@@ -1,0 +1,238 @@
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+:root {
+    --app-sidebar-width: 260px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+pre {
+    max-width: 100%;
+    overflow: auto;
+}
+
+/* Tables that should never overflow the viewport */
+.table-fit {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table-fit th,
+.table-fit td {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.app-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (min-width: 768px) {
+    .app-container {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .app-container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+.content-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: .75rem;
+    padding: 1rem;
+}
+
+@media (min-width: 768px) {
+    .content-card {
+        padding: 1.25rem;
+    }
+}
+
+.brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.brand-mark svg {
+    display: block;
+}
+
+.brand-name {
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+/* ====== Admin-only sidebar (responsive + can open/close) ====== */
+
+/* Make admin content fill the viewport height */
+body.admin-layout .content-card {
+    /* Roughly: viewport minus navbar + spacing */
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+}
+
+body.admin-layout .content-card > .card {
+    flex: 1 1 auto;
+}
+
+body.admin-layout .content-card > .card > .card-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+body.admin-layout .content-card .table-responsive {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+body.admin-layout .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--app-sidebar-width);
+    overflow-y: auto;
+    z-index: 1020;
+    transform: translateX(0);
+    transition: transform .2s ease;
+}
+
+body.admin-layout .app-sidebar-inner {
+    padding: 1rem;
+}
+
+body.admin-layout .app-navbar {
+    margin-left: var(--app-sidebar-width);
+    width: calc(100% - var(--app-sidebar-width));
+    transition: margin-left .2s ease;
+}
+
+body.admin-layout .app-container {
+    margin-left: var(--app-sidebar-width);
+    width: calc(100% - var(--app-sidebar-width));
+    transition: margin-left .2s ease;
+}
+
+body.admin-layout.sidebar-collapsed .app-sidebar {
+    transform: translateX(-100%);
+}
+
+body.admin-layout.sidebar-collapsed .app-navbar,
+body.admin-layout.sidebar-collapsed .app-container {
+    margin-left: 0;
+    width: 100%;
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1015;
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    body.admin-layout .app-navbar,
+    body.admin-layout .app-container {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    body.admin-layout:not(.sidebar-collapsed) .sidebar-backdrop {
+        display: block;
+    }
+
+    body.admin-layout .app-sidebar {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+}
+
+.app-sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.app-sidebar .sidebar-link {
+    border-radius: .5rem;
+    padding: .55rem .75rem;
+    margin: .15rem 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-sidebar .sidebar-link:hover,
+.app-sidebar .sidebar-link:focus {
+    color: #fff;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.app-sidebar hr {
+    border-color: rgba(255, 255, 255, 0.18);
+    opacity: 1;
+}
+
+/* ====== Login ====== */
+
+.card-login {
+    max-width: 420px;
+    margin: 60px auto;
+}
+
+@media (max-width: 575.98px) {
+    .card-login {
+        margin: 24px auto;
+    }
+}
+
+/* ====== Backend / Admin (ringan & simple) ====== */
+
+.admin-dashboard {
+    max-width: 1100px;
+}
+
+.admin-hero {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: .75rem;
+    padding: 1rem 1.25rem;
+}
+
+.admin-tile {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: .75rem;
+}
+
+.admin-tile-body {
+    padding: 1rem 1.25rem;
+}
+
+.admin-tile-title {
+    font-weight: 600;
+    margin-bottom: .35rem;
+}
+
+.admin-tile-text {
+    color: #6c757d;
+    margin-bottom: .75rem;
+}
+
+

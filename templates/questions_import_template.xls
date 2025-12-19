@@ -1,0 +1,107 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+<table border="1">
+  <tr>
+    <th>nomer_soal</th>
+    <th>kode_soal</th>
+    <th>pertanyaan</th>
+    <th>tipe_soal</th>
+    <th>pilihan_1</th>
+    <th>pilihan_2</th>
+    <th>pilihan_3</th>
+    <th>pilihan_4</th>
+    <th>pilihan_5</th>
+    <th>jawaban_benar</th>
+    <th>status_soal</th>
+    <th>created_at</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>PKT-001</td>
+    <td>&lt;p&gt;Hitung 2 + 3 = ...&lt;/p&gt;</td>
+    <td>Pilihan Ganda</td>
+    <td>&lt;p&gt;4&lt;/p&gt;</td>
+    <td>&lt;p&gt;5&lt;/p&gt;</td>
+    <td>&lt;p&gt;6&lt;/p&gt;</td>
+    <td>&lt;p&gt;7&lt;/p&gt;</td>
+    <td>&lt;p&gt;8&lt;/p&gt;</td>
+    <td>pilihan_2</td>
+    <td>draft</td>
+    <td>2025-12-19 10:00:00</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>PKT-001</td>
+    <td>&lt;p&gt;Pilih semua bilangan prima.&lt;/p&gt;</td>
+    <td>Pilihan Ganda Kompleks</td>
+    <td>&lt;p&gt;2&lt;/p&gt;</td>
+    <td>&lt;p&gt;3&lt;/p&gt;</td>
+    <td>&lt;p&gt;4&lt;/p&gt;</td>
+    <td>&lt;p&gt;5&lt;/p&gt;</td>
+    <td>&lt;p&gt;6&lt;/p&gt;</td>
+    <td>pilihan_1,pilihan_2,pilihan_4</td>
+    <td>published</td>
+    <td>2025-12-19 10:01:00</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>PKT-001</td>
+    <td>&lt;p&gt;Tentukan benar/salah untuk setiap pernyataan.&lt;/p&gt;</td>
+    <td>Benar/Salah</td>
+    <td>&lt;p&gt;0 adalah bilangan genap.&lt;/p&gt;</td>
+    <td>&lt;p&gt;1 adalah bilangan prima.&lt;/p&gt;</td>
+    <td>&lt;p&gt;9 adalah bilangan prima.&lt;/p&gt;</td>
+    <td>&lt;p&gt;10 adalah bilangan ganjil.&lt;/p&gt;</td>
+    <td></td>
+    <td>Benar|Salah|Salah|Salah</td>
+    <td>draft</td>
+    <td>2025-12-19 10:02:00</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>PKT-001</td>
+    <td>&lt;p&gt;Jodohkan hewan dengan suaranya.&lt;/p&gt;</td>
+    <td>Menjodohkan</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>Kucing:Meong|Anjing:Gukguk|Ayam:Kukuruyuk</td>
+    <td>draft</td>
+    <td>2025-12-19 10:03:00</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>PKT-001</td>
+    <td>&lt;p&gt;Jelaskan langkah menyelesaikan persamaan linear satu variabel.&lt;/p&gt;</td>
+    <td>Uraian</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>draft</td>
+    <td>2025-12-19 10:04:00</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>PKT-LEGACY</td>
+    <td>&lt;p&gt;Contoh legacy: 10 - 7 = ...&lt;/p&gt;</td>
+    <td>pg</td>
+    <td>&lt;p&gt;1&lt;/p&gt;</td>
+    <td>&lt;p&gt;2&lt;/p&gt;</td>
+    <td>&lt;p&gt;3&lt;/p&gt;</td>
+    <td>&lt;p&gt;4&lt;/p&gt;</td>
+    <td>&lt;p&gt;5&lt;/p&gt;</td>
+    <td>A</td>
+    <td>draft</td>
+    <td>2025-12-19 10:05:00</td>
+  </tr>
+</table>
+</body>
+</html>
