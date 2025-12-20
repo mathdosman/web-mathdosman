@@ -45,6 +45,14 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                     <div class="d-flex gap-2">
                         <a href="question_edit.php?id=<?php echo (int)$question['id']; ?><?php echo $packageId > 0 ? '&package_id=' . (int)$packageId : ''; ?>&return=<?php echo urlencode($returnLink); ?>" class="btn btn-primary btn-sm">Edit</a>
+                        <form method="post" action="question_duplicate.php" class="m-0">
+                            <input type="hidden" name="id" value="<?php echo (int)$question['id']; ?>">
+                            <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnLink); ?>">
+                            <?php if ($packageId > 0): ?>
+                                <input type="hidden" name="package_id" value="<?php echo (int)$packageId; ?>">
+                            <?php endif; ?>
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Duplikat</button>
+                        </form>
                         <a href="<?php echo htmlspecialchars($returnLink); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
                     </div>
                 </div>

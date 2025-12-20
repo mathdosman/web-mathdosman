@@ -1,0 +1,124 @@
+<?php
+// Generate a real .xls import template under assets/ using PhpSpreadsheet
+// Run: php scripts/generate_import_template_xls.php
+
+$root = dirname(__DIR__);
+$autoload = $root . '/vendor/autoload.php';
+if (!file_exists($autoload)) {
+    fwrite(STDERR, "Missing vendor/autoload.php. Run composer install.\n");
+    exit(1);
+}
+require_once $autoload;
+
+if (!class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
+    fwrite(STDERR, "PhpSpreadsheet not available. Run composer install.\n");
+    exit(1);
+}
+
+$headers = [
+    'nomer_soal',
+    'nama_paket',
+    'pertanyaan',
+    'tipe_soal',
+    'pilihan_1',
+    'pilihan_2',
+    'pilihan_3',
+    'pilihan_4',
+    'pilihan_5',
+    'jawaban_benar',
+    'status_soal',
+    'created_at',
+];
+
+$examples = [
+    [
+        '1',
+        'Paket Contoh Matematika',
+        '<p>Hitung 2 + 3 = ...</p>',
+        'Pilihan Ganda',
+        '<p>4</p>',
+        '<p>5</p>',
+        '<p>6</p>',
+        '<p>7</p>',
+        '<p>8</p>',
+        'pilihan_2',
+        'draft',
+        date('Y-m-d H:i:s'),
+    ],
+    [
+        '2',
+        'Paket Contoh Matematika',
+        '<p>Pilih semua bilangan prima.</p>',
+        'Pilihan Ganda Kompleks',
+        '<p>2</p>',
+        '<p>3</p>',
+        '<p>4</p>',
+        '<p>5</p>',
+        '<p>6</p>',
+        'pilihan_1,pilihan_2,pilihan_4',
+        'published',
+        date('Y-m-d H:i:s'),
+    ],
+    [
+        '3',
+        'Paket Contoh Matematika',
+        '<p>Tentukan benar/salah untuk setiap pernyataan.</p>',
+        'Benar/Salah',
+        '<p>0 adalah bilangan genap.</p>',
+        '<p>1 adalah bilangan prima.</p>',
+        '<p>9 adalah bilangan prima.</p>',
+        '<p>10 adalah bilangan ganjil.</p>',
+        '',
+        'Benar|Salah|Salah|Salah',
+        'draft',
+        date('Y-m-d H:i:s'),
+    ],
+    [
+        '4',
+        'Paket Contoh Matematika',
+        '<p>Jodohkan hewan dengan suaranya.</p>',
+        'Menjodohkan',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'Kucing:Meong|Anjing:Gukguk|Ayam:Kukuruyuk',
+        'draft',
+        date('Y-m-d H:i:s'),
+    ],
+];
+
+$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
+$sheet->setTitle('Template Import');
+
+foreach ($headers as $i => $h) {
+    $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1) . '1';
+    $sheet->setCellValueExplicit($cell, $h, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+}
+
+$rowIndex = 2;
+foreach ($examples as $row) {
+    foreach ($headers as $i => $_) {
+        $v = (string)($row[$i] ?? '');
+        $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1) . (string)$rowIndex;
+        $sheet->setCellValueExplicit($cell, $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+    }
+    $rowIndex++;
+}
+
+$lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
+$sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+$sheet->freezePane('A2');
+$sheet->setAutoFilter($sheet->calculateWorksheetDimension());
+
+foreach (range(1, count($headers)) as $col) {
+    $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+}
+
+$out = $root . '/assets/contoh-import-paket-soal.xls';
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
+$writer->save($out);
+
+echo "Generated: {$out}\n";

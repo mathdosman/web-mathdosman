@@ -3,14 +3,24 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
+// Excel writer (PhpSpreadsheet)
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
+
 // Ensure tables exist for older installs (minimal, without FK constraints)
 try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(80) NOT NULL UNIQUE,
         name VARCHAR(200) NOT NULL,
+        subject_id INT NULL,
+        materi VARCHAR(150) NULL,
+        submateri VARCHAR(150) NULL,
         description TEXT NULL,
         status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+        published_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
@@ -93,16 +103,31 @@ function parse_pg_answer_to_field(string $v): string
     return '';
 }
 
-header('Content-Type: text/csv; charset=utf-8');
-header('Content-Disposition: attachment; filename="questions_export_' . date('Ymd_His') . '.csv"');
+// Generate XLS
+if (!class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "PhpSpreadsheet tidak tersedia. Jalankan composer install.\n";
+    exit;
+}
 
-$output = fopen('php://output', 'w');
+header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+header('Content-Disposition: attachment; filename="questions_export_' . date('Ymd_His') . '.xls"');
 
-// Header CSV (format sesuai template Excel import)
-fputcsv($output, ['nomer_soal','kode_soal','pertanyaan','tipe_soal','pilihan_1','pilihan_2','pilihan_3','pilihan_4','pilihan_5','jawaban_benar','status_soal','created_at']);
+$headers = ['nomer_soal','nama_paket','pertanyaan','tipe_soal','pilihan_1','pilihan_2','pilihan_3','pilihan_4','pilihan_5','jawaban_benar','status_soal','created_at'];
+
+$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
+$sheet->setTitle('Export');
+
+foreach ($headers as $i => $h) {
+    $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1) . '1';
+    $sheet->setCellValueExplicit($cell, $h, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+}
+
+$rowIndex = 2;
 
 $sql = 'SELECT
-        p.code AS kode_soal,
+    p.name AS nama_paket,
         pq.question_number AS nomer_soal,
             q.pertanyaan AS pertanyaan,
             q.tipe_soal AS tipe_soal,
@@ -117,7 +142,7 @@ $sql = 'SELECT
     FROM package_questions pq
     JOIN packages p ON p.id = pq.package_id
     JOIN questions q ON q.id = pq.question_id
-    ORDER BY p.code ASC, pq.question_number ASC, pq.added_at ASC, q.id ASC';
+    ORDER BY p.name ASC, pq.question_number ASC, pq.added_at ASC, q.id ASC';
 $stmt = null;
 try {
     $stmt = $pdo->query($sql);
@@ -154,22 +179,29 @@ if ($stmt) {
             }
         }
 
-        fputcsv($output, [
-            $row['nomer_soal'],
-            $row['kode_soal'],
-            $row['pertanyaan'],
-            $tipe,
-            $row['pilihan_1'],
-            $row['pilihan_2'],
-            $row['pilihan_3'],
-            $row['pilihan_4'],
-            $row['pilihan_5'],
-            $jawaban,
-            $row['status_soal'],
-            $row['created_at'],
-        ]);
+        $values = [
+            (string)($row['nomer_soal'] ?? ''),
+            (string)($row['nama_paket'] ?? ''),
+            (string)($row['pertanyaan'] ?? ''),
+            (string)$tipe,
+            (string)($row['pilihan_1'] ?? ''),
+            (string)($row['pilihan_2'] ?? ''),
+            (string)($row['pilihan_3'] ?? ''),
+            (string)($row['pilihan_4'] ?? ''),
+            (string)($row['pilihan_5'] ?? ''),
+            (string)$jawaban,
+            (string)($row['status_soal'] ?? ''),
+            (string)($row['created_at'] ?? ''),
+        ];
+
+        foreach ($values as $i => $v) {
+            $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1) . (string)$rowIndex;
+            $sheet->setCellValueExplicit($cell, $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        }
+        $rowIndex++;
     }
 }
 
-fclose($output);
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
+$writer->save('php://output');
 exit;

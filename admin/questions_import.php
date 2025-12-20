@@ -18,8 +18,12 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         code VARCHAR(80) NOT NULL UNIQUE,
         name VARCHAR(200) NOT NULL,
+        subject_id INT NULL,
+        materi VARCHAR(150) NULL,
+        submateri VARCHAR(150) NULL,
         description TEXT NULL,
         status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+        published_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
@@ -32,6 +36,32 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 } catch (Throwable $e) {
     // ignore
+}
+
+function generate_unique_package_code(PDO $pdo): string
+{
+    for ($attempt = 0; $attempt < 10; $attempt++) {
+        try {
+            $rand = bin2hex(random_bytes(3));
+        } catch (Throwable $e) {
+            $rand = dechex(random_int(0, 0xffffff));
+        }
+
+        $code = 'pkg-' . date('Ymd') . '-' . str_pad($rand, 6, '0', STR_PAD_LEFT);
+        $code = substr($code, 0, 80);
+
+        try {
+            $stmt = $pdo->prepare('SELECT 1 FROM packages WHERE code = :c LIMIT 1');
+            $stmt->execute([':c' => $code]);
+            if (!$stmt->fetchColumn()) {
+                return $code;
+            }
+        } catch (Throwable $e) {
+            return $code;
+        }
+    }
+
+    return 'pkg-' . time();
 }
 
 function normalize_header_name(string $v): string
@@ -246,8 +276,16 @@ function parse_created_at($v): ?string
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_FILES['csv_file']) || ($_FILES['csv_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        $code = (int)($_FILES['csv_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+    $uploadField = null;
+    if (isset($_FILES['excel_file'])) {
+        $uploadField = 'excel_file';
+    } elseif (isset($_FILES['csv_file'])) {
+        // Legacy field name (backward compatible)
+        $uploadField = 'csv_file';
+    }
+
+    if ($uploadField === null || ($_FILES[$uploadField]['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        $code = (int)(($uploadField !== null ? ($_FILES[$uploadField]['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE));
         $map = [
             UPLOAD_ERR_INI_SIZE => 'Ukuran file melebihi batas upload server (upload_max_filesize).',
             UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas form.',
@@ -259,8 +297,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         $errors[] = $map[$code] ?? 'Gagal mengunggah file.';
     } else {
-        $tmpPath = $_FILES['csv_file']['tmp_name'];
-        $originalName = strtolower($_FILES['csv_file']['name'] ?? '');
+        $tmpPath = $_FILES[$uploadField]['tmp_name'];
+        $originalName = strtolower($_FILES[$uploadField]['name'] ?? '');
         $ext = pathinfo($originalName, PATHINFO_EXTENSION);
 
         $rows = [];
@@ -310,7 +348,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } else {
-            // Fallback: CSV (hasil export Excel juga umumnya CSV)
+            // Fallback: satu sel berisi teks delimiter (tab/koma/titik-koma)
             $handle = fopen($tmpPath, 'r');
             if (!$handle) {
                 $errors[] = 'Tidak dapat membaca file yang diunggah.';
@@ -328,7 +366,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $required = [
                     'nomer_soal',
-                    'kode_soal',
                     'pertanyaan',
                     'tipe_soal',
                     'pilihan_1',
@@ -340,6 +377,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'status_soal',
                     'created_at',
                 ];
+
+                // Kolom paket: baru = nama_paket, lama = kode_soal (tetap diterima)
+                $packageKeyCandidates = ['nama_paket', 'kode_soal'];
 
                 // Cari baris header yang benar (kadang ada baris kosong di atas)
                 $headerRowIndex = null;
@@ -356,6 +396,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($h === 'nomor_soal') {
                             $candidate[$i] = 'nomer_soal';
                         }
+                        if ($h === 'nama' || $h === 'nama_paket_soal') {
+                            $candidate[$i] = 'nama_paket';
+                        }
                     }
 
                     $hits = 0;
@@ -364,8 +407,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $hits++;
                         }
                     }
-                    // Anggap header valid jika minimal 6 kolom wajib terdeteksi
-                    if ($hits >= 6) {
+                    $hasPackageKey = false;
+                    foreach ($packageKeyCandidates as $pk) {
+                        if (in_array($pk, $candidate, true)) {
+                            $hasPackageKey = true;
+                            break;
+                        }
+                    }
+
+                    // Anggap header valid jika minimal 6 kolom wajib terdeteksi + ada kolom paket
+                    if ($hits >= 6 && $hasPackageKey) {
                         $headerRowIndex = $ri;
                         $header = $candidate;
                         break;
@@ -380,6 +431,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($h === 'nomor_soal') {
                             $header[$i] = 'nomer_soal';
                         }
+                        if ($h === 'nama' || $h === 'nama_paket_soal') {
+                            $header[$i] = 'nama_paket';
+                        }
                     }
                     $headerRowIndex = 0;
                 }
@@ -388,6 +442,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!in_array($col, $header, true)) {
                         $errors[] = 'Kolom wajib tidak ditemukan di header: ' . $col;
                     }
+                }
+
+                $packageKey = null;
+                foreach ($packageKeyCandidates as $pk) {
+                    if (in_array($pk, $header, true)) {
+                        $packageKey = $pk;
+                        break;
+                    }
+                }
+                if ($packageKey === null) {
+                    $errors[] = 'Kolom wajib tidak ditemukan di header: nama_paket (atau kode_soal untuk format lama)';
                 }
 
                 if (!$errors) {
@@ -413,7 +478,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!$errors) {
                         $pdo->beginTransaction();
                         try {
-                            // Cache paket by code
+                            // Cache paket by name
                             $packageCache = [];
 
                             // Jika database lama belum punya kolom created_at di questions,
@@ -425,8 +490,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $questionsHasCreatedAt = false;
                             }
 
-                            $stmtFindPackage = $pdo->prepare('SELECT id FROM packages WHERE code = :c LIMIT 1');
-                            $stmtCreatePackage = $pdo->prepare('INSERT INTO packages (code, name, description, status) VALUES (:c, :n, :d, :s)');
+                            $stmtFindPackage = $pdo->prepare('SELECT id FROM packages WHERE name = :n ORDER BY id DESC LIMIT 1');
+                            $stmtCreatePackage = $pdo->prepare('INSERT INTO packages (code, name, subject_id, description, status, published_at)
+                                VALUES (:c, :n, :sid, :d, :s, NULL)');
 
                             $stmtInsertQuestionWithDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar, created_at) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co, :ca)');
                             $stmtInsertQuestionNoDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co)');
@@ -454,7 +520,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
 
                                 $nomerSoal = (int)trim((string)($row[$idx['nomer_soal']] ?? 0));
-                                $kodeSoal = trim((string)($row[$idx['kode_soal']] ?? ''));
+                                $namaPaket = trim((string)($row[$idx[$packageKey]] ?? ''));
                                 $pertanyaan = trim((string)($row[$idx['pertanyaan']] ?? ''));
                                 $tipeRaw = trim((string)($row[$idx['tipe_soal']] ?? ''));
                                 if ($tipeRaw === '') {
@@ -482,7 +548,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'Menjodohkan',
                                     'Uraian',
                                 ];
-                                if ($kodeSoal === '' || $isEmptyRich($pertanyaan) || !in_array($tipe, $allowedTypes, true)) {
+                                if ($namaPaket === '' || $isEmptyRich($pertanyaan) || !in_array($tipe, $allowedTypes, true)) {
                                     $skipped++;
                                     continue;
                                 }
@@ -532,22 +598,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $nomerSoal = null;
                                 }
 
-                                // Ambil / buat paket berdasarkan kode_soal
-                                if (!isset($packageCache[$kodeSoal])) {
-                                    $stmtFindPackage->execute([':c' => $kodeSoal]);
+                                // Ambil / buat paket berdasarkan nama_paket
+                                if (!isset($packageCache[$namaPaket])) {
+                                    $stmtFindPackage->execute([':n' => $namaPaket]);
                                     $pid = (int)($stmtFindPackage->fetchColumn() ?: 0);
                                     if ($pid <= 0) {
+                                        $code = generate_unique_package_code($pdo);
                                         $stmtCreatePackage->execute([
-                                            ':c' => $kodeSoal,
-                                            ':n' => $kodeSoal,
+                                            ':c' => $code,
+                                            ':n' => $namaPaket,
+                                            ':sid' => $defaultSubjectId,
                                             ':d' => 'Dibuat otomatis dari import Excel',
                                             ':s' => 'draft',
                                         ]);
                                         $pid = (int)$pdo->lastInsertId();
                                     }
-                                    $packageCache[$kodeSoal] = $pid;
+                                    $packageCache[$namaPaket] = $pid;
                                 }
-                                $packageId = (int)$packageCache[$kodeSoal];
+                                $packageId = (int)$packageCache[$namaPaket];
 
                                 // Insert question
                                 $params = [
@@ -596,7 +664,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title = 'Import Soal (Excel/CSV)';
+$page_title = 'Import Soal (Excel)';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="row">
@@ -604,7 +672,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Import Soal dari Excel</h5>
-                <p class="text-muted small">Upload file Excel (.xlsx) sesuai format header yang ditentukan. Data akan otomatis masuk ke <strong>Paket Soal</strong> berdasarkan <code>kode_soal</code>.</p>
+                <p class="text-muted small">Upload file Excel (.xls/.xlsx) sesuai format header yang ditentukan. Data akan otomatis masuk ke <strong>Paket Soal</strong> berdasarkan <code>nama_paket</code> (format lama <code>kode_soal</code> masih diterima).</p>
                 <?php if ($errors): ?>
                     <div class="alert alert-danger py-2">
                         <ul class="mb-0 small">
@@ -621,8 +689,8 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
                 <form method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label class="form-label">File Excel / CSV</label>
-                        <input type="file" name="csv_file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                        <label class="form-label">File Excel</label>
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Proses Import</button>
                     <a href="questions.php" class="btn btn-link">Kembali</a>
@@ -634,7 +702,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="card h-100">
             <div class="card-body">
                 <h6 class="card-title">Header Excel yang wajib</h6>
-<pre class="bg-light border rounded p-2 small mb-2">nomer_soal	kode_soal	pertanyaan	tipe_soal	pilihan_1	pilihan_2	pilihan_3	pilihan_4	pilihan_5	jawaban_benar	status_soal	created_at</pre>
+<pre class="bg-light border rounded p-2 small mb-2">nomer_soal	nama_paket	pertanyaan	tipe_soal	pilihan_1	pilihan_2	pilihan_3	pilihan_4	pilihan_5	jawaban_benar	status_soal	created_at</pre>
                 <p class="small mb-0">Catatan: <code>jawaban_benar</code> boleh diisi <strong>A-E</strong> atau <strong>1-5</strong>. Kolom <code>created_at</code> bisa dikosongkan (akan otomatis terisi waktu import).</p>
             </div>
         </div>

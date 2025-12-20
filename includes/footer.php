@@ -1,3 +1,22 @@
+<?php if (empty($useAdminSidebar)): ?>
+	<footer class="mt-4 pt-3 border-top">
+		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
+			<div>&copy; <?php echo date('Y'); ?> MATHDOSMAN</div>
+			<div class="d-flex flex-wrap gap-3">
+				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
+				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
+				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kebijakan-privasi.php">Kebijakan Privasi</a>
+				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/syarat-ketentuan.php">Syarat &amp; Ketentuan</a>
+			</div>
+		</div>
+	</footer>
+<?php endif; ?>
+
+<?php if (!empty($useAdminSidebar)): ?>
+			</div>
+		</div>
+<?php endif; ?>
+
 </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -2,7 +2,7 @@
 
 ## Big picture
 - Aplikasi PHP procedural (tanpa framework) untuk **konten publik + admin** (dan modul bank soal sederhana).
-- Halaman publik: `index.php` (listing post), `post.php` (detail).
+- Halaman publik: `index.php` (listing paket), `paket.php` (preview paket).
 - Halaman admin: `login.php` → `dashboard.php` → modul di folder `admin/`.
 - Layout dibagi: set `$page_title`, lalu `include includes/header.php` dan tutup dengan `includes/footer.php`.
 
@@ -24,14 +24,14 @@
 - Saat membuat/ubah UI backend: utamakan class Bootstrap + CSS minimal di `style.css` (hindari dependensi baru).
 
 ## Code patterns to follow (contoh dari repo)
-- Selalu pakai prepared statements PDO untuk input user (contoh: `admin/posts.php`, `admin/questions_import.php`).
-- Escape output HTML dengan `htmlspecialchars()` (contoh: `dashboard.php`, `admin/posts.php`).
+- Selalu pakai prepared statements PDO untuk input user (contoh: `admin/packages.php`, `admin/questions_import.php`).
+- Escape output HTML dengan `htmlspecialchars()` (contoh: `dashboard.php`, `admin/packages.php`).
 - Redirect setelah aksi sukses dengan `header('Location: ...'); exit;`.
 - Validasi input sederhana + kumpulkan error ke array/string dan tampilkan via alert Bootstrap.
 - Untuk operasi batch DB, gunakan transaksi (`$pdo->beginTransaction()` / commit / rollBack) seperti di `admin/questions_import.php`.
 
 ## Database schema (ringkas)
-- `users` (admin saja), `posts` (konten publik), `subjects` + `questions` (bank soal).
+- `users` (admin saja), `packages` (konten publik), `subjects` + `questions` (bank soal).
 - Password admin memakai `password_hash` + verifikasi `password_verify` (lihat `login.php`).
 
 ## Integration points / gotchas

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 514" role="img" aria-label="Placeholder branding MATHDOSMAN">
+  <defs>
+    <style>
+      .t{font:700 56px system-ui,-apple-system,"Segoe UI",sans-serif;fill:currentColor}
+      .s{font:500 22px system-ui,-apple-system,"Segoe UI",sans-serif;fill:currentColor;opacity:.75}
+      .k{fill:none;stroke:currentColor;opacity:.25;stroke-width:3}
+    </style>
+  </defs>
+
+  <!-- Transparent background; container provides bg + border via Bootstrap classes -->
+  <rect x="28" y="28" width="1144" height="458" rx="28" class="k" />
+
+  <g transform="translate(96,160)">
+    <text class="t">MATHDOSMAN</text>
+    <text class="s" y="56">Tempat branding / banner utama</text>
+    <text class="s" y="94">Ganti file ini dengan logo/banner kamu</text>
+  </g>
+
+  <!-- Simple decorative lines -->
+  <path class="k" d="M96 380h520" />
+  <path class="k" d="M96 410h420" />
+</svg>

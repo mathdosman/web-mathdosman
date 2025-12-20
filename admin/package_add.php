@@ -3,29 +3,30 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
-function make_code(string $fallback): string {
-    $code = strtolower($fallback);
-    $code = preg_replace('/[^a-z0-9]+/i', '-', $code);
-    $code = trim($code, '-');
-    if ($code === '') {
-        $code = 'paket-' . time();
-    }
-    return $code;
-}
+function generate_unique_package_code(PDO $pdo): string
+{
+    for ($attempt = 0; $attempt < 10; $attempt++) {
+        try {
+            $rand = bin2hex(random_bytes(3));
+        } catch (Throwable $e) {
+            $rand = dechex(random_int(0, 0xffffff));
+        }
 
-function normalize_code(string $raw, string $fallbackName): string {
-    $raw = trim($raw);
-    if ($raw === '') {
-        return make_code($fallbackName);
+        $code = 'pkg-' . date('Ymd') . '-' . str_pad($rand, 6, '0', STR_PAD_LEFT);
+        $code = substr($code, 0, 80);
+
+        try {
+            $stmt = $pdo->prepare('SELECT 1 FROM packages WHERE code = :c LIMIT 1');
+            $stmt->execute([':c' => $code]);
+            if (!$stmt->fetchColumn()) {
+                return $code;
+            }
+        } catch (Throwable $e) {
+            return $code;
+        }
     }
 
-    $code = strtolower($raw);
-    $code = preg_replace('/[^a-z0-9]+/i', '-', $code);
-    $code = trim($code, '-');
-    if ($code === '') {
-        return make_code($fallbackName);
-    }
-    return $code;
+    return 'pkg-' . time();
 }
 
 $errors = [];
@@ -41,6 +42,7 @@ try {
         submateri VARCHAR(150) NULL,
         description TEXT NULL,
         status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+        published_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 } catch (Throwable $e) {
@@ -61,6 +63,7 @@ function ensure_package_column(PDO $pdo, string $column, string $definition): vo
 ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
 ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
 ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
 
 $subjects = [];
 try {
@@ -114,7 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formAction = 'save';
     }
 
-    $codeInput = trim($_POST['code'] ?? '');
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = $_POST['status'] ?? 'draft';
@@ -175,8 +177,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             try {
-                $code = normalize_code($codeInput, $name);
-                $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status) VALUES (:c, :n, :sid, :m, :sm, :d, :s)');
+                $code = generate_unique_package_code($pdo);
+                $publishedAt = ($status === 'published') ? date('Y-m-d H:i:s') : null;
+
+                $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status, published_at)
+                    VALUES (:c, :n, :sid, :m, :sm, :d, :s, :pa)');
                 $stmt->execute([
                     ':c' => $code,
                     ':n' => $name,
@@ -185,12 +190,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':sm' => ($submateri === '' ? null : $submateri),
                     ':d' => ($description === '' ? null : $description),
                     ':s' => $status,
+                    ':pa' => $publishedAt,
                 ]);
 
                 header('Location: packages.php');
                 exit;
             } catch (PDOException $e) {
-                $errors[] = 'Gagal menyimpan paket (kode mungkin sudah digunakan).';
+                $errors[] = 'Gagal menyimpan paket.';
             }
         }
     }
@@ -223,11 +229,6 @@ include __DIR__ . '/../includes/header.php';
 
                 <form method="post">
                     <input type="hidden" name="form_action" id="form_action" value="save">
-                    <div class="mb-3">
-                        <label class="form-label small">Kode Paket</label>
-                        <input type="text" name="code" class="form-control form-control-sm" placeholder="contoh: paket-aljabar-01">
-                        <div class="form-text small">Opsional. Jika dikosongkan, kode dibuat otomatis dari nama paket.</div>
-                    </div>
                     <div class="mb-3">
                         <label class="form-label small">Nama Paket Soal</label>
                         <input type="text" name="name" class="form-control form-control-sm" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>

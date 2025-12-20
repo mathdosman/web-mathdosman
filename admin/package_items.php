@@ -141,6 +141,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($isLocked) {
         $errors[] = 'Paket sudah terbit. Tambah/edit/hapus butir soal dinonaktifkan.';
+    } elseif ($action === 'remove_draft_questions') {
+        try {
+            $stmt = $pdo->prepare('DELETE pq
+                FROM package_questions pq
+                JOIN questions q ON q.id = pq.question_id
+                WHERE pq.package_id = :pid AND (q.status_soal IS NULL OR q.status_soal <> "published")');
+            $stmt->execute([':pid' => $packageId]);
+            header('Location: ' . $returnUrl);
+            exit;
+        } catch (PDOException $e) {
+            $errors[] = 'Gagal membersihkan soal draft dari paket.';
+        }
     } elseif ($action === 'add_question') {
         $questionId = (int)($_POST['question_id'] ?? 0);
         if ($questionId <= 0) {
@@ -233,6 +245,16 @@ try {
     $items = [];
 }
 
+$draftItemsCount = 0;
+if ($items) {
+    foreach ($items as $it) {
+        $st = (string)($it['status_soal'] ?? 'draft');
+        if ($st !== 'published') {
+            $draftItemsCount++;
+        }
+    }
+}
+
 $nextNoCreate = 1;
 try {
     $stmt = $pdo->prepare('SELECT COALESCE(MAX(question_number), 0) FROM package_questions WHERE package_id = :pid');
@@ -271,6 +293,12 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
             </div>
             <div class="d-flex gap-2">
+                <?php if (!$isLocked && $draftItemsCount > 0): ?>
+                    <form method="post" class="m-0" data-swal-confirm data-swal-title="Bersihkan Soal Draft?" data-swal-text="Hapus semua butir soal draft dari paket ini?">
+                        <input type="hidden" name="action" value="remove_draft_questions">
+                        <button type="submit" class="btn btn-outline-warning btn-sm">Bersihkan Draft (<?php echo (int)$draftItemsCount; ?>)</button>
+                    </form>
+                <?php endif; ?>
                 <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm<?php echo $isLocked ? ' disabled' : ''; ?>"<?php echo $isLocked ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>Buat Butir Soal Baru</a>
                 <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
             </div>

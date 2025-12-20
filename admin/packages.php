@@ -43,8 +43,36 @@ function ensure_package_column(PDO $pdo, string $column, string $definition): vo
 ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
 ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
 ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
+ensure_package_column($pdo, 'description', 'description TEXT NULL');
 
 $errors = [];
+
+function generate_unique_package_code(PDO $pdo): string
+{
+    for ($attempt = 0; $attempt < 10; $attempt++) {
+        try {
+            $rand = bin2hex(random_bytes(3));
+        } catch (Throwable $e) {
+            $rand = dechex(random_int(0, 0xffffff));
+        }
+
+        $code = 'pkg-' . date('Ymd') . '-' . str_pad($rand, 6, '0', STR_PAD_LEFT);
+        $code = substr($code, 0, 80);
+
+        try {
+            $stmt = $pdo->prepare('SELECT 1 FROM packages WHERE code = :c LIMIT 1');
+            $stmt->execute([':c' => $code]);
+            if (!$stmt->fetchColumn()) {
+                return $code;
+            }
+        } catch (Throwable $e) {
+            return $code;
+        }
+    }
+
+    return 'pkg-' . time();
+}
 
 function build_packages_return_url(array $get): string {
     $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri'];
@@ -139,8 +167,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($next !== null) {
-                    $stmt = $pdo->prepare('UPDATE packages SET status = :st WHERE id = :id');
-                    $stmt->execute([':st' => $next, ':id' => $id]);
+                    if ($next === 'published') {
+                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = NOW() WHERE id = :id');
+                        $stmt->execute([':st' => $next, ':id' => $id]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = NULL WHERE id = :id');
+                        $stmt->execute([':st' => $next, ':id' => $id]);
+                    }
                     header('Location: ' . $returnUrl);
                     exit;
                 }
@@ -169,6 +202,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (Throwable $e) {
                 $errors[] = 'Gagal menghapus paket.';
+            }
+        }
+    }
+
+    if ($action === 'duplicate') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $pdo->beginTransaction();
+                try {
+                    $stmt = $pdo->prepare('SELECT * FROM packages WHERE id = :id');
+                    $stmt->execute([':id' => $id]);
+                    $src = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if (!$src) {
+                        throw new RuntimeException('Paket tidak ditemukan.');
+                    }
+
+                    $newCode = generate_unique_package_code($pdo);
+                    $newName = trim((string)($src['name'] ?? ''));
+                    $newName = $newName !== '' ? ($newName . ' (Duplikat)') : 'Paket (Duplikat)';
+
+                    $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status, published_at)
+                        VALUES (:c, :n, :sid, :m, :sm, :d, :st, NULL)');
+                    $stmt->execute([
+                        ':c' => $newCode,
+                        ':n' => $newName,
+                        ':sid' => ($src['subject_id'] ?? null),
+                        ':m' => ($src['materi'] ?? null),
+                        ':sm' => ($src['submateri'] ?? null),
+                        ':d' => ($src['description'] ?? null),
+                        ':st' => 'draft',
+                    ]);
+                    $newId = (int)$pdo->lastInsertId();
+
+                    // Copy package items (references) with numbering
+                    $stmt = $pdo->prepare('INSERT INTO package_questions (package_id, question_id, question_number)
+                        SELECT :new_id, question_id, question_number
+                        FROM package_questions
+                        WHERE package_id = :old_id');
+                    $stmt->execute([':new_id' => $newId, ':old_id' => $id]);
+
+                    $pdo->commit();
+                } catch (Throwable $e) {
+                    $pdo->rollBack();
+                    throw $e;
+                }
+
+                header('Location: package_edit.php?id=' . $newId);
+                exit;
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal menduplikat paket.';
             }
         }
     }
@@ -288,7 +372,7 @@ include __DIR__ . '/../includes/header.php';
                 <form action="questions_import.php" method="post" enctype="multipart/form-data" class="m-0">
                     <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
                         <div class="input-group input-group-sm">
-                            <input type="file" name="csv_file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                             <button type="submit" class="btn btn-outline-primary">Upload</button>
                         </div>
                         <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xls" download>Contoh File XLS</a>
@@ -312,10 +396,10 @@ include __DIR__ . '/../includes/header.php';
                 <thead>
                     <tr>
                         <th style="width: 64px;">No</th>
-                        <th>Kode Paket</th>
+                        <th>Paket</th>
                         <th style="width: 110px;">Status</th>
                         <th class="d-none d-md-table-cell" style="width: 170px;">Dibuat</th>
-                        <th style="width: 140px;" class="text-end">Aksi</th>
+                        <th style="width: 260px;" class="text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -326,9 +410,8 @@ include __DIR__ . '/../includes/header.php';
                         <tr>
                             <td class="text-muted"><?php echo $i + 1; ?></td>
                             <td class="text-break">
-                                <div class="fw-semibold"><?php echo htmlspecialchars($p['code'] ?? ''); ?></div>
+                                <div class="fw-semibold"><?php echo htmlspecialchars($p['name']); ?></div>
                                 <div class="text-muted small">
-                                    <?php echo htmlspecialchars($p['name']); ?>
                                     <?php
                                         $meta = [];
                                         if (!empty($p['subject_name'])) {
@@ -358,42 +441,87 @@ include __DIR__ . '/../includes/header.php';
                             </td>
                             <td class="d-none d-md-table-cell"><span class="text-muted"><?php echo htmlspecialchars($p['created_at']); ?></span></td>
                             <td class="text-end">
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Aksi
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <a class="dropdown-item" href="package_edit.php?id=<?php echo (int)$p['id']; ?>">Edit Paket</a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="package_items.php?package_id=<?php echo (int)$p['id']; ?>">Lihat Butir Soal</a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form method="post" class="m-0">
-                                                <input type="hidden" name="action" value="toggle_status">
-                                                <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                                                <?php if ($p['status'] === 'published'): ?>
-                                                    <button type="submit" class="dropdown-item">Jadikan Draft</button>
-                                                <?php else: ?>
-                                                    <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
-                                                        <span class="dropdown-item text-muted">Terbitkan (blokir: masih ada soal draft)</span>
-                                                    <?php else: ?>
-                                                        <button type="submit" class="dropdown-item">Terbitkan</button>
-                                                    <?php endif; ?>
-                                                <?php endif; ?>
-                                            </form>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Paket?" data-swal-text="Hapus paket soal ini?">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
-                                                <button type="submit" class="dropdown-item text-danger">Hapus</button>
-                                            </form>
-                                        </li>
-                                    </ul>
+                                <div style="display:grid;grid-template-columns:repeat(2,max-content);gap:.25rem;justify-content:end;">
+                                    <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_edit.php?id=<?php echo (int)$p['id']; ?>" title="Edit Paket" aria-label="Edit Paket">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 20h9"/>
+                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                                        </svg>
+                                        <span class="visually-hidden">Edit</span>
+                                    </a>
+                                    <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_items.php?package_id=<?php echo (int)$p['id']; ?>" title="Lihat Butir Soal" aria-label="Lihat Butir Soal">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M8 6h13"/>
+                                            <path d="M8 12h13"/>
+                                            <path d="M8 18h13"/>
+                                            <path d="M3 6h.01"/>
+                                            <path d="M3 12h.01"/>
+                                            <path d="M3 18h.01"/>
+                                        </svg>
+                                        <span class="visually-hidden">Butir</span>
+                                    </a>
+
+                                    <form method="post" class="m-0">
+                                        <input type="hidden" name="action" value="duplicate">
+                                        <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center" title="Duplikat Paket" aria-label="Duplikat Paket">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                            </svg>
+                                            <span class="visually-hidden">Duplikat</span>
+                                        </button>
+                                    </form>
+
+                                    <form method="post" class="m-0">
+                                        <input type="hidden" name="action" value="toggle_status">
+                                        <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
+                                        <?php if ($p['status'] === 'published'): ?>
+                                            <button type="submit" class="btn btn-outline-warning btn-sm d-inline-flex align-items-center justify-content-center" title="Jadikan Draft" aria-label="Jadikan Draft">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                    <path d="M14 2v6h6"/>
+                                                    <path d="M8 15h8"/>
+                                                </svg>
+                                                <span class="visually-hidden">Jadikan Draft</span>
+                                            </button>
+                                        <?php else: ?>
+                                            <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" disabled title="Masih ada soal draft" aria-label="Terbitkan (terblokir)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M12 2v14"/>
+                                                        <path d="M7 7l5-5 5 5"/>
+                                                        <path d="M5 22h14"/>
+                                                    </svg>
+                                                    <span class="visually-hidden">Terbitkan</span>
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="submit" class="btn btn-outline-success btn-sm d-inline-flex align-items-center justify-content-center" title="Terbitkan" aria-label="Terbitkan">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M12 2v14"/>
+                                                        <path d="M7 7l5-5 5 5"/>
+                                                        <path d="M5 22h14"/>
+                                                    </svg>
+                                                    <span class="visually-hidden">Terbitkan</span>
+                                                </button>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </form>
+
+                                    <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Paket?" data-swal-text="Hapus paket soal ini?">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center" title="Hapus" aria-label="Hapus">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M3 6h18"/>
+                                                <path d="M8 6V4h8v2"/>
+                                                <path d="M6 6l1 16h10l1-16"/>
+                                                <path d="M10 11v6"/>
+                                                <path d="M14 11v6"/>
+                                            </svg>
+                                            <span class="visually-hidden">Hapus</span>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

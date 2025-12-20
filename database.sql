@@ -13,16 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabel konten publik (posting)
-CREATE TABLE IF NOT EXISTS posts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    slug VARCHAR(200) NOT NULL,
-    content TEXT NOT NULL,
-    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Tabel paket soal
 CREATE TABLE IF NOT EXISTS packages (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,6 +23,7 @@ CREATE TABLE IF NOT EXISTS packages (
     submateri VARCHAR(150) NULL,
     description TEXT NULL,
     status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    published_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

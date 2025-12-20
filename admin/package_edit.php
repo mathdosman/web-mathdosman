@@ -3,31 +3,6 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
-function make_code(string $fallback): string {
-    $code = strtolower($fallback);
-    $code = preg_replace('/[^a-z0-9]+/i', '-', $code);
-    $code = trim($code, '-');
-    if ($code === '') {
-        $code = 'paket-' . time();
-    }
-    return $code;
-}
-
-function normalize_code(string $raw, string $fallbackName): string {
-    $raw = trim($raw);
-    if ($raw === '') {
-        return make_code($fallbackName);
-    }
-
-    $code = strtolower($raw);
-    $code = preg_replace('/[^a-z0-9]+/i', '-', $code);
-    $code = trim($code, '-');
-    if ($code === '') {
-        return make_code($fallbackName);
-    }
-    return $code;
-}
-
 function ensure_package_column(PDO $pdo, string $column, string $definition): void {
     try {
         $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
@@ -53,6 +28,7 @@ try {
         submateri VARCHAR(150) NULL,
         description TEXT NULL,
         status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+        published_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 } catch (Throwable $e) {
@@ -61,6 +37,7 @@ try {
 ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
 ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
 ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
 
 $packageId = (int)($_GET['id'] ?? 0);
 if ($packageId <= 0) {
@@ -70,7 +47,7 @@ if ($packageId <= 0) {
 
 $package = null;
 try {
-    $stmt = $pdo->prepare('SELECT id, code, name, subject_id, materi, submateri, description, status FROM packages WHERE id = :id');
+    $stmt = $pdo->prepare('SELECT id, code, name, subject_id, materi, submateri, description, status, published_at FROM packages WHERE id = :id');
     $stmt->execute([':id' => $packageId]);
     $package = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
@@ -96,6 +73,7 @@ $codeInput = (string)($package['code'] ?? '');
 $name = (string)($package['name'] ?? '');
 $description = (string)($package['description'] ?? '');
 $status = (string)($package['status'] ?? 'draft');
+$currentPublishedAt = $package['published_at'] ?? null;
 
 $materials = [];
 $submaterials = [];
@@ -104,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subjectId = (int)($_POST['subject_id'] ?? 0);
     $materi = trim((string)($_POST['materi'] ?? ''));
     $submateri = trim((string)($_POST['submateri'] ?? ''));
-    $codeInput = trim((string)($_POST['code'] ?? ''));
     $name = trim((string)($_POST['name'] ?? ''));
     $description = trim((string)($_POST['description'] ?? ''));
     $status = (string)($_POST['status'] ?? 'draft');
@@ -195,31 +172,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             try {
-                $code = normalize_code($codeInput, $name);
-
-                // Keep code unique excluding current package
-                $stmt = $pdo->prepare('SELECT id FROM packages WHERE code = :c AND id <> :id LIMIT 1');
-                $stmt->execute([':c' => $code, ':id' => $packageId]);
-                if ($stmt->fetchColumn()) {
-                    $errors[] = 'Kode paket sudah digunakan.';
-                } else {
-                    $stmt = $pdo->prepare('UPDATE packages
-                        SET code = :c, name = :n, subject_id = :sid, materi = :m, submateri = :sm, description = :d, status = :s
-                        WHERE id = :id');
-                    $stmt->execute([
-                        ':c' => $code,
-                        ':n' => $name,
-                        ':sid' => $subjectId,
-                        ':m' => ($materi === '' ? null : $materi),
-                        ':sm' => ($submateri === '' ? null : $submateri),
-                        ':d' => ($description === '' ? null : $description),
-                        ':s' => $status,
-                        ':id' => $packageId,
-                    ]);
-
-                    header('Location: packages.php');
-                    exit;
+                $nextPublishedAt = null;
+                if ($status === 'published') {
+                    // Always stamp publish date when user sets published.
+                    $nextPublishedAt = date('Y-m-d H:i:s');
                 }
+
+                $stmt = $pdo->prepare('UPDATE packages
+                    SET name = :n, subject_id = :sid, materi = :m, submateri = :sm, description = :d, status = :s, published_at = :pa
+                    WHERE id = :id');
+                $stmt->execute([
+                    ':n' => $name,
+                    ':sid' => $subjectId,
+                    ':m' => ($materi === '' ? null : $materi),
+                    ':sm' => ($submateri === '' ? null : $submateri),
+                    ':d' => ($description === '' ? null : $description),
+                    ':s' => $status,
+                    ':pa' => $nextPublishedAt,
+                    ':id' => $packageId,
+                ]);
+
+                header('Location: packages.php');
+                exit;
             } catch (PDOException $e) {
                 $errors[] = 'Gagal menyimpan perubahan paket.';
             }
@@ -255,10 +229,14 @@ include __DIR__ . '/../includes/header.php';
                 <form method="post">
                     <input type="hidden" name="form_action" id="form_action" value="save">
 
-                    <div class="mb-3">
-                        <label class="form-label small">Kode Paket</label>
-                        <input type="text" name="code" class="form-control form-control-sm" value="<?php echo htmlspecialchars($codeInput); ?>" placeholder="contoh: paket-aljabar-01">
-                        <div class="form-text small">Opsional. Jika dikosongkan, kode dibuat otomatis dari nama paket.</div>
+                    <div class="alert alert-light border small">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <div class="fw-semibold">Kode paket (internal)</div>
+                                <div class="text-muted">Kode dipakai untuk URL preview dan dibuat otomatis.</div>
+                            </div>
+                            <div class="text-muted"><?php echo htmlspecialchars($codeInput); ?></div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Nama Paket Soal</label>

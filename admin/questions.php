@@ -26,28 +26,28 @@ include __DIR__ . '/../includes/header.php';
 
                 <form action="questions_import.php" method="post" enctype="multipart/form-data" class="mb-2">
                     <div class="input-group input-group-sm">
-                        <input type="file" name="csv_file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                         <button type="submit" class="btn btn-primary">Upload Excel</button>
                     </div>
-                    <div class="form-text small">Format: .xlsx / .xls / .csv</div>
+                    <div class="form-text small">Format: .xlsx / .xls</div>
                     <div class="mt-1">
                         <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xls" download>Contoh File XLS</a>
                     </div>
                 </form>
 
                 <a href="questions_import.php" class="btn btn-outline-primary btn-sm">Buka Halaman Import</a>
-                <a href="questions_export.php" class="btn btn-outline-secondary btn-sm">Export Template (CSV)</a>
+                <a href="questions_export.php" class="btn btn-outline-secondary btn-sm">Export (XLS)</a>
             </div>
         </div>
     </div>
     <div class="col-md-8 mb-3">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Format CSV yang Digunakan</h5>
-                <p class="mb-1">Gunakan file Excel/CSV dengan header kolom seperti berikut (urutan wajib):</p>
-<pre class="bg-light border rounded p-2 small mb-2">nomer_soal,kode_soal,pertanyaan,tipe_soal,pilihan_1,pilihan_2,pilihan_3,pilihan_4,pilihan_5,jawaban_benar,status_soal,created_at</pre>
+                <h5 class="card-title">Format Excel yang Digunakan</h5>
+                <p class="mb-1">Gunakan file Excel dengan header kolom seperti berikut (urutan wajib):</p>
+            <pre class="bg-light border rounded p-2 small mb-2">nomer_soal\tnama_paket\tpertanyaan\ttipe_soal\tpilihan_1\tpilihan_2\tpilihan_3\tpilihan_4\tpilihan_5\tjawaban_benar\tstatus_soal\tcreated_at</pre>
                 <ul class="small mb-0">
-                    <li><strong>kode_soal</strong>: kode paket soal (paket akan dibuat otomatis jika belum ada).</li>
+                    <li><strong>nama_paket</strong>: nama paket soal (paket akan dibuat otomatis jika belum ada).</li>
                     <li><strong>nomer_soal</strong>: nomor urut soal di dalam paket.</li>
                     <li><strong>pertanyaan</strong>: HTML/text (boleh hasil dari editor).</li>
                     <li><strong>tipe_soal</strong>: salah satu: <em>Pilihan Ganda</em>, <em>Pilihan Ganda Kompleks</em>, <em>Benar/Salah</em>, <em>Menjodohkan</em>, <em>Uraian</em>. (Kompatibel juga: <em>pg</em> = Pilihan Ganda)</li>

@@ -219,10 +219,24 @@ try {
     $ensureExcelSchema($pdo);
 } catch (PDOException $e) {
         $msg = $e->getMessage();
+        $safeMsg = htmlspecialchars($msg);
+
+        $driverCode = 0;
+        if (isset($e->errorInfo) && is_array($e->errorInfo)) {
+            $driverCode = (int)($e->errorInfo[1] ?? 0);
+        }
+
         if (strpos($msg, 'Unknown database') !== false) {
-            echo 'Koneksi database gagal: ' . htmlspecialchars($msg) . '<br>';
+            echo 'Koneksi database gagal: ' . $safeMsg . '<br>';
             echo 'Silakan jalankan installer di <a href="install/index.php">install/index.php</a> untuk membuat database.';
             exit;
         }
-        die('Koneksi database gagal: ' . $msg);
+
+        if ($driverCode === 1044 || $driverCode === 1045 || stripos($msg, 'Access denied for user') !== false) {
+            echo 'Koneksi database gagal: ' . $safeMsg . '<br>';
+            echo 'User MySQL tidak punya izin (atau password salah). Jalankan installer di <a href="install/index.php">install/index.php</a> menggunakan akun MySQL yang berhak (mis. root XAMPP) agar database & hak akses dibuat otomatis.';
+            exit;
+        }
+
+        die('Koneksi database gagal: ' . $safeMsg);
 }

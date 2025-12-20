@@ -1,9 +1,9 @@
 <?php
-session_start();
-include '../koneksi/koneksi.php';
-include '../inc/functions.php';
-check_login('admin');
-include '../inc/dataadmin.php';
+// Legacy module (CBT) from an older project structure.
+// This repository now uses Paket Soal + Bank Soal modules under /admin and public preview pages.
+// Redirect to prevent runtime errors due to missing legacy tables/includes.
+header('Location: index.php');
+exit;
 $query = "
     SELECT 
         s.id_soal, s.kode_soal, s.nama_soal, s.mapel, s.kelas, s.tampilan_soal, s.status, s.tanggal, s.waktu_ujian, s.token,

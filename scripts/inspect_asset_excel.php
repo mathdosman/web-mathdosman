@@ -10,7 +10,7 @@ if (!file_exists($autoload)) {
 }
 require_once $autoload;
 
-$path = $root . '/assets/MAT9-01.xls';
+$path = $root . '/assets/contoh-import-paket-soal.xls';
 if (!file_exists($path)) {
     fwrite(STDERR, "Missing file: {$path}\n");
     exit(1);
@@ -112,7 +112,7 @@ for ($i = 0; $i < $preview; $i++) {
 
 $required = [
     'nomer_soal',
-    'kode_soal',
+    // new: nama_paket, legacy: kode_soal
     'pertanyaan',
     'tipe_soal',
     'pilihan_1',
@@ -124,6 +124,8 @@ $required = [
     'status_soal',
     'created_at',
 ];
+
+$packageKeyCandidates = ['nama_paket', 'kode_soal'];
 
 $headerRowIndex = null;
 $header = [];
@@ -146,7 +148,15 @@ for ($ri = 0; $ri < $scanLimit; $ri++) {
             $hits++;
         }
     }
-    if ($hits >= 6) {
+    $hasPackageKey = false;
+    foreach ($packageKeyCandidates as $pk) {
+        if (in_array($pk, $candidate, true)) {
+            $hasPackageKey = true;
+            break;
+        }
+    }
+
+    if ($hits >= 6 && $hasPackageKey) {
         $headerRowIndex = $ri;
         $header = $candidate;
         break;

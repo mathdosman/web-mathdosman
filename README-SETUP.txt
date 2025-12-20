@@ -11,7 +11,7 @@ Langkah cepat menjalankan MATHDOSMAN + Admin
 
 Ini akan membuat:
 - Database: web-mathdosman
-- Tabel: users, posts, subjects, questions, packages, package_questions
+- Tabel: users, subjects, questions, packages, package_questions
 - User contoh:
   - admin / 123456 (role admin)
 
@@ -42,14 +42,14 @@ Catatan dependensi (untuk import Excel .xlsx):
 5. Fitur dasar yang tersedia (mode MATHDOSMAN)
 -----------------------------------------------
 - Frontend publik (tanpa login):
-  - Beranda menampilkan daftar konten yang dipublikasikan admin.
-  - Halaman detail konten per artikel.
+  - Beranda menampilkan daftar Paket Soal yang dipublikasikan admin.
+  - Halaman preview paket soal untuk dilihat/cetak.
 
 - Admin:
   - Login admin saja (tidak ada login siswa).
   - Dashboard admin.
   - Paket Soal: buat paket, tambah butir soal, lihat/edit butir soal.
-  - Bank Soal: import soal dari Excel (.xlsx) dan export template CSV.
+  - Bank Soal: import soal dari Excel (.xls/.xlsx) dan export template XLS.
 
 Catatan:
 --------

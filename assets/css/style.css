@@ -67,13 +67,39 @@ pre {
     line-height: 1;
 }
 
+.app-navbar .navbar-brand {
+    text-decoration: none;
+}
+
+.app-navbar .brand-mark {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: .65rem;
+    /* Neutral background so the uploaded icon.svg (any color) stays readable */
+    background: var(--bs-body-bg);
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    flex: 0 0 auto;
+}
+
 .brand-mark svg {
     display: block;
+}
+
+.brand-logo {
+    display: block;
+    width: 28px;
+    height: 28px;
 }
 
 .brand-name {
     font-weight: 600;
     letter-spacing: .02em;
+}
+
+.app-navbar .brand-name {
+    font-weight: 750;
+    letter-spacing: .03em;
 }
 
 /* ====== Admin-only sidebar (responsive + can open/close) ====== */
@@ -169,11 +195,18 @@ body.admin-layout.sidebar-collapsed .app-container {
 }
 
 .app-sidebar .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
     border-radius: .5rem;
     padding: .55rem .75rem;
     margin: .15rem 0;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-sidebar .sidebar-link svg {
+    flex: 0 0 auto;
 }
 
 .app-sidebar .sidebar-link:hover,
@@ -233,6 +266,81 @@ body.admin-layout.sidebar-collapsed .app-container {
 .admin-tile-text {
     color: #6c757d;
     margin-bottom: .75rem;
+}
+
+/* ====== Front page: Paket cards ====== */
+
+body.front-page .package-card {
+    border-radius: 1rem;
+    border: 1px solid var(--bs-border-color);
+    background: var(--bs-body-bg);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Top accent bar */
+body.front-page .package-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 10px;
+    width: 100%;
+    background: var(--package-accent, var(--bs-primary));
+}
+
+/* Subtle accent tint */
+body.front-page .package-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(var(--package-accent-rgb, var(--bs-primary-rgb)), 0.075);
+    pointer-events: none;
+}
+
+body.front-page .package-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+/* Subtle accent outline + depth (makes differences visible at a glance) */
+body.front-page .package-card {
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(var(--package-accent-rgb, var(--bs-primary-rgb)), 0.18);
+}
+
+body.front-page .package-card .card-body {
+    padding-top: 1.1rem;
+}
+
+body.front-page .package-card-title {
+    font-size: clamp(1.2rem, 1.1rem + 0.6vw, 1.5rem);
+    font-weight: 800;
+    letter-spacing: .01em;
+    line-height: 1.18;
+}
+
+body.front-page .package-card-title a {
+    color: var(--package-accent, var(--bs-primary));
+}
+
+body.front-page .package-card-title a:hover,
+body.front-page .package-card-title a:focus {
+    text-decoration: underline;
+}
+
+body.front-page .package-card-meta {
+    margin-top: .1rem;
+}
+
+/* Accent color is provided per-card via CSS variables (see index.php) */
+
+body.front-page .package-card:hover {
+    border-color: var(--package-accent, var(--bs-primary));
+    box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(var(--package-accent-rgb, var(--bs-primary-rgb)), 0.28);
 }
 
 
