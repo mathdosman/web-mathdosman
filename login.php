@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/logger.php';
 
 if (!empty($_SESSION['user'])) {
     header('Location: dashboard.php');
@@ -13,9 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if ($username === '' || $password === '') {
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+    $normUser = strtolower($username);
+    $throttleKey = 'login:' . $ip . ':' . $normUser;
+    $blockedFor = throttle_get_block_seconds($throttleKey);
+    if ($blockedFor > 0) {
+        $mins = (int)ceil($blockedFor / 60);
+        $error = 'Terlalu banyak percobaan login. Coba lagi dalam ' . $mins . ' menit.';
+    }
+
+    if ($error === '' && ($username === '' || $password === '')) {
         $error = 'Username dan password wajib diisi.';
-    } else {
+    } elseif ($error === '') {
         try {
             $stmt = $pdo->prepare('SELECT * FROM users WHERE username = :u LIMIT 1');
             $stmt->execute([':u' => $username]);
@@ -23,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($user && password_verify($password, $user['password_hash'])) {
                 if ($user['role'] !== 'admin') {
+                    throttle_clear($throttleKey);
                     $error = 'Hanya admin yang dapat login.';
                 } else {
                     session_regenerate_id(true);
@@ -32,11 +43,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'name' => $user['name'],
                         'role' => $user['role'],
                     ];
+                    throttle_clear($throttleKey);
                     header('Location: dashboard.php');
                     exit;
                 }
             } else {
+                $remain = throttle_register_failure($throttleKey);
+                if ($remain > 0) {
+                    app_log('WARN', 'Login throttled after failed attempts', ['username' => $username, 'ip' => $ip]);
+                    $mins = (int)ceil($remain / 60);
+                    $error = 'Terlalu banyak percobaan login. Coba lagi dalam ' . $mins . ' menit.';
+                } else {
+                    app_log('WARN', 'Login failed', ['username' => $username, 'ip' => $ip]);
                 $error = 'Username atau password salah.';
+                }
             }
         } catch (PDOException $e) {
             $error = 'Login gagal karena database belum siap. Pastikan Anda sudah menjalankan installer di /install/ atau meng-import database.sql (tabel users harus ada).';
