@@ -1,5 +1,32 @@
 <?php
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/config/config.php';
+
+// Fail-fast: allow the page shell to load even when MySQL is down.
+$dbPreflightOk = false;
+try {
+    $dbHost = (string)DB_HOST;
+    if (strtolower($dbHost) === 'localhost') {
+        $dbHost = '127.0.0.1';
+    }
+    $dbPort = defined('DB_PORT') ? (int)DB_PORT : 3306;
+    if ($dbPort <= 0 || $dbPort > 65535) {
+        $dbPort = 3306;
+    }
+
+    $errno = 0;
+    $errstr = '';
+    $fp = @fsockopen($dbHost, $dbPort, $errno, $errstr, 1.5);
+    if ($fp !== false) {
+        $dbPreflightOk = true;
+        @fclose($fp);
+    }
+} catch (Throwable $e) {
+    $dbPreflightOk = false;
+}
+
+if ($dbPreflightOk) {
+    require_once __DIR__ . '/config/db.php';
+}
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -17,7 +44,8 @@ $filterSubjectId = (int)($_GET['subject_id'] ?? 0);
 $packages = [];
 $subjects = [];
 $latestPackages = [];
-try {
+if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
+    try {
     $where = [];
     $params = [];
 
@@ -68,10 +96,11 @@ try {
         ORDER BY COALESCE(published_at, created_at) DESC
         LIMIT 5');
     $latestPackages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Throwable $e) {
-    $packages = [];
-    $subjects = [];
-    $latestPackages = [];
+    } catch (Throwable $e) {
+        $packages = [];
+        $subjects = [];
+        $latestPackages = [];
+    }
 }
 
 include __DIR__ . '/includes/header.php';
@@ -187,7 +216,13 @@ function hsl_to_rgb(int $h, int $s, int $l): array
             <?php endif; ?>
 
             <?php if (!$packages): ?>
-                <div class="alert alert-info mb-0">Belum ada paket soal yang tersedia.</div>
+                <?php if (!$dbPreflightOk): ?>
+                    <div class="alert alert-warning mb-0">
+                        Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info mb-0">Belum ada paket soal yang tersedia.</div>
+                <?php endif; ?>
             <?php else: ?>
                 <div class="row row-cols-1 g-3 package-grid">
                     <?php foreach ($packages as $p): ?>

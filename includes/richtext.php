@@ -11,6 +11,7 @@ function sanitize_rich_text(string $html): string
     }
 
     $allowedTags = [
+        'div' => [],
         'p' => [],
         'br' => [],
         'b' => [],
@@ -64,12 +65,43 @@ function sanitize_rich_text(string $html): string
             return false;
         }
 
-        // allow only paths under /gambar/ (and legacy /gambarsoal/ if present)
+        // Allow only images served from the app's /gambar/ directory.
+        // Accept both absolute paths (e.g. /web-mathdosman/gambar/x.png) and
+        // relative fallbacks from uploader (e.g. ../gambar/x.png) when base_url is missing.
         $path = parse_url($src, PHP_URL_PATH);
-        if (!$path || !is_string($path)) {
+        if (!is_string($path) || trim($path) === '') {
             return false;
         }
-        return str_contains($path, '/gambar/') || str_contains($path, '/gambarsoal/');
+
+        $path = str_replace('\\', '/', trim($path));
+
+        // Normalize leading relative prefixes like ./ and ../
+        // (used only by our own uploader fallback). Keep this conservative.
+        while (str_starts_with($path, './') || str_starts_with($path, '../')) {
+            $path = substr($path, strpos($path, '/') + 1);
+        }
+
+        // Block traversal anywhere.
+        if (str_contains($path, '..')) {
+            return false;
+        }
+
+        // Allow if the normalized path contains a gambar/ segment.
+        // Examples:
+        // - gambar/abc.png
+        // - web-mathdosman/gambar/abc.png
+        // - /web-mathdosman/gambar/abc.png
+        $pathCheck = ltrim($path, '/');
+        if (!preg_match('#(^|/)(gambar)/#', $pathCheck)) {
+            return false;
+        }
+
+        // Optional: basic extension allowlist (keeps it image-like).
+        if (!preg_match('#\.(png|jpe?g|gif|webp)$#i', $pathCheck)) {
+            return false;
+        }
+
+        return true;
     };
 
     $wrap = '<div>' . $html . '</div>';

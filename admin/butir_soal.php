@@ -106,9 +106,19 @@ try {
 $rows = [];
 try {
     $sql = 'SELECT q.id, q.subject_id, q.pertanyaan, q.tipe_soal, q.status_soal, q.materi, q.submateri, q.created_at,
-        s.name AS subject_name
+        s.name AS subject_name,
+        pk.cnt AS package_count,
+        pk.codes AS package_codes
         FROM questions q
         JOIN subjects s ON s.id = q.subject_id
+        LEFT JOIN (
+            SELECT pq.question_id,
+                COUNT(*) AS cnt,
+                GROUP_CONCAT(p.code ORDER BY p.id SEPARATOR ", ") AS codes
+            FROM package_questions pq
+            JOIN packages p ON p.id = pq.package_id
+            GROUP BY pq.question_id
+        ) pk ON pk.question_id = q.id
         ' . $whereSql . '
         ORDER BY q.id DESC
         LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$offset;
@@ -137,6 +147,7 @@ include __DIR__ . '/../includes/header.php';
             <p class="admin-page-subtitle">Menampilkan maksimal <?php echo (int)$perPage; ?> butir per halaman. Total: <strong><?php echo (int)$total; ?></strong></p>
         </div>
         <div class="admin-page-actions">
+            <a href="question_add.php" class="btn btn-primary btn-sm">Tambah Butir Soal</a>
             <a href="questions.php" class="btn btn-outline-secondary btn-sm">Import/Export Soal</a>
         </div>
     </div>
@@ -193,6 +204,7 @@ include __DIR__ . '/../includes/header.php';
                         <tr>
                             <th style="width: 70px;">ID</th>
                             <th style="min-width: 160px;">Kategori</th>
+                            <th style="min-width: 160px;">Paket</th>
                             <th style="min-width: 140px;">Materi</th>
                             <th style="min-width: 160px;">Submateri</th>
                             <th style="min-width: 140px;">Tipe</th>
@@ -204,7 +216,7 @@ include __DIR__ . '/../includes/header.php';
                     <tbody>
                     <?php if (!$rows): ?>
                         <tr>
-                            <td colspan="8" class="text-center text-muted p-4">Tidak ada data.</td>
+                            <td colspan="9" class="text-center text-muted p-4">Tidak ada data.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($rows as $r): ?>
@@ -224,6 +236,19 @@ include __DIR__ . '/../includes/header.php';
                             <tr>
                                 <td class="text-muted">#<?php echo (int)$r['id']; ?></td>
                                 <td><?php echo htmlspecialchars((string)$r['subject_name']); ?></td>
+                                <td>
+                                    <?php
+                                        $pkgCnt = (int)($r['package_count'] ?? 0);
+                                        $pkgCodes = trim((string)($r['package_codes'] ?? ''));
+                                    ?>
+                                    <?php if ($pkgCnt <= 0): ?>
+                                        <span class="badge text-bg-light">Belum</span>
+                                    <?php elseif ($pkgCnt === 1): ?>
+                                        <span class="badge text-bg-primary"><?php echo htmlspecialchars($pkgCodes); ?></span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-primary"><?php echo (int)$pkgCnt; ?> paket</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars((string)($r['materi'] ?? '')); ?></td>
                                 <td><?php echo htmlspecialchars((string)($r['submateri'] ?? '')); ?></td>
                                 <td><?php echo htmlspecialchars($tipe); ?></td>
@@ -239,6 +264,7 @@ include __DIR__ . '/../includes/header.php';
                                     <div class="d-flex justify-content-end gap-2">
                                         <a class="btn btn-outline-secondary btn-sm" href="question_view.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>">Lihat</a>
                                         <a class="btn btn-primary btn-sm" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>">Edit</a>
+                                        <a class="btn btn-outline-primary btn-sm" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>">Atur Paket</a>
                                     </div>
                                 </td>
                             </tr>

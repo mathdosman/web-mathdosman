@@ -12,30 +12,32 @@ if (file_exists($autoload)) {
 $errors = [];
 $report = null;
 
-// Ensure tables exist for older installs (minimal, without FK constraints)
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(80) NOT NULL UNIQUE,
-        name VARCHAR(200) NOT NULL,
-        subject_id INT NULL,
-        materi VARCHAR(150) NULL,
-        submateri VARCHAR(150) NULL,
-        description TEXT NULL,
-        status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-        published_at TIMESTAMP NULL DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+if (app_runtime_migrations_enabled()) {
+    // Ensure tables exist for older installs (opt-in, minimal, without FK constraints)
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(80) NOT NULL UNIQUE,
+            name VARCHAR(200) NOT NULL,
+            subject_id INT NULL,
+            materi VARCHAR(150) NULL,
+            submateri VARCHAR(150) NULL,
+            description TEXT NULL,
+            status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+            published_at TIMESTAMP NULL DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
-        package_id INT NOT NULL,
-        question_id INT NOT NULL,
-        question_number INT NULL,
-        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (package_id, question_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-} catch (Throwable $e) {
-    // ignore
+        $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
+            package_id INT NOT NULL,
+            question_id INT NOT NULL,
+            question_number INT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (package_id, question_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (Throwable $e) {
+        // ignore
+    }
 }
 
 function generate_unique_package_code(PDO $pdo): string
@@ -496,7 +498,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             $stmtInsertQuestionWithDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar, created_at) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co, :ca)');
                             $stmtInsertQuestionNoDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co)');
-                            $stmtAttach = $pdo->prepare('INSERT IGNORE INTO package_questions (package_id, question_id, question_number) VALUES (:pid, :qid, :no)');
+                            // Do not use INSERT IGNORE here; we want to know if attach fails.
+                            $stmtAttach = $pdo->prepare('INSERT INTO package_questions (package_id, question_id, question_number) VALUES (:pid, :qid, :no)');
 
                             for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
                                 $row = $rows[$i];
@@ -554,6 +557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
 
                                 if ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks') {
+                                    // Keputusan project: 5 opsi wajib untuk PG/PG Kompleks.
                                     if (
                                         $isEmptyRich($p1)
                                         || $isEmptyRich($p2)
@@ -617,35 +621,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
                                 $packageId = (int)$packageCache[$namaPaket];
 
-                                // Insert question
-                                $params = [
-                                    ':sid' => $defaultSubjectId,
-                                    ':qt' => $pertanyaan,
-                                    ':a' => $p1,
-                                    ':b' => $p2,
-                                    ':c' => $p3,
-                                    ':d' => $p4,
-                                    ':e' => $p5,
-                                    ':t' => $tipe,
-                                    ':st' => $status,
-                                    ':co' => $jawaban === '' ? null : $jawaban,
-                                ];
-                                if ($createdAt && $questionsHasCreatedAt) {
-                                    $params[':ca'] = $createdAt;
-                                    $stmtInsertQuestionWithDate->execute($params);
-                                } else {
-                                    $stmtInsertQuestionNoDate->execute($params);
+                                // Savepoint per row: prevent orphan questions if attach fails,
+                                // and avoid aborting the entire import on duplicate numbers.
+                                $sp = 'sp_row_' . (int)$i;
+                                $pdo->exec('SAVEPOINT ' . $sp);
+                                try {
+                                    // Insert question
+                                    $params = [
+                                        ':sid' => $defaultSubjectId,
+                                        ':qt' => $pertanyaan,
+                                        ':a' => $p1,
+                                        ':b' => $p2,
+                                        ':c' => $p3,
+                                        ':d' => $p4,
+                                        ':e' => $p5,
+                                        ':t' => $tipe,
+                                        ':st' => $status,
+                                        ':co' => $jawaban === '' ? null : $jawaban,
+                                    ];
+                                    if ($createdAt && $questionsHasCreatedAt) {
+                                        $params[':ca'] = $createdAt;
+                                        $stmtInsertQuestionWithDate->execute($params);
+                                    } else {
+                                        $stmtInsertQuestionNoDate->execute($params);
+                                    }
+                                    $questionId = (int)$pdo->lastInsertId();
+
+                                    // Attach to package with question number
+                                    $stmtAttach->execute([
+                                        ':pid' => $packageId,
+                                        ':qid' => $questionId,
+                                        ':no' => $nomerSoal,
+                                    ]);
+
+                                    $inserted++;
+                                    $pdo->exec('RELEASE SAVEPOINT ' . $sp);
+                                } catch (PDOException $e) {
+                                    // Roll back this row only
+                                    $pdo->exec('ROLLBACK TO SAVEPOINT ' . $sp);
+                                    $pdo->exec('RELEASE SAVEPOINT ' . $sp);
+                                    $skipped++;
+
+                                    $sqlState = (string)($e->errorInfo[0] ?? '');
+                                    $driverCode = (string)($e->errorInfo[1] ?? '');
+                                    $msg = (string)$e->getMessage();
+                                    if ($sqlState === '23000' || $driverCode === '1062') {
+                                        // Commonly: duplicate question_number inside a package
+                                        if (stripos($msg, 'uniq_package_question_number') !== false) {
+                                            continue;
+                                        }
+                                    }
+
+                                    // Other DB errors should abort the import
+                                    throw $e;
                                 }
-                                $questionId = (int)$pdo->lastInsertId();
-
-                                // Attach to package with question number
-                                $stmtAttach->execute([
-                                    ':pid' => $packageId,
-                                    ':qid' => $questionId,
-                                    ':no' => $nomerSoal,
-                                ]);
-
-                                $inserted++;
                             }
 
                             $pdo->commit();
@@ -697,6 +726,7 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 <?php endif; ?>
                 <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <div class="mb-3">
                         <label class="form-label">File Excel</label>
                         <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>

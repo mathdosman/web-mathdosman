@@ -9,30 +9,32 @@ if (file_exists($autoload)) {
     require_once $autoload;
 }
 
-// Ensure tables exist for older installs (minimal, without FK constraints)
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(80) NOT NULL UNIQUE,
-        name VARCHAR(200) NOT NULL,
-        subject_id INT NULL,
-        materi VARCHAR(150) NULL,
-        submateri VARCHAR(150) NULL,
-        description TEXT NULL,
-        status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-        published_at TIMESTAMP NULL DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+if (app_runtime_migrations_enabled()) {
+    // Ensure tables exist for older installs (opt-in, minimal, without FK constraints)
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(80) NOT NULL UNIQUE,
+            name VARCHAR(200) NOT NULL,
+            subject_id INT NULL,
+            materi VARCHAR(150) NULL,
+            submateri VARCHAR(150) NULL,
+            description TEXT NULL,
+            status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+            published_at TIMESTAMP NULL DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
-        package_id INT NOT NULL,
-        question_id INT NOT NULL,
-        question_number INT NULL,
-        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (package_id, question_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-} catch (Throwable $e) {
-    // ignore
+        $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
+            package_id INT NOT NULL,
+            question_id INT NOT NULL,
+            question_number INT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (package_id, question_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (Throwable $e) {
+        // ignore
+    }
 }
 
 function normalize_tipe_soal(string $v): string

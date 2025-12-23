@@ -342,25 +342,9 @@ body.admin-layout .option-block.is-correct textarea.form-control:focus {
     box-shadow: 0 0 0 .25rem rgba(var(--bs-success-rgb), 0.18);
 }
 
-/* Summernote: ensure original textarea is hidden after init */
-textarea.rich-editor.is-summernote {
-    display: none !important;
-}
+/* Summernote styles removed (editor disabled). */
 
-/* When Summernote is enabled, hide the source textarea from the start (prevents 2 inputs showing). */
-body.has-summernote textarea.rich-editor {
-    display: none !important;
-}
 
-/* Summernote internal textarea (codeview/codable) should stay hidden to avoid 'double textarea' UI */
-.note-editor .note-codable {
-    display: none !important;
-}
-
-/* Hide Summernote codeview textarea (Bootstrap .form-control styles come from _form-control.scss in DevTools) */
-.note-editor.note-frame textarea.note-codable.form-control {
-    display: none !important;
-}
 
 /* Fallback: apply highlight even if admin-layout body class isn't present */
 .option-block.is-correct {

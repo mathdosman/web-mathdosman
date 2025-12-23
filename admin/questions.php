@@ -31,6 +31,7 @@ include __DIR__ . '/../includes/header.php';
                 <p class="mb-3">Soal tersimpan: <strong><?php echo $totalQuestions; ?></strong></p>
 
                 <form action="questions_import.php" method="post" enctype="multipart/form-data" class="mb-2">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <div class="input-group input-group-sm">
                         <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                         <button type="submit" class="btn btn-primary">Upload Excel</button>

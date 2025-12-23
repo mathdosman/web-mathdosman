@@ -5,45 +5,47 @@ require_role('admin');
 
 $errors = [];
 
-// Ensure tables exist for older installs
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(80) NOT NULL UNIQUE,
-        name VARCHAR(200) NOT NULL,
-        subject_id INT NULL,
-        materi VARCHAR(150) NULL,
-        submateri VARCHAR(150) NULL,
-        description TEXT NULL,
-        status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
-        package_id INT NOT NULL,
-        question_id INT NOT NULL,
-        question_number INT NULL,
-        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (package_id, question_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-} catch (Throwable $e) {
-}
-
-function ensure_package_column(PDO $pdo, string $column, string $definition): void {
+if (app_runtime_migrations_enabled()) {
+    // Ensure tables/columns exist for older installs (opt-in)
     try {
-        $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
-        $stmt->execute([':col' => $column]);
-        $exists = (bool)$stmt->fetch();
-        if (!$exists) {
-            $pdo->exec('ALTER TABLE packages ADD COLUMN ' . $definition);
-        }
+        $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(80) NOT NULL UNIQUE,
+            name VARCHAR(200) NOT NULL,
+            subject_id INT NULL,
+            materi VARCHAR(150) NULL,
+            submateri VARCHAR(150) NULL,
+            description TEXT NULL,
+            status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
+            package_id INT NOT NULL,
+            question_id INT NOT NULL,
+            question_number INT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (package_id, question_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     } catch (Throwable $e) {
     }
-}
 
-ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
-ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
-ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+    function ensure_package_column(PDO $pdo, string $column, string $definition): void {
+        try {
+            $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
+            $stmt->execute([':col' => $column]);
+            $exists = (bool)$stmt->fetch();
+            if (!$exists) {
+                $pdo->exec('ALTER TABLE packages ADD COLUMN ' . $definition);
+            }
+        } catch (Throwable $e) {
+        }
+    }
+
+    ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
+    ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
+    ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+}
 
 function build_package_items_return_url(int $packageId, array $get): string {
     $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri'];
@@ -351,11 +353,12 @@ include __DIR__ . '/../includes/header.php';
         <div class="admin-page-actions">
             <?php if (!$isLocked && $draftItemsCount > 0): ?>
                 <form method="post" class="m-0" data-swal-confirm data-swal-title="Bersihkan Soal Draft?" data-swal-text="Hapus semua butir soal draft dari paket ini?">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <input type="hidden" name="action" value="remove_draft_questions">
                     <button type="submit" class="btn btn-outline-warning btn-sm">Bersihkan Draft (<?php echo (int)$draftItemsCount; ?>)</button>
                 </form>
             <?php endif; ?>
-            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm<?php echo $isLocked ? ' disabled' : ''; ?>"<?php echo $isLocked ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>Buat Butir Soal Baru</a>
+            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm<?php echo $isLocked ? ' disabled' : ''; ?>"<?php echo $isLocked ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>Tambah Butir Soal</a>
             <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
         </div>
     </div>
@@ -426,6 +429,7 @@ include __DIR__ . '/../includes/header.php';
                         </div>
 
                         <form method="post" class="row g-2 align-items-end">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                             <input type="hidden" name="action" value="add_questions_bulk">
                             <div class="col-12 col-md-9">
                                 <label class="form-label small">Pilih Soal</label>
@@ -537,6 +541,7 @@ include __DIR__ . '/../includes/header.php';
                                     <?php if (!$isLocked): ?>
                                         <a class="btn btn-outline-primary btn-sm" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>">Edit</a>
                                         <form method="post" class="m-0" data-swal-confirm data-swal-title="Keluarkan Soal?" data-swal-text="Keluarkan butir soal dari paket ini?">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                             <input type="hidden" name="action" value="remove_question">
                                             <input type="hidden" name="question_id" value="<?php echo (int)$it['id']; ?>">
                                             <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>

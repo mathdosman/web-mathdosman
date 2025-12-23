@@ -21,10 +21,6 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<?php if (!empty($use_summernote)): ?>
-	<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js"></script>
-<?php endif; ?>
 <script>
 (() => {
 	const body = document.body;
@@ -64,6 +60,117 @@
 		const meta = document.querySelector('meta[name="csrf-token"]');
 		return meta ? (meta.getAttribute('content') || '') : '';
 	};
+})();
+</script>
+
+<script>
+(() => {
+	// Optional debugging helper for form submits.
+	// Enable by adding: ?md_debug_submit=1 (or &md_debug_submit=1) to the URL.
+	try {
+		const params = new URLSearchParams(window.location.search || '');
+		const enabled = params.get('md_debug_submit') === '1' || params.get('md_debug') === '1';
+		window.__md_debug_submit = !!enabled;
+		if (!enabled) return;
+
+		const safeStr = (v) => {
+			try {
+				if (v === null || typeof v === 'undefined') return '';
+				return String(v);
+			} catch (e) {
+				return '';
+			}
+		};
+
+		const dumpForm = (form) => {
+			if (!(form instanceof HTMLFormElement)) return;
+			const id = form.getAttribute('id') || '(no-id)';
+			const action = form.getAttribute('action') || window.location.href;
+			const method = (form.getAttribute('method') || 'GET').toUpperCase();
+			console.groupCollapsed('[MATHDOSMAN DEBUG] submit', { id, method, action });
+
+			try {
+				const els = Array.from(form.elements || []);
+				const disabled = els
+					.filter((el) => el && (el.disabled === true) && el.name)
+					.map((el) => ({ name: el.name, id: el.id || '', type: el.type || el.tagName }));
+				if (disabled.length) {
+					console.warn('[MATHDOSMAN DEBUG] disabled controls (not submitted):', disabled);
+				}
+			} catch (e) {}
+
+			// What browser will actually submit
+			try {
+				const fd = new FormData(form);
+				const keys = [];
+				fd.forEach((_, k) => { keys.push(k); });
+				console.log('[MATHDOSMAN DEBUG] formdata keys:', Array.from(new Set(keys)));
+				const peek = (k) => {
+					try {
+						const all = fd.getAll(k);
+						if (!all || !all.length) return null;
+						return all.map((x) => {
+							if (x instanceof File) return { file: x.name, size: x.size, type: x.type };
+							const s = safeStr(x);
+							return s.length > 120 ? (s.slice(0, 120) + '…') : s;
+						});
+					} catch (e) {
+						return null;
+					}
+				};
+				console.log('[MATHDOSMAN DEBUG] pertanyaan:', peek('pertanyaan'));
+				console.log('[MATHDOSMAN DEBUG] pilihan_1:', peek('pilihan_1'));
+				console.log('[MATHDOSMAN DEBUG] pilihan_2:', peek('pilihan_2'));
+				console.log('[MATHDOSMAN DEBUG] pilihan_3:', peek('pilihan_3'));
+				console.log('[MATHDOSMAN DEBUG] pilihan_4:', peek('pilihan_4'));
+				console.log('[MATHDOSMAN DEBUG] pilihan_5:', peek('pilihan_5'));
+				console.log('[MATHDOSMAN DEBUG] jawaban_benar[]:', peek('jawaban_benar[]'));
+				console.log('[MATHDOSMAN DEBUG] csrf_token:', peek('csrf_token'));
+			} catch (e) {
+				console.error('[MATHDOSMAN DEBUG] FormData error:', e);
+			}
+
+			console.groupEnd();
+		};
+
+		window.mdDumpForm = (formId = 'questionForm') => {
+			try {
+				const form = document.getElementById(formId);
+				dumpForm(form);
+			} catch (e) {}
+		};
+
+		console.info('[MATHDOSMAN DEBUG] Submit debug enabled. Use mdDumpForm() to dump current form state.');
+		document.addEventListener('submit', (e) => {
+			try { dumpForm(e.target); } catch (err) {}
+		}, true);
+
+		// Some browsers/flows (native validation, custom handlers) can block submit events.
+		// Dump on submit button clicks too, so we still see what would be submitted.
+		document.addEventListener('click', (e) => {
+			try {
+				const t = e.target;
+				if (!(t instanceof Element)) return;
+				const btn = t.closest('button, input');
+				if (!btn) return;
+				// Use the DOM property (defaults to "submit" for <button> without type attribute).
+				let type = '';
+				try {
+					// HTMLButtonElement / HTMLInputElement both have .type
+					// @ts-ignore
+					type = String(btn.type || '').toLowerCase();
+				} catch (e) {
+					type = String((btn.getAttribute('type') || '')).toLowerCase();
+				}
+				if (type !== 'submit') return;
+				const form = btn.closest('form');
+				if (!form) return;
+				dumpForm(form);
+			} catch (err) {}
+		}, true);
+	} catch (e) {
+		// no-op
+	}
 })();
 </script>
 
@@ -124,7 +231,12 @@
 		}).then((res) => {
 			if (res.isConfirmed) {
 				form.dataset.swalConfirmed = '1';
-				form.submit();
+				// Prefer requestSubmit() so normal submit events fire (important for editor sync/validation hooks).
+				if (typeof form.requestSubmit === 'function') {
+					form.requestSubmit();
+				} else {
+					form.submit();
+				}
 			}
 		});
 	}, true);

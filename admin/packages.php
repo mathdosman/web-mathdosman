@@ -3,50 +3,52 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
-// Ensure tables exist for older installs
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(80) NOT NULL UNIQUE,
-        name VARCHAR(200) NOT NULL,
-        subject_id INT NULL,
-        materi VARCHAR(150) NULL,
-        submateri VARCHAR(150) NULL,
-        description TEXT NULL,
-        show_answers_public TINYINT(1) NOT NULL DEFAULT 0,
-        status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
-        package_id INT NOT NULL,
-        question_id INT NOT NULL,
-        question_number INT NULL,
-        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (package_id, question_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-} catch (Throwable $e) {
-    // Ignore; will show errors on query if needed
-}
-
-function ensure_package_column(PDO $pdo, string $column, string $definition): void {
+if (app_runtime_migrations_enabled()) {
+    // Ensure tables/columns exist for older installs (opt-in).
     try {
-        $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
-        $stmt->execute([':col' => $column]);
-        $exists = (bool)$stmt->fetch();
-        if (!$exists) {
-            $pdo->exec('ALTER TABLE packages ADD COLUMN ' . $definition);
-        }
-    } catch (Throwable $e) {
-    }
-}
+        $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(80) NOT NULL UNIQUE,
+            name VARCHAR(200) NOT NULL,
+            subject_id INT NULL,
+            materi VARCHAR(150) NULL,
+            submateri VARCHAR(150) NULL,
+            description TEXT NULL,
+            show_answers_public TINYINT(1) NOT NULL DEFAULT 0,
+            status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
-ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
-ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
-ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
-ensure_package_column($pdo, 'description', 'description TEXT NULL');
-ensure_package_column($pdo, 'show_answers_public', 'show_answers_public TINYINT(1) NOT NULL DEFAULT 0');
+        $pdo->exec("CREATE TABLE IF NOT EXISTS package_questions (
+            package_id INT NOT NULL,
+            question_id INT NOT NULL,
+            question_number INT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (package_id, question_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (Throwable $e) {
+        // Ignore; will show errors on query if needed
+    }
+
+    function ensure_package_column(PDO $pdo, string $column, string $definition): void {
+        try {
+            $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
+            $stmt->execute([':col' => $column]);
+            $exists = (bool)$stmt->fetch();
+            if (!$exists) {
+                $pdo->exec('ALTER TABLE packages ADD COLUMN ' . $definition);
+            }
+        } catch (Throwable $e) {
+        }
+    }
+
+    ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
+    ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
+    ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+    ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
+    ensure_package_column($pdo, 'description', 'description TEXT NULL');
+    ensure_package_column($pdo, 'show_answers_public', 'show_answers_public TINYINT(1) NOT NULL DEFAULT 0');
+}
 
 $errors = [];
 
@@ -388,6 +390,7 @@ include __DIR__ . '/../includes/header.php';
             <div class="border rounded p-2 bg-body-tertiary">
                 <div class="text-muted small mb-1">Import paket soal dari Excel</div>
                 <form action="questions_import.php" method="post" enctype="multipart/form-data" class="m-0">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
                         <div class="input-group input-group-sm">
                             <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
@@ -480,6 +483,7 @@ include __DIR__ . '/../includes/header.php';
                                     </a>
 
                                     <form method="post" class="m-0">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                         <input type="hidden" name="action" value="toggle_show_answers_public">
                                         <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
                                         <?php $showPublic = ((int)($p['show_answers_public'] ?? 0)) === 1; ?>
@@ -505,6 +509,7 @@ include __DIR__ . '/../includes/header.php';
                                     </form>
 
                                     <form method="post" class="m-0">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                         <input type="hidden" name="action" value="duplicate">
                                         <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
                                         <button type="submit" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center" title="Duplikat Paket" aria-label="Duplikat Paket">
@@ -517,6 +522,7 @@ include __DIR__ . '/../includes/header.php';
                                     </form>
 
                                     <form method="post" class="m-0">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                         <input type="hidden" name="action" value="toggle_status">
                                         <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
                                         <?php if ($p['status'] === 'published'): ?>
@@ -552,6 +558,7 @@ include __DIR__ . '/../includes/header.php';
                                     </form>
 
                                     <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Paket?" data-swal-text="Hapus paket soal ini?">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
                                         <button type="submit" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center" title="Hapus" aria-label="Hapus">

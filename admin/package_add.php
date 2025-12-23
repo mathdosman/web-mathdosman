@@ -31,39 +31,41 @@ function generate_unique_package_code(PDO $pdo): string
 
 $errors = [];
 
-// Ensure table exists for older installs
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        code VARCHAR(80) NOT NULL UNIQUE,
-        name VARCHAR(200) NOT NULL,
-        subject_id INT NULL,
-        materi VARCHAR(150) NULL,
-        submateri VARCHAR(150) NULL,
-        description TEXT NULL,
-        status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-        published_at TIMESTAMP NULL DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-} catch (Throwable $e) {
-}
-
-function ensure_package_column(PDO $pdo, string $column, string $definition): void {
+if (app_runtime_migrations_enabled()) {
+    // Ensure table/columns exist for older installs (opt-in).
     try {
-        $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
-        $stmt->execute([':col' => $column]);
-        $exists = (bool)$stmt->fetch();
-        if (!$exists) {
-            $pdo->exec('ALTER TABLE packages ADD COLUMN ' . $definition);
-        }
+        $pdo->exec("CREATE TABLE IF NOT EXISTS packages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(80) NOT NULL UNIQUE,
+            name VARCHAR(200) NOT NULL,
+            subject_id INT NULL,
+            materi VARCHAR(150) NULL,
+            submateri VARCHAR(150) NULL,
+            description TEXT NULL,
+            status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+            published_at TIMESTAMP NULL DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     } catch (Throwable $e) {
     }
-}
 
-ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
-ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
-ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
-ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
+    function ensure_package_column(PDO $pdo, string $column, string $definition): void {
+        try {
+            $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :col');
+            $stmt->execute([':col' => $column]);
+            $exists = (bool)$stmt->fetch();
+            if (!$exists) {
+                $pdo->exec('ALTER TABLE packages ADD COLUMN ' . $definition);
+            }
+        } catch (Throwable $e) {
+        }
+    }
+
+    ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
+    ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
+    ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+    ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
+}
 
 $subjects = [];
 try {
@@ -232,6 +234,7 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
 
                 <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <input type="hidden" name="form_action" id="form_action" value="save">
                     <div class="mb-3">
                         <label class="form-label small">Nama Paket Soal</label>

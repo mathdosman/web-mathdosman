@@ -1,15 +1,101 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+if (!function_exists('app_runtime_migrations_enabled')) {
+    function app_runtime_migrations_enabled(): bool
+    {
+        return defined('APP_ENABLE_RUNTIME_MIGRATIONS') && (bool)APP_ENABLE_RUNTIME_MIGRATIONS;
+    }
+}
+
+if (!function_exists('app_db_tcp_preflight')) {
+    /**
+     * Hard-timeout MySQL connect+handshake check.
+     * Some failures keep port 3306 open but never send the MySQL greeting, causing PDO to hang.
+     * Returns null when greeting bytes are received, otherwise returns a short error string.
+     */
+    function app_db_tcp_preflight(string $host, int $port, float $timeoutSeconds): ?string
+    {
+        $timeoutSeconds = max(0.1, $timeoutSeconds);
+        $port = (int)$port;
+        if ($port <= 0 || $port > 65535) {
+            return 'invalid port';
+        }
+
+        // Use streams: connect with timeout, then read greeting bytes with timeout.
+        $errno = 0;
+        $errstr = '';
+        $fp = @stream_socket_client('tcp://' . $host . ':' . $port, $errno, $errstr, $timeoutSeconds, STREAM_CLIENT_CONNECT);
+        if ($fp === false) {
+            return $errstr !== '' ? ($errstr . ' (' . $errno . ')') : ('error ' . $errno);
+        }
+
+        try {
+            @stream_set_timeout($fp, (int)ceil($timeoutSeconds));
+            @stream_set_blocking($fp, true);
+
+            // MySQL/MariaDB sends a greeting packet immediately after connect.
+            // Read 1 byte; if timeout occurs, treat as not-ready.
+            $b = @fread($fp, 1);
+            $meta = @stream_get_meta_data($fp);
+            if (is_array($meta) && !empty($meta['timed_out'])) {
+                return 'handshake timeout';
+            }
+            if ($b === false || $b === '') {
+                return 'no handshake data';
+            }
+            return null;
+        } finally {
+            @fclose($fp);
+        }
+    }
+}
+
 try {
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
-    $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+    // On Windows/XAMPP, using 'localhost' can trigger named-pipe/shared-memory behavior
+    // that sometimes appears to hang. Force TCP loopback for a more predictable connection.
+    $dbHost = (string)DB_HOST;
+    if (strtolower($dbHost) === 'localhost') {
+        $dbHost = '127.0.0.1';
+    }
+
+    $dbPort = 3306;
+    if (defined('DB_PORT')) {
+        $p = (int)DB_PORT;
+        if ($p > 0 && $p <= 65535) {
+            $dbPort = $p;
+        }
+    }
+
+    $connectTimeoutSeconds = 5;
+    @ini_set('default_socket_timeout', (string)$connectTimeoutSeconds);
+
+    // Fail-fast preflight so pages don't "muter" when MySQL is down/crashing.
+    // This avoids relying solely on PDO/MySQL driver timeouts (which can be ignored on some setups).
+    $preflightErr = app_db_tcp_preflight($dbHost, (int)$dbPort, (float)$connectTimeoutSeconds);
+    if ($preflightErr !== null) {
+        throw new PDOException('Server database tidak bisa dihubungi: ' . $dbHost . ':' . $dbPort . ' (' . $preflightErr . ')');
+    }
+
+    $dsn = 'mysql:host=' . $dbHost . ';port=' . $dbPort . ';dbname=' . DB_NAME . ';charset=utf8mb4;connect_timeout=' . $connectTimeoutSeconds;
+
+    $pdoOptions = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
+    ];
+
+    // Best-effort connect timeout to avoid endless loading when MySQL is down.
+    // (PDO::ATTR_TIMEOUT is not always honored by MySQL driver; use MYSQL_ATTR_CONNECT_TIMEOUT when available.)
+    $pdoOptions[PDO::ATTR_TIMEOUT] = $connectTimeoutSeconds;
+    if (defined('PDO::MYSQL_ATTR_CONNECT_TIMEOUT')) {
+        $pdoOptions[constant('PDO::MYSQL_ATTR_CONNECT_TIMEOUT')] = $connectTimeoutSeconds;
+    }
+
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, $pdoOptions);
 
     // Migrasi ringan: sesuaikan skema DB agar cocok dengan import Excel.
-    // Aman untuk dijalankan berulang, dibungkus try/catch agar tidak mengganggu akses aplikasi.
+    // Catatan: DDL (ALTER/CREATE) kadang bisa menunggu lock lama dan membuat halaman "muter".
+    // Maka, runtime migrations dibuat OPT-IN via APP_ENABLE_RUNTIME_MIGRATIONS.
     $ensureExcelSchema = function (PDO $pdo): void {
         try {
             $hasQuestions = $pdo->query("SHOW TABLES LIKE 'questions'")->fetchColumn();
@@ -229,7 +315,23 @@ try {
             // ignore
         }
     };
-    $ensureExcelSchema($pdo);
+    if (app_runtime_migrations_enabled()) {
+        // Prevent concurrent schema changes from multiple requests.
+        $lockFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'schema_migrate.lock';
+        $fp = @fopen($lockFile, 'c');
+        if ($fp !== false) {
+            try {
+                if (@flock($fp, LOCK_EX | LOCK_NB)) {
+                    $ensureExcelSchema($pdo);
+                }
+            } catch (Throwable $e) {
+                // ignore
+            } finally {
+                @flock($fp, LOCK_UN);
+                @fclose($fp);
+            }
+        }
+    }
 } catch (PDOException $e) {
         $msg = $e->getMessage();
         $safeMsg = htmlspecialchars($msg);
@@ -251,5 +353,7 @@ try {
             exit;
         }
 
-        die('Koneksi database gagal: ' . $safeMsg);
+        echo 'Koneksi database gagal: ' . $safeMsg . '<br>';
+        echo 'Pastikan MySQL/MariaDB di XAMPP sudah berjalan dan database <strong>' . htmlspecialchars((string)DB_NAME) . '</strong> tersedia.';
+        exit;
 }

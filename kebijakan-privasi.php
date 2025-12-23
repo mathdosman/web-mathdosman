@@ -1,6 +1,4 @@
 <?php
-require_once __DIR__ . '/config/db.php';
-
 $page_title = 'Kebijakan Privasi';
 $use_print_soal_css = true;
 $body_class = 'front-page';

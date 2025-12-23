@@ -31,6 +31,19 @@ if ($return !== '' && strpos($return, '://') === false && $return[0] !== '/' && 
 
 $packageId = (int)($_GET['package_id'] ?? 0);
 
+$packages = [];
+try {
+    $stmt = $pdo->prepare('SELECT p.id, p.code, p.name, p.status, pq.question_number
+        FROM package_questions pq
+        JOIN packages p ON p.id = pq.package_id
+        WHERE pq.question_id = :qid
+        ORDER BY pq.added_at DESC');
+    $stmt->execute([':qid' => $questionId]);
+    $packages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $packages = [];
+}
+
 $page_title = 'Lihat Butir Soal';
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -43,6 +56,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="admin-page-actions">
             <a href="question_edit.php?id=<?php echo (int)$question['id']; ?><?php echo $packageId > 0 ? '&package_id=' . (int)$packageId : ''; ?>&return=<?php echo urlencode($returnLink); ?>" class="btn btn-primary btn-sm">Edit</a>
             <form method="post" action="question_duplicate.php" class="m-0">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                 <input type="hidden" name="id" value="<?php echo (int)$question['id']; ?>">
                 <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnLink); ?>">
                 <?php if ($packageId > 0): ?>
@@ -142,8 +156,43 @@ include __DIR__ . '/../includes/header.php';
                     <span class="badge text-bg-info">Jawaban Benar: <?php echo htmlspecialchars($ansLabel); ?></span>
                     <span class="badge text-bg-secondary ms-1">Tipe: <?php echo htmlspecialchars($question['tipe_soal'] ?? ''); ?></span>
                     <span class="badge text-bg-light ms-1">Status: <?php echo htmlspecialchars($question['status_soal'] ?? 'draft'); ?></span>
+
+                    <?php if (!$packages): ?>
+                        <span class="badge text-bg-light ms-1">Paket: Belum</span>
+                    <?php else: ?>
+                        <?php if (count($packages) === 1): ?>
+                            <?php $p0 = $packages[0]; ?>
+                            <span class="badge text-bg-primary ms-1">Paket: <?php echo htmlspecialchars((string)($p0['code'] ?? '')); ?></span>
+                        <?php else: ?>
+                            <span class="badge text-bg-primary ms-1">Paket: <?php echo (int)count($packages); ?> paket</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
                     <span class="text-muted ms-2">Dibuat: <?php echo htmlspecialchars($question['created_at']); ?></span>
                 </div>
+
+                <?php if ($packages): ?>
+                    <div class="mt-3 small">
+                        <div class="fw-semibold mb-1">Terhubung ke Paket</div>
+                        <ul class="mb-0">
+                            <?php foreach ($packages as $p): ?>
+                                <?php
+                                    $label = '#' . (int)($p['id'] ?? 0) . ' • ' . (string)($p['code'] ?? '') . ' — ' . (string)($p['name'] ?? '');
+                                    $qn = ($p['question_number'] === null ? null : (int)$p['question_number']);
+                                ?>
+                                <li>
+                                    <?php echo htmlspecialchars($label); ?>
+                                    <?php if ($qn !== null): ?>
+                                        <span class="text-muted">(Nomor: <?php echo (int)$qn; ?>)</span>
+                                    <?php endif; ?>
+                                    <?php if ((string)($p['status'] ?? 'draft') === 'published'): ?>
+                                        <span class="badge text-bg-secondary ms-1">published</span>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
                 </div>
             </div>
         </div>

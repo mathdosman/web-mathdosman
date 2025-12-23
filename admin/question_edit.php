@@ -198,6 +198,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formAction = 'save';
     }
 
+    // Namespaced payloads to avoid field-name collisions across question types.
+    $pgPost = $_POST['pg'] ?? [];
+    $bsPost = $_POST['bs'] ?? [];
+    $matchPost = $_POST['match'] ?? [];
+    $uraianPost = $_POST['uraian'] ?? [];
+    if (!is_array($pgPost)) $pgPost = [];
+    if (!is_array($bsPost)) $bsPost = [];
+    if (!is_array($matchPost)) $matchPost = [];
+    if (!is_array($uraianPost)) $uraianPost = [];
+
     $subjectIdSelected = (int)($_POST['subject_id'] ?? ($question['subject_id'] ?? 0));
     if ($subjectIdSelected <= 0 && $subjects) {
         $subjectIdSelected = (int)$subjects[0]['id'];
@@ -219,31 +229,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $question['tipe_soal'] = $tipeEffective;
         $question['pertanyaan'] = (string)($_POST['pertanyaan'] ?? (string)($question['pertanyaan'] ?? ''));
-        $question['pilihan_1'] = (string)($_POST['pilihan_1'] ?? (string)($question['pilihan_1'] ?? ''));
-        $question['pilihan_2'] = (string)($_POST['pilihan_2'] ?? (string)($question['pilihan_2'] ?? ''));
-        $question['pilihan_3'] = (string)($_POST['pilihan_3'] ?? (string)($question['pilihan_3'] ?? ''));
-        $question['pilihan_4'] = (string)($_POST['pilihan_4'] ?? (string)($question['pilihan_4'] ?? ''));
-        $question['pilihan_5'] = (string)($_POST['pilihan_5'] ?? (string)($question['pilihan_5'] ?? ''));
+
+        if ($tipeEffective === 'Pilihan Ganda' || $tipeEffective === 'Pilihan Ganda Kompleks') {
+            $question['pilihan_1'] = (string)($pgPost['pilihan_1'] ?? ($_POST['pilihan_1'] ?? (string)($question['pilihan_1'] ?? '')));
+            $question['pilihan_2'] = (string)($pgPost['pilihan_2'] ?? ($_POST['pilihan_2'] ?? (string)($question['pilihan_2'] ?? '')));
+            $question['pilihan_3'] = (string)($pgPost['pilihan_3'] ?? ($_POST['pilihan_3'] ?? (string)($question['pilihan_3'] ?? '')));
+            $question['pilihan_4'] = (string)($pgPost['pilihan_4'] ?? ($_POST['pilihan_4'] ?? (string)($question['pilihan_4'] ?? '')));
+            $question['pilihan_5'] = (string)($pgPost['pilihan_5'] ?? ($_POST['pilihan_5'] ?? (string)($question['pilihan_5'] ?? '')));
+        } elseif ($tipeEffective === 'Benar/Salah') {
+            $question['pilihan_1'] = (string)($bsPost['pernyataan_1'] ?? ($_POST['pilihan_1'] ?? (string)($question['pilihan_1'] ?? '')));
+            $question['pilihan_2'] = (string)($bsPost['pernyataan_2'] ?? ($_POST['pilihan_2'] ?? (string)($question['pilihan_2'] ?? '')));
+            $question['pilihan_3'] = (string)($bsPost['pernyataan_3'] ?? ($_POST['pilihan_3'] ?? (string)($question['pilihan_3'] ?? '')));
+            $question['pilihan_4'] = (string)($bsPost['pernyataan_4'] ?? ($_POST['pilihan_4'] ?? (string)($question['pilihan_4'] ?? '')));
+            $question['pilihan_5'] = '';
+        } else {
+            $question['pilihan_1'] = (string)($_POST['pilihan_1'] ?? (string)($question['pilihan_1'] ?? ''));
+            $question['pilihan_2'] = (string)($_POST['pilihan_2'] ?? (string)($question['pilihan_2'] ?? ''));
+            $question['pilihan_3'] = (string)($_POST['pilihan_3'] ?? (string)($question['pilihan_3'] ?? ''));
+            $question['pilihan_4'] = (string)($_POST['pilihan_4'] ?? (string)($question['pilihan_4'] ?? ''));
+            $question['pilihan_5'] = (string)($_POST['pilihan_5'] ?? (string)($question['pilihan_5'] ?? ''));
+        }
 
         $jawabanTmp = '';
         if ($tipeEffective === 'Pilihan Ganda') {
-            $jawArr = $_POST['jawaban_benar'] ?? [];
+            $jawArr = $pgPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? []);
             if (is_array($jawArr) && count($jawArr) >= 1) {
                 $jawabanTmp = (string)$jawArr[0];
             }
         } elseif ($tipeEffective === 'Pilihan Ganda Kompleks') {
-            $jawArr = $_POST['jawaban_benar'] ?? [];
+            $jawArr = $pgPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? []);
             if (is_array($jawArr) && count($jawArr) >= 1) {
                 $jawabanTmp = implode(',', array_map('strval', $jawArr));
             }
         } elseif ($tipeEffective === 'Benar/Salah') {
-            $jawArr = $_POST['jawaban_benar'] ?? [];
+            $jawArr = $bsPost['jawaban'] ?? ($_POST['jawaban_benar'] ?? []);
             if (is_array($jawArr) && count($jawArr) >= 1) {
-                $jawabanTmp = implode('|', array_map('strval', $jawArr));
+                $vals = array_values(array_map('strval', $jawArr));
+                $jawabanTmp = implode('|', $vals);
             }
         } elseif ($tipeEffective === 'Menjodohkan') {
-            $pasSoal = $_POST['pasangan_soal'] ?? [];
-            $pasJaw = $_POST['pasangan_jawaban'] ?? [];
+            $pasSoal = $matchPost['soal'] ?? ($_POST['pasangan_soal'] ?? []);
+            $pasJaw = $matchPost['jawaban'] ?? ($_POST['pasangan_jawaban'] ?? []);
             if (!is_array($pasSoal)) $pasSoal = [];
             if (!is_array($pasJaw)) $pasJaw = [];
 
@@ -260,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $jawabanTmp = implode('|', $pairs);
             }
         } elseif ($tipeEffective === 'Uraian') {
-            $jawabanTmp = (string)($_POST['jawaban_benar'] ?? '');
+            $jawabanTmp = (string)($uraianPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? ''));
         }
         if ($jawabanTmp !== '') {
             $question['jawaban_benar'] = $jawabanTmp;
@@ -309,11 +335,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    $p1 = sanitize_rich_text((string)($_POST['pilihan_1'] ?? ''));
-    $p2 = sanitize_rich_text((string)($_POST['pilihan_2'] ?? ''));
-    $p3 = sanitize_rich_text((string)($_POST['pilihan_3'] ?? ''));
-    $p4 = sanitize_rich_text((string)($_POST['pilihan_4'] ?? ''));
-    $p5 = sanitize_rich_text((string)($_POST['pilihan_5'] ?? ''));
+    // Initialize stored columns (questions table) based on type.
+    $p1 = $p2 = $p3 = $p4 = $p5 = '';
 
     $isEmpty = function (string $html): bool {
         return trim(strip_tags($html)) === '' && strpos($html, '<img') === false;
@@ -327,10 +350,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $allowedAnswerFields = ['pilihan_1', 'pilihan_2', 'pilihan_3', 'pilihan_4', 'pilihan_5'];
 
     if ($tipeEffective === 'Pilihan Ganda') {
+        $p1 = sanitize_rich_text((string)($pgPost['pilihan_1'] ?? ($_POST['pilihan_1'] ?? '')));
+        $p2 = sanitize_rich_text((string)($pgPost['pilihan_2'] ?? ($_POST['pilihan_2'] ?? '')));
+        $p3 = sanitize_rich_text((string)($pgPost['pilihan_3'] ?? ($_POST['pilihan_3'] ?? '')));
+        $p4 = sanitize_rich_text((string)($pgPost['pilihan_4'] ?? ($_POST['pilihan_4'] ?? '')));
+        $p5 = sanitize_rich_text((string)($pgPost['pilihan_5'] ?? ($_POST['pilihan_5'] ?? '')));
         if ($isEmpty($p1) || $isEmpty($p2) || $isEmpty($p3) || $isEmpty($p4) || $isEmpty($p5)) {
             $errors[] = 'Semua pilihan (1-5) wajib diisi.';
         }
-        $jawArr = $_POST['jawaban_benar'] ?? [];
+        $jawArr = $pgPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? []);
         if (!is_array($jawArr) || count($jawArr) !== 1) {
             $errors[] = 'Harap pilih tepat 1 jawaban benar.';
         } else {
@@ -342,10 +370,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif ($tipeEffective === 'Pilihan Ganda Kompleks') {
+        $p1 = sanitize_rich_text((string)($pgPost['pilihan_1'] ?? ($_POST['pilihan_1'] ?? '')));
+        $p2 = sanitize_rich_text((string)($pgPost['pilihan_2'] ?? ($_POST['pilihan_2'] ?? '')));
+        $p3 = sanitize_rich_text((string)($pgPost['pilihan_3'] ?? ($_POST['pilihan_3'] ?? '')));
+        $p4 = sanitize_rich_text((string)($pgPost['pilihan_4'] ?? ($_POST['pilihan_4'] ?? '')));
+        $p5 = sanitize_rich_text((string)($pgPost['pilihan_5'] ?? ($_POST['pilihan_5'] ?? '')));
         if ($isEmpty($p1) || $isEmpty($p2) || $isEmpty($p3) || $isEmpty($p4) || $isEmpty($p5)) {
             $errors[] = 'Semua pilihan (1-5) wajib diisi.';
         }
-        $jawArr = $_POST['jawaban_benar'] ?? [];
+        $jawArr = $pgPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? []);
         if (!is_array($jawArr) || count($jawArr) < 1) {
             $errors[] = 'Harap pilih minimal 1 jawaban benar.';
         } else {
@@ -358,13 +391,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif ($tipeEffective === 'Benar/Salah') {
-        $jaw = $_POST['jawaban_benar'] ?? [];
+        $p1 = sanitize_rich_text((string)($bsPost['pernyataan_1'] ?? ($_POST['pilihan_1'] ?? '')));
+        $p2 = sanitize_rich_text((string)($bsPost['pernyataan_2'] ?? ($_POST['pilihan_2'] ?? '')));
+        $p3 = sanitize_rich_text((string)($bsPost['pernyataan_3'] ?? ($_POST['pilihan_3'] ?? '')));
+        $p4 = sanitize_rich_text((string)($bsPost['pernyataan_4'] ?? ($_POST['pilihan_4'] ?? '')));
+        $p5 = '';
+
+        if ($isEmpty($p1) || $isEmpty($p2) || $isEmpty($p3) || $isEmpty($p4)) {
+            $errors[] = 'Semua pernyataan (1-4) wajib diisi.';
+        }
+
+        $jaw = $bsPost['jawaban'] ?? ($_POST['jawaban_benar'] ?? []);
         if (!is_array($jaw) || count($jaw) < 4) {
             $errors[] = 'Harap isi jawaban benar untuk setiap pernyataan.';
         } else {
             $vals = [];
             for ($i = 0; $i < 4; $i++) {
-                $v = (string)($jaw[$i] ?? '');
+                $v = (string)($jaw[$i] ?? ($jaw[(string)$i] ?? ''));
                 if ($v !== 'Benar' && $v !== 'Salah') {
                     $errors[] = 'Jawaban benar Benar/Salah tidak valid.';
                     break;
@@ -375,10 +418,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $jawabanBenar = implode('|', $vals);
             }
         }
-        $p5 = '';
     } elseif ($tipeEffective === 'Menjodohkan') {
-        $pasSoal = $_POST['pasangan_soal'] ?? [];
-        $pasJaw = $_POST['pasangan_jawaban'] ?? [];
+        $pasSoal = $matchPost['soal'] ?? ($_POST['pasangan_soal'] ?? []);
+        $pasJaw = $matchPost['jawaban'] ?? ($_POST['pasangan_jawaban'] ?? []);
         if (!is_array($pasSoal) || !is_array($pasJaw)) {
             $errors[] = 'Data pasangan tidak valid.';
         } else {
@@ -426,7 +468,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $p1 = $p2 = $p3 = $p4 = $p5 = '';
     } elseif ($tipeEffective === 'Uraian') {
-        $jawabanBenar = sanitize_rich_text((string)($_POST['jawaban_benar'] ?? ''));
+        $jawabanBenar = sanitize_rich_text((string)($uraianPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? '')));
         if ($isEmpty($jawabanBenar)) {
             $errors[] = 'Jawaban benar wajib diisi.';
         }
@@ -497,7 +539,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Edit Butir Soal';
-$use_summernote = true;
+$use_summernote = false;
 include __DIR__ . '/../includes/header.php';
 
 $legacyMateriInvalid = false;
@@ -548,6 +590,7 @@ if ($tipeSoalView === 'Menjodohkan') {
         <div class="admin-page-actions">
             <a href="question_view.php?id=<?php echo (int)$question['id']; ?>&return=<?php echo urlencode($returnLink); ?>" class="btn btn-outline-secondary btn-sm">Batal</a>
             <form method="post" action="question_duplicate.php" class="m-0">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                 <input type="hidden" name="id" value="<?php echo (int)$question['id']; ?>">
                 <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnLink); ?>">
                 <?php if ($packageId > 0): ?>
@@ -593,6 +636,7 @@ if ($tipeSoalView === 'Menjodohkan') {
                 <?php endif; ?>
 
                 <form method="post" class="small" id="questionForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <input type="hidden" name="form_action" id="form_action" value="save">
                     <?php if ($packageId > 0 && $packageQuestionNumber !== null): ?>
                         <div class="mb-3" style="max-width:80px;">
@@ -666,7 +710,7 @@ if ($tipeSoalView === 'Menjodohkan') {
                             <div class="option-label">Pertanyaan</div>
                             <div class="option-help">Tulis soal dulu</div>
                         </div>
-                        <textarea class="form-control rich-editor" id="pertanyaan" name="pertanyaan" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question['pertanyaan'] ?? '')); ?></textarea>
+                        <textarea class="form-control" id="pertanyaan" name="pertanyaan" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question['pertanyaan'] ?? '')); ?></textarea>
                     </div>
 
                     <div id="pilihan-ganda-fields" class="d-none">
@@ -678,13 +722,13 @@ if ($tipeSoalView === 'Menjodohkan') {
                                     <div class="option-label">Opsi <?php echo chr(64 + (int)$i); ?></div>
                                     <div class="option-help">Tandai jawaban</div>
                                 </div>
-                                <textarea class="form-control" id="<?php echo $field; ?>" name="<?php echo $field; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question[$field] ?? '')); ?></textarea>
+                                <textarea class="form-control" id="<?php echo $field; ?>" name="pg[<?php echo $field; ?>]" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question[$field] ?? '')); ?></textarea>
                                 <div class="form-check answer-check">
                                     <input
                                         type="checkbox"
                                         class="form-check-input checkbox-jawaban-benar"
                                         id="jb_<?php echo $field; ?>"
-                                        name="jawaban_benar[]"
+                                        name="pg[jawaban_benar][]"
                                         value="<?php echo $field; ?>"
                                         onclick="checkOnlyOne(this)"
                                         <?php echo in_array($field, $jawabanCheckbox, true) ? 'checked' : ''; ?>
@@ -704,15 +748,15 @@ if ($tipeSoalView === 'Menjodohkan') {
                                     <div class="option-label">Pernyataan <?php echo $i; ?></div>
                                     <div class="option-help">Pilih Benar/Salah</div>
                                 </div>
-                                <textarea class="form-control" id="bs_<?php echo $i; ?>" name="<?php echo $field; ?>" placeholder="Tulis pernyataan <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question[$field] ?? '')); ?></textarea>
+                                <textarea class="form-control" id="bs_<?php echo $i; ?>" name="bs[pernyataan_<?php echo $i; ?>]" placeholder="Tulis pernyataan <?php echo $i; ?>" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question[$field] ?? '')); ?></textarea>
                                 <div class="mt-2 d-flex flex-wrap gap-3">
                                     <?php $bsVal = (string)($jawabanBS[$idx] ?? ''); ?>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" id="bs_<?php echo $i; ?>_benar" name="jawaban_benar[<?php echo $idx; ?>]" value="Benar" <?php echo $bsVal === 'Benar' ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>>
+                                        <input class="form-check-input" type="radio" id="bs_<?php echo $i; ?>_benar" name="bs[jawaban][<?php echo $idx; ?>]" value="Benar" <?php echo $bsVal === 'Benar' ? 'checked' : ''; ?> required <?php echo $isLocked ? 'disabled' : ''; ?>>
                                         <label class="form-check-label" for="bs_<?php echo $i; ?>_benar">Benar</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" id="bs_<?php echo $i; ?>_salah" name="jawaban_benar[<?php echo $idx; ?>]" value="Salah" <?php echo $bsVal === 'Salah' ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>>
+                                        <input class="form-check-input" type="radio" id="bs_<?php echo $i; ?>_salah" name="bs[jawaban][<?php echo $idx; ?>]" value="Salah" <?php echo $bsVal === 'Salah' ? 'checked' : ''; ?> required <?php echo $isLocked ? 'disabled' : ''; ?>>
                                         <label class="form-check-label" for="bs_<?php echo $i; ?>_salah">Salah</label>
                                     </div>
                                 </div>
@@ -729,10 +773,10 @@ if ($tipeSoalView === 'Menjodohkan') {
                                 </div>
                                 <div class="row g-2">
                                     <div class="col-12 col-md-6">
-                                        <textarea class="form-control" name="pasangan_soal[]" placeholder="Soal <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($menjodohkanSoal[$idx] ?? '')); ?></textarea>
+                                        <textarea class="form-control" name="match[soal][]" placeholder="Soal <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($menjodohkanSoal[$idx] ?? '')); ?></textarea>
                                     </div>
                                     <div class="col-12 col-md-6">
-                                        <textarea class="form-control" name="pasangan_jawaban[]" placeholder="Jawaban <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($menjodohkanJawaban[$idx] ?? '')); ?></textarea>
+                                        <textarea class="form-control" name="match[jawaban][]" placeholder="Jawaban <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($menjodohkanJawaban[$idx] ?? '')); ?></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -745,7 +789,7 @@ if ($tipeSoalView === 'Menjodohkan') {
                                 <div class="option-label">Jawaban Benar</div>
                                 <div class="option-help">Untuk tipe uraian</div>
                             </div>
-                            <textarea class="form-control" name="jawaban_benar" rows="3" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars($jawabanRaw); ?></textarea>
+                            <textarea class="form-control" name="uraian[jawaban_benar]" rows="3" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars($jawabanRaw); ?></textarea>
                         </div>
                     </div>
 
@@ -784,7 +828,7 @@ if ($tipeSoalView === 'Menjodohkan') {
                             updatePgOptionHighlights();
                             return;
                         }
-                        const checkboxes = document.querySelectorAll('#pilihan-ganda-fields input[name="jawaban_benar[]"]');
+                        const checkboxes = document.querySelectorAll('#pilihan-ganda-fields input[name="pg[jawaban_benar][]"]');
                         checkboxes.forEach(function (cb) {
                             if (cb !== checkbox) cb.checked = false;
                         });
@@ -800,7 +844,7 @@ if ($tipeSoalView === 'Menjodohkan') {
                             return;
                         }
                         document.querySelectorAll('#pilihan-ganda-fields .option-block').forEach(function (block) {
-                            const cb = block.querySelector('input[name="jawaban_benar[]"]');
+                            const cb = block.querySelector('input[name="pg[jawaban_benar][]"]');
                             if (cb && cb.checked) {
                                 block.classList.add('is-correct');
                             } else {
@@ -816,7 +860,7 @@ if ($tipeSoalView === 'Menjodohkan') {
                             summary.textContent = '';
                             return;
                         }
-                        const checked = Array.from(document.querySelectorAll('#pilihan-ganda-fields input[name="jawaban_benar[]"]:checked'));
+                        const checked = Array.from(document.querySelectorAll('#pilihan-ganda-fields input[name="pg[jawaban_benar][]"]:checked'));
                         const letters = checked
                             .map(function (el) {
                                 const v = String(el.value || '');
@@ -835,17 +879,22 @@ if ($tipeSoalView === 'Menjodohkan') {
                     }
 
                     function setSectionEnabled(sectionId, enabled) {
+                        if (IS_LOCKED) return;
+                        // Inputs are namespaced per type, so we only toggle "required" to avoid
+                        // HTML5 validation errors on hidden fields.
                         const el = document.getElementById(sectionId);
                         if (!el) return;
-                        const controls = el.querySelectorAll('input, textarea, select, button');
+                        const controls = el.querySelectorAll('input, textarea, select');
                         controls.forEach(function (c) {
-                            if (!enabled) {
-                                c.disabled = true;
-                                return;
-                            }
-                            if (!IS_LOCKED) {
-                                c.disabled = false;
-                            }
+                            try {
+                                if (c && c.dataset && c.dataset.mdRequired === '1') {
+                                    if (enabled) {
+                                        c.setAttribute('required', 'required');
+                                    } else {
+                                        c.removeAttribute('required');
+                                    }
+                                }
+                            } catch (e) {}
                         });
                     }
 
@@ -887,200 +936,33 @@ if ($tipeSoalView === 'Menjodohkan') {
                     }
 
                     document.addEventListener('DOMContentLoaded', function () {
+                        // Snapshot which controls are originally required.
+                        // We'll re-apply required only for the active section.
+                        try {
+                            ['pilihan-ganda-fields', 'benar-salah-fields', 'menjodohkan-fields', 'uraian-fields'].forEach(function (id) {
+                                const el = document.getElementById(id);
+                                if (!el) return;
+                                el.querySelectorAll('input, textarea, select').forEach(function (c) {
+                                    try {
+                                        if (c && c.hasAttribute && c.hasAttribute('required')) {
+                                            c.dataset.mdRequired = '1';
+                                        }
+                                    } catch (e) {}
+                                });
+                            });
+                        } catch (e) {}
+
                         const sel = document.getElementById('tipe_soal');
                         const initType = sel ? sel.value : <?php echo json_encode($tipeSoalView); ?>;
                         showFields(initType);
 
-                        const pgCbs = document.querySelectorAll('#pilihan-ganda-fields input[name="jawaban_benar[]"]');
+                        const pgCbs = document.querySelectorAll('#pilihan-ganda-fields input[name="pg[jawaban_benar][]"]');
                         pgCbs.forEach(function (cb) {
                             cb.addEventListener('change', updatePgSummary);
                             cb.addEventListener('change', updatePgOptionHighlights);
                         });
                         updatePgSummary();
                         updatePgOptionHighlights();
-
-                        // Summernote rich editor (for images in pertanyaan/opsi/uraian)
-                        // Guard: avoid running this bootstrap twice on the same page.
-                        if (window.__md_summernote_bootstrapped) return;
-                        window.__md_summernote_bootstrapped = true;
-
-                        if (IS_LOCKED) return;
-                        if (typeof window.jQuery === 'undefined') return;
-                        const $ = window.jQuery;
-                        if (!$.fn || typeof $.fn.summernote !== 'function') return;
-
-                        // Hard reset: if a previous duplicate init left extra .note-editor wrappers,
-                        // remove them and re-init fresh to avoid mirrored double editors.
-                        try {
-                            $('.note-editor').remove();
-                            $('.rich-editor').each(function () {
-                                const $t = $(this);
-                                $t.removeData('summernote');
-                                if (this && this.style && typeof this.style.removeProperty === 'function') {
-                                    this.style.removeProperty('display');
-                                }
-                            });
-                        } catch (e) {}
-
-                        const uploadUrl = 'uploadeditor.php';
-                        const deleteUrl = 'hapus_gambar_editor.php';
-                        const csrfToken = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
-
-                        const warnResizeIfNeeded = (file) => {
-                            try {
-                                if (!(file instanceof File)) return;
-                                if (!file.type || !file.type.startsWith('image/')) return;
-                                const url = URL.createObjectURL(file);
-                                const img = new Image();
-                                img.onload = function () {
-                                    try {
-                                        if (img.width > 1920 || img.height > 1920) {
-                                            if (typeof Swal !== 'undefined') {
-                                                Swal.fire({
-                                                    icon: 'info',
-                                                    title: 'Gambar akan di-resize',
-                                                    text: 'Gambar yang diupload akan otomatis diperkecil (maks 1920px) agar lebih ringan.'
-                                                });
-                                            }
-                                        }
-                                    } finally {
-                                        URL.revokeObjectURL(url);
-                                    }
-                                };
-                                img.onerror = function () { URL.revokeObjectURL(url); };
-                                img.src = url;
-                            } catch (e) {}
-                        };
-
-                        const uploadFile = (file, $editor) => {
-                            warnResizeIfNeeded(file);
-                            const fd = new FormData();
-                            fd.append('file', file);
-                            if (csrfToken) {
-                                fd.append('csrf_token', csrfToken);
-                            }
-                            $.ajax({
-                                url: uploadUrl,
-                                method: 'POST',
-                                data: fd,
-                                cache: false,
-                                contentType: false,
-                                processData: false,
-                                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
-                                success: function (res) {
-                                    if (res && res.url) {
-                                        $editor.summernote('insertImage', res.url);
-                                    } else if (res && res.img) {
-                                        $editor.summernote('pasteHTML', res.img);
-                                    }
-                                },
-                                error: function (xhr) {
-                                    const msg = (xhr && xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Gagal upload gambar.';
-                                    if (typeof Swal !== 'undefined') {
-                                        Swal.fire({ icon: 'error', title: 'Upload gagal', text: msg });
-                                    }
-                                }
-                            });
-                        };
-
-                        const deleteBySrc = (src) => {
-                            if (!src) return;
-                            const data = csrfToken ? { src: src, csrf_token: csrfToken } : { src: src };
-                            $.ajax({
-                                url: deleteUrl,
-                                method: 'POST',
-                                data,
-                                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
-                            });
-                        };
-
-                        const $editor = $('#pertanyaan.rich-editor');
-                        if ($editor.length) {
-
-                            // If a previous (duplicate) init already injected editors, clean them up.
-                            const $existingFrames = $editor.nextAll('.note-editor');
-                            if ($existingFrames.length > 1) {
-                                $existingFrames.slice(0, -1).remove();
-                            }
-                            if ($existingFrames.length === 1 && !$editor.data('summernote')) {
-                                $existingFrames.remove();
-                            }
-
-                            // Guard: avoid double initialization (which can show duplicate editors/textarea)
-                            if ($editor.data('summernote') || $editor.next('.note-editor').length) {
-                                return;
-                            }
-                            $editor.summernote({
-                                height: 220,
-                                placeholder: 'ketik soal disini',
-                                toolbar: [
-                                    ['style', ['bold', 'italic', 'underline']],
-                                    ['para', ['ul', 'ol']],
-                                    ['insert', ['picture', 'link']],
-                                    // Keep WYSIWYG only to avoid confusing duplicate textarea/codeview UI
-                                ],
-                                callbacks: {
-                                    onImageUpload: function (files) {
-                                        if (!files || !files.length) return;
-                                        Array.from(files).forEach(function (f) { uploadFile(f, $editor); });
-                                    },
-                                    onMediaDelete: function (target) {
-                                        try {
-                                            const src = target && target[0] ? target[0].src : '';
-                                            deleteBySrc(src);
-                                        } catch (e) {}
-                                    }
-                                }
-                            });
-                            // Ensure we are never in codeview mode (codeview uses an internal textarea styled by Bootstrap)
-                            try {
-                                $editor.summernote('codeview.deactivate');
-                            } catch (e) {}
-
-                            // Enforce WYSIWYG-only UI even if CSS loads late or DOM updates happen.
-                            const enforceWysiwygOnly = () => {
-                                try {
-                                    const $frame = $editor.next('.note-editor');
-                                    if (!$frame.length) return;
-                                    $frame.removeClass('codeview');
-                                    $frame.find('textarea.note-codable').each(function () {
-                                        try {
-                                            this.style.setProperty('display', 'none', 'important');
-                                            this.style.setProperty('visibility', 'hidden', 'important');
-                                        } catch (e) {}
-                                    });
-                                    $frame.find('.note-editable').each(function () {
-                                        try {
-                                            this.style.setProperty('display', 'block', 'important');
-                                            this.style.setProperty('visibility', 'visible', 'important');
-                                        } catch (e) {}
-                                    });
-                                } catch (e) {}
-                            };
-                            enforceWysiwygOnly();
-                            setTimeout(enforceWysiwygOnly, 0);
-                            setTimeout(enforceWysiwygOnly, 50);
-                            setTimeout(enforceWysiwygOnly, 200);
-                            // Force-hide the source textarea (in case some CSS overrides Summernote's hide)
-                            $editor.addClass('is-summernote');
-                            if ($editor[0] && $editor[0].style && typeof $editor[0].style.setProperty === 'function') {
-                                $editor[0].style.setProperty('display', 'none', 'important');
-                            } else {
-                                $editor.css('display', 'none');
-                            }
-
-                            // Also hide any textarea inside the Summernote frame (e.g. codeview/codable)
-                            const $frame = $editor.next('.note-editor');
-                            if ($frame && $frame.length) {
-                                $frame.find('textarea').each(function () {
-                                    try {
-                                        this.style.setProperty('display', 'none', 'important');
-                                    } catch (e) {
-                                        $(this).css('display', 'none');
-                                    }
-                                });
-                            }
-                        }
                     });
 
                     function onMapelChange() {

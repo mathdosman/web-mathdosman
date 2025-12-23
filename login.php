@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/logger.php';
 
@@ -26,6 +25,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($error === '' && ($username === '' || $password === '')) {
         $error = 'Username dan password wajib diisi.';
     } elseif ($error === '') {
+        // Fail-fast preflight: keep login page responsive when MySQL is down.
+        $dbPreflightOk = false;
+        try {
+            $dbHost = (string)DB_HOST;
+            if (strtolower($dbHost) === 'localhost') {
+                $dbHost = '127.0.0.1';
+            }
+            $dbPort = defined('DB_PORT') ? (int)DB_PORT : 3306;
+            if ($dbPort <= 0 || $dbPort > 65535) {
+                $dbPort = 3306;
+            }
+
+            $errno = 0;
+            $errstr = '';
+            $fp = @fsockopen($dbHost, $dbPort, $errno, $errstr, 1.5);
+            if ($fp !== false) {
+                $dbPreflightOk = true;
+                @fclose($fp);
+            }
+        } catch (Throwable $e) {
+            $dbPreflightOk = false;
+        }
+
+        if (!$dbPreflightOk) {
+            $error = 'Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.';
+        }
+    }
+
+    if ($error === '') {
+        require_once __DIR__ . '/config/db.php';
         try {
             $stmt = $pdo->prepare('SELECT * FROM users WHERE username = :u LIMIT 1');
             $stmt->execute([':u' => $username]);

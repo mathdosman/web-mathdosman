@@ -1,6 +1,4 @@
 <?php
-require_once __DIR__ . '/config/db.php';
-
 $page_title = 'Syarat & Ketentuan';
 $use_print_soal_css = true;
 $body_class = 'front-page';

@@ -20,11 +20,10 @@ $body_class = isset($body_class) && is_string($body_class) ? trim($body_class) :
 
 // MathJax (LaTeX rendering)
 // Default: aktif di hampir semua halaman yang menampilkan konten.
-// Untuk halaman editor (Summernote), default dimatikan agar tidak mengganggu area input.
 if (isset($use_mathjax)) {
     $use_mathjax = !empty($use_mathjax);
 } else {
-    $use_mathjax = empty($use_summernote);
+    $use_mathjax = true;
 }
 
 $isFrontArea = false;
@@ -65,9 +64,6 @@ try {
     <?php endif; ?>
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <?php if (!empty($use_summernote)): ?>
-        <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.css" rel="stylesheet">
-    <?php endif; ?>
     <link href="<?php echo $base_url; ?>/assets/css/style.css" rel="stylesheet">
     <?php if ($isFrontArea): ?>
         <link href="<?php echo $base_url; ?>/assets/css/front.css" rel="stylesheet">
@@ -87,20 +83,14 @@ try {
                 options: {
                     // Prevent rendering inside code blocks and rich text editors
                     skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                    ignoreHtmlClass: 'no-mathjax|note-editor|note-editable|note-codable|note-codeview',
+                    ignoreHtmlClass: 'no-mathjax',
                 }
             };
         </script>
         <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <?php endif; ?>
 </head>
-<noscript>
-    <style>
-        /* If JS is disabled, Summernote won't load; keep the textarea visible. */
-        body.has-summernote textarea.rich-editor { display: block !important; }
-    </style>
-</noscript>
-<body class="bg-light<?php echo $useAdminSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo !empty($use_summernote) ? ' has-summernote' : ''; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
+<body class="bg-light<?php echo $useAdminSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 app-navbar">
     <div class="<?php echo $useAdminSidebar ? 'container-fluid' : 'container'; ?>">
         <?php if ($useAdminSidebar): ?>

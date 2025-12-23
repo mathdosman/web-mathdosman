@@ -18,6 +18,10 @@
   - Manual: jalankan SQL di `database.sql` via phpMyAdmin.
 - Pastikan `$base_url` di `config/config.php` sesuai lokasi deploy (default `http://localhost/web-mathdosman`).
 
+## Git workflow
+- Jangan melakukan `git commit`, membuat tag, atau `git push` kecuali user memerintahkan secara eksplisit.
+- Secara default, cukup lakukan perubahan di lokal dan laporkan file yang berubah.
+
 ## UI/CSS conventions
 - UI memakai Bootstrap 5 via CDN (lihat `includes/header.php`).
 - Tambahan CSS ada di `assets/css/style.css`.

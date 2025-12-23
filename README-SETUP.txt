@@ -31,6 +31,17 @@ Catatan dependensi (untuk import Excel .xlsx):
 - Pastikan Apache dan MySQL di XAMPP sudah berjalan
 - Buka browser ke: http://localhost/web-mathdosman
 
+Endpoint diagnostik lokal (opsional)
+-----------------------------------
+- http://localhost/web-mathdosman/ping.php
+  - Cek cepat Apache+PHP (harus muncul "PING OK")
+- http://localhost/web-mathdosman/health.php
+  - Cek koneksi DB (preflight + PDO)
+
+Catatan keamanan:
+- Kedua endpoint di atas dikunci untuk localhost saja.
+- Jika project dipindah ke hosting/public server, disarankan tetap hapus kedua file tersebut.
+
 4. Akun contoh
 --------------
 - Admin:

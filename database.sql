@@ -25,7 +25,10 @@ CREATE TABLE IF NOT EXISTS packages (
     show_answers_public TINYINT(1) NOT NULL DEFAULT 0,
     status ENUM('draft','published') NOT NULL DEFAULT 'draft',
     published_at TIMESTAMP NULL DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_packages_status (status),
+    KEY idx_packages_subject (subject_id),
+    KEY idx_packages_subject_status (subject_id, status)
 );
 
 -- Tabel mata pelajaran (bank soal)
@@ -76,6 +79,10 @@ CREATE TABLE IF NOT EXISTS questions (
         materi VARCHAR(255) DEFAULT NULL,
         submateri VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_questions_subject (subject_id),
+    KEY idx_questions_status (status_soal),
+    KEY idx_questions_subject_status (subject_id, status_soal),
+    KEY idx_questions_created_at (created_at),
     FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 );
 
@@ -86,6 +93,7 @@ CREATE TABLE IF NOT EXISTS package_questions (
     question_number INT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (package_id, question_id),
+    KEY idx_package_questions_qid (question_id),
     UNIQUE KEY uniq_package_question_number (package_id, question_number),
     FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE

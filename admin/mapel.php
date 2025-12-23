@@ -6,27 +6,29 @@ require_role('admin');
 $errors = [];
 $success = null;
 
-// Ensure master tables exist (best-effort)
-try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS materials (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        subject_id INT NOT NULL,
-        name VARCHAR(150) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY uniq_material (subject_id, name),
-        FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+if (app_runtime_migrations_enabled()) {
+    // Ensure master tables exist (opt-in)
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS materials (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            subject_id INT NOT NULL,
+            name VARCHAR(150) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_material (subject_id, name),
+            FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS submaterials (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        material_id INT NOT NULL,
-        name VARCHAR(150) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY uniq_submaterial (material_id, name),
-        FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-} catch (Throwable $e) {
-    // ignore
+        $pdo->exec("CREATE TABLE IF NOT EXISTS submaterials (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            material_id INT NOT NULL,
+            name VARCHAR(150) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_submaterial (material_id, name),
+            FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    } catch (Throwable $e) {
+        // ignore
+    }
 }
 
 $selectedSubjectId = (int)($_GET['subject_id'] ?? 0);
@@ -338,6 +340,7 @@ include __DIR__ . '/../includes/header.php';
                                href="mapel.php?<?php echo htmlspecialchars($qs(['subject_id' => (int)$s['id'], 'material_id' => null, 'material_page' => 1, 'submaterial_page' => 1])); ?>">
                                 <span class="text-truncate"><span class="me-2 text-muted"><?php echo (int)$no; ?>.</span><?php echo htmlspecialchars($s['name']); ?></span>
                                 <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Mapel?" data-swal-text="Hapus mapel ini beserta materi/submaterinya?">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                     <input type="hidden" name="action" value="delete_subject">
                                     <input type="hidden" name="id" value="<?php echo (int)$s['id']; ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-light<?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? '' : ' btn-outline-danger'; ?>" style="min-width:60px;">Hapus</button>
@@ -386,6 +389,7 @@ include __DIR__ . '/../includes/header.php';
                                href="mapel.php?<?php echo htmlspecialchars($qs(['subject_id' => (int)$selectedSubjectId, 'material_id' => (int)$m['id'], 'submaterial_page' => 1])); ?>">
                                 <span class="text-truncate"><span class="me-2 text-muted"><?php echo (int)$no; ?>.</span><?php echo htmlspecialchars($m['name']); ?></span>
                                 <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Materi?" data-swal-text="Hapus materi ini beserta submaterinya?">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                     <input type="hidden" name="action" value="delete_material">
                                     <input type="hidden" name="id" value="<?php echo (int)$m['id']; ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-light" style="min-width:60px;">Hapus</button>
@@ -434,6 +438,7 @@ include __DIR__ . '/../includes/header.php';
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <span class="text-truncate"><span class="me-2 text-muted"><?php echo (int)$no; ?>.</span><?php echo htmlspecialchars($sm['name']); ?></span>
                                 <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Submateri?" data-swal-text="Hapus submateri ini?">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                     <input type="hidden" name="action" value="delete_submaterial">
                                     <input type="hidden" name="id" value="<?php echo (int)$sm['id']; ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
@@ -457,6 +462,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Mapel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -480,6 +486,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Materi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -503,6 +510,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Submateri</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
