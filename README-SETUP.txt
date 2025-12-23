@@ -21,12 +21,10 @@ Catatan dependensi (untuk import Excel .xlsx):
 
 2. Cek konfigurasi koneksi database
 -----------------------------------
-- Buka file config/config.php
-- Pastikan:
-  - DB_HOST = 'localhost'
-  - DB_NAME = 'web-mathdosman'
-  - DB_USER = 'mathdosman'
-  - DB_PASS = 'admin 007007' (atau sesuaikan jika diubah di installer)
+- Disarankan: jalankan installer: http://localhost/web-mathdosman/install/ (akan menulis config/config.php otomatis)
+- Alternatif manual:
+  - Salin file: config/config.example.php menjadi config/config.php
+  - Lalu sesuaikan DB_HOST, DB_NAME, DB_USER, DB_PASS, dan $base_url
 
 3. Jalankan aplikasi
 --------------------

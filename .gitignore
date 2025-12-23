@@ -18,3 +18,6 @@ Thumbs.db
 # Optional env files
 .env
 .env.*
+
+# Local app config (contains DB credentials)
+config/config.php
