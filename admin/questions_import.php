@@ -667,12 +667,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Import Soal (Excel)';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="row">
-    <div class="col-md-7 mb-3">
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Import Soal (Excel)</h4>
+            <p class="admin-page-subtitle">Upload file Excel (.xls/.xlsx) sesuai format header. Data akan otomatis masuk ke Paket Soal berdasarkan <code>nama_paket</code> (format lama <code>kode_soal</code> masih diterima).</p>
+        </div>
+        <div class="admin-page-actions">
+            <a href="questions.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7 mb-3">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Import Soal dari Excel</h5>
-                <p class="text-muted small">Upload file Excel (.xls/.xlsx) sesuai format header yang ditentukan. Data akan otomatis masuk ke <strong>Paket Soal</strong> berdasarkan <code>nama_paket</code> (format lama <code>kode_soal</code> masih diterima).</p>
                 <?php if ($errors): ?>
                     <div class="alert alert-danger py-2">
                         <ul class="mb-0 small">
@@ -693,18 +702,18 @@ include __DIR__ . '/../includes/header.php';
                         <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Proses Import</button>
-                    <a href="questions.php" class="btn btn-link">Kembali</a>
                 </form>
             </div>
         </div>
-    </div>
-    <div class="col-md-5 mb-3">
+        </div>
+        <div class="col-md-5 mb-3">
         <div class="card h-100">
             <div class="card-body">
                 <h6 class="card-title">Header Excel yang wajib</h6>
 <pre class="bg-light border rounded p-2 small mb-2">nomer_soal	nama_paket	pertanyaan	tipe_soal	pilihan_1	pilihan_2	pilihan_3	pilihan_4	pilihan_5	jawaban_benar	status_soal	created_at</pre>
                 <p class="small mb-0">Catatan: <code>jawaban_benar</code> boleh diisi <strong>A-E</strong> atau <strong>1-5</strong>. Kolom <code>created_at</code> bisa dikosongkan (akan otomatis terisi waktu import).</p>
             </div>
+        </div>
         </div>
     </div>
 </div>

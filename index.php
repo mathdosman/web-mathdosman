@@ -9,6 +9,7 @@ $page_title = 'Beranda';
 
 $use_print_soal_css = true;
 $body_class = 'front-page';
+$use_mathjax = true;
 
 $q = trim((string)($_GET['q'] ?? ''));
 $filterSubjectId = (int)($_GET['subject_id'] ?? 0);
@@ -140,7 +141,6 @@ function hsl_to_rgb(int $h, int $s, int $l): array
 }
 ?>
 
-<div class="container">
     <div class="row g-3 g-lg-4">
         <div class="col-12 col-lg-8">
             <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner">
@@ -309,5 +309,4 @@ function hsl_to_rgb(int $h, int $s, int $l): array
             </div>
         </div>
     </div>
-</div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

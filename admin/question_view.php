@@ -34,28 +34,30 @@ $packageId = (int)($_GET['package_id'] ?? 0);
 $page_title = 'Lihat Butir Soal';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="row">
-    <div class="col-12 col-xl-10">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-                    <div>
-                        <h5 class="card-title mb-1">Lihat Butir Soal</h5>
-                        <div class="text-muted small">ID: <strong><?php echo (int)$question['id']; ?></strong> • Mapel: <strong><?php echo htmlspecialchars($question['subject_name']); ?></strong></div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <a href="question_edit.php?id=<?php echo (int)$question['id']; ?><?php echo $packageId > 0 ? '&package_id=' . (int)$packageId : ''; ?>&return=<?php echo urlencode($returnLink); ?>" class="btn btn-primary btn-sm">Edit</a>
-                        <form method="post" action="question_duplicate.php" class="m-0">
-                            <input type="hidden" name="id" value="<?php echo (int)$question['id']; ?>">
-                            <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnLink); ?>">
-                            <?php if ($packageId > 0): ?>
-                                <input type="hidden" name="package_id" value="<?php echo (int)$packageId; ?>">
-                            <?php endif; ?>
-                            <button type="submit" class="btn btn-outline-primary btn-sm">Duplikat</button>
-                        </form>
-                        <a href="<?php echo htmlspecialchars($returnLink); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
-                    </div>
-                </div>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Lihat Butir Soal</h4>
+            <p class="admin-page-subtitle">ID: <strong><?php echo (int)$question['id']; ?></strong> • Mapel: <strong><?php echo htmlspecialchars($question['subject_name']); ?></strong></p>
+        </div>
+        <div class="admin-page-actions">
+            <a href="question_edit.php?id=<?php echo (int)$question['id']; ?><?php echo $packageId > 0 ? '&package_id=' . (int)$packageId : ''; ?>&return=<?php echo urlencode($returnLink); ?>" class="btn btn-primary btn-sm">Edit</a>
+            <form method="post" action="question_duplicate.php" class="m-0">
+                <input type="hidden" name="id" value="<?php echo (int)$question['id']; ?>">
+                <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnLink); ?>">
+                <?php if ($packageId > 0): ?>
+                    <input type="hidden" name="package_id" value="<?php echo (int)$packageId; ?>">
+                <?php endif; ?>
+                <button type="submit" class="btn btn-outline-primary btn-sm">Duplikat</button>
+            </form>
+            <a href="<?php echo htmlspecialchars($returnLink); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-xl-10">
+            <div class="card">
+                <div class="card-body">
 
                 <div class="mb-3">
                     <div class="fw-semibold mb-1">Teks Soal</div>
@@ -141,6 +143,7 @@ include __DIR__ . '/../includes/header.php';
                     <span class="badge text-bg-secondary ms-1">Tipe: <?php echo htmlspecialchars($question['tipe_soal'] ?? ''); ?></span>
                     <span class="badge text-bg-light ms-1">Status: <?php echo htmlspecialchars($question['status_soal'] ?? 'draft'); ?></span>
                     <span class="text-muted ms-2">Dibuat: <?php echo htmlspecialchars($question['created_at']); ?></span>
+                </div>
                 </div>
             </div>
         </div>

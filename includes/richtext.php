@@ -1,7 +1,7 @@
 <?php
 
-// Sanitizer sederhana untuk HTML hasil editor (Summernote).
-// Tujuan: mencegah XSS dengan allowlist tag/atribut, dan membatasi <img src> hanya ke folder /gambarsoal.
+    // Sanitizer sederhana untuk HTML hasil editor (Summernote).
+    // Tujuan: mencegah XSS dengan allowlist tag/atribut, dan membatasi <img src> hanya ke folder gambar aplikasi.
 
 function sanitize_rich_text(string $html): string
 {
@@ -64,12 +64,12 @@ function sanitize_rich_text(string $html): string
             return false;
         }
 
-        // allow only paths under /gambarsoal/
+        // allow only paths under /gambar/ (and legacy /gambarsoal/ if present)
         $path = parse_url($src, PHP_URL_PATH);
         if (!$path || !is_string($path)) {
             return false;
         }
-        return str_contains($path, '/gambarsoal/');
+        return str_contains($path, '/gambar/') || str_contains($path, '/gambarsoal/');
     };
 
     $wrap = '<div>' . $html . '</div>';

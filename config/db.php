@@ -190,6 +190,19 @@ try {
             // ignore
         }
 
+        // Paket: izin publik melihat jawaban
+        try {
+            $hasPackages = $pdo->query("SHOW TABLES LIKE 'packages'")->fetchColumn();
+            if ($hasPackages) {
+                $col = $pdo->query("SHOW COLUMNS FROM packages LIKE 'show_answers_public'")->fetch();
+                if (!$col) {
+                    $pdo->exec("ALTER TABLE packages ADD COLUMN show_answers_public TINYINT(1) NOT NULL DEFAULT 0");
+                }
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
+
         // Master materi / submateri
         try {
             $hasSubjects = $pdo->query("SHOW TABLES LIKE 'subjects'")->fetchColumn();

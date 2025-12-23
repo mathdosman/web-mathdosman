@@ -6,6 +6,12 @@ body {
     --app-sidebar-width: 260px;
 }
 
+/* Consistent keyboard focus (works with Bootstrap tokens) */
+:where(a, button, input, select, textarea, .btn, .nav-link, .form-control, .form-select, .form-check-input):focus-visible {
+    outline: 3px solid rgba(var(--bs-primary-rgb), 0.35);
+    outline-offset: 2px;
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -48,8 +54,8 @@ pre {
 }
 
 .content-card {
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
     border-radius: .75rem;
     padding: 1rem;
 }
@@ -78,7 +84,7 @@ pre {
     /* Neutral background so the uploaded icon.svg (any color) stays readable */
     background: var(--bs-body-bg);
     border: 1px solid rgba(0, 0, 0, 0.14);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--bs-box-shadow-sm);
     flex: 0 0 auto;
 }
 
@@ -217,6 +223,13 @@ body.admin-layout.sidebar-collapsed .app-container {
     border-color: rgba(255, 255, 255, 0.18);
 }
 
+.app-sidebar .sidebar-link.active,
+.app-sidebar .sidebar-link[aria-current="page"] {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
 .app-sidebar hr {
     border-color: rgba(255, 255, 255, 0.18);
     opacity: 1;
@@ -237,20 +250,164 @@ body.admin-layout.sidebar-collapsed .app-container {
 
 /* ====== Backend / Admin (ringan & simple) ====== */
 
+/* Constrain admin pages for nicer readability */
+body.admin-layout .admin-page {
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body.admin-layout .admin-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+body.admin-layout .admin-page-title {
+    margin: 0;
+    font-weight: 750;
+    letter-spacing: .01em;
+}
+
+body.admin-layout .admin-page-subtitle {
+    margin: .15rem 0 0;
+    color: var(--bs-secondary-color);
+}
+
+body.admin-layout .admin-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Admin question editor helpers */
+body.admin-layout .question-block {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    padding: .75rem;
+    margin-bottom: 1rem;
+    background: var(--bs-body-bg);
+}
+
+body.admin-layout .question-block-header,
+body.admin-layout .option-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding-bottom: .5rem;
+    margin-bottom: .65rem;
+    border-bottom: 1px dashed var(--bs-border-color);
+}
+
+body.admin-layout .option-label {
+    margin: 0;
+    font-weight: 750;
+    letter-spacing: .01em;
+}
+
+body.admin-layout .option-help {
+    color: var(--bs-secondary-color);
+    font-size: .875em;
+    white-space: nowrap;
+}
+
+body.admin-layout .option-block {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .65rem .75rem;
+    margin-bottom: .65rem;
+    background-color: var(--bs-tertiary-bg);
+}
+
+body.admin-layout .option-block.is-correct {
+    border-color: var(--bs-success-border-subtle, rgba(var(--bs-success-rgb), 0.55));
+    background-color: var(--bs-success-bg-subtle, rgba(var(--bs-success-rgb), 0.10));
+}
+
+body.admin-layout .option-block.is-correct textarea.form-control {
+    border-color: var(--bs-success-border-subtle, rgba(var(--bs-success-rgb), 0.55));
+    background-color: var(--bs-success-bg-subtle, rgba(var(--bs-success-rgb), 0.08));
+}
+
+body.admin-layout .option-block.is-correct textarea.form-control:focus {
+    border-color: rgba(var(--bs-success-rgb), 0.75);
+    box-shadow: 0 0 0 .25rem rgba(var(--bs-success-rgb), 0.18);
+}
+
+/* Summernote: ensure original textarea is hidden after init */
+textarea.rich-editor.is-summernote {
+    display: none !important;
+}
+
+/* When Summernote is enabled, hide the source textarea from the start (prevents 2 inputs showing). */
+body.has-summernote textarea.rich-editor {
+    display: none !important;
+}
+
+/* Summernote internal textarea (codeview/codable) should stay hidden to avoid 'double textarea' UI */
+.note-editor .note-codable {
+    display: none !important;
+}
+
+/* Hide Summernote codeview textarea (Bootstrap .form-control styles come from _form-control.scss in DevTools) */
+.note-editor.note-frame textarea.note-codable.form-control {
+    display: none !important;
+}
+
+/* Fallback: apply highlight even if admin-layout body class isn't present */
+.option-block.is-correct {
+    border-color: var(--bs-success-border-subtle, rgba(var(--bs-success-rgb), 0.55));
+    background-color: var(--bs-success-bg-subtle, rgba(var(--bs-success-rgb), 0.10));
+}
+
+.option-block.is-correct textarea.form-control {
+    border-color: var(--bs-success-border-subtle, rgba(var(--bs-success-rgb), 0.55));
+    background-color: var(--bs-success-bg-subtle, rgba(var(--bs-success-rgb), 0.08));
+}
+
+body.admin-layout .checkbox-jawaban-benar {
+    transform: scale(1.25);
+    margin-right: .4rem;
+}
+
+body.admin-layout .answer-check {
+    margin-top: .55rem;
+}
+
+body.admin-layout .answer-check .form-check-label {
+    font-weight: 750;
+}
+
+body.admin-layout .answer-check .form-check-input:checked + .form-check-label {
+    color: var(--bs-success);
+}
+
+body.admin-layout .question-no-field {
+    max-width: 96px;
+}
+
 .admin-dashboard {
     max-width: 1100px;
 }
 
 .admin-hero {
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
     border-radius: .75rem;
     padding: 1rem 1.25rem;
 }
 
 .admin-tile {
-    background: #fff;
-    border: 1px solid #dee2e6;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
     border-radius: .75rem;
 }
 
@@ -264,7 +421,7 @@ body.admin-layout.sidebar-collapsed .app-container {
 }
 
 .admin-tile-text {
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     margin-bottom: .75rem;
 }
 

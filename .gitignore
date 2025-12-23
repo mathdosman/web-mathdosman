@@ -1,0 +1,20 @@
+# Runtime / generated
+logs/
+*.log
+
+# Upload directories (keep local)
+gambar/
+gambarsoal/
+
+# Local backups
+backups/
+*.zip
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Optional env files
+.env
+.env.*

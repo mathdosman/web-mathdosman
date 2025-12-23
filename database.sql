@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS packages (
     materi VARCHAR(150) NULL,
     submateri VARCHAR(150) NULL,
     description TEXT NULL,
+    show_answers_public TINYINT(1) NOT NULL DEFAULT 0,
     status ENUM('draft','published') NOT NULL DEFAULT 'draft',
     published_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

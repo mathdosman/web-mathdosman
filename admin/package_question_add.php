@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/richtext.php';
+require_once __DIR__ . '/../includes/logger.php';
 require_role('admin');
 
 $errors = [];
@@ -17,6 +19,11 @@ try {
     $stmt->execute([':id' => $packageId]);
     $package = $stmt->fetch();
 } catch (PDOException $e) {
+    app_log('error', 'Failed to load package (package_question_add)', [
+        'package_id' => $packageId,
+        'err' => $e->getMessage(),
+        'code' => (string)$e->getCode(),
+    ]);
     $package = null;
 }
 
@@ -115,7 +122,10 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $formAction = (string)($_POST['form_action'] ?? 'save');
+    $formAction = trim((string)($_POST['form_action'] ?? 'save'));
+    if ($formAction === '') {
+        $formAction = 'save';
+    }
     if ($formAction !== 'save') {
         // hanya untuk refresh dropdown MAPEL/Materi/Submateri (tanpa validasi/simpan)
         if ($formAction === 'change_mapel') {
@@ -143,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $tipeSoal = trim((string)($_POST['tipe_soal'] ?? ''));
-        $pertanyaan = (string)($_POST['pertanyaan'] ?? '');
+        $pertanyaan = sanitize_rich_text((string)($_POST['pertanyaan'] ?? ''));
         $materi = trim((string)($_POST['materi'] ?? ''));
         $submateri = trim((string)($_POST['submateri'] ?? ''));
         if ($materi === '') {
@@ -170,17 +180,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        $p1 = (string)($_POST['pilihan_1'] ?? '');
-        $p2 = (string)($_POST['pilihan_2'] ?? '');
-        $p3 = (string)($_POST['pilihan_3'] ?? '');
-        $p4 = (string)($_POST['pilihan_4'] ?? '');
-        $p5 = (string)($_POST['pilihan_5'] ?? '');
+        $p1 = sanitize_rich_text((string)($_POST['pilihan_1'] ?? ''));
+        $p2 = sanitize_rich_text((string)($_POST['pilihan_2'] ?? ''));
+        $p3 = sanitize_rich_text((string)($_POST['pilihan_3'] ?? ''));
+        $p4 = sanitize_rich_text((string)($_POST['pilihan_4'] ?? ''));
+        $p5 = sanitize_rich_text((string)($_POST['pilihan_5'] ?? ''));
 
         $isEmpty = function (string $html): bool {
             return trim(strip_tags($html)) === '' && strpos($html, '<img') === false;
         };
 
         $jawabanBenar = '';
+        $allowedAnswerFields = ['pilihan_1', 'pilihan_2', 'pilihan_3', 'pilihan_4', 'pilihan_5'];
 
         if (!in_array($tipeSoal, ['Pilihan Ganda', 'Pilihan Ganda Kompleks', 'Benar/Salah', 'Menjodohkan', 'Uraian'], true)) {
             $errors[] = 'Tipe soal wajib dipilih.';
@@ -197,21 +208,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!is_array($jawArr) || count($jawArr) !== 1) {
                 $errors[] = 'Harap pilih tepat 1 jawaban benar.';
             } else {
-                $jawabanBenar = (string)$jawArr[0];
+                $picked = (string)$jawArr[0];
+                if (!in_array($picked, $allowedAnswerFields, true)) {
+                    $errors[] = 'Jawaban benar tidak valid.';
+                } else {
+                    $jawabanBenar = $picked;
+                }
             }
         } elseif ($tipeSoal === 'Pilihan Ganda Kompleks') {
+            if ($isEmpty($p1) || $isEmpty($p2) || $isEmpty($p3) || $isEmpty($p4) || $isEmpty($p5)) {
+                $errors[] = 'Semua pilihan (1-5) wajib diisi.';
+            }
             $jawArr = $_POST['jawaban_benar'] ?? [];
             if (!is_array($jawArr) || count($jawArr) < 1) {
                 $errors[] = 'Harap pilih minimal 1 jawaban benar.';
             } else {
-                $jawabanBenar = implode(',', array_map('strval', $jawArr));
+                $jawArr = array_values(array_unique(array_map('strval', $jawArr)));
+                $invalid = array_values(array_diff($jawArr, $allowedAnswerFields));
+                if ($invalid) {
+                    $errors[] = 'Jawaban benar tidak valid.';
+                } else {
+                    $jawabanBenar = implode(',', $jawArr);
+                }
             }
         } elseif ($tipeSoal === 'Benar/Salah') {
-            $jawArr = $_POST['jawaban_benar'] ?? [];
-            if (!is_array($jawArr) || count($jawArr) < 1) {
-                $errors[] = 'Harap isi jawaban Benar/Salah.';
+            $jaw = $_POST['jawaban_benar'] ?? [];
+            if (!is_array($jaw) || count($jaw) < 4) {
+                $errors[] = 'Harap isi jawaban benar untuk setiap pernyataan.';
             } else {
-                $jawabanBenar = implode('|', array_map('strval', $jawArr));
+                $vals = [];
+                for ($i = 0; $i < 4; $i++) {
+                    $v = (string)($jaw[$i] ?? '');
+                    if ($v !== 'Benar' && $v !== 'Salah') {
+                        $errors[] = 'Jawaban benar Benar/Salah tidak valid.';
+                        break;
+                    }
+                    $vals[] = $v;
+                }
+                if (!$errors) {
+                    $jawabanBenar = implode('|', $vals);
+                }
             }
             // Pernyataan disimpan di pilihan_1..4
             if ($isEmpty($p1) || $isEmpty($p2) || $isEmpty($p3) || $isEmpty($p4)) {
@@ -234,6 +270,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $soal = (string)$soal;
                 if (trim($soal) === '' || trim($jawab) === '') {
                     continue;
+                }
+                if (str_contains($soal, '|') || str_contains($soal, ':') || str_contains($jawab, '|') || str_contains($jawab, ':')) {
+                    $errors[] = 'Menjodohkan: karakter ":" dan "|" tidak boleh dipakai di soal/jawaban.';
+                    break;
                 }
                 if (trim($soal) === trim($jawab)) {
                     $errors[] = 'Soal dan jawaban dalam satu baris tidak boleh sama!';
@@ -262,11 +302,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $p1 = $p2 = $p3 = $p4 = $p5 = '';
         } elseif ($tipeSoal === 'Uraian') {
-            $jawabanBenar = (string)($_POST['jawaban_benar'] ?? '');
+            $jawabanBenar = sanitize_rich_text((string)($_POST['jawaban_benar'] ?? ''));
             if ($isEmpty($jawabanBenar)) {
                 $errors[] = 'Jawaban benar wajib diisi.';
             }
             $p1 = $p2 = $p3 = $p4 = $p5 = '';
+        }
+
+        if ($errors) {
+            app_log('warn', 'Validation failed (package_question_add)', [
+                'package_id' => $packageId,
+                'subject_id' => $subjectIdSelected,
+                'question_number' => $nomerSoal,
+                'tipe_soal' => $tipeSoal,
+                'save_mode' => $saveMode,
+                'errors' => $errors,
+            ]);
         }
 
         if (!$errors) {
@@ -305,7 +356,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: package_items.php?package_id=' . $packageId);
                 exit;
             } catch (Throwable $e) {
-                $pdo->rollBack();
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                app_log('error', 'Failed to save question (package_question_add)', [
+                    'package_id' => $packageId,
+                    'subject_id' => $subjectIdSelected,
+                    'question_number' => $nomerSoal,
+                    'tipe_soal' => $tipeSoal,
+                    'save_mode' => $saveMode,
+                    'err' => $e->getMessage(),
+                    'code' => (string)$e->getCode(),
+                ]);
                 $errors[] = 'Gagal menyimpan butir soal.';
             }
         }
@@ -313,6 +375,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Input Butir Soal';
+$use_summernote = true;
 include __DIR__ . '/../includes/header.php';
 
 $legacyMateriInvalid = false;
@@ -328,17 +391,21 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<div class="row">
-    <div class="col-12 col-xl-10">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-                    <div>
-                        <h5 class="card-title mb-1">Input Butir Soal Baru</h5>
-                        <div class="text-muted small">Paket: <strong><?php echo htmlspecialchars($package['code']); ?></strong> — <?php echo htmlspecialchars($package['name']); ?></div>
-                    </div>
-                    <a href="package_items.php?package_id=<?php echo (int)$packageId; ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
-                </div>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Input Butir Soal</h4>
+            <p class="admin-page-subtitle">Paket: <strong><?php echo htmlspecialchars($package['code']); ?></strong> — <?php echo htmlspecialchars($package['name']); ?></p>
+        </div>
+        <div class="admin-page-actions">
+            <a href="package_items.php?package_id=<?php echo (int)$packageId; ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-xl-10">
+            <div class="card">
+                <div class="card-body">
 
                 <?php if ($errors): ?>
                     <div class="alert alert-danger py-2 small">
@@ -368,14 +435,9 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     </script>
                 <?php endif; ?>
 
-                <style>
-                    .option-block{border:1px solid #ced4da;border-radius:6px;padding:10px 12px;margin-bottom:10px;background-color:#f8f9fa}
-                    .checkbox-jawaban-benar{transform:scale(1.4);margin-right:6px}
-                </style>
-
                 <form method="post" class="small" id="questionForm">
-                    <input type="hidden" name="form_action" id="form_action" value="">
-                    <div class="mb-3" style="max-width:80px;">
+                    <input type="hidden" name="form_action" id="form_action" value="save">
+                    <div class="mb-3 question-no-field">
                         <label for="nomer_soal" class="form-label">Nomor Soal</label>
                         <input type="number" class="form-control" id="nomer_soal" name="nomer_soal" value="<?php echo (int)($_POST['nomer_soal'] ?? $nomerBaru); ?>" required <?php echo $isLocked ? 'disabled' : ''; ?>>
                     </div>
@@ -442,10 +504,12 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="pertanyaan" class="form-label">Pertanyaan</label>
-                        <textarea class="form-control" id="pertanyaan" name="pertanyaan" required><?php echo htmlspecialchars((string)($_POST['pertanyaan'] ?? '')); ?></textarea>
-                        <hr>
+                    <div class="question-block">
+                        <div class="question-block-header">
+                            <div class="option-label">Pertanyaan</div>
+                            <div class="option-help">Tulis soal dulu</div>
+                        </div>
+                        <textarea class="form-control rich-editor" id="pertanyaan" name="pertanyaan" required><?php echo htmlspecialchars((string)($_POST['pertanyaan'] ?? '')); ?></textarea>
                     </div>
 
                     <?php
@@ -454,13 +518,27 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     ?>
 
                     <div id="pilihan-ganda-fields" class="d-none">
+                        <div id="pg-help-text" class="small text-body-secondary mb-2"></div>
+                        <div id="pg-selection-summary" class="small text-body-secondary mb-2"></div>
                         <?php for ($i = 1; $i <= 5; $i++): $field = 'pilihan_' . $i; ?>
                             <div class="mb-3 option-block">
-                                <label class="form-label">Pilihan <?php echo $i; ?></label>
+                                <div class="option-block-header">
+                                    <div class="option-label">Opsi <?php echo chr(64 + (int)$i); ?></div>
+                                    <div class="option-help">Tandai jawaban</div>
+                                </div>
                                 <textarea class="form-control" id="<?php echo $field; ?>" name="<?php echo $field; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($_POST[$field] ?? '')); ?></textarea>
-                                <div class="mt-2">
-                                    <input type="checkbox" class="checkbox-jawaban-benar" name="jawaban_benar[]" value="<?php echo $field; ?>" onclick="checkOnlyOne(this)" <?php echo in_array($field, $jawPost, true) ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>>
-                                    <strong>Jawaban Benar</strong>
+                                <div class="form-check answer-check">
+                                    <input
+                                        type="checkbox"
+                                        class="form-check-input checkbox-jawaban-benar"
+                                        id="jb_<?php echo $field; ?>"
+                                        name="jawaban_benar[]"
+                                        value="<?php echo $field; ?>"
+                                        onclick="checkOnlyOne(this)"
+                                        <?php echo in_array($field, $jawPost, true) ? 'checked' : ''; ?>
+                                        <?php echo $isLocked ? 'disabled' : ''; ?>
+                                    >
+                                    <label class="form-check-label" for="jb_<?php echo $field; ?>">Jawaban Benar</label>
                                 </div>
                             </div>
                         <?php endfor; ?>
@@ -468,13 +546,24 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div id="benar-salah-fields" class="d-none">
                         <label class="form-label">Pernyataan dan Jawaban</label>
-                        <br><br>
                         <?php for ($i = 1; $i <= 4; $i++): $idx = $i - 1; $field = 'pilihan_' . $i; ?>
-                            <div class="form-group">
-                                <textarea class="form-control mb-1" id="bs_<?php echo $i; ?>" name="<?php echo $field; ?>" placeholder="Pernyataan <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($_POST[$field] ?? '')); ?></textarea>
-                                <label><input type="radio" name="jawaban_benar[<?php echo $idx; ?>]" value="Benar" <?php echo ((string)($jawPost[$idx] ?? '') === 'Benar') ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>> Benar</label>
-                                <label><input type="radio" name="jawaban_benar[<?php echo $idx; ?>]" value="Salah" <?php echo ((string)($jawPost[$idx] ?? '') === 'Salah') ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>> Salah</label>
-                                <hr><br><br>
+                            <div class="mb-3 option-block">
+                                <div class="option-block-header">
+                                    <div class="option-label">Pernyataan <?php echo $i; ?></div>
+                                    <div class="option-help">Pilih Benar/Salah</div>
+                                </div>
+                                <textarea class="form-control" id="bs_<?php echo $i; ?>" name="<?php echo $field; ?>" placeholder="Tulis pernyataan <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($_POST[$field] ?? '')); ?></textarea>
+                                <div class="mt-2 d-flex flex-wrap gap-3">
+                                    <?php $bsVal = (string)($jawPost[$idx] ?? ''); ?>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" id="bs_<?php echo $i; ?>_benar" name="jawaban_benar[<?php echo $idx; ?>]" value="Benar" <?php echo $bsVal === 'Benar' ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>>
+                                        <label class="form-check-label" for="bs_<?php echo $i; ?>_benar">Benar</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" id="bs_<?php echo $i; ?>_salah" name="jawaban_benar[<?php echo $idx; ?>]" value="Salah" <?php echo $bsVal === 'Salah' ? 'checked' : ''; ?> <?php echo $isLocked ? 'disabled' : ''; ?>>
+                                        <label class="form-check-label" for="bs_<?php echo $i; ?>_salah">Salah</label>
+                                    </div>
+                                </div>
                             </div>
                         <?php endfor; ?>
                     </div>
@@ -487,20 +576,29 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (!is_array($pasJaw)) $pasJaw = [];
                         ?>
                         <?php for ($i = 1; $i <= 8; $i++): $idx = $i - 1; ?>
-                            <div class="row mb-2">
-                                <div class="col">
-                                    <textarea class="form-control" name="pasangan_soal[]" placeholder="Pilihan <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($pasSoal[$idx] ?? '')); ?></textarea>
+                            <div class="mb-3 option-block">
+                                <div class="option-block-header">
+                                    <div class="option-label">Pasangan <?php echo $i; ?></div>
+                                    <div class="option-help">Soal ↔ Jawaban</div>
                                 </div>
-                                <div class="col">
-                                    <textarea class="form-control" name="pasangan_jawaban[]" placeholder="Pasangan <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($pasJaw[$idx] ?? '')); ?></textarea>
+                                <div class="row g-2">
+                                    <div class="col-12 col-md-6">
+                                        <textarea class="form-control" name="pasangan_soal[]" placeholder="Soal <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($pasSoal[$idx] ?? '')); ?></textarea>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <textarea class="form-control" name="pasangan_jawaban[]" placeholder="Jawaban <?php echo $i; ?>" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($pasJaw[$idx] ?? '')); ?></textarea>
+                                    </div>
                                 </div>
                             </div>
                         <?php endfor; ?>
                     </div>
 
                     <div id="uraian-fields" class="d-none">
-                        <div class="mb-3">
-                            <label class="form-label">Jawaban Benar</label>
+                        <div class="question-block">
+                            <div class="question-block-header">
+                                <div class="option-label">Jawaban Benar</div>
+                                <div class="option-help">Untuk tipe uraian</div>
+                            </div>
                             <textarea class="form-control" name="jawaban_benar" rows="3" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($_POST['jawaban_benar'] ?? '')); ?></textarea>
                         </div>
                     </div>
@@ -536,12 +634,58 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     function checkOnlyOne(checkbox) {
                         if (currentType !== 'Pilihan Ganda') {
+                            updatePgSummary();
+                            updatePgOptionHighlights();
                             return;
                         }
                         const checkboxes = document.querySelectorAll('#pilihan-ganda-fields input[name="jawaban_benar[]"]');
                         checkboxes.forEach(function (cb) {
                             if (cb !== checkbox) cb.checked = false;
                         });
+                        updatePgSummary();
+                        updatePgOptionHighlights();
+                    }
+
+                    function updatePgOptionHighlights() {
+                        if (currentType !== 'Pilihan Ganda' && currentType !== 'Pilihan Ganda Kompleks') {
+                            document.querySelectorAll('#pilihan-ganda-fields .option-block').forEach(function (b) {
+                                b.classList.remove('is-correct');
+                            });
+                            return;
+                        }
+                        document.querySelectorAll('#pilihan-ganda-fields .option-block').forEach(function (block) {
+                            const cb = block.querySelector('input[name="jawaban_benar[]"]');
+                            if (cb && cb.checked) {
+                                block.classList.add('is-correct');
+                            } else {
+                                block.classList.remove('is-correct');
+                            }
+                        });
+                    }
+
+                    function updatePgSummary() {
+                        const summary = document.getElementById('pg-selection-summary');
+                        if (!summary) return;
+                        if (currentType !== 'Pilihan Ganda' && currentType !== 'Pilihan Ganda Kompleks') {
+                            summary.textContent = '';
+                            return;
+                        }
+                        const checked = Array.from(document.querySelectorAll('#pilihan-ganda-fields input[name="jawaban_benar[]"]:checked'));
+                        const letters = checked
+                            .map(function (el) {
+                                const v = String(el.value || '');
+                                const m = v.match(/pilihan_(\d+)/);
+                                const n = m ? parseInt(m[1], 10) : NaN;
+                                if (!Number.isFinite(n) || n < 1 || n > 5) return null;
+                                return String.fromCharCode(64 + n);
+                            })
+                            .filter(Boolean);
+
+                        if (letters.length === 0) {
+                            summary.textContent = 'Jawaban terpilih: (belum dipilih)';
+                            return;
+                        }
+                        summary.textContent = 'Jawaban terpilih: ' + letters.join(', ');
                     }
 
                     function setSectionEnabled(sectionId, enabled) {
@@ -561,6 +705,18 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     function showFields(tipeSoal) {
                         currentType = tipeSoal;
+                        const pgHelp = document.getElementById('pg-help-text');
+                        if (pgHelp) {
+                            if (tipeSoal === 'Pilihan Ganda') {
+                                pgHelp.textContent = 'Pilih tepat 1 jawaban benar.';
+                            } else if (tipeSoal === 'Pilihan Ganda Kompleks') {
+                                pgHelp.textContent = 'Boleh memilih lebih dari 1 jawaban benar.';
+                            } else {
+                                pgHelp.textContent = '';
+                            }
+                        }
+                        updatePgSummary();
+                        updatePgOptionHighlights();
                         const sections = {
                             'Pilihan Ganda': 'pilihan-ganda-fields',
                             'Pilihan Ganda Kompleks': 'pilihan-ganda-fields',
@@ -586,6 +742,187 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     document.addEventListener('DOMContentLoaded', function () {
                         showFields(document.getElementById('tipe_soal').value);
+                        const pgCbs = document.querySelectorAll('#pilihan-ganda-fields input[name="jawaban_benar[]"]');
+                        pgCbs.forEach(function (cb) {
+                            cb.addEventListener('change', updatePgSummary);
+                            cb.addEventListener('change', updatePgOptionHighlights);
+                        });
+                        updatePgSummary();
+                        updatePgOptionHighlights();
+
+                        // Summernote rich editor (for images in pertanyaan/opsi/uraian)
+                        // Guard: avoid running this bootstrap twice on the same page.
+                        if (window.__md_summernote_bootstrapped) return;
+                        window.__md_summernote_bootstrapped = true;
+
+                        if (IS_LOCKED) return;
+                        if (typeof window.jQuery === 'undefined') return;
+                        const $ = window.jQuery;
+                        if (!$.fn || typeof $.fn.summernote !== 'function') return;
+
+                        // Hard reset: if a previous duplicate init left extra .note-editor wrappers,
+                        // remove them and re-init fresh to avoid mirrored double editors.
+                        try {
+                            $('.note-editor').remove();
+                            $('.rich-editor').each(function () {
+                                const $t = $(this);
+                                $t.removeData('summernote');
+                                if (this && this.style && typeof this.style.removeProperty === 'function') {
+                                    this.style.removeProperty('display');
+                                }
+                            });
+                        } catch (e) {}
+
+                        const uploadUrl = 'uploadeditor.php';
+                        const deleteUrl = 'hapus_gambar_editor.php';
+
+                        const warnResizeIfNeeded = (file) => {
+                            try {
+                                if (!(file instanceof File)) return;
+                                if (!file.type || !file.type.startsWith('image/')) return;
+                                const url = URL.createObjectURL(file);
+                                const img = new Image();
+                                img.onload = function () {
+                                    try {
+                                        if (img.width > 1920 || img.height > 1920) {
+                                            if (typeof Swal !== 'undefined') {
+                                                Swal.fire({
+                                                    icon: 'info',
+                                                    title: 'Gambar akan di-resize',
+                                                    text: 'Gambar yang diupload akan otomatis diperkecil (maks 1920px) agar lebih ringan.'
+                                                });
+                                            }
+                                        }
+                                    } finally {
+                                        URL.revokeObjectURL(url);
+                                    }
+                                };
+                                img.onerror = function () { URL.revokeObjectURL(url); };
+                                img.src = url;
+                            } catch (e) {}
+                        };
+
+                        const uploadFile = (file, $editor) => {
+                            warnResizeIfNeeded(file);
+                            const fd = new FormData();
+                            fd.append('file', file);
+                            $.ajax({
+                                url: uploadUrl,
+                                method: 'POST',
+                                data: fd,
+                                cache: false,
+                                contentType: false,
+                                processData: false,
+                                success: function (res) {
+                                    if (res && res.url) {
+                                        $editor.summernote('insertImage', res.url);
+                                    } else if (res && res.img) {
+                                        $editor.summernote('pasteHTML', res.img);
+                                    }
+                                },
+                                error: function (xhr) {
+                                    const msg = (xhr && xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Gagal upload gambar.';
+                                    if (typeof Swal !== 'undefined') {
+                                        Swal.fire({ icon: 'error', title: 'Upload gagal', text: msg });
+                                    }
+                                }
+                            });
+                        };
+
+                        const deleteBySrc = (src) => {
+                            if (!src) return;
+                            $.post(deleteUrl, { src: src });
+                        };
+
+                        const $editor = $('#pertanyaan.rich-editor');
+                        if ($editor.length) {
+
+                            // If a previous (duplicate) init already injected editors, clean them up.
+                            // Two stacked editors that mirror each other usually means the init ran twice.
+                            const $existingFrames = $editor.nextAll('.note-editor');
+                            if ($existingFrames.length > 1) {
+                                $existingFrames.slice(0, -1).remove();
+                            }
+                            if ($existingFrames.length === 1 && !$editor.data('summernote')) {
+                                // Frame exists but data is missing -> safest is to remove and init fresh.
+                                $existingFrames.remove();
+                            }
+
+                            // Guard: avoid double initialization (which can show duplicate editors/textarea)
+                            if ($editor.data('summernote') || $editor.next('.note-editor').length) {
+                                return;
+                            }
+                            $editor.summernote({
+                                height: 220,
+                                placeholder: 'ketik soal disini',
+                                toolbar: [
+                                    ['style', ['bold', 'italic', 'underline']],
+                                    ['para', ['ul', 'ol']],
+                                    ['insert', ['picture', 'link']],
+                                    // Keep WYSIWYG only to avoid confusing duplicate textarea/codeview UI
+                                ],
+                                callbacks: {
+                                    onImageUpload: function (files) {
+                                        if (!files || !files.length) return;
+                                        Array.from(files).forEach(function (f) { uploadFile(f, $editor); });
+                                    },
+                                    onMediaDelete: function (target) {
+                                        try {
+                                            const src = target && target[0] ? target[0].src : '';
+                                            deleteBySrc(src);
+                                        } catch (e) {}
+                                    }
+                                }
+                            });
+                            // Ensure we are never in codeview mode (codeview uses an internal textarea styled by Bootstrap)
+                            try {
+                                $editor.summernote('codeview.deactivate');
+                            } catch (e) {}
+
+                            // Enforce WYSIWYG-only UI even if CSS loads late or DOM updates happen.
+                            const enforceWysiwygOnly = () => {
+                                try {
+                                    const $frame = $editor.next('.note-editor');
+                                    if (!$frame.length) return;
+                                    $frame.removeClass('codeview');
+                                    $frame.find('textarea.note-codable').each(function () {
+                                        try {
+                                            this.style.setProperty('display', 'none', 'important');
+                                            this.style.setProperty('visibility', 'hidden', 'important');
+                                        } catch (e) {}
+                                    });
+                                    $frame.find('.note-editable').each(function () {
+                                        try {
+                                            this.style.setProperty('display', 'block', 'important');
+                                            this.style.setProperty('visibility', 'visible', 'important');
+                                        } catch (e) {}
+                                    });
+                                } catch (e) {}
+                            };
+                            enforceWysiwygOnly();
+                            setTimeout(enforceWysiwygOnly, 0);
+                            setTimeout(enforceWysiwygOnly, 50);
+                            setTimeout(enforceWysiwygOnly, 200);
+                            // Force-hide the source textarea (in case some CSS overrides Summernote's hide)
+                            $editor.addClass('is-summernote');
+                            if ($editor[0] && $editor[0].style && typeof $editor[0].style.setProperty === 'function') {
+                                $editor[0].style.setProperty('display', 'none', 'important');
+                            } else {
+                                $editor.css('display', 'none');
+                            }
+
+                            // Also hide any textarea inside the Summernote frame (e.g. codeview/codable)
+                            const $frame = $editor.next('.note-editor');
+                            if ($frame && $frame.length) {
+                                $frame.find('textarea').each(function () {
+                                    try {
+                                        this.style.setProperty('display', 'none', 'important');
+                                    } catch (e) {
+                                        $(this).css('display', 'none');
+                                    }
+                                });
+                            }
+                        }
                     });
 
                     function onMapelChange() {
@@ -608,6 +945,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         document.getElementById('questionForm').submit();
                     }
                 </script>
+                </div>
             </div>
         </div>
     </div>

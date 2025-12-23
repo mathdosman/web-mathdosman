@@ -112,12 +112,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card">
-    <div class="card-body">
-        <div class="mb-3 pb-3 border-bottom">
-            <h5 class="card-title mb-1">Ganti Password Admin</h5>
-            <div class="text-muted small">Ubah password untuk akun admin yang sedang login.</div>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Ganti Password</h4>
+            <p class="admin-page-subtitle">Ubah nama dan/atau password akun admin yang sedang login.</p>
         </div>
+        <div class="admin-page-actions">
+            <a href="<?php echo $base_url; ?>/dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
 
         <?php if ($success): ?>
             <div class="alert alert-success py-2 small mb-3"><?php echo htmlspecialchars($success); ?></div>
@@ -154,12 +161,13 @@ include __DIR__ . '/../includes/header.php';
                     <label class="form-label">Ulangi Password Baru</label>
                     <input type="password" name="confirm_password" class="form-control">
                 </div>
-                <div class="col-12 d-flex gap-2">
+                <div class="col-12 d-flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                     <a href="<?php echo $base_url; ?>/dashboard.php" class="btn btn-outline-secondary">Batal</a>
                 </div>
             </div>
         </form>
+        </div>
     </div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

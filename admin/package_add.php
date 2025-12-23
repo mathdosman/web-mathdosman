@@ -205,17 +205,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Tambah Paket Soal';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="row">
-    <div class="col-12 col-lg-9 col-xl-8">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-                    <div>
-                        <h5 class="card-title mb-1">Tambah Paket Soal</h5>
-                        <div class="text-muted small">Buat paket soal baru, lalu tambahkan butir soal melalui menu Aksi.</div>
-                    </div>
-                    <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
-                </div>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Tambah Paket Soal</h4>
+            <p class="admin-page-subtitle">Buat paket soal baru, lalu tambahkan butir soal melalui menu Aksi.</p>
+        </div>
+        <div class="admin-page-actions">
+            <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-lg-9 col-xl-8">
+            <div class="card">
+                <div class="card-body">
 
                 <?php if ($errors): ?>
                     <div class="alert alert-danger py-2 small">
@@ -290,6 +294,7 @@ include __DIR__ . '/../includes/header.php';
                         <a href="packages.php" class="btn btn-link btn-sm">Batal</a>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>

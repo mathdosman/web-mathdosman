@@ -19,11 +19,27 @@ if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
 
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+$currentPage = basename($scriptName);
 $isAdminArea = (strpos($scriptName, '/admin/') !== false) || (basename($scriptName) === 'dashboard.php');
 $useAdminSidebar = $isAdmin && $isAdminArea;
 
 $use_print_soal_css = !empty($use_print_soal_css);
 $body_class = isset($body_class) && is_string($body_class) ? trim($body_class) : '';
+
+// MathJax (LaTeX rendering)
+// Default: aktif di hampir semua halaman yang menampilkan konten.
+// Untuk halaman editor (Summernote), default dimatikan agar tidak mengganggu area input.
+if (isset($use_mathjax)) {
+    $use_mathjax = !empty($use_mathjax);
+} else {
+    $use_mathjax = empty($use_summernote);
+}
+
+$isFrontArea = false;
+if ($body_class !== '') {
+    $haystack = ' ' . $body_class . ' ';
+    $isFrontArea = (strpos($haystack, ' front-page ') !== false) || (strpos($haystack, ' paket-preview ') !== false);
+}
 
 $brandLogoPath = null;
 $faviconPath = null;
@@ -61,11 +77,38 @@ try {
         <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.css" rel="stylesheet">
     <?php endif; ?>
     <link href="<?php echo $base_url; ?>/assets/css/style.css" rel="stylesheet">
+    <?php if ($isFrontArea): ?>
+        <link href="<?php echo $base_url; ?>/assets/css/front.css" rel="stylesheet">
+    <?php endif; ?>
     <?php if ($use_print_soal_css): ?>
         <link href="<?php echo $base_url; ?>/assets/css/print-soal.css" rel="stylesheet">
     <?php endif; ?>
+
+    <?php if ($use_mathjax): ?>
+        <script>
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                    processEscapes: true,
+                },
+                options: {
+                    // Prevent rendering inside code blocks and rich text editors
+                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                    ignoreHtmlClass: 'no-mathjax|note-editor|note-editable|note-codable|note-codeview',
+                }
+            };
+        </script>
+        <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <?php endif; ?>
 </head>
-<body class="bg-light<?php echo $useAdminSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
+<noscript>
+    <style>
+        /* If JS is disabled, Summernote won't load; keep the textarea visible. */
+        body.has-summernote textarea.rich-editor { display: block !important; }
+    </style>
+</noscript>
+<body class="bg-light<?php echo $useAdminSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo !empty($use_summernote) ? ' has-summernote' : ''; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 app-navbar">
     <div class="<?php echo $useAdminSidebar ? 'container-fluid' : 'container'; ?>">
         <?php if ($useAdminSidebar): ?>
@@ -96,13 +139,16 @@ try {
             <?php if (!$useAdminSidebar): ?>
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>/index.php">Beranda</a>
+                        <?php $isActive = ($currentPage === '' || $currentPage === 'index.php'); ?>
+                        <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/index.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>Beranda</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
+                        <?php $isActive = ($currentPage === 'tentang.php'); ?>
+                        <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/tentang.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>Tentang</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
+                        <?php $isActive = ($currentPage === 'kontak.php'); ?>
+                        <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/kontak.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>Kontak</a>
                     </li>
                 </ul>
             <?php endif; ?>
@@ -144,7 +190,8 @@ try {
         <div class="app-sidebar-inner">
             <div class="small text-white-50 mb-2">Menu Admin</div>
             <nav class="nav flex-column">
-                <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/dashboard.php">
+                <?php $isActive = ($currentPage === 'dashboard.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/dashboard.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 13h8V3H3z"/>
                         <path d="M13 21h8V11h-8z"/>
@@ -153,7 +200,10 @@ try {
                     </svg>
                     <span>Dashboard</span>
                 </a>
-                <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/admin/packages.php">
+                <?php
+                    $isActive = in_array($currentPage, ['packages.php', 'package_add.php', 'package_edit.php', 'package_items.php', 'package_question_add.php'], true);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/packages.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 7h18"/>
                         <path d="M3 7l2 14h14l2-14"/>
@@ -161,15 +211,35 @@ try {
                     </svg>
                     <span>Paket Soal</span>
                 </a>
-                <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/admin/mapel.php">
+                <?php $isActive = ($currentPage === 'mapel.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/mapel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M4 19a2 2 0 0 0 2 2h14"/>
                         <path d="M4 5a2 2 0 0 1 2-2h14v18H6a2 2 0 0 1-2-2z"/>
                         <path d="M8 7h8"/>
                     </svg>
-                    <span>MAPEL</span>
+                    <span>Kategori</span>
                 </a>
-                <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/admin/questions.php">
+
+                <?php
+                    $isActive = in_array($currentPage, ['butir_soal.php', 'question_edit.php', 'question_view.php', 'question_duplicate.php'], true);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/butir_soal.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M8 6h13"/>
+                        <path d="M8 12h13"/>
+                        <path d="M8 18h13"/>
+                        <path d="M3 6h.01"/>
+                        <path d="M3 12h.01"/>
+                        <path d="M3 18h.01"/>
+                    </svg>
+                    <span>Butir Soal</span>
+                </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['questions.php', 'questions_import.php', 'questions_export.php'], true);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/questions.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <path d="M14 2v6h6"/>
@@ -179,7 +249,8 @@ try {
                     <span>Bank Soal</span>
                 </a>
                 <hr class="my-2">
-                <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/admin/change_password.php">
+                <?php $isActive = ($currentPage === 'change_password.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/change_password.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M21 8v6"/>
                         <path d="M18 11h6"/>

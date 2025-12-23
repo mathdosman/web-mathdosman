@@ -1,0 +1,207 @@
+/*
+  front.css
+  - Screen-only styling for public pages (front-page + paket-preview).
+  - Split out from print-soal.css to keep print rules focused.
+*/
+
+@media screen {
+    /* ====== Modern & elegant (screen) ====== */
+    body.front-page {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+
+    body.front-page .app-container {
+        max-width: 1140px;
+    }
+
+    body.front-page h1,
+    body.front-page h2,
+    body.front-page h3 {
+        letter-spacing: .01em;
+    }
+
+    body.front-page .brand-banner {
+        box-shadow: var(--bs-box-shadow-sm);
+    }
+
+    body.front-page .content-card {
+        background: transparent;
+        border: 0;
+        padding: 0;
+    }
+
+    body.front-page .home-hero {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: .75rem;
+        padding: 1.25rem;
+    }
+
+    body.front-page .home-hero .text-uppercase {
+        letter-spacing: .08em;
+    }
+
+    @media (min-width: 992px) {
+        body.front-page .home-hero {
+            padding: 1.5rem;
+        }
+    }
+
+    body.front-page .post-card {
+        border-radius: .75rem;
+        border: 1px solid var(--bs-border-color);
+        transition: box-shadow .18s ease, transform .18s ease;
+    }
+
+    body.front-page .post-card:hover {
+        box-shadow: var(--bs-box-shadow-sm);
+        transform: translateY(-1px);
+    }
+
+    /* Section heading divider (Paket Soal) */
+    body.front-page .section-heading {
+        padding-bottom: .5rem;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+
+    body.front-page .section-heading h2 {
+        margin-bottom: .25rem;
+    }
+
+    body.front-page .post-detail {
+        border-radius: .75rem;
+    }
+
+    body.front-page .post-detail .content-body {
+        line-height: 1.65;
+    }
+
+    body.front-page .card {
+        border-color: var(--bs-border-color);
+    }
+
+    body.front-page .sidebar-widget .card-body {
+        padding: 1rem;
+    }
+
+    body.front-page .sidebar-widget h2.h6 {
+        margin-bottom: .75rem;
+        padding-bottom: .5rem;
+        border-bottom: 1px dashed var(--bs-border-color);
+    }
+
+    body.front-page .package-meta-chips .badge,
+    body.paket-preview .package-meta-chips .badge {
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--bs-body-color) !important;
+        border-color: var(--bs-border-color) !important;
+        font-weight: 600;
+        padding: .35rem .6rem;
+        line-height: 1.2;
+        font-size: .825rem;
+    }
+
+    body.front-page .package-meta-chips,
+    body.paket-preview .package-meta-chips {
+        row-gap: .5rem;
+        column-gap: .5rem;
+    }
+
+    body.front-page .card .card-body > h2.h6 {
+        letter-spacing: .02em;
+    }
+
+    body.front-page .list-group-item {
+        border-color: var(--bs-border-color);
+    }
+
+    body.front-page .list-group-item-action:hover {
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    body.front-page .list-group-item.active {
+        background-color: var(--bs-dark);
+        border-color: var(--bs-dark);
+    }
+
+    body.front-page .badge.text-bg-secondary {
+        background-color: var(--bs-secondary-bg) !important;
+        color: var(--bs-body-color) !important;
+    }
+
+    /* Paket preview (screen) should resemble print layout, scoped safely */
+    body.paket-preview {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+    }
+
+    body.paket-preview .app-container {
+        max-width: 980px;
+    }
+
+    body.paket-preview .paket-sheet {
+        background: var(--bs-body-bg);
+    }
+
+    body.paket-preview .custom-card {
+        border: 1px solid var(--bs-border-color);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    body.paket-preview .custom-card-header {
+        border-bottom: 1px solid var(--bs-border-color);
+        background-color: var(--bs-tertiary-bg);
+        padding: 10px;
+        font-weight: bold;
+    }
+
+    body.paket-preview .oke {
+        padding: 15px;
+    }
+
+    body.paket-preview hr {
+        border: none;
+        border-top: 2px solid #000;
+        margin: 1rem 0;
+    }
+
+    body.paket-preview .soal-header {
+        background-color: var(--bs-secondary);
+        padding: 5px;
+        color: #fff;
+        margin: 0;
+        border-radius: .25rem;
+    }
+
+    body.paket-preview .soal-nomor {
+        background-color: var(--bs-dark);
+        padding: 5px;
+        color: #fff;
+        border-radius: .25rem;
+    }
+
+    /* Opsi pilihan ganda: label (A/B/...) sejajar dengan isi */
+    body.paket-preview .opsi-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    body.paket-preview .opsi-label {
+        flex: 0 0 24px;
+        width: 24px;
+        line-height: 1.2;
+    }
+
+    body.paket-preview .opsi-content {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    body.paket-preview .opsi-content p {
+        margin-bottom: 0;
+    }
+
+}

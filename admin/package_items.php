@@ -136,6 +136,9 @@ if ($filterSubmateri !== '' && !in_array($filterSubmateri, $submaterials, true))
 
 $returnUrl = build_package_items_return_url($packageId, $_GET);
 
+// Untuk UI filter pada picker (dipakai menampilkan link reset filter).
+$hasPickerFilter = ($filterSubjectId > 0) || ($filterMateri !== '') || ($filterSubmateri !== '');
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -179,6 +182,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit;
                 }
             } catch (PDOException $e) {
+                $errors[] = 'Gagal menambahkan butir soal ke paket.';
+            }
+        }
+    } elseif ($action === 'add_questions_bulk') {
+        $questionIds = $_POST['question_ids'] ?? [];
+        if (!is_array($questionIds)) {
+            $questionIds = [];
+        }
+        $questionIds = array_values(array_unique(array_filter(array_map('intval', $questionIds), fn($v) => $v > 0)));
+
+        if (!$questionIds) {
+            $errors[] = 'Pilih minimal 1 butir soal.';
+        } else {
+            try {
+                // Nomor soal lanjutan
+                $stmt = $pdo->prepare('SELECT COALESCE(MAX(question_number), 0) FROM package_questions WHERE package_id = :pid');
+                $stmt->execute([':pid' => $packageId]);
+                $nextNo = ((int)$stmt->fetchColumn()) + 1;
+
+                $pdo->beginTransaction();
+
+                $stmtExistsQuestion = $pdo->prepare('SELECT id FROM questions WHERE id = :qid');
+                $stmtAlreadyInPackage = $pdo->prepare('SELECT 1 FROM package_questions WHERE package_id = :pid AND question_id = :qid');
+                $stmtInsert = $pdo->prepare('INSERT INTO package_questions (package_id, question_id, question_number)
+                    VALUES (:pid, :qid, :no)
+                    ON DUPLICATE KEY UPDATE question_number = IFNULL(question_number, VALUES(question_number))');
+
+                $added = 0;
+                foreach ($questionIds as $qid) {
+                    $stmtExistsQuestion->execute([':qid' => $qid]);
+                    if (!(int)$stmtExistsQuestion->fetchColumn()) {
+                        continue;
+                    }
+
+                    $stmtAlreadyInPackage->execute([':pid' => $packageId, ':qid' => $qid]);
+                    if ($stmtAlreadyInPackage->fetchColumn()) {
+                        continue;
+                    }
+
+                    $stmtInsert->execute([':pid' => $packageId, ':qid' => $qid, ':no' => $nextNo]);
+                    $nextNo++;
+                    $added++;
+                }
+
+                $pdo->commit();
+                if ($added > 0) {
+                    header('Location: ' . $returnUrl);
+                    exit;
+                }
+                $errors[] = 'Tidak ada soal yang ditambahkan (mungkin sudah ada di paket / tidak valid).';
+            } catch (PDOException $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 $errors[] = 'Gagal menambahkan butir soal ke paket.';
             }
         }
@@ -267,42 +324,44 @@ try {
 $page_title = 'Butir Soal Paket';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card">
-    <div class="card-body">
-        <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-            <div>
-                <h5 class="card-title mb-1">Butir Soal</h5>
-                <div class="text-muted small">Paket: <strong><?php echo htmlspecialchars($package['code']); ?></strong> — <?php echo htmlspecialchars($package['name']); ?></div>
-                <?php
-                    $meta = [];
-                    if (!empty($package['subject_name'])) {
-                        $meta[] = 'Mapel: ' . $package['subject_name'];
-                    }
-                    if (!empty($package['materi'])) {
-                        $meta[] = 'Materi: ' . $package['materi'];
-                    }
-                    if (!empty($package['submateri'])) {
-                        $meta[] = 'Submateri: ' . $package['submateri'];
-                    }
-                ?>
-                <?php if ($meta): ?>
-                    <div class="text-muted small mt-1"><?php echo htmlspecialchars(implode(' • ', $meta)); ?></div>
-                <?php endif; ?>
-                <?php if ($isLocked): ?>
-                    <div class="text-danger small mt-1">Status: <strong>Terbit</strong>. Perubahan butir soal dikunci.</div>
-                <?php endif; ?>
-            </div>
-            <div class="d-flex gap-2">
-                <?php if (!$isLocked && $draftItemsCount > 0): ?>
-                    <form method="post" class="m-0" data-swal-confirm data-swal-title="Bersihkan Soal Draft?" data-swal-text="Hapus semua butir soal draft dari paket ini?">
-                        <input type="hidden" name="action" value="remove_draft_questions">
-                        <button type="submit" class="btn btn-outline-warning btn-sm">Bersihkan Draft (<?php echo (int)$draftItemsCount; ?>)</button>
-                    </form>
-                <?php endif; ?>
-                <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm<?php echo $isLocked ? ' disabled' : ''; ?>"<?php echo $isLocked ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>Buat Butir Soal Baru</a>
-                <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
-            </div>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Butir Soal</h4>
+            <p class="admin-page-subtitle">Paket: <strong><?php echo htmlspecialchars($package['code']); ?></strong> — <?php echo htmlspecialchars($package['name']); ?></p>
+            <?php
+                $meta = [];
+                if (!empty($package['subject_name'])) {
+                    $meta[] = 'Mapel: ' . $package['subject_name'];
+                }
+                if (!empty($package['materi'])) {
+                    $meta[] = 'Materi: ' . $package['materi'];
+                }
+                if (!empty($package['submateri'])) {
+                    $meta[] = 'Submateri: ' . $package['submateri'];
+                }
+            ?>
+            <?php if ($meta): ?>
+                <div class="admin-page-subtitle small mt-1"><?php echo htmlspecialchars(implode(' • ', $meta)); ?></div>
+            <?php endif; ?>
+            <?php if ($isLocked): ?>
+                <div class="admin-page-subtitle small text-danger mt-1">Status: <strong>Terbit</strong>. Perubahan butir soal dikunci.</div>
+            <?php endif; ?>
         </div>
+        <div class="admin-page-actions">
+            <?php if (!$isLocked && $draftItemsCount > 0): ?>
+                <form method="post" class="m-0" data-swal-confirm data-swal-title="Bersihkan Soal Draft?" data-swal-text="Hapus semua butir soal draft dari paket ini?">
+                    <input type="hidden" name="action" value="remove_draft_questions">
+                    <button type="submit" class="btn btn-outline-warning btn-sm">Bersihkan Draft (<?php echo (int)$draftItemsCount; ?>)</button>
+                </form>
+            <?php endif; ?>
+            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm<?php echo $isLocked ? ' disabled' : ''; ?>"<?php echo $isLocked ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>Buat Butir Soal Baru</a>
+            <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
 
         <?php if ($errors): ?>
             <div class="alert alert-danger py-2 small">
@@ -320,8 +379,7 @@ include __DIR__ . '/../includes/header.php';
                     Tambah Soal dari Pilihan
                 </button>
 
-                <?php $hasPickerFilter = ($filterSubjectId > 0) || ($filterMateri !== '') || ($filterSubmateri !== ''); ?>
-                <div class="collapse mt-2 <?php echo $hasPickerFilter ? 'show' : ''; ?>" id="addFromBank">
+                <div class="collapse mt-2" id="addFromBank">
                     <div class="border rounded p-2 bg-light">
                         <div class="mb-2">
                             <form method="get" class="row g-2 align-items-end m-0">
@@ -368,27 +426,66 @@ include __DIR__ . '/../includes/header.php';
                         </div>
 
                         <form method="post" class="row g-2 align-items-end">
-                            <input type="hidden" name="action" value="add_question">
+                            <input type="hidden" name="action" value="add_questions_bulk">
                             <div class="col-12 col-md-9">
                                 <label class="form-label small">Pilih Soal</label>
-                                <select name="question_id" class="form-select form-select-sm" required>
-                                    <option value="">-- pilih soal --</option>
-                                    <?php foreach ($questionOptions as $q): ?>
-                                        <?php
-                                            $label = '[' . $q['subject_name'] . '] #' . $q['id'] . ' - ' . trim(mb_substr($q['pertanyaan'], 0, 60));
-                                            if (mb_strlen($q['pertanyaan']) > 60) {
-                                                $label .= '...';
-                                            }
-                                        ?>
-                                        <option value="<?php echo (int)$q['id']; ?>"><?php echo htmlspecialchars($label); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="form-text small">Menampilkan 200 soal terbaru yang belum ada di paket (sesuai filter).</div>
+                                <?php if (!$questionOptions): ?>
+                                    <div class="alert alert-info py-2 small mb-0">Tidak ada soal tersedia untuk ditambahkan (atau sudah semua masuk paket).</div>
+                                <?php else: ?>
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                        <div class="small text-muted">Pilih cepat:</div>
+                                        <div class="btn-group btn-group-sm" role="group" aria-label="Pilih cepat">
+                                            <button type="button" class="btn btn-outline-secondary" data-picker-action="check_all">Centang Semua</button>
+                                            <button type="button" class="btn btn-outline-secondary" data-picker-action="clear_all">Kosongkan</button>
+                                        </div>
+                                    </div>
+                                    <div class="border rounded bg-white p-2 overflow-auto" style="max-height: 320px;">
+                                        <?php foreach ($questionOptions as $q): ?>
+                                            <?php
+                                                    $plain = preg_replace('/\s+/', ' ', trim(strip_tags((string)($q['pertanyaan'] ?? ''))));
+                                                    $label = '[' . $q['subject_name'] . '] #' . $q['id'] . ' - ' . trim(mb_substr($plain, 0, 60));
+                                                    if (mb_strlen($plain) > 60) {
+                                                    $label .= '...';
+                                                }
+                                            ?>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="question_ids[]" value="<?php echo (int)$q['id']; ?>" id="pick_q_<?php echo (int)$q['id']; ?>">
+                                                <label class="form-check-label small" for="pick_q_<?php echo (int)$q['id']; ?>"><?php echo htmlspecialchars($label); ?></label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="form-text small">Centang beberapa soal, lalu klik <strong>Tambah Terpilih</strong>. Menampilkan 200 soal terbaru yang belum ada di paket (sesuai filter).</div>
+                                <?php endif; ?>
                             </div>
                             <div class="col-12 col-md-3 d-grid">
-                                <button type="submit" class="btn btn-primary btn-sm">Tambah</button>
+                                <button type="submit" class="btn btn-primary btn-sm" <?php echo !$questionOptions ? 'disabled' : ''; ?>>Tambah Terpilih</button>
                             </div>
                         </form>
+
+                        <script>
+                        (function () {
+                            var root = document.getElementById('addFromBank');
+                            if (!root) return;
+
+                            var onClick = function (ev) {
+                                var btn = ev.target && ev.target.closest ? ev.target.closest('[data-picker-action]') : null;
+                                if (!btn) return;
+                                var action = btn.getAttribute('data-picker-action');
+                                if (!action) return;
+
+                                var boxes = root.querySelectorAll('input[type="checkbox"][name="question_ids[]"]');
+                                if (!boxes || boxes.length === 0) return;
+
+                                if (action === 'check_all') {
+                                    boxes.forEach(function (b) { b.checked = true; });
+                                } else if (action === 'clear_all') {
+                                    boxes.forEach(function (b) { b.checked = false; });
+                                }
+                            };
+
+                            root.addEventListener('click', onClick);
+                        })();
+                        </script>
                     </div>
                 </div>
             </div>
@@ -412,7 +509,11 @@ include __DIR__ . '/../includes/header.php';
                     <?php foreach ($items as $it): ?>
                         <tr>
                             <td><?php echo ($it['question_number'] === null ? '-' : (int)$it['question_number']); ?></td>
-                            <td class="text-break"><?php echo htmlspecialchars((string)($it['pertanyaan'] ?? '')); ?></td>
+                            <?php
+                                $itPlain = preg_replace('/\s+/', ' ', trim(strip_tags((string)($it['pertanyaan'] ?? ''))));
+                                $itPlain = mb_substr($itPlain, 0, 160);
+                            ?>
+                            <td class="text-break"><?php echo htmlspecialchars($itPlain); ?></td>
                             <td class="text-break">
                                 <?php
                                     $tipeView = (string)($it['tipe_soal'] ?? '');
@@ -450,6 +551,7 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
                 </tbody>
             </table>
+        </div>
         </div>
     </div>
 </div>

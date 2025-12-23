@@ -1,50 +1,29 @@
 <?php
-// Installer sederhana untuk membuat database dan user MySQL
 
-$message = '';
-$error = '';
+require_once __DIR__ . '/../config/db.php';
 
-/**
- * Seed data demo saat instalasi pertama (aman dijalankan berulang).
- * Membuat:
- * - Subject: Matematika
- * - Material: Statistika
- * - Submaterial: Bivariat
- * - 1 paket published + 10 soal Uraian (LaTeX)
- */
-function seedDemoStatistikaBivariat(PDO $pdo, string $dbName): void
+function seed_demo_statistika_bivariat(PDO $pdo): array
 {
-    $pdo->exec('USE `' . $dbName . '`');
-
-    $hasPackages = (bool)$pdo->query("SHOW TABLES LIKE 'packages'")->fetchColumn();
-    $hasQuestions = (bool)$pdo->query("SHOW TABLES LIKE 'questions'")->fetchColumn();
-    $hasSubjects = (bool)$pdo->query("SHOW TABLES LIKE 'subjects'")->fetchColumn();
-    $hasPQ = (bool)$pdo->query("SHOW TABLES LIKE 'package_questions'")->fetchColumn();
-    if (!$hasPackages || !$hasQuestions || !$hasSubjects || !$hasPQ) {
-        return;
-    }
-
     $packageCode = 'demo-statistika-bivariat';
+
+    $requiredTables = ['subjects', 'packages', 'questions', 'package_questions'];
+    foreach ($requiredTables as $t) {
+        $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($t));
+        if (!$stmt || !$stmt->fetchColumn()) {
+            return ['ok' => false, 'message' => "Tabel '{$t}' tidak ditemukan. Jalankan installer terlebih dulu."];
+        }
+    }
 
     // Jika paket demo sudah punya butir, jangan seed lagi.
     $stmt = $pdo->prepare('SELECT id FROM packages WHERE code = :c LIMIT 1');
     $stmt->execute([':c' => $packageCode]);
-    $existingPackageId = (int)$stmt->fetchColumn();
-    if ($existingPackageId > 0) {
+    $packageId = (int)$stmt->fetchColumn();
+
+    if ($packageId > 0) {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM package_questions WHERE package_id = :pid');
-        $stmt->execute([':pid' => $existingPackageId]);
+        $stmt->execute([':pid' => $packageId]);
         if ((int)$stmt->fetchColumn() > 0) {
-            return;
-        }
-    } else {
-        // Jika sudah ada data lain (user sudah isi), jangan tambahkan demo otomatis.
-        $stmt = $pdo->query('SELECT COUNT(*) FROM questions');
-        if ((int)$stmt->fetchColumn() > 0) {
-            return;
-        }
-        $stmt = $pdo->query('SELECT COUNT(*) FROM packages');
-        if ((int)$stmt->fetchColumn() > 0) {
-            return;
+            return ['ok' => true, 'message' => 'Seed dilewati: paket demo sudah berisi soal.'];
         }
     }
 
@@ -61,7 +40,7 @@ function seedDemoStatistikaBivariat(PDO $pdo, string $dbName): void
             $subjectId = (int)$pdo->lastInsertId();
         }
 
-        // Material/Submaterial (best effort bila tabelnya ada)
+        // Material/Submaterial (best-effort)
         $materi = 'Statistika';
         $submateri = 'Bivariat';
         $hasMaterials = (bool)$pdo->query("SHOW TABLES LIKE 'materials'")->fetchColumn();
@@ -82,10 +61,10 @@ function seedDemoStatistikaBivariat(PDO $pdo, string $dbName): void
         // Paket demo (published agar tampil di beranda)
         $packageName = 'Demo Statistika — Bivariat (10 Soal)';
         $packageDesc = <<<'HTML'
-    <p>Paket contoh bawaan untuk instalasi pertama.</p>
-    <p>Materi: <strong>Statistika</strong> • Submateri: <strong>Bivariat</strong>.</p>
-    <p>Berisi 10 soal campuran (PG, PG Kompleks, Benar/Salah, Menjodohkan, Uraian) dengan notasi LaTeX (ditulis dengan tanda <code>$...$</code>).</p>
-    HTML;
+<p>Paket contoh bawaan untuk instalasi pertama.</p>
+<p>Materi: <strong>Statistika</strong> • Submateri: <strong>Bivariat</strong>.</p>
+<p>Berisi 10 soal campuran (PG, PG Kompleks, Benar/Salah, Menjodohkan, Uraian) dengan notasi LaTeX (ditulis dengan tanda <code>$...$</code>).</p>
+HTML;
 
         $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status, published_at)
             VALUES (:c, :n, :sid, :m, :sm, :d, "published", NOW())
@@ -181,7 +160,7 @@ HTML,
                 'jb' => 'pilihan_1,pilihan_2,pilihan_4',
             ],
 
-            // Benar/Salah (4 pernyataan)
+            // Benar/Salah
             [
                 'tipe' => 'Benar/Salah',
                 'pertanyaan' => '<p>Tentukan Benar/Salah untuk pernyataan berikut.</p>',
@@ -203,7 +182,7 @@ HTML,
                 'jb' => 'Benar|Benar|Benar|Salah',
             ],
 
-            // Menjodohkan (minimal 2 pasang, disimpan di jawaban_benar)
+            // Menjodohkan
             [
                 'tipe' => 'Menjodohkan',
                 'pertanyaan' => '<p>Jodohkan istilah dengan definisinya.</p>',
@@ -274,6 +253,7 @@ HTML,
                 ':sm' => $submateri,
                 ':st' => 'published',
             ]);
+
             $qid = (int)$pdo->lastInsertId();
             $stmtLink->execute([
                 ':pid' => $packageId,
@@ -284,165 +264,20 @@ HTML,
         }
 
         $pdo->commit();
+        return ['ok' => true, 'message' => 'Seed berhasil: paket demo + 10 soal ditambahkan.'];
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        // Jangan mengganggu instalasi; seed hanya bonus.
+        return ['ok' => false, 'message' => 'Seed gagal: ' . $e->getMessage()];
     }
 }
 
-/**
- * Perbarui konfigurasi koneksi database di config/config.php
- */
-function updateConfigDbCredentials(string $dbHost, string $dbName, string $dbUser, string $dbPass): void
-{
-    $configPath = __DIR__ . '/../config/config.php';
-    if (!file_exists($configPath)) {
-        return;
-    }
+$result = seed_demo_statistika_bivariat($pdo);
 
-    $content = file_get_contents($configPath);
-    if ($content === false) {
-        return;
-    }
-
-    $replacements = [
-        'DB_HOST' => $dbHost,
-        'DB_NAME' => $dbName,
-        'DB_USER' => $dbUser,
-        'DB_PASS' => $dbPass,
-    ];
-
-    foreach ($replacements as $key => $value) {
-        $pattern = "/define\(\s*'" . $key . "'\s*,\s*'[^']*'\s*\);/";
-        $replacement = "define('" . $key . "', '" . addslashes($value) . "');";
-        $content = preg_replace($pattern, $replacement, $content, 1);
-    }
-
-    file_put_contents($configPath, $content);
+if (PHP_SAPI === 'cli') {
+    fwrite(STDOUT, ($result['ok'] ? '[OK] ' : '[ERROR] ') . $result['message'] . PHP_EOL);
+} else {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo ($result['ok'] ? '[OK] ' : '[ERROR] ') . $result['message'];
 }
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $rootHost = trim($_POST['root_host'] ?? 'localhost');
-    $rootUser = trim($_POST['root_user'] ?? 'root');
-    $rootPass = $_POST['root_pass'] ?? '';
-
-    $dbName = 'web-mathdosman';
-    $appUser = 'mathdosman';
-    $appPass = 'admin 007007';
-
-    try {
-        $dsn = 'mysql:host=' . $rootHost . ';charset=utf8mb4';
-        $pdo = new PDO($dsn, $rootUser, $rootPass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-
-        // Buat database jika belum ada
-        $pdo->exec('CREATE DATABASE IF NOT EXISTS `'.$dbName.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-
-        // Import struktur tabel dari file SQL ke database tersebut
-        $sqlFile = __DIR__ . '/../database.sql';
-        if (file_exists($sqlFile)) {
-            $sql = file_get_contents($sqlFile);
-            if ($sql !== false) {
-                // Pastikan menggunakan DB yang baru dibuat
-                $sql = preg_replace('/USE `?[^`]+`?;?/i', 'USE `'.$dbName.'`;', $sql, 1);
-                $pdo->exec($sql);
-            }
-        }
-
-        // Pastikan akun admin default tersedia (agar login tidak gagal setelah instalasi)
-        // Password default: 123456
-        $pdo->exec('USE `'.$dbName.'`');
-        $adminHash = password_hash('123456', PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, name, role)
-            VALUES (:u, :ph, :n, 'admin')
-            ON DUPLICATE KEY UPDATE
-                password_hash = VALUES(password_hash),
-                name = VALUES(name),
-                role = VALUES(role)");
-        $stmt->execute([
-            ':u' => 'admin',
-            ':ph' => $adminHash,
-            ':n' => 'Administrator',
-        ]);
-
-        // Seed contoh paket & soal (hanya saat instalasi pertama).
-        seedDemoStatistikaBivariat($pdo, $dbName);
-
-        // Coba buat user aplikasi dan beri hak akses ke database
-        $appUserCreated = false;
-        try {
-            // Hapus user lama dengan nama sama (opsional, tergantung hak akses)
-            try {
-                $pdo->exec("DROP USER IF EXISTS '$appUser'@'localhost'");
-            } catch (PDOException $eDrop) {
-                // Abaikan jika tidak boleh drop user
-            }
-
-            $pdo->exec("CREATE USER IF NOT EXISTS '$appUser'@'localhost' IDENTIFIED BY '$appPass'");
-            $pdo->exec("GRANT ALL PRIVILEGES ON `$dbName`.* TO '$appUser'@'localhost'");
-            $pdo->exec('FLUSH PRIVILEGES');
-            $appUserCreated = true;
-        } catch (PDOException $eUser) {
-            // Jika tidak punya hak CREATE USER / GRANT, lanjutkan tanpa membuat user khusus
-            $appUserCreated = false;
-        }
-
-        if ($appUserCreated) {
-            // Pakai user khusus di konfigurasi aplikasi
-            updateConfigDbCredentials($rootHost, $dbName, $appUser, $appPass);
-            $message = 'Instalasi berhasil. Database dan user aplikasi sudah dibuat. Anda dapat mengakses situs di <a href="../index.php">beranda</a> dan login admin di <a href="../login.php">login admin</a>.';
-        } else {
-            // Pakai akun yang dipakai installer (root/akun lain) di konfigurasi aplikasi
-            updateConfigDbCredentials($rootHost, $dbName, $rootUser, $rootPass);
-            $message = 'Instalasi berhasil. Database sudah dibuat, namun user khusus aplikasi tidak dapat dibuat karena keterbatasan hak akses (CREATE USER/GRANT). Aplikasi akan menggunakan akun MySQL yang Anda masukkan di atas. Anda dapat mengakses situs di <a href="../index.php">beranda</a> dan login admin di <a href="../login.php">login admin</a>.';
-        }
-    } catch (PDOException $e) {
-        $error = 'Gagal melakukan instalasi: ' . htmlspecialchars($e->getMessage());
-    }
-}
-?><!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Installer - MATHDOSMAN</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container" style="max-width: 600px; margin-top: 40px;">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h3 class="card-title mb-3">Installer MATHDOSMAN</h3>
-            <p class="text-muted">Gunakan form ini untuk membuat database MySQL yang dibutuhkan aplikasi. Masukkan akun MySQL yang memiliki izin membuat database (misalnya akun root XAMPP Anda).</p>
-
-            <?php if ($message): ?>
-                <div class="alert alert-success"><?php echo $message; ?></div>
-            <?php endif; ?>
-            <?php if ($error): ?>
-                <div class="alert alert-danger"><?php echo $error; ?></div>
-            <?php endif; ?>
-
-            <form method="post">
-                <div class="mb-3">
-                    <label class="form-label">Host MySQL (root)</label>
-                    <input type="text" name="root_host" class="form-control" value="<?php echo htmlspecialchars($_POST['root_host'] ?? 'localhost'); ?>">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Username MySQL (root)</label>
-                    <input type="text" name="root_user" class="form-control" value="<?php echo htmlspecialchars($_POST['root_user'] ?? 'root'); ?>">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Password MySQL (root)</label>
-                    <input type="password" name="root_pass" class="form-control" value="<?php echo htmlspecialchars($_POST['root_pass'] ?? ''); ?>">
-                </div>
-                <button type="submit" class="btn btn-primary">Jalankan Instalasi</button>
-            </form>
-            <hr>
-            <p class="small text-muted mb-0">Setelah instalasi sukses, hapus folder <code>install</code> untuk keamanan.</p>
-        </div>
-    </div>
-</div>
-</body>
-</html>

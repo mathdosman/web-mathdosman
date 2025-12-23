@@ -13,6 +13,7 @@ try {
         materi VARCHAR(150) NULL,
         submateri VARCHAR(150) NULL,
         description TEXT NULL,
+        show_answers_public TINYINT(1) NOT NULL DEFAULT 0,
         status ENUM('draft','published') NOT NULL DEFAULT 'draft',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
@@ -45,6 +46,7 @@ ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
 ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
 ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
 ensure_package_column($pdo, 'description', 'description TEXT NULL');
+ensure_package_column($pdo, 'show_answers_public', 'show_answers_public TINYINT(1) NOT NULL DEFAULT 0');
 
 $errors = [];
 
@@ -143,6 +145,20 @@ if ($filterSubmateri !== '' && !in_array($filterSubmateri, $submaterials, true))
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+
+    if ($action === 'toggle_show_answers_public') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id > 0) {
+            try {
+                $stmt = $pdo->prepare('UPDATE packages SET show_answers_public = IF(show_answers_public = 1, 0, 1) WHERE id = :id');
+                $stmt->execute([':id' => $id]);
+                header('Location: ' . $returnUrl);
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = 'Gagal mengubah izin tampil jawaban.';
+            }
+        }
+    }
 
     if ($action === 'toggle_status') {
         $id = (int)($_POST['id'] ?? 0);
@@ -260,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $packages = [];
 try {
-    $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
+    $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
         COALESCE(d.cnt, 0) AS draft_count,
         s.name AS subject_name
         FROM packages p
@@ -299,21 +315,23 @@ try {
 $page_title = 'Paket Soal';
 include __DIR__ . '/../includes/header.php';
 ?>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Paket Soal</h4>
+            <p class="admin-page-subtitle">Buat paket soal dan tambahkan butir soal ke dalam paket.</p>
+        </div>
+        <div class="admin-page-actions">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel">
+                Filter
+            </button>
+            <a class="btn btn-primary btn-sm" href="package_add.php">Tambah Paket Soal</a>
+        </div>
+    </div>
+
 <div class="card">
     <div class="card-body">
         <div class="mb-3 pb-3 border-bottom">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
-                <div>
-                    <h5 class="card-title mb-1">Daftar Paket Soal</h5>
-                    <div class="text-muted small">Buat paket soal dan tambahkan butir soal ke dalam paket.</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel">
-                        Filter
-                    </button>
-                    <a class="btn btn-primary btn-sm" href="package_add.php">Tambah Paket Soal</a>
-                </div>
-            </div>
 
             <?php
                 $hasFilter = ($filterSubjectId > 0) || ($filterMateri !== '') || ($filterSubmateri !== '');
@@ -462,6 +480,31 @@ include __DIR__ . '/../includes/header.php';
                                     </a>
 
                                     <form method="post" class="m-0">
+                                        <input type="hidden" name="action" value="toggle_show_answers_public">
+                                        <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
+                                        <?php $showPublic = ((int)($p['show_answers_public'] ?? 0)) === 1; ?>
+                                        <?php if ($showPublic): ?>
+                                            <button type="submit" class="btn btn-outline-dark btn-sm d-inline-flex align-items-center justify-content-center" title="Sembunyikan Jawaban (Publik)" aria-label="Sembunyikan Jawaban (Publik)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a21.8 21.8 0 0 1 5.06-7.94"/>
+                                                    <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.89 4.3"/>
+                                                    <path d="M14.12 14.12a3 3 0 0 1-4.24-4.24"/>
+                                                    <path d="M1 1l22 22"/>
+                                                </svg>
+                                                <span class="visually-hidden">Sembunyikan Jawaban</span>
+                                            </button>
+                                        <?php else: ?>
+                                            <button type="submit" class="btn btn-outline-dark btn-sm d-inline-flex align-items-center justify-content-center" title="Izinkan Jawaban (Publik)" aria-label="Izinkan Jawaban (Publik)">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                                <span class="visually-hidden">Izinkan Jawaban</span>
+                                            </button>
+                                        <?php endif; ?>
+                                    </form>
+
+                                    <form method="post" class="m-0">
                                         <input type="hidden" name="action" value="duplicate">
                                         <input type="hidden" name="id" value="<?php echo (int)$p['id']; ?>">
                                         <button type="submit" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center" title="Duplikat Paket" aria-label="Duplikat Paket">
@@ -531,5 +574,6 @@ include __DIR__ . '/../includes/header.php';
             </table>
         </div>
     </div>
+</div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

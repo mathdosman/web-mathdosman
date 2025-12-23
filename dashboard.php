@@ -7,10 +7,12 @@ $user = $_SESSION['user'];
 $page_title = 'Dashboard';
 include __DIR__ . '/includes/header.php';
 ?>
-<div class="admin-dashboard">
-    <div class="admin-hero mb-3">
-        <h4 class="mb-1">Dashboard Admin</h4>
-        <p class="mb-0">Selamat datang, <strong><?php echo htmlspecialchars($user['name']); ?></strong>. Gunakan menu berikut untuk mengelola konten dan data.</p>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Dashboard Admin</h4>
+            <p class="admin-page-subtitle">Selamat datang, <strong><?php echo htmlspecialchars($user['name']); ?></strong>. Gunakan menu berikut untuk mengelola konten dan data.</p>
+        </div>
     </div>
 
     <div class="row">

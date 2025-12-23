@@ -282,29 +282,30 @@ try {
 $page_title = 'MAPEL / Materi / Submateri';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-    <div>
-        <h5 class="mb-1">MAPEL</h5>
-        <div class="text-muted small">Kelola Mapel, Materi, dan Submateri untuk dropdown saat input butir soal.</div>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">MAPEL</h4>
+            <p class="admin-page-subtitle">Kelola Mapel, Materi, dan Submateri untuk dropdown saat input butir soal.</p>
+        </div>
+        <div class="admin-page-actions">
+            <form method="get" class="d-flex gap-2 align-items-center">
+                <?php if ($selectedSubjectId > 0): ?><input type="hidden" name="subject_id" value="<?php echo (int)$selectedSubjectId; ?>"><?php endif; ?>
+                <?php if ($selectedMaterialId > 0): ?><input type="hidden" name="material_id" value="<?php echo (int)$selectedMaterialId; ?>"><?php endif; ?>
+                <input type="hidden" name="subject_page" value="1">
+                <input type="hidden" name="material_page" value="1">
+                <input type="hidden" name="submaterial_page" value="1">
+                <label class="small text-muted">Tampilkan</label>
+                <select class="form-select form-select-sm w-auto" name="per_page" onchange="this.form.submit()">
+                    <?php foreach ([10,25,50] as $pp): ?>
+                        <option value="<?php echo (int)$pp; ?>" <?php echo $perPage === (int)$pp ? 'selected' : ''; ?>><?php echo (int)$pp; ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="small text-muted">/ halaman</span>
+            </form>
+            <a href="dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+        </div>
     </div>
-    <div class="d-flex gap-2 align-items-center">
-        <form method="get" class="d-flex gap-2 align-items-center">
-            <?php if ($selectedSubjectId > 0): ?><input type="hidden" name="subject_id" value="<?php echo (int)$selectedSubjectId; ?>"><?php endif; ?>
-            <?php if ($selectedMaterialId > 0): ?><input type="hidden" name="material_id" value="<?php echo (int)$selectedMaterialId; ?>"><?php endif; ?>
-            <input type="hidden" name="subject_page" value="1">
-            <input type="hidden" name="material_page" value="1">
-            <input type="hidden" name="submaterial_page" value="1">
-            <label class="small text-muted">Tampilkan</label>
-            <select class="form-select form-select-sm" name="per_page" style="width:auto" onchange="this.form.submit()">
-                <?php foreach ([10,25,50] as $pp): ?>
-                    <option value="<?php echo (int)$pp; ?>" <?php echo $perPage === (int)$pp ? 'selected' : ''; ?>><?php echo (int)$pp; ?></option>
-                <?php endforeach; ?>
-            </select>
-            <span class="small text-muted">/ halaman</span>
-        </form>
-        <a href="dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
-    </div>
-</div>
 
 <?php if ($errors): ?>
     <div class="alert alert-danger py-2 small">
@@ -519,6 +520,8 @@ include __DIR__ . '/../includes/header.php';
             </form>
         </div>
     </div>
+</div>
+
 </div>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

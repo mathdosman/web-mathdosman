@@ -10,14 +10,20 @@ $totalQuestions = (int)$pdo->query('SELECT COUNT(*) FROM questions')->fetchColum
 $page_title = 'Bank Soal';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="row">
-    <div class="col-12 mb-3">
-        <h4>Bank Soal</h4>
-        <p class="text-muted mb-0">Impor dan ekspor soal melalui file Excel (.xlsx). Format kolom disesuaikan agar mendukung tipe soal seperti di cbt-eschool.</p>
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h4 class="admin-page-title">Bank Soal</h4>
+            <p class="admin-page-subtitle">Impor dan ekspor soal melalui file Excel (.xlsx). Format kolom disesuaikan agar mendukung tipe soal seperti di cbt-eschool.</p>
+        </div>
+        <div class="admin-page-actions">
+            <a href="questions_import.php" class="btn btn-outline-primary btn-sm">Buka Import</a>
+            <a href="questions_export.php" class="btn btn-outline-secondary btn-sm">Export (XLS)</a>
+        </div>
     </div>
-</div>
-<div class="row mb-3">
-    <div class="col-md-4 mb-3">
+
+    <div class="row mb-3">
+        <div class="col-md-4 mb-3">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Ringkasan Data</h5>
@@ -35,12 +41,14 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </form>
 
-                <a href="questions_import.php" class="btn btn-outline-primary btn-sm">Buka Halaman Import</a>
-                <a href="questions_export.php" class="btn btn-outline-secondary btn-sm">Export (XLS)</a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="questions_import.php" class="btn btn-outline-primary btn-sm">Buka Halaman Import</a>
+                    <a href="questions_export.php" class="btn btn-outline-secondary btn-sm">Export (XLS)</a>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-8 mb-3">
+        </div>
+        <div class="col-md-8 mb-3">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Format Excel yang Digunakan</h5>
@@ -65,6 +73,8 @@ include __DIR__ . '/../includes/header.php';
                     <li><strong>created_at</strong>: boleh dikosongkan (akan diisi otomatis saat import).</li>
                 </ul>
             </div>
+        </div>
+    </div>
         </div>
     </div>
 </div>
