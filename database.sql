@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS questions (
     pilihan_5 TEXT NULL,
     gambar_pilihan_5 VARCHAR(255) NULL,
     jawaban_benar TEXT NULL,
+    penyelesaian TEXT NULL,
         status_soal ENUM('draft','published') NOT NULL DEFAULT 'draft',
         materi VARCHAR(255) DEFAULT NULL,
         submateri VARCHAR(255) DEFAULT NULL,

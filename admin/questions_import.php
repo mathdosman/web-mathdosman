@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/richtext.php';
 require_role('admin');
 
 // Excel reader (PhpSpreadsheet)
@@ -492,12 +493,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $questionsHasCreatedAt = false;
                             }
 
+                            $questionsHasPenyelesaian = false;
+                            try {
+                                $questionsHasPenyelesaian = (bool)$pdo->query("SHOW COLUMNS FROM questions LIKE 'penyelesaian'")->fetch();
+                            } catch (Throwable $e) {
+                                $questionsHasPenyelesaian = false;
+                            }
+
                             $stmtFindPackage = $pdo->prepare('SELECT id FROM packages WHERE name = :n ORDER BY id DESC LIMIT 1');
                             $stmtCreatePackage = $pdo->prepare('INSERT INTO packages (code, name, subject_id, description, status, published_at)
                                 VALUES (:c, :n, :sid, :d, :s, NULL)');
 
-                            $stmtInsertQuestionWithDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar, created_at) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co, :ca)');
-                            $stmtInsertQuestionNoDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co)');
+                            if ($questionsHasPenyelesaian) {
+                                $stmtInsertQuestionWithDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, penyelesaian, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar, created_at) VALUES (:sid, :qt, :pz, :a, :b, :c, :d, :e, :t, :st, :co, :ca)');
+                                $stmtInsertQuestionNoDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, penyelesaian, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar) VALUES (:sid, :qt, :pz, :a, :b, :c, :d, :e, :t, :st, :co)');
+                            } else {
+                                $stmtInsertQuestionWithDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar, created_at) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co, :ca)');
+                                $stmtInsertQuestionNoDate = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, tipe_soal, status_soal, jawaban_benar) VALUES (:sid, :qt, :a, :b, :c, :d, :e, :t, :st, :co)');
+                            }
                             // Do not use INSERT IGNORE here; we want to know if attach fails.
                             $stmtAttach = $pdo->prepare('INSERT INTO package_questions (package_id, question_id, question_number) VALUES (:pid, :qid, :no)');
 
@@ -525,6 +538,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $nomerSoal = (int)trim((string)($row[$idx['nomer_soal']] ?? 0));
                                 $namaPaket = trim((string)($row[$idx[$packageKey]] ?? ''));
                                 $pertanyaan = trim((string)($row[$idx['pertanyaan']] ?? ''));
+                                $penyelesaian = '';
+                                if (isset($idx['penyelesaian'])) {
+                                    $penyelesaian = trim((string)($row[$idx['penyelesaian']] ?? ''));
+                                }
                                 $tipeRaw = trim((string)($row[$idx['tipe_soal']] ?? ''));
                                 if ($tipeRaw === '') {
                                     $tipeRaw = 'pg';
@@ -543,6 +560,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $isEmptyRich = function (string $html): bool {
                                     return trim(strip_tags($html)) === '' && strpos($html, '<img') === false;
                                 };
+
+                                $pertanyaan = sanitize_rich_text($pertanyaan);
+                                $penyelesaian = sanitize_rich_text($penyelesaian);
+                                $p1 = sanitize_rich_text($p1);
+                                $p2 = sanitize_rich_text($p2);
+                                $p3 = sanitize_rich_text($p3);
+                                $p4 = sanitize_rich_text($p4);
+                                $p5 = sanitize_rich_text($p5);
+                                $penyelesaianDb = $isEmptyRich($penyelesaian) ? null : $penyelesaian;
+                                if ($tipe === 'Uraian') {
+                                    $jawaban = sanitize_rich_text($jawaban);
+                                    if ($isEmptyRich($jawaban)) {
+                                        $jawaban = '';
+                                    }
+                                }
 
                                 $allowedTypes = [
                                     'Pilihan Ganda',
@@ -630,6 +662,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $params = [
                                         ':sid' => $defaultSubjectId,
                                         ':qt' => $pertanyaan,
+                                    ];
+                                    if ($questionsHasPenyelesaian) {
+                                        $params[':pz'] = $penyelesaianDb;
+                                    }
+                                    $params = array_merge($params, [
                                         ':a' => $p1,
                                         ':b' => $p2,
                                         ':c' => $p3,
@@ -638,7 +675,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         ':t' => $tipe,
                                         ':st' => $status,
                                         ':co' => $jawaban === '' ? null : $jawaban,
-                                    ];
+                                    ]);
                                     if ($createdAt && $questionsHasCreatedAt) {
                                         $params[':ca'] = $createdAt;
                                         $stmtInsertQuestionWithDate->execute($params);

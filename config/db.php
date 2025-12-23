@@ -133,6 +133,7 @@ try {
         $addColumnIfMissing('pilihan_5', "TEXT NULL");
         $addColumnIfMissing('gambar_pilihan_5', 'VARCHAR(255) NULL');
         $addColumnIfMissing('jawaban_benar', 'TEXT NULL');
+        $addColumnIfMissing('penyelesaian', 'TEXT NULL');
         $addColumnIfMissing('materi', 'VARCHAR(255) NULL');
         $addColumnIfMissing('submateri', 'VARCHAR(255) NULL');
         $addColumnIfMissing('status_soal', "ENUM('draft','published') NOT NULL DEFAULT 'draft'");
@@ -164,6 +165,17 @@ try {
             $type = is_array($col) ? strtolower((string)($col['Type'] ?? '')) : '';
             if ($type !== '' && !str_contains($type, 'text')) {
                 $pdo->exec("ALTER TABLE questions MODIFY jawaban_benar TEXT NULL");
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
+
+        // Pastikan penyelesaian bertipe TEXT.
+        try {
+            $col = $pdo->query("SHOW COLUMNS FROM questions LIKE 'penyelesaian'")->fetch();
+            $type = is_array($col) ? strtolower((string)($col['Type'] ?? '')) : '';
+            if ($type !== '' && !str_contains($type, 'text')) {
+                $pdo->exec("ALTER TABLE questions MODIFY penyelesaian TEXT NULL");
             }
         } catch (Throwable $e) {
             // ignore

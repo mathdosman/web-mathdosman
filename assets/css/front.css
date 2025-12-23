@@ -59,6 +59,77 @@
         transform: translateY(-1px);
     }
 
+    /* Daftar Isi (Table of Contents) */
+    body.front-page.daftar-isi .toc-grid {
+        max-width: 1140px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    body.front-page.daftar-isi .toc-card {
+        border-radius: .85rem;
+        overflow: hidden;
+        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+        background: var(--bs-body-bg);
+        min-height: 165px;
+    }
+
+    body.front-page.daftar-isi .toc-card-link-wrapper {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+        border-radius: .85rem;
+    }
+
+    body.front-page.daftar-isi .toc-card-link-wrapper:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--bs-primary) 45%, transparent);
+        outline-offset: 3px;
+    }
+
+    body.front-page.daftar-isi .toc-card:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--bs-box-shadow-sm);
+        border-color: color-mix(in srgb, var(--bs-border-color) 60%, var(--bs-primary));
+    }
+
+    body.front-page.daftar-isi .toc-card .card-body {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.front-page.daftar-isi .toc-card .h6 {
+        line-height: 1.35;
+    }
+
+    body.front-page.daftar-isi .toc-card-title {
+        color: var(--toc-accent, var(--bs-primary));
+        font-weight: 800;
+        font-size: 1.05rem;
+        letter-spacing: .015em;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    body.front-page.daftar-isi .toc-card-sub {
+        min-height: 1.25rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    body.front-page.daftar-isi .toc-card-bottom {
+        margin-top: auto;
+    }
+
+    body.front-page.daftar-isi .toc-card-link-wrapper:hover .toc-card-title {
+        color: color-mix(in srgb, var(--toc-accent, var(--bs-primary)) 80%, var(--bs-body-color));
+    }
+
     /* Section heading divider (Paket Soal) */
     body.front-page .section-heading {
         padding-bottom: .5rem;
@@ -140,6 +211,59 @@
         max-width: 980px;
     }
 
+    @media (min-width: 992px) {
+        body.paket-preview.paket-dock .app-container {
+            max-width: 1140px;
+        }
+
+        body.paket-preview.paket-dock .paket-dock-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        body.paket-preview.paket-dock .paket-dock-sidebar {
+            flex: 0 0 320px;
+            width: 320px;
+        }
+
+        body.paket-preview.paket-dock .paket-dock-sidebar {
+            border-radius: 12px;
+        }
+
+        body.paket-preview.paket-dock .paket-dock-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        /* When collapsed, go back to centered reading layout (prevents content jumping too far left). */
+        body.paket-preview.paket-dock.paket-sidebar-collapsed .app-container {
+            max-width: 980px;
+        }
+
+        body.paket-preview.paket-dock.paket-sidebar-collapsed .paket-dock-layout {
+            display: block;
+        }
+
+        body.paket-preview.paket-dock.paket-sidebar-collapsed .paket-dock-sidebar {
+            display: none !important;
+        }
+    }
+
+    /* Reuse admin sidebar look, but make each item stacked (judul/materi/jumlah). */
+    body.paket-preview .app-sidebar .sidebar-link {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .25rem;
+    }
+
+    /* Brighten paket sidebar (~30%) while keeping admin sidebar look. */
+    body.paket-preview .paket-dock-sidebar.app-sidebar.bg-dark,
+    body.paket-preview #paketSidebarOffcanvas.text-bg-dark {
+        background-color: color-mix(in srgb, var(--bs-dark) 70%, var(--bs-body-bg));
+    }
+
+
     body.paket-preview .paket-sheet {
         background: var(--bs-body-bg);
     }
@@ -157,14 +281,105 @@
         font-weight: bold;
     }
 
+    /* Kop header (Paket) */
+    body.paket-preview .kop-header {
+        text-align: center;
+        padding: 18px 10px;
+        background-color: var(--bs-tertiary-bg);
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        border-bottom: 4px double #1a237e;
+        margin: 0 auto 12px;
+        border-radius: 10px;
+    }
+
+    body.paket-preview .kop-header .container-kop {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+    }
+
+    body.paket-preview .kop-header .logo-svg {
+        width: 72px;
+        height: 72px;
+        flex: 0 0 auto;
+    }
+
+    body.paket-preview .kop-header .text-area {
+        text-align: left;
+    }
+
+    body.paket-preview .kop-header .brand-name {
+        font-size: 30px;
+        font-weight: 800;
+        color: #1a237e;
+        margin: 0;
+        letter-spacing: 1.5px;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    body.paket-preview .kop-header .slogan {
+        font-size: 14px;
+        color: #555;
+        margin: 6px 0 2px;
+        font-style: italic;
+    }
+
+    body.paket-preview .kop-header .jenjang-pendidikan {
+        font-size: 12px;
+        font-weight: 700;
+        color: #c5a021;
+        margin: 0;
+        letter-spacing: .6px;
+    }
+
+    @media (max-width: 600px) {
+        body.paket-preview .kop-header {
+            padding: 14px 10px;
+        }
+
+        body.paket-preview .kop-header .container-kop {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        body.paket-preview .kop-header .text-area {
+            text-align: center;
+        }
+
+        body.paket-preview .kop-header .brand-name {
+            font-size: 26px;
+        }
+    }
+
     body.paket-preview .oke {
         padding: 15px;
     }
 
     body.paket-preview hr {
         border: none;
-        border-top: 2px solid #000;
+        border-top: 2px solid var(--bs-border-color);
         margin: 1rem 0;
+    }
+
+    body.paket-preview hr.soal-divider {
+        border: 0;
+        height: 0;
+        border-top: 3px solid color-mix(in srgb, var(--bs-border-color) 85%, var(--bs-body-bg));
+        border-bottom: 1px solid color-mix(in srgb, var(--bs-border-color) 55%, var(--bs-body-bg));
+        margin: 1.25rem 0;
+    }
+
+    body.paket-preview .scroll-top-btn {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        line-height: 1;
+        z-index: 1030;
     }
 
     body.paket-preview .soal-header {

@@ -460,7 +460,7 @@ include __DIR__ . '/../includes/header.php';
                                     <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted"><?php echo htmlspecialchars($p['created_at']); ?></span></td>
+                            <td class="d-none d-md-table-cell"><span class="text-muted"><?php echo htmlspecialchars(format_id_date((string)($p['created_at'] ?? ''))); ?></span></td>
                             <td class="text-end">
                                 <div style="display:grid;grid-template-columns:repeat(2,max-content);gap:.25rem;justify-content:end;">
                                     <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_edit.php?id=<?php echo (int)$p['id']; ?>" title="Edit Paket" aria-label="Edit Paket">

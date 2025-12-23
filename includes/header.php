@@ -32,6 +32,45 @@ if ($body_class !== '') {
     $isFrontArea = (strpos($haystack, ' front-page ') !== false) || (strpos($haystack, ' paket-preview ') !== false);
 }
 
+if (!function_exists('format_id_date')) {
+    function format_id_date(?string $value): string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+
+        try {
+            $dt = new DateTime($value);
+        } catch (Throwable $e) {
+            // If parsing fails, return raw value.
+            return $value;
+        }
+
+        $months = [
+            1 => 'jan',
+            2 => 'feb',
+            3 => 'mar',
+            4 => 'apr',
+            5 => 'mei',
+            6 => 'jun',
+            7 => 'jul',
+            8 => 'agu',
+            9 => 'sep',
+            10 => 'okt',
+            11 => 'nov',
+            12 => 'des',
+        ];
+
+        $day = (int)$dt->format('d');
+        $monthNum = (int)$dt->format('n');
+        $year = (int)$dt->format('Y');
+        $mon = $months[$monthNum] ?? strtolower($dt->format('M'));
+
+        return sprintf('%02d %s %04d', $day, $mon, $year);
+    }
+}
+
 $brandLogoPath = null;
 $faviconPath = null;
 try {
@@ -123,6 +162,10 @@ try {
                     <li class="nav-item">
                         <?php $isActive = ($currentPage === '' || $currentPage === 'index.php'); ?>
                         <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/index.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>Beranda</a>
+                    </li>
+                    <li class="nav-item">
+                        <?php $isActive = ($currentPage === 'daftar-isi.php'); ?>
+                        <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/daftar-isi.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>Daftar Isi</a>
                     </li>
                     <li class="nav-item">
                         <?php $isActive = ($currentPage === 'tentang.php'); ?>

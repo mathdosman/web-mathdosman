@@ -21,6 +21,11 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<?php if (!empty($useAdminSidebar)): ?>
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+<?php endif; ?>
+
 <script>
 (() => {
 	const body = document.body;
@@ -62,6 +67,121 @@
 	};
 })();
 </script>
+
+<?php if (!empty($useAdminSidebar)): ?>
+<script>
+(() => {
+	if (typeof tinymce === 'undefined') {
+		return;
+	}
+
+	const baseSelector = 'textarea:not(.no-tinymce):not([data-editor="plain"]):not([disabled])';
+	const hasAnyTextarea = document.querySelector(baseSelector);
+	if (!hasAnyTextarea) {
+		return;
+	}
+
+	const uploadUrl = <?php echo json_encode(rtrim((string)$base_url, '/') . '/admin/uploadeditor.php'); ?>;
+
+	const triggerSaveSafe = () => {
+		try {
+			if (typeof tinymce !== 'undefined') {
+				tinymce.triggerSave();
+			}
+		} catch (e) {}
+	};
+
+	// Ensure editor content is synced into underlying <textarea> before any submit handlers/validation.
+	document.addEventListener('submit', () => {
+		triggerSaveSafe();
+	}, true);
+
+	const commonConfig = {
+		menubar: false,
+		statusbar: false,
+		branding: false,
+		promotion: false,
+		convert_urls: false,
+		relative_urls: false,
+		remove_script_host: false,
+		plugins: 'lists link image table code autoresize',
+		toolbar: 'undo redo | bold italic underline | bullist numlist | link image table | code',
+		images_upload_handler: (blobInfo, progress) => {
+			return new Promise((resolve, reject) => {
+				try {
+					const xhr = new XMLHttpRequest();
+					xhr.open('POST', uploadUrl);
+					xhr.responseType = 'json';
+
+					const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
+					if (token) {
+						xhr.setRequestHeader('X-CSRF-Token', token);
+					}
+
+					xhr.upload.onprogress = (e) => {
+						if (e.lengthComputable && typeof progress === 'function') {
+							progress((e.loaded / e.total) * 100);
+						}
+					};
+
+					xhr.onerror = () => reject('Upload gagal.');
+					xhr.onload = () => {
+						if (xhr.status < 200 || xhr.status >= 300) {
+							const msg = (xhr.response && xhr.response.error) ? xhr.response.error : ('HTTP ' + xhr.status);
+							reject(msg);
+							return;
+						}
+
+						const res = xhr.response;
+						if (res && typeof res.url === 'string' && res.url) {
+							resolve(res.url);
+							return;
+						}
+						reject('Respon upload tidak valid.');
+					};
+
+					const formData = new FormData();
+					formData.append('file', blobInfo.blob(), blobInfo.filename());
+					xhr.send(formData);
+				} catch (e) {
+					reject('Upload gagal.');
+				}
+			});
+		},
+		setup: (editor) => {
+			// Keep textarea updated during typing (helps required validation + debug tools).
+			editor.on('change keyup setcontent', () => {
+				triggerSaveSafe();
+			});
+		},
+	};
+
+	document.addEventListener('DOMContentLoaded', () => {
+		try {
+			// 1) Pertanyaan: height 320
+			const pertanyaan = document.querySelector('textarea#pertanyaan');
+			if (pertanyaan && pertanyaan.matches(baseSelector)) {
+				tinymce.init({
+					...commonConfig,
+					selector: 'textarea#pertanyaan',
+					height: 320,
+					min_height: 320,
+				});
+			}
+
+			// 2) Others keep default height 280
+			tinymce.init({
+				...commonConfig,
+				selector: baseSelector + ':not(#pertanyaan)',
+				height: 280,
+			});
+		} catch (e) {
+			// no-op
+		}
+	});
+})();
+</script>
+<?php endif; ?>
 
 <script>
 (() => {

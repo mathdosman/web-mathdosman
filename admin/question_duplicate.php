@@ -28,12 +28,12 @@ try {
 
     // Duplicate question as draft with fresh created_at
     $stmt = $pdo->prepare('INSERT INTO questions
-        (subject_id, pertanyaan, gambar_pertanyaan, tipe_soal,
+        (subject_id, pertanyaan, penyelesaian, gambar_pertanyaan, tipe_soal,
          pilihan_1, gambar_pilihan_1, pilihan_2, gambar_pilihan_2, pilihan_3, gambar_pilihan_3,
          pilihan_4, gambar_pilihan_4, pilihan_5, gambar_pilihan_5,
          jawaban_benar, status_soal, materi, submateri, created_at)
         VALUES
-        (:subject_id, :pertanyaan, :gambar_pertanyaan, :tipe_soal,
+        (:subject_id, :pertanyaan, :penyelesaian, :gambar_pertanyaan, :tipe_soal,
          :pilihan_1, :gambar_pilihan_1, :pilihan_2, :gambar_pilihan_2, :pilihan_3, :gambar_pilihan_3,
          :pilihan_4, :gambar_pilihan_4, :pilihan_5, :gambar_pilihan_5,
          :jawaban_benar, :status_soal, :materi, :submateri, NOW())');
@@ -41,6 +41,7 @@ try {
     $stmt->execute([
         ':subject_id' => (int)($q['subject_id'] ?? 0),
         ':pertanyaan' => (string)($q['pertanyaan'] ?? ''),
+        ':penyelesaian' => $q['penyelesaian'] ?? null,
         ':gambar_pertanyaan' => $q['gambar_pertanyaan'] ?? null,
         ':tipe_soal' => (string)($q['tipe_soal'] ?? 'pg'),
         ':pilihan_1' => $q['pilihan_1'] ?? null,
@@ -69,6 +70,56 @@ try {
     header('Location: ' . $dest);
     exit;
 } catch (Throwable $e) {
+    // If DB belum punya kolom penyelesaian, coba ulang tanpa kolom itu.
+    if ($e instanceof PDOException) {
+        $sqlState = (string)($e->errorInfo[0] ?? '');
+        $msg = (string)$e->getMessage();
+        if (($sqlState === '42S22' || stripos($msg, 'Unknown column') !== false) && stripos($msg, 'penyelesaian') !== false) {
+            try {
+                $stmt = $pdo->prepare('INSERT INTO questions
+                    (subject_id, pertanyaan, gambar_pertanyaan, tipe_soal,
+                     pilihan_1, gambar_pilihan_1, pilihan_2, gambar_pilihan_2, pilihan_3, gambar_pilihan_3,
+                     pilihan_4, gambar_pilihan_4, pilihan_5, gambar_pilihan_5,
+                     jawaban_benar, status_soal, materi, submateri, created_at)
+                    VALUES
+                    (:subject_id, :pertanyaan, :gambar_pertanyaan, :tipe_soal,
+                     :pilihan_1, :gambar_pilihan_1, :pilihan_2, :gambar_pilihan_2, :pilihan_3, :gambar_pilihan_3,
+                     :pilihan_4, :gambar_pilihan_4, :pilihan_5, :gambar_pilihan_5,
+                     :jawaban_benar, :status_soal, :materi, :submateri, NOW())');
+                $stmt->execute([
+                    ':subject_id' => (int)($q['subject_id'] ?? 0),
+                    ':pertanyaan' => (string)($q['pertanyaan'] ?? ''),
+                    ':gambar_pertanyaan' => $q['gambar_pertanyaan'] ?? null,
+                    ':tipe_soal' => (string)($q['tipe_soal'] ?? 'pg'),
+                    ':pilihan_1' => $q['pilihan_1'] ?? null,
+                    ':gambar_pilihan_1' => $q['gambar_pilihan_1'] ?? null,
+                    ':pilihan_2' => $q['pilihan_2'] ?? null,
+                    ':gambar_pilihan_2' => $q['gambar_pilihan_2'] ?? null,
+                    ':pilihan_3' => $q['pilihan_3'] ?? null,
+                    ':gambar_pilihan_3' => $q['gambar_pilihan_3'] ?? null,
+                    ':pilihan_4' => $q['pilihan_4'] ?? null,
+                    ':gambar_pilihan_4' => $q['gambar_pilihan_4'] ?? null,
+                    ':pilihan_5' => $q['pilihan_5'] ?? null,
+                    ':gambar_pilihan_5' => $q['gambar_pilihan_5'] ?? null,
+                    ':jawaban_benar' => $q['jawaban_benar'] ?? null,
+                    ':status_soal' => 'draft',
+                    ':materi' => $q['materi'] ?? null,
+                    ':submateri' => $q['submateri'] ?? null,
+                ]);
+
+                $newId = (int)$pdo->lastInsertId();
+                $dest = 'question_edit.php?id=' . $newId . '&return=' . urlencode($returnLink);
+                if ($packageId > 0) {
+                    $dest .= '&package_id=' . $packageId;
+                }
+                header('Location: ' . $dest);
+                exit;
+            } catch (Throwable $e2) {
+                // fall through
+            }
+        }
+    }
+
     // Fail safe
     header('Location: ' . $returnLink);
     exit;

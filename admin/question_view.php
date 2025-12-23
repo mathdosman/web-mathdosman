@@ -46,7 +46,29 @@ try {
 
 $page_title = 'Lihat Butir Soal';
 include __DIR__ . '/../includes/header.php';
+
+$swalFlash = null;
+if (isset($_SESSION['swal_flash']) && is_array($_SESSION['swal_flash'])) {
+    $swalFlash = $_SESSION['swal_flash'];
+    unset($_SESSION['swal_flash']);
+}
 ?>
+
+<?php if ($swalFlash): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Swal === 'undefined') return;
+    Swal.fire({
+        icon: <?php echo json_encode((string)($swalFlash['icon'] ?? 'success')); ?>,
+        title: <?php echo json_encode((string)($swalFlash['title'] ?? 'Info')); ?>,
+        text: <?php echo json_encode((string)($swalFlash['text'] ?? '')); ?>,
+        timer: 1800,
+        showConfirmButton: false,
+    });
+});
+</script>
+<?php endif; ?>
+
 <div class="admin-page">
     <div class="admin-page-header">
         <div>
@@ -77,6 +99,17 @@ include __DIR__ . '/../includes/header.php';
                     <div class="fw-semibold mb-1">Teks Soal</div>
                     <div class="border rounded p-3 bg-light small text-break"><?php echo (string)($question['pertanyaan'] ?? ''); ?></div>
                 </div>
+
+                <?php
+                    $penyelesaianHtml = (string)($question['penyelesaian'] ?? '');
+                    $penyelesaianHasContent = trim(strip_tags($penyelesaianHtml)) !== '' || strpos($penyelesaianHtml, '<img') !== false;
+                ?>
+                <?php if ($penyelesaianHasContent): ?>
+                    <div class="mb-3">
+                        <div class="fw-semibold mb-1">Penyelesaian</div>
+                        <div class="border rounded p-3 bg-light small text-break"><?php echo $penyelesaianHtml; ?></div>
+                    </div>
+                <?php endif; ?>
 
                 <div class="row g-2 small">
                     <div class="col-12 col-md-6">
@@ -168,7 +201,7 @@ include __DIR__ . '/../includes/header.php';
                         <?php endif; ?>
                     <?php endif; ?>
 
-                    <span class="text-muted ms-2">Dibuat: <?php echo htmlspecialchars($question['created_at']); ?></span>
+                    <span class="text-muted ms-2">Dibuat: <?php echo htmlspecialchars(format_id_date((string)($question['created_at'] ?? ''))); ?></span>
                 </div>
 
                 <?php if ($packages): ?>

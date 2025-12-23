@@ -34,6 +34,48 @@ pre {
     word-break: break-word;
 }
 
+/* Slightly tighter admin tables */
+.table-compact th,
+.table-compact td {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+/* Truncate long cell text without making the table wider */
+.md-cell-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Multi-line clamp for long excerpts (keeps table narrow, shows more words) */
+.md-cell-clamp {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+@media (max-width: 575.98px) {
+    .md-cell-clamp {
+        -webkit-line-clamp: 2;
+    }
+}
+
+/* Mobile tuning for Butir Soal list */
+.butir-soal-table .butir-col-info {
+    width: 320px;
+}
+
+@media (max-width: 575.98px) {
+    .butir-soal-table .butir-col-info {
+        width: 210px;
+    }
+    .butir-soal-table .butir-col-actions {
+        width: 140px;
+    }
+}
+
 .app-container {
     padding-left: 1rem;
     padding-right: 1rem;

@@ -115,7 +115,18 @@ if (!class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
 header('Content-Type: application/vnd.ms-excel; charset=utf-8');
 header('Content-Disposition: attachment; filename="questions_export_' . date('Ymd_His') . '.xls"');
 
-$headers = ['nomer_soal','nama_paket','pertanyaan','tipe_soal','pilihan_1','pilihan_2','pilihan_3','pilihan_4','pilihan_5','jawaban_benar','status_soal','created_at'];
+$hasPenyelesaian = false;
+try {
+    $hasPenyelesaian = (bool)$pdo->query("SHOW COLUMNS FROM questions LIKE 'penyelesaian'")->fetch();
+} catch (Throwable $e) {
+    $hasPenyelesaian = false;
+}
+
+$headers = ['nomer_soal','nama_paket','pertanyaan'];
+if ($hasPenyelesaian) {
+    $headers[] = 'penyelesaian';
+}
+$headers = array_merge($headers, ['tipe_soal','pilihan_1','pilihan_2','pilihan_3','pilihan_4','pilihan_5','jawaban_benar','status_soal','created_at']);
 
 $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
@@ -131,7 +142,11 @@ $rowIndex = 2;
 $sql = 'SELECT
     p.name AS nama_paket,
         pq.question_number AS nomer_soal,
-            q.pertanyaan AS pertanyaan,
+            q.pertanyaan AS pertanyaan,';
+if ($hasPenyelesaian) {
+    $sql .= "\n            q.penyelesaian AS penyelesaian,";
+}
+$sql .= '
             q.tipe_soal AS tipe_soal,
             q.pilihan_1 AS pilihan_1,
             q.pilihan_2 AS pilihan_2,
@@ -185,6 +200,11 @@ if ($stmt) {
             (string)($row['nomer_soal'] ?? ''),
             (string)($row['nama_paket'] ?? ''),
             (string)($row['pertanyaan'] ?? ''),
+        ];
+        if ($hasPenyelesaian) {
+            $values[] = (string)($row['penyelesaian'] ?? '');
+        }
+        $values = array_merge($values, [
             (string)$tipe,
             (string)($row['pilihan_1'] ?? ''),
             (string)($row['pilihan_2'] ?? ''),
@@ -194,7 +214,7 @@ if ($stmt) {
             (string)$jawaban,
             (string)($row['status_soal'] ?? ''),
             (string)($row['created_at'] ?? ''),
-        ];
+        ]);
 
         foreach ($values as $i => $v) {
             $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1) . (string)$rowIndex;

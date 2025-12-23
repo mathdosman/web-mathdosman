@@ -111,6 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return trim(strip_tags($html)) === '' && strpos($html, '<img') === false;
         };
 
+        $penyelesaian = sanitize_rich_text((string)($_POST['penyelesaian'] ?? ''));
+        $penyelesaianDb = $isEmpty($penyelesaian) ? null : $penyelesaian;
+
         // Namespaced payloads to avoid field-name collisions across question types.
         $pgPost = $_POST['pg'] ?? [];
         $bsPost = $_POST['bs'] ?? [];
@@ -264,10 +267,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo->beginTransaction();
 
-                $stmt = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, materi, submateri, status_soal) VALUES (:sid, :qt, :t, :a, :b, :c, :d, :e, :jb, :m, :sm, :st)');
+                $stmt = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, penyelesaian, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, materi, submateri, status_soal) VALUES (:sid, :qt, :pz, :t, :a, :b, :c, :d, :e, :jb, :m, :sm, :st)');
                 $stmt->execute([
                     ':sid' => $subjectIdSelected,
                     ':qt' => $pertanyaan,
+                    ':pz' => $penyelesaianDb,
                     ':t' => $tipeSoal,
                     ':a' => $p1,
                     ':b' => $p2,
@@ -294,7 +298,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'err' => $e->getMessage(),
                     'code' => (string)$e->getCode(),
                 ]);
-                $errors[] = 'Gagal menyimpan butir soal.';
+                if ($e instanceof PDOException) {
+                    $sqlState = (string)($e->errorInfo[0] ?? '');
+                    $msg = (string)$e->getMessage();
+                    if (($sqlState === '42S22' || stripos($msg, 'Unknown column') !== false) && stripos($msg, 'penyelesaian') !== false) {
+                        $errors[] = 'Kolom Penyelesaian belum ada di database. Jalankan update schema (ALTER TABLE questions ADD penyelesaian TEXT NULL) atau aktifkan runtime migrations.';
+                    } else {
+                        $errors[] = 'Gagal menyimpan butir soal.';
+                    }
+                } else {
+                    $errors[] = 'Gagal menyimpan butir soal.';
+                }
             }
         }
     }
@@ -531,6 +545,15 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <textarea class="form-control" name="uraian[jawaban_benar]" rows="3" required><?php echo htmlspecialchars((string)(($_POST['uraian']['jawaban_benar'] ?? null) ?? ($_POST['jawaban_benar'] ?? ''))); ?></textarea>
                         </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-top"></div>
+                    <div class="question-block border-2">
+                        <div class="question-block-header">
+                            <div class="option-label">Penyelesaian</div>
+                            <div class="option-help">Opsional</div>
+                        </div>
+                        <textarea class="form-control border-2" id="penyelesaian" name="penyelesaian" rows="4"><?php echo htmlspecialchars((string)($_POST['penyelesaian'] ?? '')); ?></textarea>
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap">

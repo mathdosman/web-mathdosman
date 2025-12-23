@@ -262,7 +262,7 @@ function hsl_to_rgb(int $h, int $s, int $l): array
                                             </h3>
                                             <div class="package-card-meta text-muted small">
                                                 Soal: <strong><?php echo (int)($p['published_questions'] ?? 0); ?></strong>
-                                                • Publish: <strong><?php echo htmlspecialchars($publishedAt); ?></strong>
+                                                • Publish: <strong><?php echo htmlspecialchars(format_id_date($publishedAt)); ?></strong>
                                             </div>
                                         </div>
 
@@ -335,7 +335,7 @@ function hsl_to_rgb(int $h, int $s, int $l): array
                             <?php foreach ($latestPackages as $lp): ?>
                                 <a class="list-group-item list-group-item-action" href="paket.php?code=<?php echo urlencode((string)($lp['code'] ?? '')); ?>">
                                     <div class="fw-semibold text-truncate"><?php echo htmlspecialchars((string)($lp['name'] ?? '')); ?></div>
-                                    <div class="small text-muted"><?php echo htmlspecialchars((string)($lp['published_at'] ?? '')); ?></div>
+                                    <div class="small text-muted"><?php echo htmlspecialchars(format_id_date((string)($lp['published_at'] ?? ''))); ?></div>
                                 </a>
                             <?php endforeach; ?>
                         </div>

@@ -229,6 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $question['tipe_soal'] = $tipeEffective;
         $question['pertanyaan'] = (string)($_POST['pertanyaan'] ?? (string)($question['pertanyaan'] ?? ''));
+        $question['penyelesaian'] = (string)($_POST['penyelesaian'] ?? (string)($question['penyelesaian'] ?? ''));
 
         if ($tipeEffective === 'Pilihan Ganda' || $tipeEffective === 'Pilihan Ganda Kompleks') {
             $question['pilihan_1'] = (string)($pgPost['pilihan_1'] ?? ($_POST['pilihan_1'] ?? (string)($question['pilihan_1'] ?? '')));
@@ -309,6 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $pertanyaan = sanitize_rich_text((string)($_POST['pertanyaan'] ?? ''));
+    $penyelesaian = sanitize_rich_text((string)($_POST['penyelesaian'] ?? ''));
     $materi = trim((string)($_POST['materi'] ?? ''));
     $submateri = trim((string)($_POST['submateri'] ?? ''));
     if ($materi === '') {
@@ -341,6 +343,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isEmpty = function (string $html): bool {
         return trim(strip_tags($html)) === '' && strpos($html, '<img') === false;
     };
+
+    $penyelesaianDb = $isEmpty($penyelesaian) ? null : $penyelesaian;
 
     if ($isEmpty($pertanyaan)) {
         $errors[] = 'Pertanyaan wajib diisi.';
@@ -490,10 +494,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
-            $stmt = $pdo->prepare('UPDATE questions SET subject_id = :sid, pertanyaan = :qt, pilihan_1 = :a, pilihan_2 = :b, pilihan_3 = :c, pilihan_4 = :d, pilihan_5 = :e, tipe_soal = :t, jawaban_benar = :jb, materi = :m, submateri = :sm, status_soal = :st WHERE id = :id');
+            $stmt = $pdo->prepare('UPDATE questions SET subject_id = :sid, pertanyaan = :qt, penyelesaian = :pz, pilihan_1 = :a, pilihan_2 = :b, pilihan_3 = :c, pilihan_4 = :d, pilihan_5 = :e, tipe_soal = :t, jawaban_benar = :jb, materi = :m, submateri = :sm, status_soal = :st WHERE id = :id');
             $stmt->execute([
                 ':sid' => $subjectIdSelected,
                 ':qt' => $pertanyaan,
+                ':pz' => $penyelesaianDb,
                 ':a' => $p1,
                 ':b' => $p2,
                 ':c' => $p3,
@@ -507,6 +512,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':id' => $questionId,
             ]);
 
+            $_SESSION['swal_flash'] = [
+                'icon' => 'success',
+                'title' => 'Berhasil',
+                'text' => 'Perubahan berhasil disimpan.',
+            ];
+
             header('Location: question_view.php?id=' . $questionId . '&return=' . urlencode($returnLink));
             exit;
         } catch (PDOException $e) {
@@ -519,13 +530,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'err' => $e->getMessage(),
                 'code' => (string)$e->getCode(),
             ]);
-            $errors[] = 'Gagal menyimpan perubahan.';
+
+            $sqlState = (string)($e->errorInfo[0] ?? '');
+            $msg = (string)$e->getMessage();
+            if ($sqlState === '42S22' || stripos($msg, 'Unknown column') !== false) {
+                if (stripos($msg, 'penyelesaian') !== false) {
+                    $errors[] = 'Kolom Penyelesaian belum ada di database. Jalankan update schema (ALTER TABLE questions ADD penyelesaian TEXT NULL) atau aktifkan runtime migrations.';
+                } else {
+                    $errors[] = 'Gagal menyimpan karena struktur database belum sesuai (kolom tidak ditemukan).';
+                }
+            } else {
+                $errors[] = 'Gagal menyimpan perubahan.';
+            }
         }
     }
 
     // keep form values on error
     $question['tipe_soal'] = $tipeStored;
     $question['pertanyaan'] = $pertanyaan;
+    $question['penyelesaian'] = $penyelesaian;
     $question['subject_id'] = $subjectIdSelected;
     $question['materi'] = $materi;
     $question['submateri'] = $submateri;
@@ -615,6 +638,19 @@ if ($tipeSoalView === 'Menjodohkan') {
                             <?php endforeach; ?>
                         </ul>
                     </div>
+
+                    <?php if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($formAction ?? '') === 'save' && !$isLocked): ?>
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            if (typeof Swal === 'undefined') return;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal menyimpan',
+                                text: <?php echo json_encode((string)($errors[0] ?? 'Gagal menyimpan perubahan.')); ?>,
+                            });
+                        });
+                        </script>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if (($legacyMateriInvalid || $legacySubmateriInvalid) && !$isLocked): ?>
@@ -719,23 +755,25 @@ if ($tipeSoalView === 'Menjodohkan') {
                         <?php for ($i = 1; $i <= 5; $i++): $field = 'pilihan_' . $i; ?>
                             <div class="mb-3 option-block">
                                 <div class="option-block-header">
-                                    <div class="option-label">Opsi <?php echo chr(64 + (int)$i); ?></div>
-                                    <div class="option-help">Tandai jawaban</div>
+                                    <div>
+                                        <div class="option-label">Opsi <?php echo chr(64 + (int)$i); ?></div>
+                                        <div class="option-help">Tandai jawaban</div>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input checkbox-jawaban-benar"
+                                            id="jb_<?php echo $field; ?>"
+                                            name="pg[jawaban_benar][]"
+                                            value="<?php echo $field; ?>"
+                                            onchange="checkOnlyOne(this)"
+                                            <?php echo in_array($field, $jawabanCheckbox, true) ? 'checked' : ''; ?>
+                                            <?php echo $isLocked ? 'disabled' : ''; ?>
+                                        >
+                                        <label class="form-check-label" for="jb_<?php echo $field; ?>">Benar</label>
+                                    </div>
                                 </div>
                                 <textarea class="form-control" id="<?php echo $field; ?>" name="pg[<?php echo $field; ?>]" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question[$field] ?? '')); ?></textarea>
-                                <div class="form-check answer-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input checkbox-jawaban-benar"
-                                        id="jb_<?php echo $field; ?>"
-                                        name="pg[jawaban_benar][]"
-                                        value="<?php echo $field; ?>"
-                                        onclick="checkOnlyOne(this)"
-                                        <?php echo in_array($field, $jawabanCheckbox, true) ? 'checked' : ''; ?>
-                                        <?php echo $isLocked ? 'disabled' : ''; ?>
-                                    >
-                                    <label class="form-check-label" for="jb_<?php echo $field; ?>">Jawaban Benar</label>
-                                </div>
                             </div>
                         <?php endfor; ?>
                     </div>
@@ -791,6 +829,15 @@ if ($tipeSoalView === 'Menjodohkan') {
                             </div>
                             <textarea class="form-control" name="uraian[jawaban_benar]" rows="3" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars($jawabanRaw); ?></textarea>
                         </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-top"></div>
+                    <div class="question-block border-2">
+                        <div class="question-block-header">
+                            <div class="option-label">Penyelesaian</div>
+                            <div class="option-help">Opsional</div>
+                        </div>
+                        <textarea class="form-control border-2" id="penyelesaian" name="penyelesaian" rows="4" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)($question['penyelesaian'] ?? '')); ?></textarea>
                     </div>
 
                     <div class="d-flex gap-2 flex-wrap">

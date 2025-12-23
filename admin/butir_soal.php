@@ -199,24 +199,20 @@ include __DIR__ . '/../includes/header.php';
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle mb-0">
+                <table class="table table-hover table-striped align-middle mb-0 table-fit table-sm table-compact butir-soal-table">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 70px;">ID</th>
-                            <th style="min-width: 160px;">Kategori</th>
-                            <th style="min-width: 160px;">Paket</th>
-                            <th style="min-width: 140px;">Materi</th>
-                            <th style="min-width: 160px;">Submateri</th>
-                            <th style="min-width: 140px;">Tipe</th>
-                            <th style="width: 120px;">Status</th>
+                            <th class="text-nowrap d-none d-sm-table-cell" style="width: 70px;">ID</th>
+                            <th class="butir-col-info">Info</th>
                             <th>Soal</th>
-                            <th style="width: 140px;" class="text-end">Aksi</th>
+                            <th class="text-nowrap d-none d-md-table-cell" style="width: 110px;">Deskripsi</th>
+                            <th class="text-end text-nowrap butir-col-actions" style="width: 160px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (!$rows): ?>
                         <tr>
-                            <td colspan="9" class="text-center text-muted p-4">Tidak ada data.</td>
+                            <td colspan="5" class="text-center text-muted p-4">Tidak ada data.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($rows as $r): ?>
@@ -229,42 +225,93 @@ include __DIR__ . '/../includes/header.php';
                                 $qText = strip_tags((string)($r['pertanyaan'] ?? ''));
                                 $qText = preg_replace('/\s+/', ' ', $qText ?? '') ?? '';
                                 $qText = trim($qText);
-                                if (mb_strlen($qText) > 140) {
-                                    $qText = mb_substr($qText, 0, 140) . '…';
+                                $qTextFull = $qText;
+                                if (mb_strlen($qText) > 220) {
+                                    $qText = mb_substr($qText, 0, 220) . '…';
                                 }
                             ?>
                             <tr>
-                                <td class="text-muted">#<?php echo (int)$r['id']; ?></td>
-                                <td><?php echo htmlspecialchars((string)$r['subject_name']); ?></td>
+                                <td class="text-muted d-none d-sm-table-cell">#<?php echo (int)$r['id']; ?></td>
                                 <td>
                                     <?php
                                         $pkgCnt = (int)($r['package_count'] ?? 0);
                                         $pkgCodes = trim((string)($r['package_codes'] ?? ''));
+
+                                        $materi = trim((string)($r['materi'] ?? ''));
+                                        $submateri = trim((string)($r['submateri'] ?? ''));
+                                        $materiLabel = $materi;
+                                        if ($materiLabel !== '' && $submateri !== '') {
+                                            $materiLabel .= ' / ' . $submateri;
+                                        } elseif ($materiLabel === '') {
+                                            $materiLabel = $submateri;
+                                        }
                                     ?>
-                                    <?php if ($pkgCnt <= 0): ?>
-                                        <span class="badge text-bg-light">Belum</span>
-                                    <?php elseif ($pkgCnt === 1): ?>
-                                        <span class="badge text-bg-primary"><?php echo htmlspecialchars($pkgCodes); ?></span>
-                                    <?php else: ?>
-                                        <span class="badge text-bg-primary"><?php echo (int)$pkgCnt; ?> paket</span>
-                                    <?php endif; ?>
+                                    <div class="d-sm-none text-muted small mb-1">
+                                        #<?php echo (int)$r['id']; ?>
+                                        <?php if ($status === 'published'): ?>
+                                            <span class="badge text-bg-success ms-1">published</span>
+                                        <?php else: ?>
+                                            <span class="badge text-bg-secondary ms-1">draft</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="fw-semibold text-truncate" title="<?php echo htmlspecialchars((string)$r['subject_name']); ?>">
+                                        <?php echo htmlspecialchars((string)$r['subject_name']); ?>
+                                    </div>
+                                    <div class="text-muted small text-truncate d-none d-md-block" title="<?php echo htmlspecialchars($materiLabel); ?>">
+                                        <?php echo htmlspecialchars($materiLabel); ?>
+                                    </div>
+                                    <div class="text-muted small text-truncate d-none d-md-block" title="<?php echo htmlspecialchars($tipe); ?>">
+                                        <?php echo htmlspecialchars($tipe); ?>
+                                    </div>
+                                    <div class="mt-1">
+                                        <?php if ($pkgCnt <= 0): ?>
+                                            <span class="badge text-bg-light">Belum</span>
+                                        <?php elseif ($pkgCnt === 1): ?>
+                                            <span class="badge text-bg-primary" title="<?php echo htmlspecialchars($pkgCodes); ?>"><?php echo htmlspecialchars($pkgCodes); ?></span>
+                                        <?php else: ?>
+                                            <span class="badge text-bg-primary" title="<?php echo htmlspecialchars($pkgCodes); ?>"><?php echo (int)$pkgCnt; ?> paket</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
-                                <td><?php echo htmlspecialchars((string)($r['materi'] ?? '')); ?></td>
-                                <td><?php echo htmlspecialchars((string)($r['submateri'] ?? '')); ?></td>
-                                <td><?php echo htmlspecialchars($tipe); ?></td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     <?php if ($status === 'published'): ?>
                                         <span class="badge text-bg-success">published</span>
                                     <?php else: ?>
                                         <span class="badge text-bg-secondary">draft</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="text-muted small"><?php echo htmlspecialchars($qText); ?></td>
+                                <td class="text-muted small">
+                                    <div class="md-cell-clamp" title="<?php echo htmlspecialchars($qTextFull); ?>"><?php echo htmlspecialchars($qText); ?></div>
+                                </td>
                                 <td class="text-end">
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <a class="btn btn-outline-secondary btn-sm" href="question_view.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>">Lihat</a>
-                                        <a class="btn btn-primary btn-sm" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>">Edit</a>
-                                        <a class="btn btn-outline-primary btn-sm" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>">Atur Paket</a>
+                                    <div style="display:grid;grid-template-columns:repeat(3,max-content);gap:.25rem;justify-content:end;">
+                                        <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat Soal" aria-label="Lihat Soal">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                            <span class="visually-hidden">Lihat</span>
+                                        </a>
+
+                                        <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Edit Soal" aria-label="Edit Soal">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M12 20h9"/>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                                            </svg>
+                                            <span class="visually-hidden">Edit</span>
+                                        </a>
+
+                                        <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Atur Paket" aria-label="Atur Paket">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M8 6h13"/>
+                                                <path d="M8 12h13"/>
+                                                <path d="M8 18h13"/>
+                                                <path d="M3 6h.01"/>
+                                                <path d="M3 12h.01"/>
+                                                <path d="M3 18h.01"/>
+                                            </svg>
+                                            <span class="visually-hidden">Paket</span>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>

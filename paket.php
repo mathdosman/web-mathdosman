@@ -65,6 +65,7 @@ if ($isAdmin && $requestedShowAnswers) {
 $items = [];
 try {
     $sql = 'SELECT q.id, q.pertanyaan, q.tipe_soal, q.status_soal,
+        q.penyelesaian,
         q.pilihan_1, q.pilihan_2, q.pilihan_3, q.pilihan_4, q.pilihan_5,
         q.jawaban_benar,
         q.materi, q.submateri,
@@ -85,9 +86,99 @@ try {
     $items = [];
 }
 
+// Sidebar: 5 paket terkait, 5 paket terbaru, 5 paket random.
+$sidebarPackagesRelated = [];
+$sidebarPackagesLatest = [];
+$sidebarPackagesRandom = [];
+
+try {
+    $params = [':curr' => (int)($package['id'] ?? 0)];
+    $where = 'WHERE p.id <> :curr';
+
+    $materi = trim((string)($package['materi'] ?? ''));
+    if ($materi !== '') {
+        $where .= ' AND p.materi = :m';
+        $params[':m'] = $materi;
+    } else {
+        // Fallback jika materi kosong: pakai subject agar tetap relevan.
+        $sid = (int)($package['subject_id'] ?? 0);
+        if ($sid > 0) {
+            $where .= ' AND p.subject_id = :sid';
+            $params[':sid'] = $sid;
+        }
+    }
+
+    if (!$isAdmin) {
+        $where .= ' AND p.status = "published"';
+    }
+
+    $stmt = $pdo->prepare('SELECT p.code, p.name, p.materi, p.created_at, p.published_at, p.status,
+            COUNT(pq.question_id) AS question_count
+        FROM packages p
+        LEFT JOIN package_questions pq ON pq.package_id = p.id
+        ' . $where . '
+        GROUP BY p.id, p.code, p.name, p.materi, p.created_at, p.published_at, p.status
+        ORDER BY RAND()
+        LIMIT 5');
+    $stmt->execute($params);
+    $sidebarPackagesRelated = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $sidebarPackagesRelated = [];
+}
+
+try {
+    $params = [];
+    $where = 'WHERE 1';
+    $sid = (int)($package['subject_id'] ?? 0);
+    if ($sid > 0) {
+        $where .= ' AND p.subject_id = :sid';
+        $params[':sid'] = $sid;
+    }
+    if (!$isAdmin) {
+        $where .= ' AND p.status = "published"';
+    }
+    $stmt = $pdo->prepare('SELECT p.code, p.name, p.materi, p.created_at, p.published_at, p.status,
+            COUNT(pq.question_id) AS question_count
+        FROM packages p
+        LEFT JOIN package_questions pq ON pq.package_id = p.id
+        ' . $where . '
+        GROUP BY p.id, p.code, p.name, p.materi, p.created_at, p.published_at, p.status
+        ORDER BY COALESCE(p.published_at, p.created_at) DESC
+        LIMIT 5');
+    $stmt->execute($params);
+    $sidebarPackagesLatest = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $sidebarPackagesLatest = [];
+}
+
+try {
+    $params = [];
+    $where = 'WHERE 1';
+    $sid = (int)($package['subject_id'] ?? 0);
+    if ($sid > 0) {
+        $where .= ' AND p.subject_id = :sid';
+        $params[':sid'] = $sid;
+    }
+    if (!$isAdmin) {
+        $where .= ' AND p.status = "published"';
+    }
+    $stmt = $pdo->prepare('SELECT p.code, p.name, p.materi, p.created_at, p.published_at, p.status,
+            COUNT(pq.question_id) AS question_count
+        FROM packages p
+        LEFT JOIN package_questions pq ON pq.package_id = p.id
+        ' . $where . '
+        GROUP BY p.id, p.code, p.name, p.materi, p.created_at, p.published_at, p.status
+        ORDER BY RAND()
+        LIMIT 5');
+    $stmt->execute($params);
+    $sidebarPackagesRandom = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $sidebarPackagesRandom = [];
+}
+
 $page_title = (string)($package['name'] ?? 'Preview Paket');
 $use_print_soal_css = true;
-$body_class = 'front-page paket-preview';
+$body_class = 'front-page paket-preview paket-dock';
 $use_mathjax = true;
 include __DIR__ . '/includes/header.php';
 
@@ -203,15 +294,105 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
 
     return '<strong>' . htmlspecialchars($jawabanRaw) . '</strong>';
 };
+
+$renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $code): void {
+    ?>
+    <div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
+    <?php if (!$list): ?>
+        <div class="small text-white-50 mb-3">Belum ada data.</div>
+    <?php else: ?>
+        <nav class="nav flex-column mb-3">
+            <?php foreach ($list as $row): ?>
+                <?php
+                    $pkgCode = (string)($row['code'] ?? '');
+                    $pkgName = (string)($row['name'] ?? '');
+                    $pkgMateri = trim((string)($row['materi'] ?? ''));
+                    $count = (int)($row['question_count'] ?? 0);
+                    $href = ($pkgCode !== '') ? ('paket.php?code=' . urlencode($pkgCode)) : '';
+                    $isDraft = ((string)($row['status'] ?? '') !== 'published');
+                    $isActive = ($pkgCode !== '' && $pkgCode === $code);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo htmlspecialchars($href !== '' ? $href : '#'); ?>" <?php echo $href === '' ? 'aria-disabled="true"' : ''; ?> <?php echo $isActive ? 'aria-current="page"' : ''; ?>>
+                    <div class="d-flex align-items-start justify-content-between gap-2 w-100">
+                        <div class="fw-semibold" style="line-height:1.25;">
+                            <?php echo htmlspecialchars($pkgName !== '' ? $pkgName : '(tanpa judul)'); ?>
+                        </div>
+                        <?php if ($isAdmin && $isDraft): ?>
+                            <span class="badge text-bg-secondary">Draft</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="small text-white-50">
+                        Materi: <?php echo htmlspecialchars($pkgMateri !== '' ? $pkgMateri : '-'); ?>
+                        <span class="mx-1">|</span>
+                        Jumlah soal: <?php echo (int)$count; ?>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+    <?php endif; ?>
+    <?php
+};
 ?>
 <div class="row">
-    <div class="col-12 col-lg-10 mx-auto">
+    <div class="col-12">
         <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-            <a href="index.php" class="btn btn-outline-secondary btn-sm">&laquo; Kembali</a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="index.php" class="btn btn-dark btn-sm fw-semibold">&laquo; Kembali</a>
+                <button type="button" class="btn btn-dark btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Paket</button>
+                <button type="button" class="btn btn-dark btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Tutup Paket</button>
+            </div>
             <div class="text-muted small">Kode: <strong><?php echo htmlspecialchars((string)$package['code']); ?></strong></div>
         </div>
 
-        <div class="paket-sheet">
+        <div class="offcanvas offcanvas-start d-lg-none text-bg-dark" tabindex="-1" id="paketSidebarOffcanvas" aria-labelledby="paketSidebarOffcanvasLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="paketSidebarOffcanvasLabel">Daftar Paket</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
+            </div>
+            <div class="offcanvas-body app-sidebar">
+                <?php
+                    $renderSidebarPackages('5 Paket Terkait', $sidebarPackagesRelated);
+                    $renderSidebarPackages('5 Paket Terbaru', $sidebarPackagesLatest);
+                    $renderSidebarPackages('5 Paket Random', $sidebarPackagesRandom);
+                ?>
+            </div>
+        </div>
+
+        <div class="paket-dock-layout">
+            <div class="paket-dock-sidebar d-none d-lg-block app-sidebar bg-dark text-white p-3" id="paketDockSidebar">
+                <div class="d-grid gap-2 mb-2">
+                    <button type="button" class="btn btn-outline-light btn-sm" id="paketDockClose">Tutup Sidebar</button>
+                </div>
+                <?php
+                    $renderSidebarPackages('5 Paket Terkait', $sidebarPackagesRelated);
+                    $renderSidebarPackages('5 Paket Terbaru', $sidebarPackagesLatest);
+                    $renderSidebarPackages('5 Paket Random', $sidebarPackagesRandom);
+                ?>
+            </div>
+
+            <div class="paket-dock-main">
+                <div class="paket-sheet">
+                    <header class="kop-header" aria-label="Kop MathDosman">
+                        <div class="container-kop">
+                            <?php if (!empty($brandLogoPath)): ?>
+                                <img class="logo-svg" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="72" height="72" alt="Logo MathDosman" loading="eager" decoding="async">
+                            <?php else: ?>
+                                <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                                    <circle cx="50" cy="50" r="48" stroke="#c5a021" stroke-width="2"/>
+                                    <path d="M30 70V30L50 50L70 30V70" stroke="#1a237e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M40 50C40 40 60 60 60 50C60 40 40 60 40 50Z" stroke="#c5a021" stroke-width="3" stroke-linecap="round"/>
+                                    <path d="M25 45Q25 35 30 35" stroke="#1a237e" stroke-width="2" fill="none"/>
+                                </svg>
+                            <?php endif; ?>
+
+                            <div class="text-area">
+                                <div class="brand-name">MathDosman</div>
+                                <div class="slogan">Pusat Latihan Soal &amp; Referensi Matematika Terpadu</div>
+                                <div class="jenjang-pendidikan">SD &bull; SMP &bull; SMA &bull; SMK &bull; PERGURUAN TINGGI</div>
+                            </div>
+                        </div>
+                    </header>
+
             <?php if ($isAdmin && (($package['status'] ?? '') !== 'published')): ?>
                 <div class="alert alert-warning">Mode Admin: paket ini masih <strong>draft</strong>, hanya admin yang bisa melihatnya.</div>
             <?php endif; ?>
@@ -230,7 +411,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <div class="small text-muted">Dibuat: <?php echo htmlspecialchars((string)($package['created_at'] ?? '')); ?></div>
+                        <div class="small text-muted">Dibuat: <?php echo htmlspecialchars(format_id_date((string)($package['created_at'] ?? ''))); ?></div>
                     </div>
                 </div>
                 <?php if (trim((string)($package['description'] ?? '')) !== ''): ?>
@@ -243,6 +424,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
             <?php if (!$items): ?>
                 <div class="alert alert-info">Belum ada soal di paket ini.</div>
             <?php else: ?>
+                <?php $totalItems = count($items); ?>
                 <?php foreach ($items as $idx => $q): ?>
                     <?php
                         $no = $q['question_number'] === null ? ($idx + 1) : (int)$q['question_number'];
@@ -252,7 +434,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
                             $tipe = 'Pilihan Ganda';
                         }
                     ?>
-                    <div class="custom-card mb-3">
+                    <div class="custom-card mb-3" id="q-<?php echo (int)($q['id'] ?? 0); ?>">
                         <div class="custom-card-header">
                             <div class="d-flex align-items-center justify-content-between gap-2">
                                 <div>
@@ -522,12 +704,95 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
                                         <div class="mt-1"><?php echo $renderJawaban($q); ?></div>
                                     </div>
                                 <?php endif; ?>
+
+                            <?php
+                                $penyelesaianHtmlRaw = (string)($q['penyelesaian'] ?? '');
+                                $penyelesaianRendered = $renderHtml($penyelesaianHtmlRaw);
+                                $penyelesaianHasContent = $penyelesaianRendered !== '';
+                                $collapseId = 'collapsePenyelesaian_' . (int)($q['id'] ?? 0);
+                            ?>
+                            <?php if ($penyelesaianHasContent): ?>
+                                <div class="mt-3 pt-2 border-top">
+                                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>"
+                                            aria-controls="<?php echo htmlspecialchars($collapseId); ?>"
+                                            aria-expanded="false"
+                                        >
+                                            Penyelesaian
+                                        </button>
+                                    </div>
+                                    <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
+                                        <div class="border rounded p-2 bg-warning-subtle small text-break">
+                                            <?php echo $penyelesaianRendered; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
+
+                    <?php if ($idx < ($totalItems - 1)): ?>
+                        <hr class="soal-divider" />
+                    <?php endif; ?>
                 <?php endforeach; ?>
             <?php endif; ?>
+
+                </div>
+            </div>
         </div>
+
+        <button
+            type="button"
+            id="scrollTopBtn"
+            class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3 scroll-top-btn"
+            aria-label="Ke atas"
+            title="Ke atas"
+        >
+            <span aria-hidden="true">↑</span>
+        </button>
+
+        <script>
+        (() => {
+            const body = document.body;
+            const btn = document.getElementById('paketDockToggle');
+            const closeBtn = document.getElementById('paketDockClose');
+            const cls = 'paket-sidebar-collapsed';
+
+            const scrollTopBtn = document.getElementById('scrollTopBtn');
+            if (scrollTopBtn) {
+                scrollTopBtn.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            if (!btn) return;
+
+            const sync = () => {
+                const collapsed = body.classList.contains(cls);
+                btn.textContent = collapsed ? 'Buka Paket' : 'Tutup Paket';
+                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            };
+
+            btn.addEventListener('click', () => {
+                body.classList.toggle(cls);
+                sync();
+            });
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    body.classList.add(cls);
+                    sync();
+                });
+            }
+
+            sync();
+        })();
+        </script>
     </div>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>
