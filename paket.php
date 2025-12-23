@@ -698,6 +698,8 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
                                     </div>
                                 <?php elseif ($tipe === 'Benar/Salah' || $tipe === 'Menjodohkan'): ?>
                                     <!-- Jawaban ditampilkan inline sesuai tipe -->
+                                <?php elseif ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks'): ?>
+                                    <!-- Pilihan ganda: jawaban sudah ditandai pada opsi (tanpa label tambahan) -->
                                 <?php else: ?>
                                     <div class="mt-3 pt-2 border-top">
                                         <div class="small text-muted">Jawaban Benar</div>
