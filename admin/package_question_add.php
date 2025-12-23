@@ -775,6 +775,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         const uploadUrl = 'uploadeditor.php';
                         const deleteUrl = 'hapus_gambar_editor.php';
+                        const csrfToken = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
 
                         const warnResizeIfNeeded = (file) => {
                             try {
@@ -806,6 +807,9 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             warnResizeIfNeeded(file);
                             const fd = new FormData();
                             fd.append('file', file);
+                            if (csrfToken) {
+                                fd.append('csrf_token', csrfToken);
+                            }
                             $.ajax({
                                 url: uploadUrl,
                                 method: 'POST',
@@ -813,6 +817,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                 cache: false,
                                 contentType: false,
                                 processData: false,
+                                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
                                 success: function (res) {
                                     if (res && res.url) {
                                         $editor.summernote('insertImage', res.url);
@@ -831,7 +836,13 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         const deleteBySrc = (src) => {
                             if (!src) return;
-                            $.post(deleteUrl, { src: src });
+                            const data = csrfToken ? { src: src, csrf_token: csrfToken } : { src: src };
+                            $.ajax({
+                                url: deleteUrl,
+                                method: 'POST',
+                                data,
+                                headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+                            });
                         };
 
                         const $editor = $('#pertanyaan.rich-editor');

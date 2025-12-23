@@ -4,17 +4,9 @@ if (!isset($page_title)) {
 }
 require_once __DIR__ . '/../config/config.php';
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/session.php';
 
-if (empty($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
-    try {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    } catch (Throwable $e) {
-        $_SESSION['csrf_token'] = bin2hex((string)microtime(true));
-    }
-}
+app_session_start();
 
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
 

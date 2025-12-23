@@ -1,9 +1,9 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/security.php';
+
+app_session_start();
 
 function redirect_to(string $path): void
 {
@@ -32,5 +32,10 @@ function require_role($role) {
         http_response_code(403);
         echo 'Akses ditolak';
         exit;
+    }
+
+    // CSRF protection for all authenticated admin POST actions.
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+        require_csrf_valid();
     }
 }

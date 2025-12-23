@@ -4,6 +4,11 @@
 $message = '';
 $error = '';
 
+$lockFile = __DIR__ . '/installed.lock';
+if (is_file($lockFile) && (string)($_GET['force'] ?? '') !== '1') {
+    $message = 'Installer dinonaktifkan karena aplikasi sudah pernah diinstal.<br>Jika Anda ingin install ulang: hapus file <code>install/installed.lock</code> atau buka <a href="?force=1">installer dengan force=1</a>.';
+}
+
 /**
  * Seed data demo saat instalasi pertama (aman dijalankan berulang).
  * Membuat:
@@ -323,7 +328,7 @@ function updateConfigDbCredentials(string $dbHost, string $dbName, string $dbUse
     file_put_contents($configPath, $content);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (!$message && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $rootHost = trim($_POST['root_host'] ?? 'localhost');
     $rootUser = trim($_POST['root_user'] ?? 'root');
     $rootPass = $_POST['root_pass'] ?? '';
@@ -398,6 +403,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Pakai akun yang dipakai installer (root/akun lain) di konfigurasi aplikasi
             updateConfigDbCredentials($rootHost, $dbName, $rootUser, $rootPass);
             $message = 'Instalasi berhasil. Database sudah dibuat, namun user khusus aplikasi tidak dapat dibuat karena keterbatasan hak akses (CREATE USER/GRANT). Aplikasi akan menggunakan akun MySQL yang Anda masukkan di atas. Anda dapat mengakses situs di <a href="../index.php">beranda</a> dan login admin di <a href="../login.php">login admin</a>.';
+        }
+
+        // Write install lock (best effort)
+        try {
+            @file_put_contents($lockFile, "installed_at=" . date('c') . "\n");
+        } catch (Throwable $e) {
+            // ignore
         }
     } catch (PDOException $e) {
         $error = 'Gagal melakukan instalasi: ' . htmlspecialchars($e->getMessage());

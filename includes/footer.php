@@ -69,6 +69,26 @@
 
 <script>
 (() => {
+	// Automatically attach CSRF token to all POST forms.
+	document.addEventListener('DOMContentLoaded', () => {
+		const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
+		if (!token) return;
+		const forms = Array.from(document.querySelectorAll('form[method="post"], form[method="POST"]'));
+		forms.forEach((form) => {
+			if (!(form instanceof HTMLFormElement)) return;
+			if (form.querySelector('input[name="csrf_token"]')) return;
+			const input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = 'csrf_token';
+			input.value = token;
+			form.appendChild(input);
+		});
+	});
+})();
+</script>
+
+<script>
+(() => {
 	if (typeof Swal === 'undefined') {
 		return;
 	}
