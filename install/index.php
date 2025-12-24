@@ -315,10 +315,7 @@ HTML,
 }
 
 /**
- * Jalankan semua seed yang tersedia.
- * - Demo Statistika Bivariat (built-in)
- * - Paket Polinomial-01
- * - Paket Turunan-01
+ * Jalankan semua seed yang tersedia (berdasarkan registry scripts/seeds.php).
  *
  * @return array<int, array{ok:bool, message:string}>
  */
@@ -373,14 +370,8 @@ function runAllSeeds(PDO $pdo, string $dbName): array
         return $results;
     }
 
-    // Fallback (jika registry belum ada): hanya jalankan demo built-in.
-    try {
-        seedDemoStatistikaBivariat($pdo, $dbName);
-        $results[] = ['ok' => true, 'message' => 'Seed demo statistika: OK'];
-    } catch (Throwable $e) {
-        $results[] = ['ok' => false, 'message' => 'Seed demo statistika gagal: ' . $e->getMessage()];
-    }
-
+    // Jika registry tidak ada / kosong, jangan seed apa pun.
+    $results[] = ['ok' => false, 'message' => 'Registry seed tidak ditemukan atau kosong. Tidak ada seed yang dijalankan.'];
     return $results;
 }
 
@@ -425,7 +416,6 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $appPass = 'admin 007007';
 
     try {
-        $doSeed = isset($_POST['do_seed']) && (string)($_POST['do_seed'] ?? '') === '1';
         $dsn = 'mysql:host=' . $rootHost . ';charset=utf8mb4';
         $pdo = new PDO($dsn, $rootUser, $rootPass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -475,11 +465,8 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ':n' => 'Administrator',
         ]);
 
-        // Seed contoh paket & soal (opsional; aman dijalankan berulang).
-        $seedResults = [];
-        if ($doSeed) {
-            $seedResults = runAllSeeds($pdo, $dbName);
-        }
+        // Seed: jalankan semua seed otomatis (aman dijalankan berulang karena pakai skip_if_exists).
+        $seedResults = runAllSeeds($pdo, $dbName);
 
         // Coba buat user aplikasi dan beri hak akses ke database
         $appUserCreated = false;
@@ -577,10 +564,8 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label">Password MySQL (root)</label>
                     <input type="password" name="root_pass" class="form-control" value="<?php echo htmlspecialchars($_POST['root_pass'] ?? ''); ?>">
                 </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" name="do_seed" id="do_seed" value="1" <?php echo (!isset($_POST['do_seed']) || (string)($_POST['do_seed'] ?? '') === '1') ? 'checked' : ''; ?>>
-                    <label class="form-check-label" for="do_seed">Isi data contoh (seed paket demo)</label>
-                    <div class="form-text">Membuat paket demo + beberapa paket contoh. Aman dijalankan ulang (akan skip jika sudah ada).</div>
+                <div class="alert alert-info py-2">
+                    Seed otomatis aktif: installer akan mengisi semua seed yang terdaftar di <code>scripts/seeds.php</code>.
                 </div>
                 <button type="submit" class="btn btn-primary">Jalankan Instalasi</button>
             </form>

@@ -16,16 +16,6 @@
  */
 return [
     [
-        'key' => 'demo-statistika-bivariat',
-        'label' => 'Demo Statistika Bivariat',
-        'file' => __DIR__ . '/seed_demo_statistika_bivariat.php',
-        'function' => 'seed_demo_statistika_bivariat',
-        'options' => [
-            'skip_if_exists' => true,
-            'skip_if_any_data' => true,
-        ],
-    ],
-    [
         'key' => 'konten-turunan-pertama',
         'label' => 'Konten Materi: Turunan Pertama',
         'file' => __DIR__ . '/seed_content_turunan_pertama.php',
