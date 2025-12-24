@@ -20,3 +20,4 @@ Thumbs.db
 
 # Local app config (contains DB credentials)
 config/config.php
+/install/installed.lock
