@@ -108,12 +108,28 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
     // Sidebar: Latest published contents (materi/berita).
     try {
-        $stmt = $pdo->query('SELECT id, type, title, slug, COALESCE(published_at, created_at) AS published_at
-            FROM contents
-            WHERE status = "published"
-            ORDER BY COALESCE(published_at, created_at) DESC, id DESC
-            LIMIT 5');
-        $latestContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Hide contents that are already attached as package intro (so homepage shows package cards only for merged items).
+        try {
+            $stmt = $pdo->query('SELECT id, type, title, slug, COALESCE(published_at, created_at) AS published_at
+                FROM contents
+                WHERE status = "published"
+                  AND id NOT IN (
+                    SELECT intro_content_id
+                    FROM packages
+                    WHERE status = "published" AND intro_content_id IS NOT NULL
+                  )
+                ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+                LIMIT 5');
+            $latestContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $e2) {
+            // Backward compatibility: older schema without packages.intro_content_id.
+            $stmt = $pdo->query('SELECT id, type, title, slug, COALESCE(published_at, created_at) AS published_at
+                FROM contents
+                WHERE status = "published"
+                ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+                LIMIT 5');
+            $latestContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
     } catch (Throwable $e) {
         $latestContents = [];
     }
@@ -129,16 +145,39 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
                 $cParams[':cq'] = '%' . $q . '%';
             }
 
-            $cSql = 'SELECT id, type, title, slug, excerpt, created_at, COALESCE(published_at, created_at) AS published_at
-                FROM contents';
-            if ($cWhere) {
-                $cSql .= ' WHERE ' . implode(' AND ', $cWhere);
-            }
-            $cSql .= ' ORDER BY COALESCE(published_at, created_at) DESC, id DESC';
+            // Hide contents that are already attached as package intro (so homepage shows package cards only for merged items).
+            $cWhereWithExclusion = $cWhere;
+            $cWhereWithExclusion[] = 'id NOT IN (
+                SELECT intro_content_id
+                FROM packages
+                WHERE status = "published" AND intro_content_id IS NOT NULL
+            )';
 
-            $stmt = $pdo->prepare($cSql);
-            $stmt->execute($cParams);
-            $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $cSqlBase = 'SELECT id, type, title, slug, excerpt, created_at, COALESCE(published_at, created_at) AS published_at
+                FROM contents';
+
+            // Prefer exclusion query; fallback to plain query for older schema.
+            try {
+                $cSql = $cSqlBase;
+                if ($cWhereWithExclusion) {
+                    $cSql .= ' WHERE ' . implode(' AND ', $cWhereWithExclusion);
+                }
+                $cSql .= ' ORDER BY COALESCE(published_at, created_at) DESC, id DESC';
+
+                $stmt = $pdo->prepare($cSql);
+                $stmt->execute($cParams);
+                $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Throwable $e2) {
+                $cSql = $cSqlBase;
+                if ($cWhere) {
+                    $cSql .= ' WHERE ' . implode(' AND ', $cWhere);
+                }
+                $cSql .= ' ORDER BY COALESCE(published_at, created_at) DESC, id DESC';
+
+                $stmt = $pdo->prepare($cSql);
+                $stmt->execute($cParams);
+                $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         } catch (Throwable $e) {
             $contents = [];
         }

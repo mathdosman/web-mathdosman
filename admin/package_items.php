@@ -45,6 +45,7 @@ if (app_runtime_migrations_enabled()) {
     ensure_package_column($pdo, 'subject_id', 'subject_id INT NULL');
     ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
     ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
+    ensure_package_column($pdo, 'intro_content_id', 'intro_content_id INT NULL');
 }
 
 function build_package_items_return_url(int $packageId, array $get): string {
@@ -71,12 +72,22 @@ if ($packageId <= 0) {
 
 $package = null;
 try {
-    $stmt = $pdo->prepare('SELECT p.id, p.code, p.name, p.status, p.subject_id, p.materi, p.submateri, s.name AS subject_name
-        FROM packages p
-        LEFT JOIN subjects s ON s.id = p.subject_id
-        WHERE p.id = :id');
-    $stmt->execute([':id' => $packageId]);
-    $package = $stmt->fetch();
+    try {
+        $stmt = $pdo->prepare('SELECT p.id, p.code, p.name, p.status, p.subject_id, p.materi, p.submateri, p.intro_content_id, s.name AS subject_name
+            FROM packages p
+            LEFT JOIN subjects s ON s.id = p.subject_id
+            WHERE p.id = :id');
+        $stmt->execute([':id' => $packageId]);
+        $package = $stmt->fetch();
+    } catch (PDOException $e) {
+        // Backward compatible: older DB may not have intro_content_id.
+        $stmt = $pdo->prepare('SELECT p.id, p.code, p.name, p.status, p.subject_id, p.materi, p.submateri, s.name AS subject_name
+            FROM packages p
+            LEFT JOIN subjects s ON s.id = p.subject_id
+            WHERE p.id = :id');
+        $stmt->execute([':id' => $packageId]);
+        $package = $stmt->fetch();
+    }
 } catch (PDOException $e) {
     $package = null;
 }
@@ -141,10 +152,98 @@ $returnUrl = build_package_items_return_url($packageId, $_GET);
 // Untuk UI filter pada picker (dipakai menampilkan link reset filter).
 $hasPickerFilter = ($filterSubjectId > 0) || ($filterMateri !== '') || ($filterSubmateri !== '');
 
+// Materi (konten) yang ditampilkan di atas butir soal pada halaman publik paket.
+$introContent = null;
+$contentOptions = [];
+
+try {
+    // List 200 konten terbaru (materi/berita). Admin boleh memilih draft, tapi publik hanya melihat yang published.
+    $stmt = $pdo->query('SELECT id, type, title, slug, status, published_at, created_at
+        FROM contents
+        ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+        LIMIT 200');
+    $contentOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $contentOptions = [];
+}
+
+try {
+    $introId = (int)($package['intro_content_id'] ?? 0);
+    if ($introId > 0) {
+        $stmt = $pdo->prepare('SELECT id, type, title, slug, status, published_at, created_at
+            FROM contents
+            WHERE id = :id
+            LIMIT 1');
+        $stmt->execute([':id' => $introId]);
+        $introContent = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+} catch (Throwable $e) {
+    $introContent = null;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    if ($action === 'remove_draft_questions') {
+    if ($action === 'set_intro_content') {
+        $contentId = (int)($_POST['content_id'] ?? 0);
+        if ($contentId < 0) {
+            $contentId = 0;
+        }
+
+        try {
+            if ($contentId > 0) {
+                $stmt = $pdo->prepare('SELECT 1 FROM contents WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $contentId]);
+                if (!$stmt->fetchColumn()) {
+                    $errors[] = 'Konten tidak ditemukan.';
+                }
+            }
+
+            if (!$errors) {
+                $doUpdate = function () use ($pdo, $contentId, $packageId): void {
+                    $stmt = $pdo->prepare('UPDATE packages SET intro_content_id = :cid WHERE id = :pid');
+                    $stmt->execute([
+                        ':cid' => ($contentId > 0 ? $contentId : null),
+                        ':pid' => $packageId,
+                    ]);
+                };
+
+                try {
+                    $doUpdate();
+                } catch (PDOException $e) {
+                    $msg = $e->getMessage();
+                    $sqlState = (string)$e->getCode();
+                    $isUnknownColumn = (stripos($msg, 'Unknown column') !== false) || ($sqlState === '42S22');
+                    if ($isUnknownColumn) {
+                        if (app_runtime_migrations_enabled()) {
+                            // Try to add missing column then retry.
+                            try {
+                                $pdo->exec('ALTER TABLE packages ADD COLUMN intro_content_id INT NULL');
+                            } catch (Throwable $e2) {
+                                // ignore and retry update; if still fails, bubble up
+                            }
+                            $doUpdate();
+                        } else {
+                            $errors[] = 'Gagal menyimpan materi karena database belum memiliki kolom intro_content_id. Aktifkan runtime migrations atau jalankan update schema (ALTER TABLE packages ADD COLUMN intro_content_id INT NULL).';
+                        }
+                    } else {
+                        throw $e;
+                    }
+                }
+
+                if ($errors) {
+                    // fall through to render errors
+                } else {
+                header('Location: ' . $returnUrl);
+                exit;
+                }
+            }
+        } catch (Throwable $e) {
+            if (!$errors) {
+                $errors[] = 'Gagal menyimpan materi.';
+            }
+        }
+    } elseif ($action === 'remove_draft_questions') {
         try {
             $stmt = $pdo->prepare('DELETE pq
                 FROM package_questions pq
@@ -258,33 +357,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $questionOptions = [];
 try {
     // Jangan tampilkan soal yang sudah ada di paket
-    $sql = 'SELECT q.id, s.name AS subject_name, q.pertanyaan
-        FROM questions q
-        JOIN subjects s ON s.id = q.subject_id
-        LEFT JOIN package_questions pq
-            ON pq.question_id = q.id AND pq.package_id = :pid
-        WHERE pq.question_id IS NULL
-          AND q.status_soal = "published"';
-
     $params = [':pid' => $packageId];
-    if ($filterSubjectId > 0) {
-        $sql .= ' AND q.subject_id = :sid';
-        $params[':sid'] = $filterSubjectId;
-    }
-    if ($filterMateri !== '') {
-        $sql .= ' AND q.materi = :m';
-        $params[':m'] = $filterMateri;
-    }
-    if ($filterSubmateri !== '') {
-        $sql .= ' AND q.submateri = :sm';
-        $params[':sm'] = $filterSubmateri;
-    }
 
-    $sql .= ' ORDER BY q.created_at DESC, q.id DESC LIMIT 200';
+    $buildSql = function (bool $withStatus, bool $withMateriFilters, bool $withCreatedAt) use ($filterSubjectId, $filterMateri, $filterSubmateri, &$params): string {
+        $sql = 'SELECT q.id, s.name AS subject_name, q.pertanyaan
+            FROM questions q
+            JOIN subjects s ON s.id = q.subject_id
+            LEFT JOIN package_questions pq
+                ON pq.question_id = q.id AND pq.package_id = :pid
+            WHERE pq.question_id IS NULL';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $questionOptions = $stmt->fetchAll();
+        if ($withStatus) {
+            $sql .= ' AND q.status_soal = "published"';
+        }
+
+        if ($filterSubjectId > 0) {
+            $sql .= ' AND q.subject_id = :sid';
+            $params[':sid'] = $filterSubjectId;
+        }
+
+        if ($withMateriFilters && $filterMateri !== '') {
+            $sql .= ' AND q.materi = :m';
+            $params[':m'] = $filterMateri;
+        }
+
+        if ($withMateriFilters && $filterSubmateri !== '') {
+            $sql .= ' AND q.submateri = :sm';
+            $params[':sm'] = $filterSubmateri;
+        }
+
+        if ($withCreatedAt) {
+            $sql .= ' ORDER BY q.created_at DESC, q.id DESC';
+        } else {
+            $sql .= ' ORDER BY q.id DESC';
+        }
+
+        $sql .= ' LIMIT 200';
+        return $sql;
+    };
+
+    $attempts = [
+        // Newer schema: published-only + created_at + materi filters
+        [true, true, true],
+        // Older schema: no status_soal / created_at
+        [false, true, false],
+        // Very old schema: no materi/submateri columns
+        [false, false, false],
+    ];
+
+    foreach ($attempts as [$withStatus, $withMateriFilters, $withCreatedAt]) {
+        try {
+            // Reset optional params each attempt (keep :pid)
+            $params = [':pid' => $packageId];
+            $sql = $buildSql($withStatus, $withMateriFilters, $withCreatedAt);
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $questionOptions = $stmt->fetchAll();
+            break;
+        } catch (PDOException $e) {
+            $questionOptions = [];
+        }
+    }
 } catch (PDOException $e) {
     $questionOptions = [];
 }
@@ -372,6 +505,94 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <?php if (!$isLocked): ?>
+            <div class="mb-3">
+                <div class="border rounded p-2 bg-light">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div>
+                            <div class="fw-semibold">Materi (Konten)</div>
+                            <div class="small text-muted">Pilih konten materi/berita yang akan tampil di atas butir soal pada halaman paket.</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <?php if ($introContent): ?>
+                                <?php
+                                    $introSlug = (string)($introContent['slug'] ?? '');
+                                    $introTitle = (string)($introContent['title'] ?? '');
+                                    $introStatus = (string)($introContent['status'] ?? '');
+                                    $introType = (string)($introContent['type'] ?? '');
+                                    $adminEditUrl = 'content_edit.php?id=' . (int)($introContent['id'] ?? 0);
+                                    $publicUrl = '../post.php?slug=' . rawurlencode($introSlug);
+                                ?>
+                                <span class="badge text-bg-light border"><?php echo htmlspecialchars($introType); ?></span>
+                                <span class="badge <?php echo ($introStatus === 'published') ? 'text-bg-success' : 'text-bg-secondary'; ?>"><?php echo htmlspecialchars($introStatus); ?></span>
+                                <a class="btn btn-outline-secondary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="<?php echo htmlspecialchars($adminEditUrl); ?>" title="Edit konten" aria-label="Edit konten">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                        <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.5 9.5a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.5-9.5zM11.207 2L3 10.207V11h.793L12 2.793 11.207 2z"/>
+                                    </svg>
+                                    <span class="visually-hidden">Edit</span>
+                                </a>
+                                <?php if ($introStatus === 'published' && $introSlug !== ''): ?>
+                                    <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="<?php echo htmlspecialchars($publicUrl); ?>" target="_blank" rel="noopener" title="Lihat" aria-label="Lihat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                                            <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                        </svg>
+                                        <span class="visually-hidden">Lihat</span>
+                                    </a>
+                                <?php endif; ?>
+
+                                <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Materi?" data-swal-text="Kosongkan materi pada paket ini?">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                    <input type="hidden" name="action" value="set_intro_content">
+                                    <input type="hidden" name="content_id" value="0">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm px-2 d-inline-flex align-items-center justify-content-center" title="Hapus materi" aria-label="Hapus materi">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0V6zm2 .0a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0V6z"/>
+                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2H5.5l1-1h3l1 1H14.5a1 1 0 0 1 1 1zM4 4v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4H4z"/>
+                                        </svg>
+                                        <span class="visually-hidden">Hapus</span>
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <span class="small text-muted">Belum dipilih.</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <form method="post" class="row g-2 align-items-end mt-2">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                        <input type="hidden" name="action" value="set_intro_content">
+                        <div class="col-12 col-md-10">
+                            <label class="form-label small mb-1">Pilih Konten</label>
+                            <select name="content_id" class="form-select form-select-sm">
+                                <option value="0">-- Tanpa materi --</option>
+                                <?php foreach ($contentOptions as $c): ?>
+                                    <?php
+                                        $cid = (int)($c['id'] ?? 0);
+                                        $ct = (string)($c['title'] ?? '');
+                                        $cs = (string)($c['status'] ?? '');
+                                        $ctype = (string)($c['type'] ?? '');
+                                        $cslug = (string)($c['slug'] ?? '');
+                                        $label = '[' . $ctype . '] ' . $ct;
+                                        if ($cs !== '') {
+                                            $label .= ' (' . $cs . ')';
+                                        }
+                                        if ($cslug !== '') {
+                                            $label .= ' — ' . $cslug;
+                                        }
+                                        $selected = ((int)($package['intro_content_id'] ?? 0) === $cid) ? 'selected' : '';
+                                    ?>
+                                    <option value="<?php echo (int)$cid; ?>" <?php echo $selected; ?>><?php echo htmlspecialchars($label); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text small">Yang tampil ke publik hanya konten berstatus <strong>published</strong>. Admin tetap bisa memilih draft untuk persiapan.</div>
+                        </div>
+                        <div class="col-12 col-md-2 d-grid">
+                            <button type="submit" class="btn btn-primary btn-sm" <?php echo !$contentOptions ? 'disabled' : ''; ?>>Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="mb-3">
                 <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addFromBank" aria-expanded="false" aria-controls="addFromBank">
                     Tambah Soal dari Pilihan
@@ -532,13 +753,30 @@ include __DIR__ . '/../includes/header.php';
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap justify-content-end">
-                                    <a class="btn btn-outline-secondary btn-sm" href="question_view.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>">Lihat</a>
-                                    <a class="btn btn-outline-primary btn-sm" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>">Edit</a>
+                                    <a class="btn btn-outline-secondary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>" title="Lihat" aria-label="Lihat">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                                            <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                        </svg>
+                                        <span class="visually-hidden">Lihat</span>
+                                    </a>
+                                    <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>" title="Edit" aria-label="Edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                            <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.5 9.5a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.5-9.5zM11.207 2L3 10.207V11h.793L12 2.793 11.207 2z"/>
+                                        </svg>
+                                        <span class="visually-hidden">Edit</span>
+                                    </a>
                                     <form method="post" class="m-0" data-swal-confirm data-swal-title="Keluarkan Soal?" data-swal-text="Keluarkan butir soal dari paket ini?">
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                         <input type="hidden" name="action" value="remove_question">
                                         <input type="hidden" name="question_id" value="<?php echo (int)$it['id']; ?>">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-2 d-inline-flex align-items-center justify-content-center" title="Hapus" aria-label="Hapus">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0V6zm2 .0a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0V6z"/>
+                                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2H5.5l1-1h3l1 1H14.5a1 1 0 0 1 1 1zM4 4v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4H4z"/>
+                                            </svg>
+                                            <span class="visually-hidden">Hapus</span>
+                                        </button>
                                     </form>
                                 </div>
                             </td>

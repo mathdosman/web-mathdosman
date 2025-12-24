@@ -20,20 +20,42 @@ if ($code === '') {
 
 $package = null;
 try {
-    $sql = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
+    $sqlBase = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
         p.show_answers_public,
         s.name AS subject_name
         FROM packages p
         LEFT JOIN subjects s ON s.id = p.subject_id
         WHERE p.code = :c';
+
+    $sqlWithIntro = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
+        p.show_answers_public,
+        p.intro_content_id,
+        s.name AS subject_name
+        FROM packages p
+        LEFT JOIN subjects s ON s.id = p.subject_id
+        WHERE p.code = :c';
+
+    $sql = $sqlWithIntro;
     if (!$isAdmin) {
         $sql .= ' AND p.status = "published"';
     }
     $sql .= ' LIMIT 1';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':c' => $code]);
-    $package = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':c' => $code]);
+        $package = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        // Backward compatible: older DB may not have intro_content_id.
+        $sql = $sqlBase;
+        if (!$isAdmin) {
+            $sql .= ' AND p.status = "published"';
+        }
+        $sql .= ' LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':c' => $code]);
+        $package = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 } catch (Throwable $e) {
     $package = null;
 }
@@ -219,6 +241,27 @@ $renderHtml = function (?string $html): string {
     }
     return nl2br(htmlspecialchars($text));
 };
+
+// Materi (konten) yang ditampilkan di atas butir soal.
+$introContent = null;
+try {
+    $introId = (int)($package['intro_content_id'] ?? 0);
+    if ($introId > 0) {
+        $sql = 'SELECT id, type, title, slug, excerpt, content_html, status,
+            COALESCE(published_at, created_at) AS published_at
+            FROM contents
+            WHERE id = :id';
+        if (!$isAdmin) {
+            $sql .= ' AND status = "published"';
+        }
+        $sql .= ' LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $introId]);
+        $introContent = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+} catch (Throwable $e) {
+    $introContent = null;
+}
 
 $renderJawaban = function (array $q) use ($renderHtml): string {
     $tipe = (string)($q['tipe_soal'] ?? '');
@@ -434,6 +477,46 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
                     </div>
                 <?php endif; ?>
             </div>
+
+            <?php if ($introContent): ?>
+                <?php
+                    $introBadge = ((string)($introContent['type'] ?? '') === 'berita') ? 'Berita' : 'Materi';
+                    $introTitle = (string)($introContent['title'] ?? '');
+                    $introPublishedAt = (string)($introContent['published_at'] ?? '');
+                    $introExcerpt = trim((string)($introContent['excerpt'] ?? ''));
+                    $introSafeHtml = $renderHtml((string)($introContent['content_html'] ?? ''));
+                ?>
+                <div class="custom-card mb-3">
+                    <div class="custom-card-header">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <div class="small text-muted">Materi</div>
+                                <?php if ($introTitle !== ''): ?>
+                                    <div class="fw-bold"><?php echo htmlspecialchars($introTitle); ?></div>
+                                <?php endif; ?>
+                                <div class="mt-2 d-flex flex-wrap gap-2 package-meta-chips">
+                                    <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($introBadge); ?></span>
+                                    <?php if ($introPublishedAt !== ''): ?>
+                                        <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars(format_id_date($introPublishedAt)); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="oke">
+                        <?php if ($introExcerpt !== ''): ?>
+                            <div class="text-muted mb-2"><?php echo htmlspecialchars($introExcerpt); ?></div>
+                        <?php endif; ?>
+                        <div class="richtext-content"><?php echo $introSafeHtml; ?></div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center my-4" aria-label="Pembatas Materi dan Soal">
+                    <hr class="flex-grow-1" />
+                    <div class="px-4 py-2 fw-bold fs-4 text-dark bg-body-secondary border rounded-pill">Soal-soal</div>
+                    <hr class="flex-grow-1" />
+                </div>
+            <?php endif; ?>
 
             <?php if (!$items): ?>
                 <div class="alert alert-info">Belum ada soal di paket ini.</div>
