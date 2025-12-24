@@ -14,7 +14,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="admin-page-header">
         <div>
             <h4 class="admin-page-title">Bank Soal</h4>
-            <p class="admin-page-subtitle">Impor dan ekspor soal melalui file Excel (.xlsx). Format kolom disesuaikan agar mendukung tipe soal seperti di cbt-eschool.</p>
+            <p class="admin-page-subtitle">Impor dan ekspor soal melalui file Excel (.xlsx). Format kolom disesuaikan agar mendukung tipe soal seperti di mathdosman.</p>
         </div>
         <div class="admin-page-actions">
             <a href="questions_import.php" class="btn btn-outline-primary btn-sm">Buka Import</a>

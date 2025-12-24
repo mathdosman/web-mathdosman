@@ -180,6 +180,20 @@ $page_title = (string)($package['name'] ?? 'Preview Paket');
 $use_print_soal_css = true;
 $body_class = 'front-page paket-preview paket-dock';
 $use_mathjax = true;
+
+// SEO/Share
+$meta_og_type = 'article';
+$meta_og_title = 'Paket Soal - ' . $page_title;
+$rawDesc = strip_tags((string)($package['description'] ?? ''));
+$rawDesc = preg_replace('/\s+/', ' ', trim((string)$rawDesc));
+if ($rawDesc === '') {
+    $rawDesc = 'Preview paket soal untuk latihan dan cetak.';
+}
+$meta_description = (string)mb_substr((string)$rawDesc, 0, 180);
+if (mb_strlen((string)$rawDesc) > 180) {
+    $meta_description .= '...';
+}
+$meta_og_image = rtrim((string)$base_url, '/') . '/assets/img/icon.svg';
 include __DIR__ . '/includes/header.php';
 
 $meta = [];

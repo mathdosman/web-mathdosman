@@ -86,7 +86,7 @@ if (!$package) {
     exit;
 }
 
-$isLocked = (($package['status'] ?? '') === 'published');
+$isLocked = false;
 
 // Filter for question picker (Mapel/Materi/Submateri)
 $filterSubjectId = (int)($_GET['filter_subject_id'] ?? 0);
@@ -144,9 +144,7 @@ $hasPickerFilter = ($filterSubjectId > 0) || ($filterMateri !== '') || ($filterS
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    if ($isLocked) {
-        $errors[] = 'Paket sudah terbit. Tambah/edit/hapus butir soal dinonaktifkan.';
-    } elseif ($action === 'remove_draft_questions') {
+    if ($action === 'remove_draft_questions') {
         try {
             $stmt = $pdo->prepare('DELETE pq
                 FROM package_questions pq
@@ -346,19 +344,16 @@ include __DIR__ . '/../includes/header.php';
             <?php if ($meta): ?>
                 <div class="admin-page-subtitle small mt-1"><?php echo htmlspecialchars(implode(' • ', $meta)); ?></div>
             <?php endif; ?>
-            <?php if ($isLocked): ?>
-                <div class="admin-page-subtitle small text-danger mt-1">Status: <strong>Terbit</strong>. Perubahan butir soal dikunci.</div>
-            <?php endif; ?>
         </div>
         <div class="admin-page-actions">
-            <?php if (!$isLocked && $draftItemsCount > 0): ?>
+            <?php if ($draftItemsCount > 0): ?>
                 <form method="post" class="m-0" data-swal-confirm data-swal-title="Bersihkan Soal Draft?" data-swal-text="Hapus semua butir soal draft dari paket ini?">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <input type="hidden" name="action" value="remove_draft_questions">
                     <button type="submit" class="btn btn-outline-warning btn-sm">Bersihkan Draft (<?php echo (int)$draftItemsCount; ?>)</button>
                 </form>
             <?php endif; ?>
-            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm<?php echo $isLocked ? ' disabled' : ''; ?>"<?php echo $isLocked ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>Tambah Butir Soal</a>
+            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm">Tambah Butir Soal</a>
             <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
         </div>
     </div>
@@ -538,17 +533,13 @@ include __DIR__ . '/../includes/header.php';
                             <td>
                                 <div class="d-flex gap-1 flex-wrap justify-content-end">
                                     <a class="btn btn-outline-secondary btn-sm" href="question_view.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>">Lihat</a>
-                                    <?php if (!$isLocked): ?>
-                                        <a class="btn btn-outline-primary btn-sm" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>">Edit</a>
-                                        <form method="post" class="m-0" data-swal-confirm data-swal-title="Keluarkan Soal?" data-swal-text="Keluarkan butir soal dari paket ini?">
-                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                                            <input type="hidden" name="action" value="remove_question">
-                                            <input type="hidden" name="question_id" value="<?php echo (int)$it['id']; ?>">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
-                                        </form>
-                                    <?php else: ?>
-                                        <span class="badge text-bg-light">Terkunci</span>
-                                    <?php endif; ?>
+                                    <a class="btn btn-outline-primary btn-sm" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>">Edit</a>
+                                    <form method="post" class="m-0" data-swal-confirm data-swal-title="Keluarkan Soal?" data-swal-text="Keluarkan butir soal dari paket ini?">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                        <input type="hidden" name="action" value="remove_question">
+                                        <input type="hidden" name="question_id" value="<?php echo (int)$it['id']; ?>">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

@@ -93,12 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title = 'Login - CBT E-School Lite';
+$page_title = 'Admin';
 include __DIR__ . '/includes/header.php';
 ?>
 <div class="card card-login shadow-sm">
     <div class="card-body">
-        <h5 class="card-title mb-3 text-center">Login CBT</h5>
+        <h5 class="card-title mb-3 text-center">Admin</h5>
         <?php if ($error): ?>
             <div class="alert alert-danger py-2"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>

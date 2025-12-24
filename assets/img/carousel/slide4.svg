@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="MATHDOSMAN - Slide 4">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f8f9fa"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="2100" height="900" fill="url(#bg4)"/>
+
+  <!-- Stats card -->
+  <g transform="translate(140 120)" fill="none" stroke="#000">
+    <rect x="0" y="0" width="980" height="660" rx="32" fill="#fff" stroke-opacity="0.14" stroke-width="6"/>
+
+    <!-- Bar chart -->
+    <g transform="translate(140 90)">
+      <path d="M0 520 H700" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+      <path d="M0 520 V0" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+
+      <g fill="#000" fill-opacity="0.12" stroke="#000" stroke-opacity="0.25" stroke-width="6">
+        <rect x="70" y="260" width="90" height="260" rx="10"/>
+        <rect x="210" y="160" width="90" height="360" rx="10"/>
+        <rect x="350" y="320" width="90" height="200" rx="10"/>
+        <rect x="490" y="110" width="90" height="410" rx="10"/>
+        <rect x="630" y="220" width="90" height="300" rx="10"/>
+      </g>
+
+      <!-- Trend line -->
+      <path d="M115 300 L255 200 L395 355 L535 150 L675 250" stroke="#000" stroke-opacity="0.75" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <g fill="#000" fill-opacity="0.75" stroke="none">
+        <circle cx="115" cy="300" r="10"/>
+        <circle cx="255" cy="200" r="10"/>
+        <circle cx="395" cy="355" r="10"/>
+        <circle cx="535" cy="150" r="10"/>
+        <circle cx="675" cy="250" r="10"/>
+      </g>
+    </g>
+
+    <g fill="#000" stroke="none" font-family="sans-serif">
+      <text x="140" y="620" font-size="34" opacity="0.8">Statistika • Peluang • Data</text>
+    </g>
+  </g>
+
+  <!-- Copy on right -->
+  <g fill="#000" font-family="sans-serif">
+    <text x="1240" y="250" font-size="78" font-weight="800">Statistika</text>
+    <text x="1240" y="330" font-size="34" opacity="0.75">Pahami data, bukan hafal.</text>
+
+    <text x="1240" y="470" font-size="44" font-weight="700">Istilah:</text>
+    <text x="1240" y="540" font-size="44" font-weight="800">mean • median • modus</text>
+    <text x="1240" y="605" font-size="34" opacity="0.8">Cocok untuk latihan dan evaluasi.</text>
+  </g>
+
+  <!-- Decorative dots -->
+  <g fill="#000" fill-opacity="0.18">
+    <circle cx="1900" cy="690" r="8"/>
+    <circle cx="1940" cy="720" r="6"/>
+    <circle cx="1985" cy="690" r="10"/>
+    <circle cx="2025" cy="735" r="7"/>
+  </g>
+</svg>

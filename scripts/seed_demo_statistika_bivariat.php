@@ -1,9 +1,16 @@
 <?php
 
-require_once __DIR__ . '/../config/db.php';
-
-function seed_demo_statistika_bivariat(PDO $pdo): array
+/**
+ * Seed demo: Statistika Bivariat.
+ *
+ * @param array{skip_if_exists?:bool, skip_if_any_data?:bool} $options
+ * @return array{ok:bool, message:string, skipped?:bool}
+ */
+function seed_demo_statistika_bivariat(PDO $pdo, array $options = []): array
 {
+    $skipIfExists = array_key_exists('skip_if_exists', $options) ? (bool)$options['skip_if_exists'] : true;
+    $skipIfAnyData = array_key_exists('skip_if_any_data', $options) ? (bool)$options['skip_if_any_data'] : false;
+
     $packageCode = 'demo-statistika-bivariat';
 
     $requiredTables = ['subjects', 'packages', 'questions', 'package_questions'];
@@ -23,7 +30,23 @@ function seed_demo_statistika_bivariat(PDO $pdo): array
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM package_questions WHERE package_id = :pid');
         $stmt->execute([':pid' => $packageId]);
         if ((int)$stmt->fetchColumn() > 0) {
-            return ['ok' => true, 'message' => 'Seed dilewati: paket demo sudah berisi soal.'];
+            if ($skipIfExists) {
+                return ['ok' => true, 'skipped' => true, 'message' => 'Seed dilewati: paket demo sudah berisi soal.'];
+            }
+
+            return ['ok' => false, 'message' => 'Seed dibatalkan: paket demo sudah berisi soal (berpotensi duplikasi).'];
+        }
+    }
+
+    if ($packageId <= 0 && $skipIfAnyData) {
+        try {
+            $qCount = (int)$pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
+            $pCount = (int)$pdo->query('SELECT COUNT(*) FROM packages')->fetchColumn();
+            if ($qCount > 0 || $pCount > 0) {
+                return ['ok' => true, 'skipped' => true, 'message' => 'Seed dilewati: database sudah berisi data.'];
+            }
+        } catch (Throwable $e) {
+            // Jika query gagal, tetap lanjut seed (best effort).
         }
     }
 
@@ -273,11 +296,21 @@ HTML,
     }
 }
 
-$result = seed_demo_statistika_bivariat($pdo);
+// CLI runner (agar aman saat file ini di-include oleh installer).
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    if (PHP_SAPI !== 'cli') {
+        header('Content-Type: text/plain; charset=utf-8');
+        echo "Script ini untuk CLI. Jalankan: php scripts/seed_demo_statistika_bivariat.php\n";
+        exit;
+    }
 
-if (PHP_SAPI === 'cli') {
+    require_once __DIR__ . '/../config/db.php';
+    if (!isset($pdo) || !($pdo instanceof PDO)) {
+        fwrite(STDERR, "[ERROR] Koneksi database (PDO) tidak tersedia.\n");
+        exit(1);
+    }
+
+    $result = seed_demo_statistika_bivariat($pdo, ['skip_if_exists' => true]);
     fwrite(STDOUT, ($result['ok'] ? '[OK] ' : '[ERROR] ') . $result['message'] . PHP_EOL);
-} else {
-    header('Content-Type: text/plain; charset=utf-8');
-    echo ($result['ok'] ? '[OK] ' : '[ERROR] ') . $result['message'];
+    exit($result['ok'] ? 0 : 1);
 }

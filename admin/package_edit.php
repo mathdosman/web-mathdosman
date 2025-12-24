@@ -176,8 +176,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $nextPublishedAt = null;
                 if ($status === 'published') {
-                    // Always stamp publish date when user sets published.
-                    $nextPublishedAt = date('Y-m-d H:i:s');
+                    // Preserve publish time on edits; only stamp on first publish.
+                    $nextPublishedAt = $currentPublishedAt;
+                    if ($nextPublishedAt === null || $nextPublishedAt === '') {
+                        $nextPublishedAt = date('Y-m-d H:i:s');
+                    }
+                } else {
+                    // Keep original published_at so re-publish keeps the first publish time.
+                    $nextPublishedAt = $currentPublishedAt;
                 }
 
                 $stmt = $pdo->prepare('UPDATE packages

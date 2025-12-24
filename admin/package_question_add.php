@@ -32,9 +32,10 @@ if (!$package) {
     exit;
 }
 
-$isLocked = ((string)($package['status'] ?? 'draft')) === 'published';
+// Editing is allowed even when the package is published.
+$isLocked = false;
 
-// Default nomor soal (nomer_baru ala cbt-eschool)
+// Default nomor soal (nomer_baru ala mathdosman)
 $defaultNo = 1;
 try {
     $stmt = $pdo->prepare('SELECT COALESCE(MAX(question_number), 0) FROM package_questions WHERE package_id = :pid');
@@ -133,10 +134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['submateri'] = '';
         }
     } else {
-        if ($isLocked) {
-            $errors[] = 'Paket sudah published dan tidak bisa ditambah/diedit.';
-        }
-
         $subjectIdSelected = (int)($_POST['subject_id'] ?? $subjectIdDefault);
         if ($subjectIdSelected <= 0) {
             $subjectIdSelected = $subjectIdDefault;
@@ -485,18 +482,6 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="alert alert-warning py-2 small">
                         Materi/Submateri tidak sesuai master MAPEL. Silakan pilih ulang sebelum menyimpan.
                     </div>
-                <?php endif; ?>
-
-                <?php if ($isLocked): ?>
-                    <div class="alert alert-warning small">Paket sudah <strong>published</strong>. Halaman ini dikunci.</div>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function () {
-                            if (typeof Swal !== 'undefined') {
-                                Swal.fire({ icon: 'warning', title: 'Dikunci', text: 'Paket sudah published dan tidak bisa ditambah/diedit.' })
-                                    .then(() => { window.location.href = 'package_items.php?package_id=<?php echo (int)$packageId; ?>'; });
-                            }
-                        });
-                    </script>
                 <?php endif; ?>
 
                 <form method="post" class="small" id="questionForm">

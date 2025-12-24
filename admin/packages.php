@@ -186,10 +186,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($next !== null) {
                     if ($next === 'published') {
-                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = NOW() WHERE id = :id');
+                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = COALESCE(published_at, NOW()) WHERE id = :id');
                         $stmt->execute([':st' => $next, ':id' => $id]);
                     } else {
-                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = NULL WHERE id = :id');
+                        // Keep original published_at so re-publish keeps the first publish time.
+                        $stmt = $pdo->prepare('UPDATE packages SET status = :st WHERE id = :id');
                         $stmt->execute([':st' => $next, ':id' => $id]);
                     }
                     header('Location: ' . $returnUrl);
