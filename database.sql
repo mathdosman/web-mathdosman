@@ -107,3 +107,19 @@ ON DUPLICATE KEY UPDATE
     password_hash = VALUES(password_hash),
     name = VALUES(name),
     role = VALUES(role);
+
+-- Tabel konten (materi/berita)
+CREATE TABLE IF NOT EXISTS contents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type ENUM('materi','berita') NOT NULL DEFAULT 'materi',
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL,
+    excerpt VARCHAR(500) NULL,
+    content_html MEDIUMTEXT NULL,
+    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    published_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_contents_slug (slug),
+    KEY idx_contents_status (status),
+    KEY idx_contents_published_at (published_at)
+);
