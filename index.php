@@ -47,12 +47,21 @@ $use_mathjax = true;
 $q = trim((string)($_GET['q'] ?? ''));
 $filterSubjectId = (int)($_GET['subject_id'] ?? 0);
 
+$page = (int)($_GET['page'] ?? 1);
+if ($page < 1) {
+    $page = 1;
+}
+
+$perPage = 5;
+$offset = ($page - 1) * $perPage;
+
 $packages = [];
 $contents = [];
 $feedItems = [];
 $subjects = [];
 $latestPackages = [];
 $latestContents = [];
+$total = 0;
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
     $where = [];
@@ -71,6 +80,24 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
         $params[':q'] = '%' . $q . '%';
     }
 
+    // Total untuk pagination (sesuai filter di atas)
+    $countSql = 'SELECT COUNT(*) FROM packages p';
+    if ($where) {
+        $countSql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $stmt = $pdo->prepare($countSql);
+    $stmt->execute($params);
+    $total = (int)$stmt->fetchColumn();
+
+    $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+    if ($totalPages < 1) {
+        $totalPages = 1;
+    }
+    if ($page > $totalPages) {
+        $page = $totalPages;
+        $offset = ($page - 1) * $perPage;
+    }
+
     $sql = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.published_at, p.subject_id, p.materi, p.submateri,
         s.name AS subject_name,
         COUNT(DISTINCT pq.question_id) AS total_questions,
@@ -83,10 +110,15 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     if ($where) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
-    $sql .= ' GROUP BY p.id ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC';
+    $sql .= ' GROUP BY p.id ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC LIMIT :lim OFFSET :off';
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    foreach ($params as $k => $v) {
+        $stmt->bindValue($k, $v);
+    }
+    $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $packages = $stmt->fetchAll();
 
     // Sidebar: Mapel (subjects) with package count.
@@ -197,18 +229,8 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
             'row' => $p,
         ];
     }
-    foreach ($contents as $c) {
-        $publishedAt = (string)($c['published_at'] ?? '');
-        if ($publishedAt === '') {
-            $publishedAt = (string)($c['created_at'] ?? '');
-        }
-        $feedItems[] = [
-            'kind' => 'content',
-            'date' => $publishedAt,
-            'id' => (int)($c['id'] ?? 0),
-            'row' => $c,
-        ];
-    }
+    // NOTE: Beranda menampilkan kartu paket (max 5) dengan pagination.
+    // Konten (materi/berita) tetap bisa ditampilkan di sidebar/halaman khusus.
     usort($feedItems, function (array $a, array $b): int {
         $ta = strtotime((string)($a['date'] ?? '')) ?: 0;
         $tb = strtotime((string)($b['date'] ?? '')) ?: 0;
@@ -224,10 +246,39 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
         $subjects = [];
         $latestPackages = [];
         $latestContents = [];
+        $total = 0;
     }
 }
 
 include __DIR__ . '/includes/header.php';
+?>
+
+<?php
+$totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+if ($totalPages < 1) {
+    $totalPages = 1;
+}
+
+$qs = function (array $override = []) use ($q, $filterSubjectId, $page): string {
+    $params = [];
+    if ($q !== '') {
+        $params['q'] = $q;
+    }
+    if ($filterSubjectId > 0) {
+        $params['subject_id'] = $filterSubjectId;
+    }
+    $params['page'] = $page;
+
+    foreach ($override as $k => $v) {
+        if ($v === null || $v === '' || $v === 0) {
+            unset($params[$k]);
+            continue;
+        }
+        $params[$k] = $v;
+    }
+
+    return http_build_query($params);
+};
 ?>
 
 <?php
@@ -603,6 +654,33 @@ function get_home_carousel_slides(): array
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <?php if ($totalPages > 1): ?>
+                    <nav class="mt-4" aria-label="Pagination">
+                        <ul class="pagination justify-content-center flex-wrap">
+                            <?php
+                                $prev = $page - 1;
+                                $next = $page + 1;
+                                $start = max(1, $page - 3);
+                                $end = min($totalPages, $page + 3);
+                            ?>
+
+                            <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
+                                <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>" aria-label="Sebelumnya">&laquo;</a>
+                            </li>
+
+                            <?php for ($i = $start; $i <= $end; $i++): ?>
+                                <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
+                                    <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $i])); ?>"><?php echo (int)$i; ?></a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
+                                <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>" aria-label="Berikutnya">&raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
 

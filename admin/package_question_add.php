@@ -217,9 +217,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Semua pilihan (1-5) wajib diisi.';
             }
             $jawArr = $pgPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? []);
-            if (!is_array($jawArr) || count($jawArr) !== 1) {
-                $errors[] = 'Harap pilih tepat 1 jawaban benar.';
-            } else {
+            if (!is_array($jawArr)) {
+                $jawArr = [];
+            }
+            $jawArr = array_values(array_filter(array_map('strval', $jawArr), fn($v) => $v !== ''));
+
+            // Kunci jawaban opsional: boleh 0 atau 1 pilihan benar.
+            if (count($jawArr) > 1) {
+                $errors[] = 'Untuk Pilihan Ganda, pilih maksimal 1 jawaban benar.';
+            } elseif (count($jawArr) === 1) {
                 $picked = (string)$jawArr[0];
                 if (!in_array($picked, $allowedAnswerFields, true)) {
                     $errors[] = 'Jawaban benar tidak valid.';
@@ -237,10 +243,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Semua pilihan (1-5) wajib diisi.';
             }
             $jawArr = $pgPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? []);
-            if (!is_array($jawArr) || count($jawArr) < 1) {
-                $errors[] = 'Harap pilih minimal 1 jawaban benar.';
-            } else {
-                $jawArr = array_values(array_unique(array_map('strval', $jawArr)));
+            if (!is_array($jawArr)) {
+                $jawArr = [];
+            }
+            $jawArr = array_values(array_unique(array_filter(array_map('strval', $jawArr), fn($v) => $v !== '')));
+
+            // Kunci jawaban opsional: boleh kosong.
+            if ($jawArr) {
                 $invalid = array_values(array_diff($jawArr, $allowedAnswerFields));
                 if ($invalid) {
                     $errors[] = 'Jawaban benar tidak valid.';
@@ -256,21 +265,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $p5 = '';
 
             $jaw = $bsPost['jawaban'] ?? ($_POST['jawaban_benar'] ?? []);
-            if (!is_array($jaw) || count($jaw) < 4) {
-                $errors[] = 'Harap isi jawaban benar untuk setiap pernyataan.';
-            } else {
-                $vals = [];
-                for ($i = 0; $i < 4; $i++) {
-                    $v = (string)($jaw[$i] ?? '');
-                    if ($v !== 'Benar' && $v !== 'Salah') {
-                        $errors[] = 'Jawaban benar Benar/Salah tidak valid.';
-                        break;
-                    }
-                    $vals[] = $v;
+            if (!is_array($jaw)) {
+                $jaw = [];
+            }
+            $vals = [];
+            $hasAny = false;
+            for ($i = 0; $i < 4; $i++) {
+                $v = (string)($jaw[$i] ?? '');
+                if ($v === '') {
+                    $vals[] = '';
+                    continue;
                 }
-                if (!$errors) {
-                    $jawabanBenar = implode('|', $vals);
+                if ($v !== 'Benar' && $v !== 'Salah') {
+                    $errors[] = 'Jawaban benar Benar/Salah tidak valid.';
+                    break;
                 }
+                $hasAny = true;
+                $vals[] = $v;
+            }
+            // Kunci jawaban opsional: boleh kosong. Kalau mulai diisi, harus lengkap 4.
+            if (!$errors && $hasAny && in_array('', $vals, true)) {
+                $errors[] = 'Jawaban Benar/Salah harus lengkap untuk 4 pernyataan (atau kosongkan semua).';
+            }
+            if (!$errors) {
+                $jawabanBenar = $hasAny ? implode('|', $vals) : '';
             }
             if ($isEmpty($p1) || $isEmpty($p2) || $isEmpty($p3) || $isEmpty($p4)) {
                 $errors[] = 'Semua pernyataan (1-4) wajib diisi.';
@@ -315,17 +333,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $valid++;
             }
 
-            if (!$errors && $valid < 2) {
-                $errors[] = 'Harap isi minimal dua pasangan soal dan jawaban yang valid!';
+            // Pasangan (jawaban_benar) opsional: boleh kosong.
+            // Jika mulai diisi, ikuti aturan lama (minimal 2 pasangan valid).
+            if (!$errors && $valid > 0 && $valid < 2) {
+                $errors[] = 'Harap isi minimal dua pasangan soal dan jawaban yang valid (atau kosongkan semua).';
             }
             if (!$errors) {
-                $jawabanBenar = implode('|', $pairs);
+                $jawabanBenar = $valid > 0 ? implode('|', $pairs) : '';
             }
             $p1 = $p2 = $p3 = $p4 = $p5 = '';
         } elseif ($tipeSoal === 'Uraian') {
             $jawabanBenar = sanitize_rich_text((string)($uraianPost['jawaban_benar'] ?? ($_POST['jawaban_benar'] ?? '')));
             if ($isEmpty($jawabanBenar)) {
-                $errors[] = 'Jawaban benar wajib diisi.';
+                $jawabanBenar = '';
             }
             $p1 = $p2 = $p3 = $p4 = $p5 = '';
         }
@@ -364,7 +384,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':c' => $p3,
                     ':d' => $p4,
                     ':e' => $p5,
-                    ':jb' => $jawabanBenar,
+                    ':jb' => ($jawabanBenar === '' ? null : $jawabanBenar),
                     ':m' => ($materi === '' ? null : $materi),
                     ':sm' => ($submateri === '' ? null : $submateri),
                     ':st' => $saveMode,
@@ -619,7 +639,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="border rounded p-2 mb-2">
                                 <div class="fw-semibold mb-1">Pernyataan <?php echo $i; ?></div>
                                 <textarea class="form-control mb-2" id="bs_<?php echo $i; ?>" name="bs[pernyataan_<?php echo $i; ?>]" rows="2" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars($bsStmt[$i]); ?></textarea>
-                                <select class="form-select" name="bs[jawaban][]" required <?php echo $isLocked ? 'disabled' : ''; ?>>
+                                <select class="form-select" name="bs[jawaban][]" <?php echo $isLocked ? 'disabled' : ''; ?>>
                                     <option value="">-- pilih --</option>
                                     <option value="Benar" <?php echo $jawVal === 'Benar' ? 'selected' : ''; ?>>Benar</option>
                                     <option value="Salah" <?php echo $jawVal === 'Salah' ? 'selected' : ''; ?>>Salah</option>
@@ -658,7 +678,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="option-label">Jawaban Benar</div>
                                 <div class="option-help">Untuk tipe uraian</div>
                             </div>
-                            <textarea class="form-control" name="uraian[jawaban_benar]" rows="3" required <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)(($_POST['uraian']['jawaban_benar'] ?? null) ?? ($_POST['jawaban_benar'] ?? ''))); ?></textarea>
+                            <textarea class="form-control" name="uraian[jawaban_benar]" rows="3" <?php echo $isLocked ? 'disabled' : ''; ?>><?php echo htmlspecialchars((string)(($_POST['uraian']['jawaban_benar'] ?? null) ?? ($_POST['jawaban_benar'] ?? ''))); ?></textarea>
                         </div>
                     </div>
 
@@ -781,9 +801,9 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         const pgHelp = document.getElementById('pg-help-text');
                         if (pgHelp) {
                             if (tipeSoal === 'Pilihan Ganda') {
-                                pgHelp.textContent = 'Pilih tepat 1 jawaban benar.';
+                                pgHelp.textContent = 'Opsional. Jika diisi, pilih maksimal 1 jawaban benar.';
                             } else if (tipeSoal === 'Pilihan Ganda Kompleks') {
-                                pgHelp.textContent = 'Boleh memilih lebih dari 1 jawaban benar.';
+                                pgHelp.textContent = 'Opsional. Jika diisi, boleh memilih lebih dari 1 jawaban benar.';
                             } else {
                                 pgHelp.textContent = '';
                             }

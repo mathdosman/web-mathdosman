@@ -120,7 +120,6 @@ $required = [
     'pilihan_3',
     'pilihan_4',
     'pilihan_5',
-    'jawaban_benar',
     'status_soal',
     'created_at',
 ];

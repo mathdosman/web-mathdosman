@@ -92,11 +92,46 @@ $examples = [
         'draft',
         date('Y-m-d H:i:s'),
     ],
+    [
+        '5',
+        'Paket Contoh Matematika',
+        '<p>Jelaskan langkah menyelesaikan persamaan linear sederhana.</p>',
+        '',
+        'Uraian',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'draft',
+        date('Y-m-d H:i:s'),
+    ],
 ];
 
 $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-$sheet = $spreadsheet->getActiveSheet();
-$sheet->setTitle('Template Import');
+$spreadsheet->getProperties()
+    ->setTitle('Template Import Soal')
+    ->setSubject('Template Import')
+    ->setDescription('Template import soal. Kolom jawaban_benar bersifat opsional.');
+
+$sheetGuide = $spreadsheet->getActiveSheet();
+$sheetGuide->setTitle('Petunjuk');
+$sheetGuide->setCellValue('A1', 'Petunjuk Import (ringkas)');
+$sheetGuide->setCellValue('A3', '1) Gunakan sheet "Template Import" untuk data import.');
+$sheetGuide->setCellValue('A4', '2) Header kolom mengikuti baris pertama pada sheet "Template Import".');
+$sheetGuide->setCellValue('A5', '3) Kolom "jawaban_benar" opsional: boleh kosong.');
+$sheetGuide->setCellValue('A6', '   - PG: A-E / 1-5 / pilihan_1..pilihan_5');
+$sheetGuide->setCellValue('A7', '   - PG Kompleks: pisahkan dengan koma (mis. pilihan_1,pilihan_3)');
+$sheetGuide->setCellValue('A8', '   - Benar/Salah: 4 nilai dipisah | (mis. Benar|Salah|Benar|Salah)');
+$sheetGuide->setCellValue('A9', '   - Menjodohkan: pasangan dipisah | format soal:jawab (mis. A:1|B:3)');
+$sheetGuide->setCellValue('A10', '   - Uraian: teks jawaban (boleh kosong)');
+$sheetGuide->getStyle('A1')->getFont()->setBold(true);
+$sheetGuide->getColumnDimension('A')->setAutoSize(true);
+
+$sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, 'Template Import');
+$spreadsheet->addSheet($sheet, 1);
+$spreadsheet->setActiveSheetIndexByName('Template Import');
 
 foreach ($headers as $i => $h) {
     $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1) . '1';

@@ -64,7 +64,7 @@ include __DIR__ . '/../includes/header.php';
                         untuk Pilihan Ganda/Kompleks = opsi 1–5;
                         untuk Benar/Salah = pernyataan 1–4 (pilihan_5 boleh kosong);
                         untuk tipe lain boleh dikosongkan.</li>
-                    <li><strong>jawaban_benar</strong>:
+                    <li><strong>jawaban_benar</strong> (opsional; boleh dikosongkan):
                         PG = <em>pilihan_1..pilihan_5</em> (kompatibel A–E / 1–5);
                         PG Kompleks = multi jawaban dipisah koma (mis. <em>pilihan_1,pilihan_3</em>);
                         Benar/Salah = 4 nilai dipisah <em>|</em> (mis. <em>Benar|Salah|Benar|Salah</em>);

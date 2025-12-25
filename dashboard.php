@@ -29,6 +29,26 @@ include __DIR__ . '/includes/header.php';
         <div class="col-md-6 col-lg-4 mb-3">
             <div class="admin-tile h-100">
                 <div class="admin-tile-body">
+                    <h5 class="admin-tile-title">Konten (Materi/Berita)</h5>
+                    <p class="admin-tile-text">Tulis dan kelola materi maupun berita yang tampil di halaman publik.</p>
+                    <a href="admin/contents.php" class="btn btn-outline-primary btn-sm">Buka Modul</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="admin-tile h-100">
+                <div class="admin-tile-body">
+                    <h5 class="admin-tile-title">Carousel Beranda</h5>
+                    <p class="admin-tile-text">Kelola slider/carousel yang tampil di halaman utama.</p>
+                    <a href="admin/home_carousel.php" class="btn btn-outline-primary btn-sm">Buka Modul</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="admin-tile h-100">
+                <div class="admin-tile-body">
                     <h5 class="admin-tile-title">Bank Soal</h5>
                     <p class="admin-tile-text">Impor dan ekspor soal pilihan ganda dalam format Excel (.xls/.xlsx).</p>
                     <a href="admin/questions.php" class="btn btn-outline-primary btn-sm">Buka Modul</a>

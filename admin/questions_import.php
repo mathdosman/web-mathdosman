@@ -376,7 +376,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'pilihan_3',
                     'pilihan_4',
                     'pilihan_5',
-                    'jawaban_benar',
                     'status_soal',
                     'created_at',
                 ];
@@ -552,7 +551,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $p3 = trim((string)($row[$idx['pilihan_3']] ?? ''));
                                 $p4 = trim((string)($row[$idx['pilihan_4']] ?? ''));
                                 $p5 = trim((string)($row[$idx['pilihan_5']] ?? ''));
-                                $jawabanRaw = trim((string)($row[$idx['jawaban_benar']] ?? ''));
+                                $jawabanRaw = isset($idx['jawaban_benar'])
+                                    ? trim((string)($row[$idx['jawaban_benar']] ?? ''))
+                                    : '';
                                 $jawaban = parse_jawaban_benar($tipe, $jawabanRaw);
                                 $status = parse_status_soal((string)($row[$idx['status_soal']] ?? 'draft'));
                                 $createdAt = parse_created_at($row[$idx['created_at']] ?? null);
@@ -596,8 +597,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         || $isEmptyRich($p3)
                                         || $isEmptyRich($p4)
                                         || $isEmptyRich($p5)
-                                        || $jawaban === ''
                                     ) {
+                                        $skipped++;
+                                        continue;
+                                    }
+
+                                    // jawaban_benar opsional; jika diisi tapi tidak valid, skip.
+                                    if ($jawabanRaw !== '' && $jawaban === '') {
                                         $skipped++;
                                         continue;
                                     }
@@ -607,15 +613,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         || $isEmptyRich($p2)
                                         || $isEmptyRich($p3)
                                         || $isEmptyRich($p4)
-                                        || $jawaban === ''
                                     ) {
+                                        $skipped++;
+                                        continue;
+                                    }
+
+                                    // jawaban_benar opsional; jika diisi tapi tidak valid, skip.
+                                    if ($jawabanRaw !== '' && $jawaban === '') {
                                         $skipped++;
                                         continue;
                                     }
                                     // pilihan_5 tidak dipakai di Benar/Salah
                                     $p5 = '';
                                 } elseif ($tipe === 'Menjodohkan') {
-                                    if ($jawaban === '') {
+                                    // jawaban_benar opsional; jika diisi tapi tidak valid, skip.
+                                    if ($jawabanRaw !== '' && $jawaban === '') {
                                         $skipped++;
                                         continue;
                                     }
@@ -776,9 +788,9 @@ include __DIR__ . '/../includes/header.php';
         <div class="col-md-5 mb-3">
         <div class="card h-100">
             <div class="card-body">
-                <h6 class="card-title">Header Excel yang wajib</h6>
+                <h6 class="card-title">Header Excel (jawaban_benar opsional)</h6>
 <pre class="bg-light border rounded p-2 small mb-2">nomer_soal	nama_paket	pertanyaan	tipe_soal	pilihan_1	pilihan_2	pilihan_3	pilihan_4	pilihan_5	jawaban_benar	status_soal	created_at</pre>
-                <p class="small mb-0">Catatan: <code>jawaban_benar</code> boleh diisi <strong>A-E</strong> atau <strong>1-5</strong>. Kolom <code>created_at</code> bisa dikosongkan (akan otomatis terisi waktu import).</p>
+                <p class="small mb-0">Catatan: <code>jawaban_benar</code> boleh dikosongkan. Jika diisi, boleh pakai <strong>A-E</strong> atau <strong>1-5</strong> (untuk PG). Kolom <code>created_at</code> bisa dikosongkan (akan otomatis terisi waktu import).</p>
             </div>
         </div>
         </div>
