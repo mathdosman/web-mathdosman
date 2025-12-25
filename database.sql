@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS packages (
     subject_id INT NULL,
     materi VARCHAR(150) NULL,
     submateri VARCHAR(150) NULL,
+    intro_content_id INT NULL,
     description TEXT NULL,
     show_answers_public TINYINT(1) NOT NULL DEFAULT 0,
     status ENUM('draft','published') NOT NULL DEFAULT 'draft',
@@ -28,8 +29,25 @@ CREATE TABLE IF NOT EXISTS packages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     KEY idx_packages_status (status),
     KEY idx_packages_subject (subject_id),
-    KEY idx_packages_subject_status (subject_id, status)
+    KEY idx_packages_subject_status (subject_id, status),
+    KEY idx_packages_intro_content (intro_content_id)
 );
+
+-- Tabel konten (materi/berita)
+CREATE TABLE IF NOT EXISTS contents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type ENUM('materi','berita') NOT NULL DEFAULT 'materi',
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    excerpt TEXT NULL,
+    content_html MEDIUMTEXT NOT NULL,
+    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    published_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    KEY idx_contents_type_status (type, status),
+    KEY idx_contents_published_at (published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabel mata pelajaran (bank soal)
 CREATE TABLE IF NOT EXISTS subjects (

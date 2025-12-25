@@ -20,4 +20,12 @@ Thumbs.db
 
 # Local app config (contains DB credentials)
 config/config.php
-/install/installed.lock
+
+# Installer lock file (generated after install)
+install/installed.lock
+
+# Homepage carousel uploads (keep placeholders in repo; ignore uploaded rasters)
+assets/img/carousel/slide*.jpg
+assets/img/carousel/slide*.jpeg
+assets/img/carousel/slide*.png
+assets/img/carousel/slide*.webp

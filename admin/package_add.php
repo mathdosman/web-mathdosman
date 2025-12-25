@@ -65,6 +65,7 @@ if (app_runtime_migrations_enabled()) {
     ensure_package_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
     ensure_package_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
     ensure_package_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
+    ensure_package_column($pdo, 'intro_content_id', 'intro_content_id INT NULL');
 }
 
 $subjects = [];
@@ -76,6 +77,7 @@ try {
 $subjectId = 0;
 $materi = '';
 $submateri = '';
+$introContentId = 0;
 
 $materials = [];
 $submaterials = [];
@@ -84,10 +86,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subjectId = (int)($_POST['subject_id'] ?? 0);
     $materi = trim((string)($_POST['materi'] ?? ''));
     $submateri = trim((string)($_POST['submateri'] ?? ''));
+    $introContentId = (int)($_POST['intro_content_id'] ?? 0);
+
+    if ($introContentId < 0) {
+        $introContentId = 0;
+    }
 
     if ($materi === '') {
         $submateri = '';
     }
+}
+
+$contentOptions = [];
+try {
+    $stmt = $pdo->query('SELECT id, type, title, slug, status, published_at, created_at
+        FROM contents
+        ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+        LIMIT 200');
+    $contentOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $contentOptions = [];
 }
 
 if ($subjectId > 0) {
@@ -122,6 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = $_POST['status'] ?? 'draft';
+
+    // Materi (konten)
+    $introContentId = (int)($_POST['intro_content_id'] ?? $introContentId);
+    if ($introContentId < 0) {
+        $introContentId = 0;
+    }
 
     if ($formAction === 'change_mapel') {
         $materi = '';
@@ -182,23 +206,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $code = generate_unique_package_code($pdo);
                 $publishedAt = ($status === 'published') ? date('Y-m-d H:i:s') : null;
 
-                $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status, published_at)
-                    VALUES (:c, :n, :sid, :m, :sm, :d, :s, :pa)');
-                $stmt->execute([
-                    ':c' => $code,
-                    ':n' => $name,
-                    ':sid' => $subjectId,
-                    ':m' => ($materi === '' ? null : $materi),
-                    ':sm' => ($submateri === '' ? null : $submateri),
-                    ':d' => ($description === '' ? null : $description),
-                    ':s' => $status,
-                    ':pa' => $publishedAt,
-                ]);
+                if ($introContentId > 0) {
+                    $stmt = $pdo->prepare('SELECT 1 FROM contents WHERE id = :id LIMIT 1');
+                    $stmt->execute([':id' => $introContentId]);
+                    if (!$stmt->fetchColumn()) {
+                        $errors[] = 'Konten materi tidak ditemukan.';
+                    }
+                }
+
+                if ($errors) {
+                    throw new RuntimeException('Validation failed');
+                }
+
+                try {
+                    $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status, published_at, intro_content_id)
+                        VALUES (:c, :n, :sid, :m, :sm, :d, :s, :pa, :cid)');
+                    $stmt->execute([
+                        ':c' => $code,
+                        ':n' => $name,
+                        ':sid' => $subjectId,
+                        ':m' => ($materi === '' ? null : $materi),
+                        ':sm' => ($submateri === '' ? null : $submateri),
+                        ':d' => ($description === '' ? null : $description),
+                        ':s' => $status,
+                        ':pa' => $publishedAt,
+                        ':cid' => ($introContentId > 0 ? $introContentId : null),
+                    ]);
+                } catch (PDOException $e) {
+                    // Backward compatible if intro_content_id doesn't exist.
+                    $stmt = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, description, status, published_at)
+                        VALUES (:c, :n, :sid, :m, :sm, :d, :s, :pa)');
+                    $stmt->execute([
+                        ':c' => $code,
+                        ':n' => $name,
+                        ':sid' => $subjectId,
+                        ':m' => ($materi === '' ? null : $materi),
+                        ':sm' => ($submateri === '' ? null : $submateri),
+                        ':d' => ($description === '' ? null : $description),
+                        ':s' => $status,
+                        ':pa' => $publishedAt,
+                    ]);
+                }
 
                 header('Location: packages.php');
                 exit;
             } catch (PDOException $e) {
                 $errors[] = 'Gagal menyimpan paket.';
+            } catch (RuntimeException $e) {
+                // validation error already populated
             }
         }
     }
@@ -278,6 +333,32 @@ include __DIR__ . '/../includes/header.php';
                                 <div class="form-text small">Pilih materi dulu untuk menampilkan submateri.</div>
                             <?php endif; ?>
                         </div>
+                    </div>
+
+                    <div class="mb-3 mt-2">
+                        <label class="form-label small">Materi (Konten)</label>
+                        <select name="intro_content_id" class="form-select form-select-sm" <?php echo !$contentOptions ? 'disabled' : ''; ?>>
+                            <option value="0">-- Tanpa materi --</option>
+                            <?php foreach ($contentOptions as $c): ?>
+                                <?php
+                                    $cid = (int)($c['id'] ?? 0);
+                                    $ct = (string)($c['title'] ?? '');
+                                    $cs = (string)($c['status'] ?? '');
+                                    $ctype = (string)($c['type'] ?? '');
+                                    $cslug = (string)($c['slug'] ?? '');
+                                    $label = '[' . $ctype . '] ' . $ct;
+                                    if ($cs !== '') {
+                                        $label .= ' (' . $cs . ')';
+                                    }
+                                    if ($cslug !== '') {
+                                        $label .= ' — ' . $cslug;
+                                    }
+                                    $selected = ($introContentId === $cid) ? 'selected' : '';
+                                ?>
+                                <option value="<?php echo (int)$cid; ?>" <?php echo $selected; ?>><?php echo htmlspecialchars($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text small">Yang tampil ke publik hanya konten berstatus <strong>published</strong>. Admin tetap bisa memilih draft untuk persiapan.</div>
                     </div>
 
                     <div class="mb-3">

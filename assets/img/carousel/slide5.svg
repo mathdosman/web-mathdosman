@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="MATHDOSMAN - Slide 5">
+  <defs>
+    <linearGradient id="bg5" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f8f9fa"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="2100" height="900" fill="url(#bg5)"/>
+
+  <!-- Calculus card -->
+  <g transform="translate(140 120)" fill="none" stroke="#000">
+    <rect x="0" y="0" width="980" height="660" rx="32" fill="#fff" stroke-opacity="0.14" stroke-width="6"/>
+
+    <!-- Smooth curve area -->
+    <g transform="translate(110 110)">
+      <path d="M0 470 C 180 420, 240 260, 360 240 C 520 210, 560 380, 700 360 C 820 345, 900 260, 940 160" stroke="#000" stroke-opacity="0.75" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M0 470 L0 520 L940 520 L940 160" fill="#000" fill-opacity="0.06" stroke="none"/>
+
+      <!-- Axes -->
+      <path d="M0 520 H940" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+      <path d="M0 520 V0" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+
+      <!-- Riemann rectangles hint -->
+      <g fill="#000" fill-opacity="0.10" stroke="#000" stroke-opacity="0.16" stroke-width="3">
+        <rect x="60" y="430" width="70" height="90"/>
+        <rect x="150" y="400" width="70" height="120"/>
+        <rect x="240" y="360" width="70" height="160"/>
+        <rect x="330" y="310" width="70" height="210"/>
+        <rect x="420" y="285" width="70" height="235"/>
+        <rect x="510" y="300" width="70" height="220"/>
+        <rect x="600" y="330" width="70" height="190"/>
+        <rect x="690" y="350" width="70" height="170"/>
+      </g>
+    </g>
+
+    <g fill="#000" stroke="none" font-family="sans-serif">
+      <text x="140" y="620" font-size="34" opacity="0.8">Kalkulus • Limit • Turunan • Integral</text>
+    </g>
+  </g>
+
+  <!-- Copy on right -->
+  <g fill="#000" font-family="sans-serif">
+    <text x="1240" y="250" font-size="78" font-weight="800">Kalkulus</text>
+    <text x="1240" y="330" font-size="34" opacity="0.75">Latihan konsep perubahan.</text>
+
+    <text x="1240" y="470" font-size="44" font-weight="700">Contoh:</text>
+    <text x="1240" y="540" font-size="46" font-weight="800">∫ f(x) dx</text>
+    <text x="1240" y="605" font-size="34" opacity="0.8">Siap dipakai untuk banner beranda.</text>
+  </g>
+
+  <!-- Corner mark -->
+  <g transform="translate(1860 90)" fill="none" stroke="#000" stroke-opacity="0.20" stroke-width="10" stroke-linecap="round">
+    <path d="M0 0 h160"/>
+    <path d="M0 0 v160"/>
+  </g>
+</svg>

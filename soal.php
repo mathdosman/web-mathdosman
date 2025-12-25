@@ -1,5 +1,5 @@
 <?php
-// Legacy module (CBT) from an older project structure.
+// Legacy module (mathdosman) from an older project structure.
 // This repository now uses Paket Soal + Bank Soal modules under /admin and public preview pages.
 // Redirect to prevent runtime errors due to missing legacy tables/includes.
 header('Location: index.php');

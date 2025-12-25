@@ -1,5 +1,5 @@
 <?php
-// Contoh konfigurasi dasar aplikasi CBT
+// Contoh konfigurasi dasar aplikasi mathdosman
 // Salin file ini menjadi: config/config.php lalu sesuaikan.
 
 // Ubah sesuai pengaturan MySQL Anda

@@ -186,10 +186,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($next !== null) {
                     if ($next === 'published') {
-                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = NOW() WHERE id = :id');
+                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = COALESCE(published_at, NOW()) WHERE id = :id');
                         $stmt->execute([':st' => $next, ':id' => $id]);
                     } else {
-                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = NULL WHERE id = :id');
+                        // Keep original published_at so re-publish keeps the first publish time.
+                        $stmt = $pdo->prepare('UPDATE packages SET status = :st WHERE id = :id');
                         $stmt->execute([':st' => $next, ':id' => $id]);
                     }
                     header('Location: ' . $returnUrl);
@@ -471,7 +472,7 @@ include __DIR__ . '/../includes/header.php';
                                         <span class="visually-hidden">Edit</span>
                                     </a>
                                     <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_items.php?package_id=<?php echo (int)$p['id']; ?>" title="Lihat Butir Soal" aria-label="Lihat Butir Soal">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <svg class="<?php echo ($p['status'] === 'published') ? 'text-success' : 'text-secondary'; ?>" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M8 6h13"/>
                                             <path d="M8 12h13"/>
                                             <path d="M8 18h13"/>

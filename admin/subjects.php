@@ -1,4 +1,4 @@
 <?php
-// Modul CBT mata pelajaran dinonaktifkan.
+// Modul mathdosman mata pelajaran dinonaktifkan.
 header('Location: ../dashboard.php');
 exit;

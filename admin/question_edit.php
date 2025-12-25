@@ -29,7 +29,8 @@ if ($packageId > 0) {
         $stmt = $pdo->prepare('SELECT id, code, name, status FROM packages WHERE id = :id');
         $stmt->execute([':id' => $packageId]);
         $package = $stmt->fetch();
-        $isLocked = $package && ((string)($package['status'] ?? 'draft')) === 'published';
+        // Editing is allowed even when the package is published.
+        $isLocked = false;
     } catch (Throwable $e) {
         $package = null;
         $isLocked = false;
@@ -293,10 +294,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $question['jawaban_benar'] = $jawabanTmp;
         }
     } else {
-        if ($isLocked) {
-            $errors[] = 'Paket sudah published dan tidak bisa ditambah/diedit.';
-        }
-
     $tipeSoalBefore = (string)($question['tipe_soal'] ?? '');
     $tipeSoalInput = (string)($_POST['tipe_soal'] ?? $tipeSoalBefore);
     $tipeEffective = $normalizeTipeSoal($tipeSoalInput);
@@ -657,18 +654,6 @@ if ($tipeSoalView === 'Menjodohkan') {
                     <div class="alert alert-warning py-2 small">
                         Materi/Submateri tersimpan tidak sesuai master MAPEL. Silakan pilih ulang sebelum menyimpan.
                     </div>
-                <?php endif; ?>
-
-                <?php if ($isLocked): ?>
-                    <div class="alert alert-warning small">Paket sudah <strong>published</strong>. Halaman ini dikunci.</div>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function () {
-                            if (typeof Swal !== 'undefined') {
-                                Swal.fire({ icon: 'warning', title: 'Dikunci', text: 'Paket sudah published dan tidak bisa ditambah/diedit.' })
-                                    .then(() => { window.location.href = '<?php echo htmlspecialchars($returnLink); ?>'; });
-                            }
-                        });
-                    </script>
                 <?php endif; ?>
 
                 <form method="post" class="small" id="questionForm">

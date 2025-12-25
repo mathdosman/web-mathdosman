@@ -18,6 +18,9 @@ $useAdminSidebar = $isAdmin && $isAdminArea;
 $use_print_soal_css = !empty($use_print_soal_css);
 $body_class = isset($body_class) && is_string($body_class) ? trim($body_class) : '';
 
+// Ads (default: enabled on public pages only). Set $disable_adsense = true before including header.php to opt out.
+$disable_adsense = !empty($disable_adsense);
+
 // MathJax (LaTeX rendering)
 // Default: aktif di hampir semua halaman yang menampilkan konten.
 if (isset($use_mathjax)) {
@@ -91,6 +94,41 @@ try {
     $brandLogoPath = null;
     $faviconPath = null;
 }
+
+// SEO defaults (override per page by setting variables before include header.php)
+$meta_description = isset($meta_description) && is_string($meta_description) ? trim($meta_description) : '';
+$meta_og_title = isset($meta_og_title) && is_string($meta_og_title) ? trim($meta_og_title) : '';
+$meta_og_description = isset($meta_og_description) && is_string($meta_og_description) ? trim($meta_og_description) : '';
+$meta_og_image = isset($meta_og_image) && is_string($meta_og_image) ? trim($meta_og_image) : '';
+$meta_og_type = isset($meta_og_type) && is_string($meta_og_type) ? trim($meta_og_type) : '';
+
+$baseForMeta = rtrim((string)$base_url, '/');
+$meta_default_description = 'Portal Materi & Bank Soal MATHDOSMAN — belajar ringkas, latihan terarah, dan siap cetak.';
+if ($meta_description === '') {
+    $meta_description = $meta_default_description;
+}
+if ($meta_og_title === '') {
+    $meta_og_title = (string)$page_title;
+}
+if ($meta_og_description === '') {
+    $meta_og_description = $meta_description;
+}
+if ($meta_og_type === '') {
+    $meta_og_type = 'website';
+}
+if ($meta_og_image === '') {
+    $meta_og_image = $baseForMeta . '/assets/img/icon.svg';
+}
+
+$meta_url = '';
+try {
+    $req = (string)($_SERVER['REQUEST_URI'] ?? '');
+    if ($req !== '') {
+        $meta_url = $baseForMeta . $req;
+    }
+} catch (Throwable $e) {
+    $meta_url = '';
+}
 ?><!DOCTYPE html>
 <html lang="id">
 <head>
@@ -102,6 +140,24 @@ try {
         <link rel="shortcut icon" href="<?php echo htmlspecialchars($faviconPath); ?>">
     <?php endif; ?>
     <title><?php echo htmlspecialchars($page_title); ?></title>
+    <meta name="description" content="<?php echo htmlspecialchars($meta_description); ?>">
+
+    <meta property="og:site_name" content="MATHDOSMAN">
+    <meta property="og:title" content="<?php echo htmlspecialchars($meta_og_title); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($meta_og_description); ?>">
+    <meta property="og:type" content="<?php echo htmlspecialchars($meta_og_type); ?>">
+    <?php if ($meta_url !== ''): ?>
+        <meta property="og:url" content="<?php echo htmlspecialchars($meta_url); ?>">
+        <link rel="canonical" href="<?php echo htmlspecialchars($meta_url); ?>">
+    <?php endif; ?>
+    <?php if ($meta_og_image !== ''): ?>
+        <meta property="og:image" content="<?php echo htmlspecialchars($meta_og_image); ?>">
+    <?php endif; ?>
+
+    <?php if (!$useAdminSidebar && !$disable_adsense): ?>
+        <meta name="google-adsense-account" content="ca-pub-4649430696681971">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4649430696681971" crossorigin="anonymous"></script>
+    <?php endif; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?php echo $base_url; ?>/assets/css/style.css" rel="stylesheet">
     <?php if ($isFrontArea): ?>
@@ -235,6 +291,28 @@ try {
                         <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/>
                     </svg>
                     <span>Paket Soal</span>
+                </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['contents.php', 'content_add.php', 'content_edit.php'], true);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/contents.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 4h16v16H4z"/>
+                        <path d="M8 8h8"/>
+                        <path d="M8 12h8"/>
+                        <path d="M8 16h6"/>
+                    </svg>
+                    <span>Konten</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'home_carousel.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/home_carousel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <path d="M8 13l2.5-3 3.5 4.5 2.5-3 3.5 4"/>
+                    </svg>
+                    <span>Carousel Beranda</span>
                 </a>
                 <?php $isActive = ($currentPage === 'mapel.php'); ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/mapel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
