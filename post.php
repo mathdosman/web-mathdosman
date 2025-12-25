@@ -73,12 +73,24 @@ if ($slug === '') {
 		} else {
 			// Detect whether this content is attached as a package intro.
 			try {
-				$stmt0 = $pdo->prepare('SELECT id, code, subject_id, materi, submateri
-					FROM packages
-					WHERE status = "published" AND intro_content_id = :cid
-					LIMIT 1');
-				$stmt0->execute([':cid' => (int)($content['id'] ?? 0)]);
-				$linkedIntroPackage = $stmt0->fetch(PDO::FETCH_ASSOC) ?: null;
+				try {
+					$stmt0 = $pdo->prepare('SELECT id, code, subject_id, materi, submateri,
+						created_at, published_at,
+						COALESCE(published_at, created_at) AS dt
+						FROM packages
+						WHERE status = "published" AND intro_content_id = :cid
+						LIMIT 1');
+					$stmt0->execute([':cid' => (int)($content['id'] ?? 0)]);
+					$linkedIntroPackage = $stmt0->fetch(PDO::FETCH_ASSOC) ?: null;
+				} catch (Throwable $e00) {
+					// Backward compatibility: older schema without published_at/created_at.
+					$stmt0 = $pdo->prepare('SELECT id, code, subject_id, materi, submateri
+						FROM packages
+						WHERE status = "published" AND intro_content_id = :cid
+						LIMIT 1');
+					$stmt0->execute([':cid' => (int)($content['id'] ?? 0)]);
+					$linkedIntroPackage = $stmt0->fetch(PDO::FETCH_ASSOC) ?: null;
+				}
 			} catch (Throwable $e0) {
 				$linkedIntroPackage = null;
 			}
@@ -111,31 +123,34 @@ if ($slug === '') {
 
 				$paramsBase = [':kind' => $currKindForSidebar, ':curr' => $currIdForSidebar];
 				$feedSqlWithTax = '(
-					SELECT "package" AS kind,
+					SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
 						p.id AS id,
-						p.code AS code,
-						NULL AS slug,
-						NULL AS ctype,
-						p.name AS title,
+						p.code COLLATE utf8mb4_unicode_ci AS code,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS slug,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS ctype,
+						p.name COLLATE utf8mb4_unicode_ci AS title,
 						COALESCE(p.published_at, p.created_at) AS dt,
-						p.materi AS materi,
-						p.submateri AS submateri,
-						COUNT(pq.question_id) AS question_count
+						p.materi COLLATE utf8mb4_unicode_ci AS materi,
+						p.submateri COLLATE utf8mb4_unicode_ci AS submateri,
+						COALESCE(qc.question_count, 0) AS question_count
 					FROM packages p
-					LEFT JOIN package_questions pq ON pq.package_id = p.id
+					LEFT JOIN (
+						SELECT package_id, COUNT(*) AS question_count
+						FROM package_questions
+						GROUP BY package_id
+					) qc ON qc.package_id = p.id
 					WHERE p.status = "published"
-					GROUP BY p.id
 					UNION ALL
-					SELECT "content" AS kind,
+					SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
 						c.id AS id,
-						NULL AS code,
-						c.slug AS slug,
-						c.type AS ctype,
-						c.title AS title,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS code,
+						c.slug COLLATE utf8mb4_unicode_ci AS slug,
+						c.type COLLATE utf8mb4_unicode_ci AS ctype,
+						c.title COLLATE utf8mb4_unicode_ci AS title,
 						COALESCE(c.published_at, c.created_at) AS dt,
-						c.materi AS materi,
-						c.submateri AS submateri,
-						NULL AS question_count
+						c.materi COLLATE utf8mb4_unicode_ci AS materi,
+						c.submateri COLLATE utf8mb4_unicode_ci AS submateri,
+						CAST(NULL AS SIGNED) AS question_count
 					FROM contents c
 					WHERE c.status = "published"
 					  AND c.id NOT IN (
@@ -146,31 +161,34 @@ if ($slug === '') {
 				) feed';
 
 				$feedSqlNoTax = '(
-					SELECT "package" AS kind,
+					SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
 						p.id AS id,
-						p.code AS code,
-						NULL AS slug,
-						NULL AS ctype,
-						p.name AS title,
+						p.code COLLATE utf8mb4_unicode_ci AS code,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS slug,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS ctype,
+						p.name COLLATE utf8mb4_unicode_ci AS title,
 						COALESCE(p.published_at, p.created_at) AS dt,
-						p.materi AS materi,
-						p.submateri AS submateri,
-						COUNT(pq.question_id) AS question_count
+						p.materi COLLATE utf8mb4_unicode_ci AS materi,
+						p.submateri COLLATE utf8mb4_unicode_ci AS submateri,
+						COALESCE(qc.question_count, 0) AS question_count
 					FROM packages p
-					LEFT JOIN package_questions pq ON pq.package_id = p.id
+					LEFT JOIN (
+						SELECT package_id, COUNT(*) AS question_count
+						FROM package_questions
+						GROUP BY package_id
+					) qc ON qc.package_id = p.id
 					WHERE p.status = "published"
-					GROUP BY p.id
 					UNION ALL
-					SELECT "content" AS kind,
+					SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
 						c.id AS id,
-						NULL AS code,
-						c.slug AS slug,
-						c.type AS ctype,
-						c.title AS title,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS code,
+						c.slug COLLATE utf8mb4_unicode_ci AS slug,
+						c.type COLLATE utf8mb4_unicode_ci AS ctype,
+						c.title COLLATE utf8mb4_unicode_ci AS title,
 						COALESCE(c.published_at, c.created_at) AS dt,
-						NULL AS materi,
-						NULL AS submateri,
-						NULL AS question_count
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS materi,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS submateri,
+						CAST(NULL AS SIGNED) AS question_count
 					FROM contents c
 					WHERE c.status = "published"
 					  AND c.id NOT IN (
@@ -234,30 +252,31 @@ if ($slug === '') {
 					// If this content is merged as package intro (not shown as a card), navigate as that package.
 					$currKind = 'package';
 					$currId = (int)($linkedIntroPackage['id'] ?? 0);
-					$currDate = (string)($linkedIntroPackage['published_at'] ?? $linkedIntroPackage['created_at'] ?? '');
+					$currDate = (string)($linkedIntroPackage['dt'] ?? $linkedIntroPackage['published_at'] ?? $linkedIntroPackage['created_at'] ?? '');
 				}
 				if ($currId <= 0 || trim($currDate) === '') {
 					throw new RuntimeException('feed_curr_invalid');
 				}
 
 				$params = [':d' => $currDate, ':id' => $currId];
+				// Collation-safe UNION: packages & contents bisa beda collation.
 				$feedSql = '(
-					SELECT "package" AS kind,
+					SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
 						p.id AS id,
-						p.code AS code,
-						NULL AS slug,
-						NULL AS ctype,
-						p.name AS title,
+						p.code COLLATE utf8mb4_unicode_ci AS code,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS slug,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS ctype,
+						p.name COLLATE utf8mb4_unicode_ci AS title,
 						COALESCE(p.published_at, p.created_at) AS dt
 					FROM packages p
 					WHERE p.status = "published"
 					UNION ALL
-					SELECT "content" AS kind,
+					SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
 						c.id AS id,
-						NULL AS code,
-						c.slug AS slug,
-						c.type AS ctype,
-						c.title AS title,
+						CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS code,
+						c.slug COLLATE utf8mb4_unicode_ci AS slug,
+						c.type COLLATE utf8mb4_unicode_ci AS ctype,
+						c.title COLLATE utf8mb4_unicode_ci AS title,
 						COALESCE(c.published_at, c.created_at) AS dt
 					FROM contents c
 					WHERE c.status = "published"
@@ -344,7 +363,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 	?>
 	<div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
 	<?php if (!$list): ?>
-		<div class="small text-white-50 mb-3">Belum ada data.</div>
+		<div class="small text-white-50 text-start mb-3">Belum ada data.</div>
 	<?php else: ?>
 		<nav class="nav flex-column mb-3">
 			<?php foreach ($list as $row): ?>
@@ -538,14 +557,31 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 										}
 									?>
 									<?php if ($prevHref !== ''): ?>
-										<a class="btn btn-outline-dark" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
-											&laquo; Sebelumnya
+										<a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
+											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<path d="M15 18l-6-6 6-6" />
+											</svg>
+											<span>Sebelumnya</span>
+										</a>
+									<?php else: ?>
+										<a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sebelumnya">
+											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<path d="M15 18l-6-6 6-6" />
+											</svg>
+											<span>Sebelumnya</span>
 										</a>
 									<?php endif; ?>
 								</div>
 
 								<div class="flex-grow-1 text-center">
-									<a class="btn btn-dark" href="index.php" aria-label="Kembali ke beranda">Beranda</a>
+									<a class="btn btn-dark nav-action-btn" href="index.php" aria-label="Kembali ke beranda">
+										<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+											<path d="M3 10.5L12 3l9 7.5" />
+											<path d="M5 10v10h14V10" />
+											<path d="M10 20v-6h4v6" />
+										</svg>
+										<span>Beranda</span>
+									</a>
 								</div>
 
 								<div class="flex-grow-1 text-end">
@@ -559,8 +595,18 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 										}
 									?>
 									<?php if ($nextHref !== ''): ?>
-										<a class="btn btn-outline-dark" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
-											Sesudahnya &raquo;
+										<a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
+											<span>Sesudahnya</span>
+											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<path d="M9 18l6-6-6-6" />
+											</svg>
+										</a>
+									<?php else: ?>
+										<a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sesudahnya">
+											<span>Sesudahnya</span>
+											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<path d="M9 18l6-6-6-6" />
+											</svg>
 										</a>
 									<?php endif; ?>
 								</div>

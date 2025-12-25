@@ -27,67 +27,6 @@ $postInstallChecklistHtml = '<div class="mt-3">'
     . '</div>';
 
 /**
- * Jalankan semua seed yang tersedia (berdasarkan registry scripts/seeds.php).
- *
- * @return array<int, array{ok:bool, message:string}>
- */
-function runAllSeeds(PDO $pdo, string $dbName): array
-{
-    $results = [];
-
-    // Ensure we're in the target DB.
-    $pdo->exec('USE `' . $dbName . '`');
-
-    // Prefer registry-based seeds (single source of truth).
-    $registryPath = __DIR__ . '/../scripts/seeds.php';
-    $seeds = [];
-    if (is_file($registryPath)) {
-        try {
-            $seeds = (array)require $registryPath;
-        } catch (Throwable $e) {
-            $results[] = ['ok' => false, 'message' => 'Gagal memuat registry seed: ' . $e->getMessage()];
-            $seeds = [];
-        }
-    }
-
-    if (!empty($seeds)) {
-        foreach ($seeds as $seed) {
-            $label = (string)($seed['label'] ?? ($seed['key'] ?? 'Seed'));
-            try {
-                $file = (string)($seed['file'] ?? '');
-                $fn = (string)($seed['function'] ?? '');
-                $options = is_array($seed['options'] ?? null) ? (array)$seed['options'] : [];
-
-                if ($file === '' || !is_file($file)) {
-                    $results[] = ['ok' => false, 'message' => $label . ' gagal: file seed tidak ditemukan.'];
-                    continue;
-                }
-
-                require_once $file;
-                if ($fn === '' || !function_exists($fn)) {
-                    $results[] = ['ok' => false, 'message' => $label . ' gagal: fungsi seed tidak ditemukan.'];
-                    continue;
-                }
-
-                $r = $fn($pdo, $options);
-                $results[] = [
-                    'ok' => (bool)($r['ok'] ?? false),
-                    'message' => $label . ': ' . (string)($r['message'] ?? '(no message)'),
-                ];
-            } catch (Throwable $e) {
-                $results[] = ['ok' => false, 'message' => $label . ' gagal: ' . $e->getMessage()];
-            }
-        }
-
-        return $results;
-    }
-
-    // Jika registry tidak ada / kosong, jangan seed apa pun.
-    $results[] = ['ok' => false, 'message' => 'Registry seed tidak ditemukan atau kosong. Tidak ada seed yang dijalankan.'];
-    return $results;
-}
-
-/**
  * Perbarui konfigurasi koneksi database di config/config.php
  */
 function updateConfigDbCredentials(string $dbHost, string $dbName, string $dbUser, string $dbPass): void
@@ -150,12 +89,14 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Import struktur tabel dari file SQL ke database tersebut
-        $sqlFile = __DIR__ . '/../database.sql';
+        // Import database
+        // Prefer snapshot (schema + data) jika tersedia agar instalasi tidak bergantung pada seed/HTML.
+        $snapshotFile = __DIR__ . '/../database_snapshot.sql';
+        $sqlFile = file_exists($snapshotFile) ? $snapshotFile : (__DIR__ . '/../database.sql');
         if (file_exists($sqlFile)) {
             $sql = file_get_contents($sqlFile);
             if ($sql !== false) {
-                // Pastikan menggunakan DB yang baru dibuat
+                // Pastikan menggunakan DB target
                 $sql = preg_replace('/USE `?[^`]+`?;?/i', 'USE `'.$dbName.'`;', $sql, 1);
                 $pdo->exec($sql);
             }
@@ -176,9 +117,6 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ':ph' => $adminHash,
             ':n' => 'Administrator',
         ]);
-
-        // Seed: jalankan semua seed otomatis (aman dijalankan berulang karena pakai skip_if_exists).
-        $seedResults = runAllSeeds($pdo, $dbName);
 
         // Coba buat user aplikasi dan beri hak akses ke database
         $appUserCreated = false;
@@ -209,14 +147,6 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             updateConfigDbCredentials($rootHost, $dbName, $rootUser, $rootPass);
             $message = 'Instalasi berhasil. Database sudah dibuat, namun user khusus aplikasi tidak dapat dibuat karena keterbatasan hak akses (CREATE USER/GRANT). Aplikasi akan menggunakan akun MySQL yang Anda masukkan di atas. Anda dapat mengakses situs di <a href="../index.php">beranda</a> dan login admin di <a href="../login.php">login admin</a>.'
                 . $postInstallChecklistHtml;
-        }
-
-        if (!empty($seedResults)) {
-            $parts = [];
-            foreach ($seedResults as $sr) {
-                $parts[] = htmlspecialchars((string)($sr['message'] ?? ''), ENT_QUOTES);
-            }
-            $message .= '<hr><div class="small"><div class="fw-semibold mb-1">Hasil seed:</div><ul class="mb-0"><li>' . implode('</li><li>', $parts) . '</li></ul></div>';
         }
 
         // Write install lock (best effort)
@@ -275,9 +205,6 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label class="form-label">Password MySQL (root)</label>
                     <input type="password" name="root_pass" class="form-control" value="<?php echo htmlspecialchars($_POST['root_pass'] ?? ''); ?>">
-                </div>
-                <div class="alert alert-info py-2">
-                    Seed otomatis aktif: installer akan mengisi semua seed yang terdaftar di <code>scripts/seeds.php</code>.
                 </div>
                 <button type="submit" class="btn btn-primary">Jalankan Instalasi</button>
             </form>

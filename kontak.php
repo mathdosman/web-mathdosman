@@ -10,7 +10,7 @@ include __DIR__ . '/includes/header.php';
         <div class="home-hero mb-3">
             <div class="text-uppercase small text-muted mb-1">Kontak</div>
             <h1 class="h4 mb-2">Hubungi Admin</h1>
-            <p class="text-muted mb-0">Untuk bantuan teknis atau pertanyaan seputar konten dan bank soal.</p>
+            <p class="text-muted mb-0">Untuk bantuan teknis, laporan bug, atau masukan terkait materi dan soal.</p>
         </div>
 
         <div class="card post-detail">
@@ -20,7 +20,8 @@ include __DIR__ . '/includes/header.php';
                         <div class="border rounded p-3 h-100">
                             <div class="fw-semibold mb-1">Email</div>
                             <div class="text-muted small">Silakan sesuaikan alamat email di halaman ini.</div>
-                            <a class="d-inline-block mt-2" href="mailto:admin@example.com">admin@example.com</a>
+                            <a class="d-inline-block mt-2" href="mailto:mathdosman@gmail.com">mathdosman@gmail.com</a>
+                            <div class="text-muted small mt-2">Sertakan link halaman/ID soal agar mudah dicek.</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
@@ -34,7 +35,12 @@ include __DIR__ . '/includes/header.php';
 
                 <hr>
 
-                <div class="text-muted small">Catatan: halaman ini belum mengirim pesan via form. Jika ingin, nanti bisa kita tambahkan form yang tersimpan ke database (tanpa email).</div>
+                <h2 class="h6">Saran agar cepat ditangani</h2>
+                <ul class="text-muted small mb-0">
+                    <li>Tulis judul yang jelas (contoh: “Soal #1234 salah kunci jawaban”).</li>
+                    <li>Sertakan link halaman yang bermasalah atau ID paket/soal.</li>
+                    <li>Sertakan tangkapan layar jika diperlukan.</li>
+                </ul>
             </div>
         </div>
     </div>

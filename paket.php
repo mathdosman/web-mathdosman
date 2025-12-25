@@ -38,9 +38,8 @@ try {
         WHERE p.code = :c';
 
     $sql = $sqlWithIntro;
-    if (!$isAdmin) {
-        $sql .= ' AND p.status = "published"';
-    }
+    // Halaman publik: selalu tampilkan yang published saja.
+    $sql .= ' AND p.status = "published"';
     $sql .= ' LIMIT 1';
 
     try {
@@ -50,9 +49,8 @@ try {
     } catch (Throwable $e) {
         // Backward compatible: older DB may not have intro_content_id.
         $sql = $sqlBase;
-        if (!$isAdmin) {
-            $sql .= ' AND p.status = "published"';
-        }
+        // Halaman publik: selalu tampilkan yang published saja.
+        $sql .= ' AND p.status = "published"';
         $sql .= ' LIMIT 1';
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':c' => $code]);
@@ -111,9 +109,8 @@ try {
         JOIN questions q ON q.id = pq.question_id
         WHERE pq.package_id = :pid
     ';
-    if (!$isAdmin) {
-        $sql .= ' AND q.status_soal = "published"';
-    }
+    // Halaman publik: selalu tampilkan soal published saja.
+    $sql .= ' AND q.status_soal = "published"';
     $sql .= ' ORDER BY (pq.question_number IS NULL) ASC, pq.question_number ASC, pq.added_at DESC';
 
     $stmt = $pdo->prepare($sql);
@@ -135,75 +132,81 @@ try {
     $paramsBase = [':kind' => 'package', ':curr' => $currIdForSidebar];
     $ctxSubmateri = trim((string)($package['submateri'] ?? ''));
 
-    $feedSqlWithTax = '(
-        SELECT "package" AS kind,
-               p.id AS id,
-               p.code AS code,
-               NULL AS slug,
-               NULL AS ctype,
-               p.name AS title,
-               COALESCE(p.published_at, p.created_at) AS dt,
-               p.materi AS materi,
-               p.submateri AS submateri,
-               COUNT(pq.question_id) AS question_count
-        FROM packages p
-        LEFT JOIN package_questions pq ON pq.package_id = p.id
-        WHERE p.status = "published"
-        GROUP BY p.id
-        UNION ALL
-        SELECT "content" AS kind,
-               c.id AS id,
-               NULL AS code,
-               c.slug AS slug,
-               c.type AS ctype,
-               c.title AS title,
-               COALESCE(c.published_at, c.created_at) AS dt,
-               c.materi AS materi,
-               c.submateri AS submateri,
-               NULL AS question_count
-        FROM contents c
-        WHERE c.status = "published"
-          AND c.id NOT IN (
-            SELECT intro_content_id
-            FROM packages
-            WHERE status = "published" AND intro_content_id IS NOT NULL
-          )
-    ) feed';
+        $feedSqlWithTax = '(
+         SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
+             p.id AS id,
+             p.code COLLATE utf8mb4_unicode_ci AS code,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS slug,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS ctype,
+             p.name COLLATE utf8mb4_unicode_ci AS title,
+             COALESCE(p.published_at, p.created_at) AS dt,
+             p.materi COLLATE utf8mb4_unicode_ci AS materi,
+             p.submateri COLLATE utf8mb4_unicode_ci AS submateri,
+             COALESCE(qc.question_count, 0) AS question_count
+         FROM packages p
+         LEFT JOIN (
+             SELECT package_id, COUNT(*) AS question_count
+             FROM package_questions
+             GROUP BY package_id
+         ) qc ON qc.package_id = p.id
+         WHERE p.status = "published"
+         UNION ALL
+         SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
+             c.id AS id,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS code,
+             c.slug COLLATE utf8mb4_unicode_ci AS slug,
+             c.type COLLATE utf8mb4_unicode_ci AS ctype,
+             c.title COLLATE utf8mb4_unicode_ci AS title,
+             COALESCE(c.published_at, c.created_at) AS dt,
+             c.materi COLLATE utf8mb4_unicode_ci AS materi,
+             c.submateri COLLATE utf8mb4_unicode_ci AS submateri,
+             CAST(NULL AS SIGNED) AS question_count
+         FROM contents c
+         WHERE c.status = "published"
+           AND c.id NOT IN (
+             SELECT intro_content_id
+             FROM packages
+             WHERE status = "published" AND intro_content_id IS NOT NULL
+           )
+        ) feed';
 
-    $feedSqlNoTax = '(
-        SELECT "package" AS kind,
-               p.id AS id,
-               p.code AS code,
-               NULL AS slug,
-               NULL AS ctype,
-               p.name AS title,
-               COALESCE(p.published_at, p.created_at) AS dt,
-               p.materi AS materi,
-               p.submateri AS submateri,
-               COUNT(pq.question_id) AS question_count
-        FROM packages p
-        LEFT JOIN package_questions pq ON pq.package_id = p.id
-        WHERE p.status = "published"
-        GROUP BY p.id
-        UNION ALL
-        SELECT "content" AS kind,
-               c.id AS id,
-               NULL AS code,
-               c.slug AS slug,
-               c.type AS ctype,
-               c.title AS title,
-               COALESCE(c.published_at, c.created_at) AS dt,
-               NULL AS materi,
-               NULL AS submateri,
-               NULL AS question_count
-        FROM contents c
-        WHERE c.status = "published"
-          AND c.id NOT IN (
-            SELECT intro_content_id
-            FROM packages
-            WHERE status = "published" AND intro_content_id IS NOT NULL
-          )
-    ) feed';
+        $feedSqlNoTax = '(
+         SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
+             p.id AS id,
+             p.code COLLATE utf8mb4_unicode_ci AS code,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS slug,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS ctype,
+             p.name COLLATE utf8mb4_unicode_ci AS title,
+             COALESCE(p.published_at, p.created_at) AS dt,
+             p.materi COLLATE utf8mb4_unicode_ci AS materi,
+             p.submateri COLLATE utf8mb4_unicode_ci AS submateri,
+             COALESCE(qc.question_count, 0) AS question_count
+         FROM packages p
+         LEFT JOIN (
+             SELECT package_id, COUNT(*) AS question_count
+             FROM package_questions
+             GROUP BY package_id
+         ) qc ON qc.package_id = p.id
+         WHERE p.status = "published"
+         UNION ALL
+         SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
+             c.id AS id,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS code,
+             c.slug COLLATE utf8mb4_unicode_ci AS slug,
+             c.type COLLATE utf8mb4_unicode_ci AS ctype,
+             c.title COLLATE utf8mb4_unicode_ci AS title,
+             COALESCE(c.published_at, c.created_at) AS dt,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS materi,
+             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS submateri,
+             CAST(NULL AS SIGNED) AS question_count
+         FROM contents c
+         WHERE c.status = "published"
+           AND c.id NOT IN (
+             SELECT intro_content_id
+             FROM packages
+             WHERE status = "published" AND intro_content_id IS NOT NULL
+           )
+        ) feed';
 
     $feedSql = $feedSqlWithTax;
     try {
@@ -313,32 +316,33 @@ try {
     }
 
     $params = [':d' => $currDate, ':id' => $currId];
-    $feedSql = '(
-        SELECT "package" AS kind,
-               p.id AS id,
-               p.code AS code,
-               NULL AS slug,
-             NULL AS ctype,
-               p.name AS title,
-               COALESCE(p.published_at, p.created_at) AS dt
-        FROM packages p
-        WHERE p.status = "published"
-        UNION ALL
-        SELECT "content" AS kind,
-               c.id AS id,
-               NULL AS code,
-               c.slug AS slug,
-             c.type AS ctype,
-               c.title AS title,
-               COALESCE(c.published_at, c.created_at) AS dt
-        FROM contents c
-        WHERE c.status = "published"
-          AND c.id NOT IN (
-            SELECT intro_content_id
-            FROM packages
-            WHERE status = "published" AND intro_content_id IS NOT NULL
-          )
-    ) feed';
+        // Collation-safe UNION: packages & contents bisa beda collation.
+        $feedSql = '(
+                SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
+                             p.id AS id,
+                             p.code COLLATE utf8mb4_unicode_ci AS code,
+                             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS slug,
+                             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS ctype,
+                             p.name COLLATE utf8mb4_unicode_ci AS title,
+                             COALESCE(p.published_at, p.created_at) AS dt
+                FROM packages p
+                WHERE p.status = "published"
+                UNION ALL
+                SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
+                             c.id AS id,
+                             CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS code,
+                             c.slug COLLATE utf8mb4_unicode_ci AS slug,
+                             c.type COLLATE utf8mb4_unicode_ci AS ctype,
+                             c.title COLLATE utf8mb4_unicode_ci AS title,
+                             COALESCE(c.published_at, c.created_at) AS dt
+                FROM contents c
+                WHERE c.status = "published"
+                    AND c.id NOT IN (
+                        SELECT intro_content_id
+                        FROM packages
+                        WHERE status = "published" AND intro_content_id IS NOT NULL
+                    )
+        ) feed';
 
     // Prev (lebih baru / muncul sebelum current di beranda)
     $sqlPrev = 'SELECT kind, code, slug, title
@@ -370,10 +374,8 @@ try {
         $sql = 'SELECT id, type, title, slug, excerpt, content_html, status,
             COALESCE(published_at, created_at) AS published_at
             FROM contents
-            WHERE id = :id';
-        if (!$isAdmin) {
-            $sql .= ' AND status = "published"';
-        }
+            WHERE id = :id
+              AND status = "published"';
         $sql .= ' LIMIT 1';
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':id' => $introId]);
@@ -476,7 +478,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
     ?>
     <div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
     <?php if (!$list): ?>
-        <div class="small text-white-50 mb-3">Belum ada data.</div>
+        <div class="small text-white-50 text-start mb-3">Belum ada data.</div>
     <?php else: ?>
         <nav class="nav flex-column mb-3">
             <?php foreach ($list as $row): ?>
@@ -590,10 +592,6 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                         </div>
                     </header>
 
-            <?php if ($isAdmin && (($package['status'] ?? '') !== 'published')): ?>
-                <div class="alert alert-warning">Mode Admin: paket ini masih <strong>draft</strong>, hanya admin yang bisa melihatnya.</div>
-            <?php endif; ?>
-
             <div class="custom-card mb-3">
                 <div class="custom-card-header">
                     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
@@ -677,9 +675,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                 <div>
                                     <span class="soal-nomor">No. <?php echo (int)$no; ?></span>
                                     <span class="soal-header ms-2"><?php echo htmlspecialchars($tipe); ?></span>
-                                    <?php if ($isAdmin && (($q['status_soal'] ?? '') !== 'published')): ?>
-                                        <span class="badge text-bg-secondary ms-2">Draft</span>
-                                    <?php endif; ?>
+
                                 </div>
                                 <?php
                                     $qMeta = [];
@@ -1008,14 +1004,31 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                             }
                         ?>
                         <?php if ($prevHref !== ''): ?>
-                            <a class="btn btn-outline-dark" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
-                                &laquo; Sebelumnya
+                            <a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M15 18l-6-6 6-6" />
+                                </svg>
+                                <span>Sebelumnya</span>
+                            </a>
+                        <?php else: ?>
+                            <a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sebelumnya">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M15 18l-6-6 6-6" />
+                                </svg>
+                                <span>Sebelumnya</span>
                             </a>
                         <?php endif; ?>
                     </div>
 
                     <div class="flex-grow-1 text-center">
-                        <a class="btn btn-dark" href="index.php" aria-label="Kembali ke beranda">Beranda</a>
+                        <a class="btn btn-dark nav-action-btn" href="index.php" aria-label="Kembali ke beranda">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 10.5L12 3l9 7.5" />
+                                <path d="M5 10v10h14V10" />
+                                <path d="M10 20v-6h4v6" />
+                            </svg>
+                            <span>Beranda</span>
+                        </a>
                     </div>
 
                     <div class="flex-grow-1 text-end">
@@ -1029,8 +1042,18 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                             }
                         ?>
                         <?php if ($nextHref !== ''): ?>
-                            <a class="btn btn-outline-dark" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
-                                Sesudahnya &raquo;
+                            <a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
+                                <span>Sesudahnya</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                            </a>
+                        <?php else: ?>
+                            <a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sesudahnya">
+                                <span>Sesudahnya</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
                             </a>
                         <?php endif; ?>
                     </div>

@@ -62,6 +62,14 @@ if (!in_array($status, ['', 'draft', 'published'], true)) {
 
 $q = trim((string)($_GET['q'] ?? ''));
 
+$page = (int)($_GET['page'] ?? 1);
+if ($page < 1) {
+    $page = 1;
+}
+
+$perPage = 25;
+$offset = ($page - 1) * $perPage;
+
 if (isset($_GET['success']) && is_string($_GET['success']) && $_GET['success'] !== '') {
     $success = (string)$_GET['success'];
 }
@@ -114,6 +122,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 }
 
 $contents = [];
+$total = 0;
+$totalPages = 1;
 
 try {
     $where = [];
@@ -132,6 +142,23 @@ try {
         $params[':q'] = '%' . $q . '%';
     }
 
+    // Total count for pagination.
+    $countSql = 'SELECT COUNT(*) FROM contents c';
+    if ($where) {
+        $countSql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $stmt = $pdo->prepare($countSql);
+    $stmt->execute($params);
+    $total = (int)($stmt->fetchColumn() ?: 0);
+    $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+    if ($totalPages < 1) {
+        $totalPages = 1;
+    }
+    if ($page > $totalPages) {
+        $page = $totalPages;
+        $offset = ($page - 1) * $perPage;
+    }
+
     // Prefer analytics views; fallback gracefully if page_views doesn't exist.
     try {
         $sql = 'SELECT c.id, c.type, c.title, c.slug, c.status, c.created_at, c.published_at,
@@ -142,9 +169,15 @@ try {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
         $sql .= ' ORDER BY COALESCE(c.published_at, c.created_at) DESC, c.id DESC';
+        $sql .= ' LIMIT :lim OFFSET :off';
 
         $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Throwable $e2) {
         $sql = 'SELECT c.id, c.type, c.title, c.slug, c.status, c.created_at, c.published_at,
@@ -154,9 +187,15 @@ try {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
         $sql .= ' ORDER BY COALESCE(c.published_at, c.created_at) DESC, c.id DESC';
+        $sql .= ' LIMIT :lim OFFSET :off';
 
         $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (PDOException $e) {
@@ -332,6 +371,60 @@ include __DIR__ . '/../includes/header.php';
                     </tbody>
                 </table>
             </div>
+
+            <?php if ($total > 0): ?>
+                <?php
+                    $from = $offset + 1;
+                    $to = min($offset + $perPage, $total);
+                    $queryParams = [
+                        'type' => $type,
+                        'status' => $status,
+                        'q' => $q,
+                    ];
+                ?>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="text-muted small">Menampilkan <?php echo (int)$from; ?>–<?php echo (int)$to; ?> dari <?php echo (int)$total; ?> konten.</div>
+
+                    <nav aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <?php
+                                $buildHref = function (int $targetPage) use ($queryParams): string {
+                                    $qp = $queryParams;
+                                    $qp['page'] = $targetPage;
+                                    // Keep URL clean: drop empty filters.
+                                    foreach ($qp as $k => $v) {
+                                        if ($v === '' || $v === null) {
+                                            unset($qp[$k]);
+                                        }
+                                    }
+                                    return 'contents.php' . ($qp ? ('?' . http_build_query($qp)) : '');
+                                };
+
+                                $prev = max(1, $page - 1);
+                                $next = min($totalPages, $page + 1);
+
+                                $start = max(1, $page - 2);
+                                $end = min($totalPages, $page + 2);
+                            ?>
+
+                            <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
+                                <a class="page-link" href="<?php echo htmlspecialchars($buildHref($prev)); ?>" aria-label="Sebelumnya">Prev</a>
+                            </li>
+
+                            <?php for ($i = $start; $i <= $end; $i++): ?>
+                                <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
+                                    <a class="page-link" href="<?php echo htmlspecialchars($buildHref($i)); ?>"><?php echo (int)$i; ?></a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
+                                <a class="page-link" href="<?php echo htmlspecialchars($buildHref($next)); ?>" aria-label="Berikutnya">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            <?php endif; ?>
 
         </div>
     </div>

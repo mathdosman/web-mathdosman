@@ -96,6 +96,19 @@
         transform: translateY(-1px);
     }
 
+    /* Navigation buttons (Prev/Home/Next) */
+    body.front-page .nav-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+    }
+
+    body.front-page .nav-action-btn svg {
+        flex: 0 0 auto;
+        vertical-align: middle;
+    }
+
     /* Daftar Isi (Table of Contents) */
     body.front-page.daftar-isi .toc-grid {
         max-width: 1140px;
