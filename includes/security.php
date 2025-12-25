@@ -26,6 +26,33 @@ function app_get_csrf_token_from_request(): string
     return $token;
 }
 
+function app_request_expects_json(): bool
+{
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    $xrw = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    $hasCsrfHeader = isset($_SERVER['HTTP_X_CSRF_TOKEN']) && is_string($_SERVER['HTTP_X_CSRF_TOKEN']) && trim($_SERVER['HTTP_X_CSRF_TOKEN']) !== '';
+
+    if (is_string($xrw) && strtolower(trim($xrw)) === 'xmlhttprequest') {
+        return true;
+    }
+
+    if ($hasCsrfHeader) {
+        // Typically sent by JS callers.
+        return true;
+    }
+
+    if (is_string($contentType) && stripos($contentType, 'application/json') !== false) {
+        return true;
+    }
+
+    if (is_string($accept) && stripos($accept, 'application/json') !== false) {
+        return true;
+    }
+
+    return false;
+}
+
 function require_csrf_valid(): void
 {
     $sessionToken = $_SESSION['csrf_token'] ?? '';
@@ -41,8 +68,15 @@ function require_csrf_valid(): void
 
     // 419 is commonly used for CSRF/session issues.
     http_response_code(419);
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "CSRF token tidak valid. Silakan refresh halaman dan coba lagi.\n";
+    if (app_request_expects_json()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'error' => 'CSRF token tidak valid. Silakan refresh halaman dan coba lagi.',
+        ]);
+    } else {
+        header('Content-Type: text/plain; charset=utf-8');
+        echo "CSRF token tidak valid. Silakan refresh halaman dan coba lagi.\n";
+    }
     exit;
 }
 

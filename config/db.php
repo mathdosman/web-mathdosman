@@ -96,7 +96,10 @@ try {
     // Migrasi ringan: sesuaikan skema DB agar cocok dengan import Excel.
     // Catatan: DDL (ALTER/CREATE) kadang bisa menunggu lock lama dan membuat halaman "muter".
     // Maka, runtime migrations dibuat OPT-IN via APP_ENABLE_RUNTIME_MIGRATIONS.
-    $ensureExcelSchema = function (PDO $pdo): void {
+    // Disediakan juga fungsi CLI agar migrasi bisa dijalankan secara sengaja.
+    if (!function_exists('app_ensure_excel_schema')) {
+        function app_ensure_excel_schema(PDO $pdo): void
+        {
         try {
             $hasQuestions = $pdo->query("SHOW TABLES LIKE 'questions'")->fetchColumn();
             if (!$hasQuestions) {
@@ -326,15 +329,69 @@ try {
         } catch (Throwable $e) {
             // ignore
         }
-    };
-    if (app_runtime_migrations_enabled()) {
+
+        }
+    }
+
+    if (!function_exists('app_ensure_contents_taxonomy_schema')) {
+        function app_ensure_contents_taxonomy_schema(PDO $pdo): void
+        {
+            try {
+                $hasContents = $pdo->query("SHOW TABLES LIKE 'contents'")->fetchColumn();
+                if (!$hasContents) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            $addColumnIfMissing = function (string $name, string $definition) use ($pdo): void {
+                try {
+                    $col = $pdo->query("SHOW COLUMNS FROM contents LIKE " . $pdo->quote($name))->fetch();
+                    if (!$col) {
+                        $pdo->exec("ALTER TABLE contents ADD COLUMN `{$name}` {$definition}");
+                    }
+                } catch (Throwable $e) {
+                    // ignore
+                }
+            };
+
+            // Untuk kebutuhan sidebar "Konten Terkait" berbasis submateri.
+            $addColumnIfMissing('materi', 'VARCHAR(150) NULL');
+            $addColumnIfMissing('submateri', 'VARCHAR(150) NULL');
+        }
+    }
+
+    if (!function_exists('app_ensure_analytics_schema')) {
+        function app_ensure_analytics_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS page_views (
+                    kind ENUM('package','content') NOT NULL,
+                    item_id INT NOT NULL,
+                    views BIGINT UNSIGNED NOT NULL DEFAULT 0,
+                    last_viewed_at TIMESTAMP NULL DEFAULT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (kind, item_id),
+                    KEY idx_page_views_views (views),
+                    KEY idx_page_views_last_viewed (last_viewed_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    // Runtime migrations are allowed only when explicitly enabled AND only on CLI.
+    // This avoids web requests hanging due to metadata locks.
+    if (app_runtime_migrations_enabled() && PHP_SAPI === 'cli') {
         // Prevent concurrent schema changes from multiple requests.
         $lockFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'schema_migrate.lock';
         $fp = @fopen($lockFile, 'c');
         if ($fp !== false) {
             try {
                 if (@flock($fp, LOCK_EX | LOCK_NB)) {
-                    $ensureExcelSchema($pdo);
+                    app_ensure_excel_schema($pdo);
                 }
             } catch (Throwable $e) {
                 // ignore

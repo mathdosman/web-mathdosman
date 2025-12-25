@@ -2,9 +2,21 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/security.php';
-require_role('admin');
-
 header('Content-Type: application/json; charset=utf-8');
+
+$jsonFail = static function (int $code, array $payload): void {
+    http_response_code($code);
+    echo json_encode($payload);
+    exit;
+};
+
+if (empty($_SESSION['user'])) {
+    $jsonFail(401, ['error' => 'Silakan login terlebih dahulu.']);
+}
+
+if (empty($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+    $jsonFail(403, ['error' => 'Akses ditolak.']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -76,7 +88,8 @@ if (!in_array($fileType, $allowedMimeTypes, true) || !in_array($fileExt, $allowe
 
 $uploadDir = __DIR__ . '/../gambar/';
 if (!is_dir($uploadDir)) {
-    @mkdir($uploadDir, 0777, true);
+    // Prefer least-privilege permissions; on Windows this is mostly ignored.
+    @mkdir($uploadDir, 0755, true);
 }
 if (!is_dir($uploadDir)) {
     http_response_code(500);
@@ -84,7 +97,18 @@ if (!is_dir($uploadDir)) {
     exit;
 }
 
-$newFileName = uniqid() . '.' . $fileExt;
+if (!is_writable($uploadDir)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Folder gambar tidak bisa ditulis. Periksa permission folder /gambar.']);
+    exit;
+}
+
+try {
+    $newFileName = bin2hex(random_bytes(16)) . '.' . $fileExt;
+} catch (Throwable $e) {
+    // Fallback (should be rare on PHP 8+)
+    $newFileName = uniqid('', true) . '.' . $fileExt;
+}
 $filePath = $uploadDir . $newFileName;
 
 if (!move_uploaded_file($fileTmpName, $filePath)) {

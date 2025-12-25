@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS contents (
     type ENUM('materi','berita') NOT NULL DEFAULT 'materi',
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
+    materi VARCHAR(150) NULL,
+    submateri VARCHAR(150) NULL,
     excerpt TEXT NULL,
     content_html MEDIUMTEXT NOT NULL,
     status ENUM('draft','published') NOT NULL DEFAULT 'draft',
@@ -118,6 +120,18 @@ CREATE TABLE IF NOT EXISTS package_questions (
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
 );
 
+-- Analitik sederhana: hitung total view per halaman (paket/konten)
+CREATE TABLE IF NOT EXISTS page_views (
+    kind ENUM('package','content') NOT NULL,
+    item_id INT NOT NULL,
+    views BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    last_viewed_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (kind, item_id),
+    KEY idx_page_views_views (views),
+    KEY idx_page_views_last_viewed (last_viewed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- User admin contoh (password: 123456)
 INSERT INTO users (username, password_hash, name, role) VALUES
 ('admin', '$2y$10$2cKMz2pKAt0np3IvSwyCxOZ7rJjk1z/6GkVGR1Zir/Tc1sOzoVnTu', 'Administrator', 'admin')
@@ -132,6 +146,8 @@ CREATE TABLE IF NOT EXISTS contents (
     type ENUM('materi','berita') NOT NULL DEFAULT 'materi',
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL,
+    materi VARCHAR(150) NULL,
+    submateri VARCHAR(150) NULL,
     excerpt VARCHAR(500) NULL,
     content_html MEDIUMTEXT NULL,
     status ENUM('draft','published') NOT NULL DEFAULT 'draft',

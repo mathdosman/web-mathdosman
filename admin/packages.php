@@ -279,38 +279,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $packages = [];
 try {
-    $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
-        COALESCE(d.cnt, 0) AS draft_count,
-        s.name AS subject_name
-        FROM packages p
-        LEFT JOIN subjects s ON s.id = p.subject_id
-        LEFT JOIN (
-            SELECT pq.package_id, COUNT(*) AS cnt
-            FROM package_questions pq
-            JOIN questions q ON q.id = pq.question_id
-            WHERE q.status_soal IS NULL OR q.status_soal <> "published"
-            GROUP BY pq.package_id
-        ) d ON d.package_id = p.id
-        WHERE 1=1';
-
     $params = [];
-    if ($filterSubjectId > 0) {
-        $sql .= ' AND p.subject_id = :fsid';
-        $params[':fsid'] = $filterSubjectId;
-    }
-    if ($filterMateri !== '') {
-        $sql .= ' AND p.materi = :fm';
-        $params[':fm'] = $filterMateri;
-    }
-    if ($filterSubmateri !== '') {
-        $sql .= ' AND p.submateri = :fsm';
-        $params[':fsm'] = $filterSubmateri;
-    }
-    $sql .= ' ORDER BY p.created_at DESC';
+    $buildWhere = function () use ($filterSubjectId, $filterMateri, $filterSubmateri, &$params): string {
+        $where = ' WHERE 1=1';
+        if ($filterSubjectId > 0) {
+            $where .= ' AND p.subject_id = :fsid';
+            $params[':fsid'] = $filterSubjectId;
+        }
+        if ($filterMateri !== '') {
+            $where .= ' AND p.materi = :fm';
+            $params[':fm'] = $filterMateri;
+        }
+        if ($filterSubmateri !== '') {
+            $where .= ' AND p.submateri = :fsm';
+            $params[':fsm'] = $filterSubmateri;
+        }
+        return $where;
+    };
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $packages = $stmt->fetchAll();
+    // Prefer analytics views; fallback gracefully if page_views doesn't exist.
+    try {
+        $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
+            COALESCE(d.cnt, 0) AS draft_count,
+            s.name AS subject_name,
+            COALESCE(pv.views, 0) AS views
+            FROM packages p
+            LEFT JOIN subjects s ON s.id = p.subject_id
+            LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
+            LEFT JOIN (
+                SELECT pq.package_id, COUNT(*) AS cnt
+                FROM package_questions pq
+                JOIN questions q ON q.id = pq.question_id
+                WHERE q.status_soal IS NULL OR q.status_soal <> "published"
+                GROUP BY pq.package_id
+            ) d ON d.package_id = p.id';
+        $sql .= $buildWhere();
+        $sql .= ' ORDER BY p.created_at DESC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $packages = $stmt->fetchAll();
+    } catch (Throwable $e2) {
+        $params = [];
+        $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
+            COALESCE(d.cnt, 0) AS draft_count,
+            s.name AS subject_name,
+            0 AS views
+            FROM packages p
+            LEFT JOIN subjects s ON s.id = p.subject_id
+            LEFT JOIN (
+                SELECT pq.package_id, COUNT(*) AS cnt
+                FROM package_questions pq
+                JOIN questions q ON q.id = pq.question_id
+                WHERE q.status_soal IS NULL OR q.status_soal <> "published"
+                GROUP BY pq.package_id
+            ) d ON d.package_id = p.id';
+        $sql .= $buildWhere();
+        $sql .= ' ORDER BY p.created_at DESC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $packages = $stmt->fetchAll();
+    }
 } catch (PDOException $e) {
     $errors[] = 'Tabel paket soal belum tersedia. Jalankan installer / import database.sql terbaru.';
 }
@@ -414,26 +444,27 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <div class="table-responsive">
-            <table class="table table-sm table-striped align-middle mb-0 table-fit small">
+            <table class="table table-sm table-striped align-middle mb-0 table-fit small packages-table">
                 <thead>
                     <tr>
-                        <th style="width: 64px;">No</th>
-                        <th>Paket</th>
-                        <th style="width: 110px;">Status</th>
-                        <th class="d-none d-md-table-cell" style="width: 170px;">Dibuat</th>
-                        <th style="width: 260px;" class="text-end">Aksi</th>
+                        <th class="text-center" style="width: 56px;">No</th>
+                        <th class="packages-col-paket">Paket</th>
+                        <th class="text-center" style="width: 130px;">Status</th>
+                        <th class="text-end d-none d-sm-table-cell" style="width: 90px;">Views</th>
+                        <th class="d-none d-md-table-cell text-center" style="width: 150px;">Dibuat</th>
+                        <th class="text-end" style="width: 220px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (!$packages): ?>
-                    <tr><td colspan="5" class="text-center">Belum ada paket soal.</td></tr>
+                    <tr><td colspan="6" class="text-center">Belum ada paket soal.</td></tr>
                 <?php else: ?>
                     <?php foreach ($packages as $i => $p): ?>
                         <tr>
-                            <td class="text-muted"><?php echo $i + 1; ?></td>
+                            <td class="text-center text-muted"><?php echo $i + 1; ?></td>
                             <td class="text-break">
-                                <div class="fw-semibold"><?php echo htmlspecialchars($p['name']); ?></div>
-                                <div class="text-muted small">
+                                <div class="fw-semibold md-cell-truncate"><?php echo htmlspecialchars($p['name']); ?></div>
+                                <div class="text-muted small md-cell-clamp">
                                     <?php
                                         $meta = [];
                                         if (!empty($p['subject_name'])) {
@@ -451,7 +482,7 @@ include __DIR__ . '/../includes/header.php';
                                     ?>
                                 </div>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 <?php if ($p['status'] === 'published'): ?>
                                     <span class="badge text-bg-success">Terbit</span>
                                 <?php else: ?>
@@ -461,9 +492,10 @@ include __DIR__ . '/../includes/header.php';
                                     <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="d-none d-md-table-cell"><span class="text-muted"><?php echo htmlspecialchars(format_id_date((string)($p['created_at'] ?? ''))); ?></span></td>
+                            <td class="text-end d-none d-sm-table-cell"><span class="text-muted"><?php echo (int)($p['views'] ?? 0); ?></span></td>
+                            <td class="d-none d-md-table-cell text-center"><span class="text-muted text-nowrap"><?php echo htmlspecialchars(format_id_date((string)($p['created_at'] ?? ''))); ?></span></td>
                             <td class="text-end">
-                                <div style="display:grid;grid-template-columns:repeat(2,max-content);gap:.25rem;justify-content:end;">
+                                <div class="packages-actions">
                                     <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_edit.php?id=<?php echo (int)$p['id']; ?>" title="Edit Paket" aria-label="Edit Paket">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M12 20h9"/>

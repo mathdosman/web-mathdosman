@@ -46,26 +46,46 @@ $use_mathjax = true;
 
 $q = trim((string)($_GET['q'] ?? ''));
 $filterSubjectId = (int)($_GET['subject_id'] ?? 0);
+$filterMateri = trim((string)($_GET['materi'] ?? ''));
+$filterSubmateri = trim((string)($_GET['submateri'] ?? ''));
+if ($filterMateri === '') {
+    $filterSubmateri = '';
+}
 
 $page = (int)($_GET['page'] ?? 1);
 if ($page < 1) {
     $page = 1;
 }
 
-$perPage = 5;
-$offset = ($page - 1) * $perPage;
+$perPageFirst = 5;
+$perPageNext = 7;
+$pageLimit = ($page === 1) ? $perPageFirst : $perPageNext;
+$offset = ($page === 1) ? 0 : ($perPageFirst + (($page - 2) * $perPageNext));
+
+$computeTotalPages = function (int $total) use ($perPageFirst, $perPageNext): int {
+    if ($total <= $perPageFirst) {
+        return 1;
+    }
+    if ($perPageNext <= 0) {
+        return 1;
+    }
+    return 1 + (int)ceil(($total - $perPageFirst) / $perPageNext);
+};
 
 $packages = [];
 $contents = [];
 $feedItems = [];
 $subjects = [];
-$latestPackages = [];
-$latestContents = [];
+$materiCategories = [];
+$submateriCategories = [];
+$popularItems = [];
 $total = 0;
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
     $where = [];
     $params = [];
+
+    $includeContentsInMainFeed = ($filterSubjectId <= 0 && $filterMateri === '' && $filterSubmateri === '');
 
     // Beranda publik: paket draft tidak boleh tampil, meskipun admin sedang login.
     $where[] = 'p.status = "published"';
@@ -75,27 +95,41 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
         $params[':sid'] = $filterSubjectId;
     }
 
+    if ($filterMateri !== '') {
+        $where[] = 'p.materi = :m';
+        $params[':m'] = $filterMateri;
+    }
+    if ($filterSubmateri !== '') {
+        $where[] = 'p.submateri = :sm';
+        $params[':sm'] = $filterSubmateri;
+    }
+
     if ($q !== '') {
         $where[] = '(p.name LIKE :q OR p.description LIKE :q)';
         $params[':q'] = '%' . $q . '%';
     }
 
-    // Total untuk pagination (sesuai filter di atas)
-    $countSql = 'SELECT COUNT(*) FROM packages p';
-    if ($where) {
-        $countSql .= ' WHERE ' . implode(' AND ', $where);
-    }
-    $stmt = $pdo->prepare($countSql);
-    $stmt->execute($params);
-    $total = (int)$stmt->fetchColumn();
+    // Pagination:
+    // - Jika subject filter aktif: pagination berbasis paket (seperti sebelumnya).
+    // - Jika tidak ada subject filter: pagination berbasis feed gabungan paket + materi/berita.
+    if (!$includeContentsInMainFeed) {
+        $countSql = 'SELECT COUNT(*) FROM packages p';
+        if ($where) {
+            $countSql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $stmt = $pdo->prepare($countSql);
+        $stmt->execute($params);
+        $total = (int)$stmt->fetchColumn();
 
-    $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
-    if ($totalPages < 1) {
-        $totalPages = 1;
-    }
-    if ($page > $totalPages) {
-        $page = $totalPages;
-        $offset = ($page - 1) * $perPage;
+        $totalPages = $computeTotalPages($total);
+        if ($totalPages < 1) {
+            $totalPages = 1;
+        }
+        if ($page > $totalPages) {
+            $page = $totalPages;
+            $pageLimit = ($page === 1) ? $perPageFirst : $perPageNext;
+            $offset = ($page === 1) ? 0 : ($perPageFirst + (($page - 2) * $perPageNext));
+        }
     }
 
     $sql = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.published_at, p.subject_id, p.materi, p.submateri,
@@ -110,65 +144,152 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     if ($where) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }
-    $sql .= ' GROUP BY p.id ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC LIMIT :lim OFFSET :off';
+    $sql .= ' GROUP BY p.id ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC';
+    if (!$includeContentsInMainFeed) {
+        $sql .= ' LIMIT :lim OFFSET :off';
+    }
 
     $stmt = $pdo->prepare($sql);
     foreach ($params as $k => $v) {
         $stmt->bindValue($k, $v);
     }
-    $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
-    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+
+    if (!$includeContentsInMainFeed) {
+        $stmt->bindValue(':lim', $pageLimit, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+    }
     $stmt->execute();
     $packages = $stmt->fetchAll();
 
-    // Sidebar: Mapel (subjects) with package count.
-    $subjectWhere = 'p.status = "published"';
-    $stmt = $pdo->query('SELECT s.id, s.name, COUNT(p.id) AS package_count
-        FROM subjects s
-        LEFT JOIN packages p ON p.subject_id = s.id AND ' . $subjectWhere . '
-        GROUP BY s.id
-        ORDER BY s.name ASC');
-    $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Sidebar: Kategori (Materi/Submateri) from published packages.
+    try {
+        $stmt = $pdo->query('SELECT materi, COUNT(*) AS package_count
+            FROM packages
+            WHERE status = "published" AND materi IS NOT NULL AND materi <> ""
+            GROUP BY materi
+            ORDER BY materi ASC');
+        $materiCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e2) {
+        $materiCategories = [];
+    }
 
-    // Sidebar: Latest published packages (replacement for posts).
-    $stmt = $pdo->query('SELECT id, code, name, COALESCE(published_at, created_at) AS published_at
-        FROM packages
-        WHERE status = "published"
-        ORDER BY COALESCE(published_at, created_at) DESC
-        LIMIT 5');
-    $latestPackages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($filterMateri !== '') {
+        try {
+            $stmt = $pdo->prepare('SELECT submateri, COUNT(*) AS package_count
+                FROM packages
+                WHERE status = "published"
+                  AND materi = :m
+                  AND submateri IS NOT NULL AND submateri <> ""
+                GROUP BY submateri
+                ORDER BY submateri ASC');
+            $stmt->execute([':m' => $filterMateri]);
+            $submateriCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $e3) {
+            $submateriCategories = [];
+        }
+    }
 
-    // Sidebar: Latest published contents (materi/berita).
+    // Sidebar: Popular Post (gabungan paket + materi/berita), maksimal 5 item.
+    // Best-effort: jika table page_views belum ada, fallback ke urutan terbaru.
+    $popularPackages = [];
+    $popularContents = [];
+
+    try {
+        $stmt = $pdo->query('SELECT p.id, p.code, p.name,
+            COALESCE(p.published_at, p.created_at) AS published_at,
+            COALESCE(pv.views, 0) AS views
+            FROM packages p
+            LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
+            WHERE p.status = "published"
+            ORDER BY COALESCE(pv.views, 0) DESC, COALESCE(p.published_at, p.created_at) DESC, p.id DESC
+            LIMIT 5');
+        $popularPackages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        try {
+            $stmt = $pdo->query('SELECT id, code, name, COALESCE(published_at, created_at) AS published_at, 0 AS views
+                FROM packages
+                WHERE status = "published"
+                ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+                LIMIT 5');
+            $popularPackages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $e2) {
+            $popularPackages = [];
+        }
+    }
+
     try {
         // Hide contents that are already attached as package intro (so homepage shows package cards only for merged items).
         try {
-            $stmt = $pdo->query('SELECT id, type, title, slug, COALESCE(published_at, created_at) AS published_at
-                FROM contents
-                WHERE status = "published"
-                  AND id NOT IN (
+            $stmt = $pdo->query('SELECT c.id, c.type, c.title, c.slug,
+                COALESCE(c.published_at, c.created_at) AS published_at,
+                COALESCE(pv.views, 0) AS views
+                FROM contents c
+                LEFT JOIN page_views pv ON pv.kind = "content" AND pv.item_id = c.id
+                WHERE c.status = "published"
+                  AND c.id NOT IN (
                     SELECT intro_content_id
                     FROM packages
                     WHERE status = "published" AND intro_content_id IS NOT NULL
                   )
-                ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+                ORDER BY COALESCE(pv.views, 0) DESC, COALESCE(c.published_at, c.created_at) DESC, c.id DESC
                 LIMIT 5');
-            $latestContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $popularContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $e2) {
-            // Backward compatibility: older schema without packages.intro_content_id.
-            $stmt = $pdo->query('SELECT id, type, title, slug, COALESCE(published_at, created_at) AS published_at
+            // Backward compatibility: older schema without packages.intro_content_id or page_views.
+            $stmt = $pdo->query('SELECT id, type, title, slug, COALESCE(published_at, created_at) AS published_at, 0 AS views
                 FROM contents
                 WHERE status = "published"
                 ORDER BY COALESCE(published_at, created_at) DESC, id DESC
                 LIMIT 5');
-            $latestContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $popularContents = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     } catch (Throwable $e) {
-        $latestContents = [];
+        $popularContents = [];
     }
 
+    $popularItems = [];
+    foreach ($popularPackages as $p) {
+        $popularItems[] = [
+            'kind' => 'package',
+            'id' => (int)($p['id'] ?? 0),
+            'title' => (string)($p['name'] ?? ''),
+            'href' => 'paket.php?code=' . urlencode((string)($p['code'] ?? '')),
+            'badge' => 'Paket',
+            'views' => (int)($p['views'] ?? 0),
+            'date' => (string)($p['published_at'] ?? ''),
+        ];
+    }
+    foreach ($popularContents as $c) {
+        $t = (string)($c['type'] ?? 'materi');
+        $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+        $popularItems[] = [
+            'kind' => 'content',
+            'id' => (int)($c['id'] ?? 0),
+            'title' => (string)($c['title'] ?? ''),
+            'href' => 'post.php?slug=' . urlencode((string)($c['slug'] ?? '')),
+            'badge' => $badge,
+            'views' => (int)($c['views'] ?? 0),
+            'date' => (string)($c['published_at'] ?? ''),
+        ];
+    }
+
+    usort($popularItems, function (array $a, array $b): int {
+        $va = (int)($a['views'] ?? 0);
+        $vb = (int)($b['views'] ?? 0);
+        if ($va !== $vb) {
+            return $vb <=> $va;
+        }
+        $ta = strtotime((string)($a['date'] ?? '')) ?: 0;
+        $tb = strtotime((string)($b['date'] ?? '')) ?: 0;
+        if ($ta !== $tb) {
+            return $tb <=> $ta;
+        }
+        return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
+    });
+    $popularItems = array_slice($popularItems, 0, 5);
+
     // Main feed: published contents (materi/berita).
-    // If a subject filter is active, keep the feed focused on packages.
-    if ($filterSubjectId <= 0) {
+    if ($includeContentsInMainFeed) {
         try {
             $cWhere = ['status = "published"'];
             $cParams = [];
@@ -229,8 +350,22 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
             'row' => $p,
         ];
     }
-    // NOTE: Beranda menampilkan kartu paket (max 5) dengan pagination.
-    // Konten (materi/berita) tetap bisa ditampilkan di sidebar/halaman khusus.
+
+    if ($includeContentsInMainFeed) {
+        foreach ($contents as $c) {
+            $publishedAt = (string)($c['published_at'] ?? '');
+            if ($publishedAt === '') {
+                $publishedAt = (string)($c['created_at'] ?? '');
+            }
+            $feedItems[] = [
+                'kind' => 'content',
+                'date' => $publishedAt,
+                'id' => (int)($c['id'] ?? 0),
+                'row' => $c,
+            ];
+        }
+    }
+
     usort($feedItems, function (array $a, array $b): int {
         $ta = strtotime((string)($a['date'] ?? '')) ?: 0;
         $tb = strtotime((string)($b['date'] ?? '')) ?: 0;
@@ -239,13 +374,29 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
         }
         return $tb <=> $ta;
     });
+
+    if ($includeContentsInMainFeed) {
+        // Apply pagination to the combined feed (max 5 cards).
+        $total = count($feedItems);
+        $totalPages = $computeTotalPages($total);
+        if ($totalPages < 1) {
+            $totalPages = 1;
+        }
+        if ($page > $totalPages) {
+            $page = $totalPages;
+            $pageLimit = ($page === 1) ? $perPageFirst : $perPageNext;
+            $offset = ($page === 1) ? 0 : ($perPageFirst + (($page - 2) * $perPageNext));
+        }
+        if ($pageLimit > 0) {
+            $feedItems = array_slice($feedItems, $offset, $pageLimit);
+        }
+    }
     } catch (Throwable $e) {
         $packages = [];
         $contents = [];
         $feedItems = [];
         $subjects = [];
-        $latestPackages = [];
-        $latestContents = [];
+        $popularItems = [];
         $total = 0;
     }
 }
@@ -254,18 +405,23 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <?php
-$totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
-if ($totalPages < 1) {
+if (!isset($totalPages) || (int)$totalPages < 1) {
     $totalPages = 1;
 }
 
-$qs = function (array $override = []) use ($q, $filterSubjectId, $page): string {
+$qs = function (array $override = []) use ($q, $filterSubjectId, $filterMateri, $filterSubmateri, $page): string {
     $params = [];
     if ($q !== '') {
         $params['q'] = $q;
     }
     if ($filterSubjectId > 0) {
         $params['subject_id'] = $filterSubjectId;
+    }
+    if ($filterMateri !== '') {
+        $params['materi'] = $filterMateri;
+    }
+    if ($filterSubmateri !== '') {
+        $params['submateri'] = $filterSubmateri;
     }
     $params['page'] = $page;
 
@@ -344,7 +500,14 @@ function hsl_to_rgb(int $h, int $s, int $l): array
     return [$r, $g, $b];
 }
 
-function render_home_sidebar_widgets(array $subjects, array $latestPackages, array $latestContents, int $filterSubjectId, string $q): void
+function render_home_sidebar_widgets(
+    array $materiCategories,
+    array $submateriCategories,
+    array $popularItems,
+    string $filterMateri,
+    string $filterSubmateri,
+    string $q
+): void
 {
     ?>
     <div class="card mb-3 sidebar-widget">
@@ -353,8 +516,11 @@ function render_home_sidebar_widgets(array $subjects, array $latestPackages, arr
         </div>
         <div class="card-body">
             <form method="get" class="m-0">
-                <?php if ($filterSubjectId > 0): ?>
-                    <input type="hidden" name="subject_id" value="<?php echo (int)$filterSubjectId; ?>">
+                <?php if ($filterMateri !== ''): ?>
+                    <input type="hidden" name="materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
+                <?php endif; ?>
+                <?php if ($filterSubmateri !== ''): ?>
+                    <input type="hidden" name="submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
                 <?php endif; ?>
                 <div class="input-group">
                     <input type="text" name="q" class="form-control" placeholder="Cari paket (nama/deskripsi)..." value="<?php echo htmlspecialchars($q); ?>">
@@ -366,75 +532,101 @@ function render_home_sidebar_widgets(array $subjects, array $latestPackages, arr
 
     <div class="card mb-3 sidebar-widget">
         <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Category (Mapel)</div>
+            <div class="fw-semibold">Kategori</div>
         </div>
         <div class="card-body">
-            <?php if (!$subjects): ?>
-                <div class="text-muted small">Belum ada mapel.</div>
-            <?php else: ?>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($subjects as $s): ?>
-                        <?php
-                        $sid = (int)($s['id'] ?? 0);
-                        $label = (string)($s['name'] ?? '');
-                        $cnt = (int)($s['package_count'] ?? 0);
-                        $qs = [];
-                        if ($q !== '') {
-                            $qs[] = 'q=' . rawurlencode($q);
-                        }
-                        $qs[] = 'subject_id=' . rawurlencode((string)$sid);
-                        $href = 'index.php' . ($qs ? ('?' . implode('&', $qs)) : '');
-                        ?>
-                        <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo ($filterSubjectId === $sid) ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
-                            <span><?php echo htmlspecialchars($label); ?></span>
-                            <span class="badge <?php echo ($filterSubjectId === $sid) ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
+            <div class="mb-3">
+                <div class="fw-semibold small text-muted mb-2">Materi</div>
+                <?php if (!$materiCategories): ?>
+                    <div class="text-muted small">Belum ada materi.</div>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($materiCategories as $m): ?>
+                            <?php
+                                $label = trim((string)($m['materi'] ?? ''));
+                                if ($label === '') {
+                                    continue;
+                                }
+                                $cnt = (int)($m['package_count'] ?? 0);
+                                $href = 'index.php?' . http_build_query([
+                                    'q' => ($q !== '' ? $q : null),
+                                    'materi' => $label,
+                                    'submateri' => null,
+                                    'page' => 1,
+                                ]);
+                                $active = ($filterMateri === $label);
+                            ?>
+                            <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
+                                <span><?php echo htmlspecialchars($label); ?></span>
+                                <span class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
 
-    <div class="card sidebar-widget mb-3">
-        <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Paket Terbaru</div>
-        </div>
-        <div class="card-body">
-            <?php if (!$latestPackages): ?>
-                <div class="text-muted small">Belum ada paket.</div>
-            <?php else: ?>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($latestPackages as $lp): ?>
-                        <a class="list-group-item list-group-item-action" href="paket.php?code=<?php echo urlencode((string)($lp['code'] ?? '')); ?>">
-                            <div class="fw-semibold text-truncate"><?php echo htmlspecialchars((string)($lp['name'] ?? '')); ?></div>
-                            <div class="small text-muted"><?php echo htmlspecialchars(format_id_date((string)($lp['published_at'] ?? ''))); ?></div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div>
+                <div class="fw-semibold small text-muted mb-2">Submateri</div>
+                <?php if ($filterMateri === ''): ?>
+                    <div class="text-muted small">Pilih materi untuk melihat submateri.</div>
+                <?php elseif (!$submateriCategories): ?>
+                    <div class="text-muted small">Belum ada submateri.</div>
+                <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($submateriCategories as $sm): ?>
+                            <?php
+                                $label = trim((string)($sm['submateri'] ?? ''));
+                                if ($label === '') {
+                                    continue;
+                                }
+                                $cnt = (int)($sm['package_count'] ?? 0);
+                                $href = 'index.php?' . http_build_query([
+                                    'q' => ($q !== '' ? $q : null),
+                                    'materi' => $filterMateri,
+                                    'submateri' => $label,
+                                    'page' => 1,
+                                ]);
+                                $active = ($filterSubmateri === $label);
+                            ?>
+                            <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
+                                <span><?php echo htmlspecialchars($label); ?></span>
+                                <span class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
     <div class="card sidebar-widget">
         <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Materi & Berita Terbaru</div>
+            <div class="fw-semibold">Popular Post</div>
         </div>
         <div class="card-body">
-            <?php if (!$latestContents): ?>
-                <div class="text-muted small">Belum ada konten.</div>
+            <?php if (!$popularItems): ?>
+                <div class="text-muted small">Belum ada data populer.</div>
             <?php else: ?>
                 <div class="list-group list-group-flush">
-                    <?php foreach ($latestContents as $lc): ?>
+                    <?php foreach ($popularItems as $it): ?>
                         <?php
-                        $t = (string)($lc['type'] ?? '');
-                        $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+                            $title = (string)($it['title'] ?? '');
+                            $href = (string)($it['href'] ?? '#');
+                            $badge = (string)($it['badge'] ?? '');
+                            $date = (string)($it['date'] ?? '');
                         ?>
-                        <a class="list-group-item list-group-item-action" href="post.php?slug=<?php echo urlencode((string)($lc['slug'] ?? '')); ?>">
+                        <a class="list-group-item list-group-item-action" href="<?php echo htmlspecialchars($href); ?>">
                             <div class="d-flex align-items-start justify-content-between gap-2">
-                                <div class="fw-semibold text-truncate" style="max-width: 85%;"><?php echo htmlspecialchars((string)($lc['title'] ?? '')); ?></div>
-                                <span class="badge text-bg-light border flex-shrink-0"><?php echo htmlspecialchars($badge); ?></span>
+                                <div class="fw-semibold text-truncate" style="max-width: 70%;"><?php echo htmlspecialchars($title); ?></div>
+                                <div class="d-flex gap-1 flex-shrink-0">
+                                    <?php if ($badge !== ''): ?>
+                                        <span class="badge text-bg-light border"><?php echo htmlspecialchars($badge); ?></span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                            <div class="small text-muted"><?php echo htmlspecialchars(format_id_date((string)($lc['published_at'] ?? ''))); ?></div>
+                            <?php if ($date !== ''): ?>
+                                <div class="small text-muted"><?php echo htmlspecialchars(format_id_date($date)); ?></div>
+                            <?php endif; ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -482,68 +674,70 @@ function get_home_carousel_slides(): array
 
     <div class="row g-3 g-lg-4">
         <div class="col-12 col-lg-8">
-            <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner">
-                <?php $slides = get_home_carousel_slides(); ?>
-                <?php if ($slides): ?>
-                    <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-                        <div class="carousel-inner">
-                            <?php foreach ($slides as $idx => $s): ?>
-                                <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
-                                    <div class="ratio ratio-21x9">
-                                        <img
-                                            src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
-                                            class="w-100 h-100 object-fit-contain"
-                                            alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>"
-                                            loading="lazy"
-                                        >
+            <?php if ($page === 1): ?>
+                <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner">
+                    <?php $slides = get_home_carousel_slides(); ?>
+                    <?php if ($slides): ?>
+                        <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                            <div class="carousel-inner">
+                                <?php foreach ($slides as $idx => $s): ?>
+                                    <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
+                                        <div class="ratio ratio-21x9">
+                                            <img
+                                                src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
+                                                class="w-100 h-100 object-fit-contain"
+                                                alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>"
+                                                loading="lazy"
+                                            >
+                                        </div>
                                     </div>
-                                </div>
-                            <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                    </div>
-                <?php else: ?>
-                    <div class="ratio ratio-21x9">
-                        <img
-                            src="assets/img/icon.svg"
-                            class="w-100 h-100 object-fit-contain"
-                            alt="Logo MATHDOSMAN"
-                            loading="lazy"
-                        >
-                    </div>
-                <?php endif; ?>
-            </div>
+                    <?php else: ?>
+                        <div class="ratio ratio-21x9">
+                            <img
+                                src="assets/img/icon.svg"
+                                class="w-100 h-100 object-fit-contain"
+                                alt="Logo MATHDOSMAN"
+                                loading="lazy"
+                            >
+                        </div>
+                    <?php endif; ?>
+                </div>
 
-            <div class="home-hero mb-3 mb-lg-4">
-                <div class="row g-4 align-items-center position-relative">
-                    <div class="col-12 col-lg-7">
-                        <div class="text-uppercase small text-muted mb-2">Portal Materi &amp; Bank Soal</div>
-                        <h1 class="display-6 fw-bold mb-2">Selamat datang di MATHDOSMAN</h1>
-                        <p class="lead mb-3">Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.</p>
-                        <div class="home-slogan mb-3">
-                            <span class="badge text-bg-light border">Slogan</span>
-                            <span class="ms-2 fw-semibold">Belajar Matematika, Gaskeun!</span>
+                <div class="home-hero mb-3 mb-lg-4">
+                    <div class="row g-4 align-items-center position-relative">
+                        <div class="col-12 col-lg-7">
+                            <div class="text-uppercase small text-muted mb-2">Portal Materi &amp; Bank Soal</div>
+                            <h1 class="display-6 fw-bold mb-2">Selamat datang di MATHDOSMAN</h1>
+                            <p class="lead mb-3">Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.</p>
+                            <div class="home-slogan mb-3">
+                                <span class="badge text-bg-light border">Slogan</span>
+                                <span class="ms-2 fw-semibold">Belajar Matematika, Gaskeun!</span>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge text-bg-light border">Materi ringkas</span>
+                                <span class="badge text-bg-light border">Bank soal siap latihan</span>
+                                <span class="badge text-bg-light border">Preview &amp; cetak mudah</span>
+                            </div>
                         </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <span class="badge text-bg-light border">Materi ringkas</span>
-                            <span class="badge text-bg-light border">Bank soal siap latihan</span>
-                            <span class="badge text-bg-light border">Preview &amp; cetak mudah</span>
-                        </div>
-                    </div>
 
-                    <div class="col-12 col-lg-5">
-                        <div class="home-vision border rounded-4 bg-body-tertiary p-3 p-lg-4">
-                            <div class="fw-semibold mb-2">Visi</div>
-                            <div class="text-muted">Menjadi portal belajar matematika yang simpel, rapi, dan mudah diakses untuk semua.</div>
-                            <div class="fw-semibold mt-3 mb-2">Misi</div>
-                            <ul class="mb-0 text-muted small ps-3">
-                                <li>Menyajikan materi yang jelas dan mudah dipahami.</li>
-                                <li>Menyediakan paket soal untuk latihan dan evaluasi.</li>
-                                <li>Membantu belajar lebih konsisten lewat latihan terarah.</li>
-                            </ul>
+                        <div class="col-12 col-lg-5">
+                            <div class="home-vision border rounded-4 bg-body-tertiary p-3 p-lg-4">
+                                <div class="fw-semibold mb-2">Visi</div>
+                                <div class="text-muted">Menjadi portal belajar matematika yang simpel, rapi, dan mudah diakses untuk semua.</div>
+                                <div class="fw-semibold mt-3 mb-2">Misi</div>
+                                <ul class="mb-0 text-muted small ps-3">
+                                    <li>Menyajikan materi yang jelas dan mudah dipahami.</li>
+                                    <li>Menyediakan paket soal untuk latihan dan evaluasi.</li>
+                                    <li>Membantu belajar lebih konsisten lewat latihan terarah.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
 
             <div class="d-flex align-items-end justify-content-between gap-2 mb-2 section-heading">
                 <div>
@@ -552,7 +746,7 @@ function get_home_carousel_slides(): array
                 </div>
             </div>
 
-            <?php if ($q !== '' || $filterSubjectId > 0): ?>
+            <?php if ($q !== '' || $filterSubjectId > 0 || $filterMateri !== '' || $filterSubmateri !== ''): ?>
                 <div class="alert alert-light border py-2 small d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
                     <div>
                         Filter aktif:
@@ -561,6 +755,12 @@ function get_home_carousel_slides(): array
                         <?php endif; ?>
                         <?php if ($filterSubjectId > 0): ?>
                             <span class="badge text-bg-secondary">Mapel ID: <?php echo (int)$filterSubjectId; ?></span>
+                        <?php endif; ?>
+                        <?php if ($filterMateri !== ''): ?>
+                            <span class="badge text-bg-secondary">Materi: <?php echo htmlspecialchars($filterMateri); ?></span>
+                        <?php endif; ?>
+                        <?php if ($filterSubmateri !== ''): ?>
+                            <span class="badge text-bg-secondary">Submateri: <?php echo htmlspecialchars($filterSubmateri); ?></span>
                         <?php endif; ?>
                     </div>
                     <a class="btn btn-outline-secondary btn-sm" href="index.php">Reset</a>
@@ -644,9 +844,9 @@ function get_home_carousel_slides(): array
                                         </div>
 
                                         <?php if ($excerpt !== ''): ?>
-                                            <p class="text-muted mb-0"><?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
+                                            <p class="text-muted mb-0 package-card-excerpt"><?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
                                         <?php else: ?>
-                                            <p class="text-muted mb-0">Klik untuk membuka.</p>
+                                            <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -685,7 +885,7 @@ function get_home_carousel_slides(): array
         </div>
 
         <div class="col-12 col-lg-4 d-none d-lg-block">
-            <?php render_home_sidebar_widgets($subjects, $latestPackages, $latestContents, $filterSubjectId, $q); ?>
+            <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q); ?>
         </div>
     </div>
 
@@ -695,7 +895,7 @@ function get_home_carousel_slides(): array
             <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <?php render_home_sidebar_widgets($subjects, $latestPackages, $latestContents, $filterSubjectId, $q); ?>
+            <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q); ?>
         </div>
     </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

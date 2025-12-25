@@ -1,9 +1,25 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_role('admin');
+require_once __DIR__ . '/../includes/security.php';
 
 header('Content-Type: application/json; charset=utf-8');
+
+$jsonFail = static function (int $code, array $payload): void {
+    http_response_code($code);
+    echo json_encode($payload);
+    exit;
+};
+
+if (empty($_SESSION['user'])) {
+    $jsonFail(401, ['status' => 'unauthorized', 'error' => 'Silakan login terlebih dahulu.']);
+}
+
+if (empty($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+    $jsonFail(403, ['status' => 'forbidden', 'error' => 'Akses ditolak.']);
+}
+
+require_csrf_valid();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['src'])) {
     $src = (string)$_POST['src'];

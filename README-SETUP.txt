@@ -19,6 +19,17 @@ Catatan dependensi (untuk import Excel .xlsx):
 - Jalankan perintah berikut di folder proyek:
   composer install
 
+Jika setelah update kamu menemukan error import (kolom belum ada / schema belum cocok),
+jalankan migrasi skema via CLI (lebih aman daripada DDL saat request web):
+- php scripts/migrate_db.php
+
+Migrasi CLI di atas juga akan memastikan kolom berikut ada (untuk fitur sidebar konten terkait):
+- contents.materi
+- contents.submateri
+
+Untuk mempercepat query (tambahkan index yang aman/idempotent), jalankan:
+- php scripts/migrate_db.php --indexes
+
 2. Cek konfigurasi koneksi database
 -----------------------------------
 - Disarankan: jalankan installer: http://localhost/web-mathdosman/install/ (akan menulis config/config.php otomatis)

@@ -41,6 +41,28 @@ pre {
     padding-bottom: 0.35rem;
 }
 
+/* Packages list (admin): responsive table tuning */
+.packages-table .packages-col-paket {
+    min-width: 320px;
+}
+
+@media (max-width: 575.98px) {
+    .packages-table .packages-col-paket {
+        min-width: 220px;
+    }
+}
+
+.packages-actions > form {
+    display: inline-block;
+}
+
+.packages-actions {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    gap: .25rem;
+    justify-content: end;
+}
+
 /* Truncate long cell text without making the table wider */
 .md-cell-truncate {
     white-space: nowrap;
@@ -435,10 +457,24 @@ body.admin-layout .question-no-field {
     background: var(--bs-body-bg);
     border: 1px solid var(--bs-border-color);
     border-radius: .75rem;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.admin-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--bs-box-shadow-sm);
+    border-color: color-mix(in srgb, var(--bs-border-color) 60%, var(--bs-primary));
 }
 
 .admin-tile-body {
     padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.admin-tile-body .btn {
+    margin-top: auto;
 }
 
 .admin-tile-title {
@@ -515,6 +551,19 @@ body.front-page .package-card-title a:focus {
 
 body.front-page .package-card-meta {
     margin-top: .1rem;
+}
+
+body.front-page .package-card-excerpt {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+@media (max-width: 575.98px) {
+    body.front-page .package-card-excerpt {
+        -webkit-line-clamp: 4;
+    }
 }
 
 /* Accent color is provided per-card via CSS variables (see index.php) */

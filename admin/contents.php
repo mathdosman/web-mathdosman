@@ -132,16 +132,33 @@ try {
         $params[':q'] = '%' . $q . '%';
     }
 
-    $sql = 'SELECT c.id, c.type, c.title, c.slug, c.status, c.created_at, c.published_at
-        FROM contents c';
-    if ($where) {
-        $sql .= ' WHERE ' . implode(' AND ', $where);
-    }
-    $sql .= ' ORDER BY COALESCE(c.published_at, c.created_at) DESC, c.id DESC';
+    // Prefer analytics views; fallback gracefully if page_views doesn't exist.
+    try {
+        $sql = 'SELECT c.id, c.type, c.title, c.slug, c.status, c.created_at, c.published_at,
+            COALESCE(pv.views, 0) AS views
+            FROM contents c
+            LEFT JOIN page_views pv ON pv.kind = "content" AND pv.item_id = c.id';
+        if ($where) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $sql .= ' ORDER BY COALESCE(c.published_at, c.created_at) DESC, c.id DESC';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e2) {
+        $sql = 'SELECT c.id, c.type, c.title, c.slug, c.status, c.created_at, c.published_at,
+            0 AS views
+            FROM contents c';
+        if ($where) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $sql .= ' ORDER BY COALESCE(c.published_at, c.created_at) DESC, c.id DESC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $contents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 } catch (PDOException $e) {
     $errors[] = 'Tabel konten belum tersedia. Jalankan installer / import database.sql terbaru.';
 }
@@ -213,6 +230,7 @@ include __DIR__ . '/../includes/header.php';
                             <th>Judul</th>
                             <th class="text-nowrap">Tipe</th>
                             <th class="text-nowrap">Status</th>
+                            <th class="text-nowrap text-end" style="width: 90px;">Views</th>
                             <th class="text-nowrap">Tanggal</th>
                             <th class="text-end" style="width: 1%;">Aksi</th>
                         </tr>
@@ -220,7 +238,7 @@ include __DIR__ . '/../includes/header.php';
                     <tbody>
                     <?php if (!$contents): ?>
                         <tr>
-                            <td colspan="5" class="text-muted">Belum ada konten.</td>
+                            <td colspan="6" class="text-muted">Belum ada konten.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($contents as $c): ?>
@@ -231,6 +249,7 @@ include __DIR__ . '/../includes/header.php';
                                 $ctype = (string)($c['type'] ?? '');
                                 $cstatus = (string)($c['status'] ?? '');
                                 $cdate = (string)($c['published_at'] ?? $c['created_at'] ?? '');
+                                $cviews = (int)($c['views'] ?? 0);
                                 $publicUrl = '../post.php?slug=' . rawurlencode($cslug);
                             ?>
                             <tr>
@@ -253,6 +272,7 @@ include __DIR__ . '/../includes/header.php';
                                         <span class="badge text-bg-secondary">draft</span>
                                     <?php endif; ?>
                                 </td>
+                                <td class="text-nowrap text-end"><span class="text-muted"><?php echo $cviews; ?></span></td>
                                 <td class="text-nowrap">
                                     <?php echo htmlspecialchars(format_id_date($cdate)); ?>
                                 </td>

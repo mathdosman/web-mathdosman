@@ -45,6 +45,8 @@ if (app_runtime_migrations_enabled()) {
     ensure_contents_column($pdo, 'slug', 'slug VARCHAR(255) NOT NULL');
     ensure_contents_column($pdo, 'excerpt', 'excerpt TEXT NULL');
     ensure_contents_column($pdo, 'content_html', 'content_html MEDIUMTEXT NOT NULL');
+    ensure_contents_column($pdo, 'materi', 'materi VARCHAR(150) NULL');
+    ensure_contents_column($pdo, 'submateri', 'submateri VARCHAR(150) NULL');
     ensure_contents_column($pdo, 'status', "status ENUM('draft','published') NOT NULL DEFAULT 'draft'");
     ensure_contents_column($pdo, 'published_at', 'published_at TIMESTAMP NULL DEFAULT NULL');
     ensure_contents_column($pdo, 'created_at', 'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
@@ -99,6 +101,8 @@ $title = (string)($row['title'] ?? '');
 $slug = (string)($row['slug'] ?? '');
 $excerpt = (string)($row['excerpt'] ?? '');
 $contentHtml = (string)($row['content_html'] ?? '');
+$materi = (string)($row['materi'] ?? '');
+$submateri = (string)($row['submateri'] ?? '');
 $status = (string)($row['status'] ?? 'draft');
 $publishedAt = (string)($row['published_at'] ?? '');
 
@@ -130,6 +134,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 
     $title = trim((string)($_POST['title'] ?? ''));
+    $materi = trim((string)($_POST['materi'] ?? ''));
+    $submateri = trim((string)($_POST['submateri'] ?? ''));
     $excerpt = trim((string)($_POST['excerpt'] ?? ''));
     $contentHtml = (string)($_POST['content_html'] ?? '');
     $status = trim((string)($_POST['status'] ?? 'draft'));
@@ -161,6 +167,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $updateSql = 'UPDATE contents
                 SET type = :t,
                     title = :title,
+                    materi = :m,
+                    submateri = :sm,
                     excerpt = :ex,
                     content_html = :html,
                     status = :st,';
@@ -168,6 +176,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $params = [
                 ':t' => $type,
                 ':title' => $title,
+                ':m' => ($materi === '' ? null : $materi),
+                ':sm' => ($submateri === '' ? null : $submateri),
                 ':ex' => ($cleanExcerpt === '' ? null : $cleanExcerpt),
                 ':html' => $cleanContentHtml,
                 ':st' => $status,
@@ -315,6 +325,16 @@ include __DIR__ . '/../includes/header.php';
                             <div class="col-12">
                                 <label class="form-label">Judul</label>
                                 <input type="text" name="title" class="form-control" value="<?php echo htmlspecialchars($title); ?>" required />
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Materi (opsional)</label>
+                                <input type="text" name="materi" class="form-control" value="<?php echo htmlspecialchars($materi); ?>" />
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Submateri (opsional)</label>
+                                <input type="text" name="submateri" class="form-control" value="<?php echo htmlspecialchars($submateri); ?>" />
                             </div>
 
                             <div class="col-12">

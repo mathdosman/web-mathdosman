@@ -21,6 +21,7 @@ if ($code === '') {
 $package = null;
 try {
     $sqlBase = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
+        p.published_at,
         p.show_answers_public,
         s.name AS subject_name
         FROM packages p
@@ -28,6 +29,7 @@ try {
         WHERE p.code = :c';
 
     $sqlWithIntro = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
+        p.published_at,
         p.show_answers_public,
         p.intro_content_id,
         s.name AS subject_name
@@ -78,6 +80,19 @@ if (!$package) {
     exit;
 }
 
+// Track views (best-effort) for published packages.
+// Note: count views even when admin is logged in (this is a public page).
+try {
+    if ((string)($package['status'] ?? '') === 'published') {
+        $stmt = $pdo->prepare('INSERT INTO page_views (kind, item_id, views, last_viewed_at)
+            VALUES ("package", :id, 1, NOW())
+            ON DUPLICATE KEY UPDATE views = views + 1, last_viewed_at = NOW()');
+        $stmt->execute([':id' => (int)($package['id'] ?? 0)]);
+    }
+} catch (Throwable $e) {
+    // ignore
+}
+
 $showAnswersPublic = ((int)($package['show_answers_public'] ?? 0)) === 1;
 $showAnswers = $showAnswersPublic;
 if ($isAdmin && $requestedShowAnswers) {
@@ -108,94 +123,130 @@ try {
     $items = [];
 }
 
-// Sidebar: 5 paket terkait, 5 paket terbaru, 5 paket random.
-$sidebarPackagesRelated = [];
-$sidebarPackagesLatest = [];
-$sidebarPackagesRandom = [];
-
+// Sidebar: 3 list konten (gabungan materi + paket), semua published.
+$sidebarRelated = [];
+$sidebarLatest = [];
+$sidebarRandom = [];
 try {
-    $params = [':curr' => (int)($package['id'] ?? 0)];
-    $where = 'WHERE p.id <> :curr';
-
-    $materi = trim((string)($package['materi'] ?? ''));
-    if ($materi !== '') {
-        $where .= ' AND p.materi = :m';
-        $params[':m'] = $materi;
-    } else {
-        // Fallback jika materi kosong: pakai subject agar tetap relevan.
-        $sid = (int)($package['subject_id'] ?? 0);
-        if ($sid > 0) {
-            $where .= ' AND p.subject_id = :sid';
-            $params[':sid'] = $sid;
-        }
+    if (!isset($pdo) || !($pdo instanceof PDO)) {
+        throw new RuntimeException('db_not_ready');
     }
+    $currIdForSidebar = (int)($package['id'] ?? 0);
+    $paramsBase = [':kind' => 'package', ':curr' => $currIdForSidebar];
+    $ctxSubmateri = trim((string)($package['submateri'] ?? ''));
 
-    if (!$isAdmin) {
-        $where .= ' AND p.status = "published"';
-    }
-
-    $stmt = $pdo->prepare('SELECT p.code, p.name, p.materi, p.created_at, p.published_at, p.status,
-            COUNT(pq.question_id) AS question_count
+    $feedSqlWithTax = '(
+        SELECT "package" AS kind,
+               p.id AS id,
+               p.code AS code,
+               NULL AS slug,
+               NULL AS ctype,
+               p.name AS title,
+               COALESCE(p.published_at, p.created_at) AS dt,
+               p.materi AS materi,
+               p.submateri AS submateri,
+               COUNT(pq.question_id) AS question_count
         FROM packages p
         LEFT JOIN package_questions pq ON pq.package_id = p.id
-        ' . $where . '
-        GROUP BY p.id, p.code, p.name, p.materi, p.created_at, p.published_at, p.status
+        WHERE p.status = "published"
+        GROUP BY p.id
+        UNION ALL
+        SELECT "content" AS kind,
+               c.id AS id,
+               NULL AS code,
+               c.slug AS slug,
+               c.type AS ctype,
+               c.title AS title,
+               COALESCE(c.published_at, c.created_at) AS dt,
+               c.materi AS materi,
+               c.submateri AS submateri,
+               NULL AS question_count
+        FROM contents c
+        WHERE c.status = "published"
+          AND c.id NOT IN (
+            SELECT intro_content_id
+            FROM packages
+            WHERE status = "published" AND intro_content_id IS NOT NULL
+          )
+    ) feed';
+
+    $feedSqlNoTax = '(
+        SELECT "package" AS kind,
+               p.id AS id,
+               p.code AS code,
+               NULL AS slug,
+               NULL AS ctype,
+               p.name AS title,
+               COALESCE(p.published_at, p.created_at) AS dt,
+               p.materi AS materi,
+               p.submateri AS submateri,
+               COUNT(pq.question_id) AS question_count
+        FROM packages p
+        LEFT JOIN package_questions pq ON pq.package_id = p.id
+        WHERE p.status = "published"
+        GROUP BY p.id
+        UNION ALL
+        SELECT "content" AS kind,
+               c.id AS id,
+               NULL AS code,
+               c.slug AS slug,
+               c.type AS ctype,
+               c.title AS title,
+               COALESCE(c.published_at, c.created_at) AS dt,
+               NULL AS materi,
+               NULL AS submateri,
+               NULL AS question_count
+        FROM contents c
+        WHERE c.status = "published"
+          AND c.id NOT IN (
+            SELECT intro_content_id
+            FROM packages
+            WHERE status = "published" AND intro_content_id IS NOT NULL
+          )
+    ) feed';
+
+    $feedSql = $feedSqlWithTax;
+    try {
+        $pdo->query('SELECT 1 FROM (' . $feedSqlWithTax . ') t LIMIT 1');
+    } catch (Throwable $eTax) {
+        $feedSql = $feedSqlNoTax;
+    }
+
+    // Konten terbaru
+    $stmtL = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count
+        FROM ' . $feedSql . '
+        WHERE NOT (kind = :kind AND id = :curr)
+        ORDER BY dt DESC, id DESC
+        LIMIT 5');
+    $stmtL->execute($paramsBase);
+    $sidebarLatest = $stmtL->fetchAll(PDO::FETCH_ASSOC);
+
+    // Konten random
+    $stmtX = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count
+        FROM ' . $feedSql . '
+        WHERE NOT (kind = :kind AND id = :curr)
         ORDER BY RAND()
         LIMIT 5');
-    $stmt->execute($params);
-    $sidebarPackagesRelated = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Throwable $e) {
-    $sidebarPackagesRelated = [];
-}
+    $stmtX->execute($paramsBase);
+    $sidebarRandom = $stmtX->fetchAll(PDO::FETCH_ASSOC);
 
-try {
-    $params = [];
-    $where = 'WHERE 1';
-    $sid = (int)($package['subject_id'] ?? 0);
-    if ($sid > 0) {
-        $where .= ' AND p.subject_id = :sid';
-        $params[':sid'] = $sid;
+    // Konten terkait (berdasarkan submateri)
+    if ($ctxSubmateri !== '') {
+        $paramsRel = $paramsBase + [':sm' => $ctxSubmateri];
+        $stmtR = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count
+            FROM ' . $feedSql . '
+            WHERE submateri = :sm
+              AND submateri IS NOT NULL AND submateri <> ""
+              AND NOT (kind = :kind AND id = :curr)
+            ORDER BY RAND()
+            LIMIT 5');
+        $stmtR->execute($paramsRel);
+        $sidebarRelated = $stmtR->fetchAll(PDO::FETCH_ASSOC);
     }
-    if (!$isAdmin) {
-        $where .= ' AND p.status = "published"';
-    }
-    $stmt = $pdo->prepare('SELECT p.code, p.name, p.materi, p.created_at, p.published_at, p.status,
-            COUNT(pq.question_id) AS question_count
-        FROM packages p
-        LEFT JOIN package_questions pq ON pq.package_id = p.id
-        ' . $where . '
-        GROUP BY p.id, p.code, p.name, p.materi, p.created_at, p.published_at, p.status
-        ORDER BY COALESCE(p.published_at, p.created_at) DESC
-        LIMIT 5');
-    $stmt->execute($params);
-    $sidebarPackagesLatest = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-    $sidebarPackagesLatest = [];
-}
-
-try {
-    $params = [];
-    $where = 'WHERE 1';
-    $sid = (int)($package['subject_id'] ?? 0);
-    if ($sid > 0) {
-        $where .= ' AND p.subject_id = :sid';
-        $params[':sid'] = $sid;
-    }
-    if (!$isAdmin) {
-        $where .= ' AND p.status = "published"';
-    }
-    $stmt = $pdo->prepare('SELECT p.code, p.name, p.materi, p.created_at, p.published_at, p.status,
-            COUNT(pq.question_id) AS question_count
-        FROM packages p
-        LEFT JOIN package_questions pq ON pq.package_id = p.id
-        ' . $where . '
-        GROUP BY p.id, p.code, p.name, p.materi, p.created_at, p.published_at, p.status
-        ORDER BY RAND()
-        LIMIT 5');
-    $stmt->execute($params);
-    $sidebarPackagesRandom = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Throwable $e) {
-    $sidebarPackagesRandom = [];
+    $sidebarRelated = [];
+    $sidebarLatest = [];
+    $sidebarRandom = [];
 }
 
 $page_title = (string)($package['name'] ?? 'Preview Paket');
@@ -242,8 +293,77 @@ $renderHtml = function (?string $html): string {
     return nl2br(htmlspecialchars($text));
 };
 
-// Materi (konten) yang ditampilkan di atas butir soal.
-$introContent = null;
+// Bottom navigation (prev/home/next) follows the mixed homepage feed order (packages + contents).
+$navPrev = null;
+$navNext = null;
+try {
+    if (!isset($pdo) || !($pdo instanceof PDO)) {
+        throw new RuntimeException('db_not_ready');
+    }
+
+    $currId = (int)($package['id'] ?? 0);
+    $currStatus = (string)($package['status'] ?? '');
+    if ($currId <= 0 || $currStatus !== 'published') {
+        throw new RuntimeException('package_not_in_home_feed');
+    }
+
+    $currDate = (string)($package['published_at'] ?? '');
+    if (trim($currDate) === '') {
+        $currDate = (string)($package['created_at'] ?? '');
+    }
+
+    $params = [':d' => $currDate, ':id' => $currId];
+    $feedSql = '(
+        SELECT "package" AS kind,
+               p.id AS id,
+               p.code AS code,
+               NULL AS slug,
+             NULL AS ctype,
+               p.name AS title,
+               COALESCE(p.published_at, p.created_at) AS dt
+        FROM packages p
+        WHERE p.status = "published"
+        UNION ALL
+        SELECT "content" AS kind,
+               c.id AS id,
+               NULL AS code,
+               c.slug AS slug,
+             c.type AS ctype,
+               c.title AS title,
+               COALESCE(c.published_at, c.created_at) AS dt
+        FROM contents c
+        WHERE c.status = "published"
+          AND c.id NOT IN (
+            SELECT intro_content_id
+            FROM packages
+            WHERE status = "published" AND intro_content_id IS NOT NULL
+          )
+    ) feed';
+
+    // Prev (lebih baru / muncul sebelum current di beranda)
+    $sqlPrev = 'SELECT kind, code, slug, title
+        FROM ' . $feedSql . '
+        WHERE (dt > :d OR (dt = :d AND id > :id))
+        ORDER BY dt ASC, id ASC
+        LIMIT 1';
+    $stmt = $pdo->prepare($sqlPrev);
+    $stmt->execute($params);
+    $navPrev = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+    // Next (lebih lama / muncul sesudah current di beranda)
+    $sqlNext = 'SELECT kind, code, slug, title
+        FROM ' . $feedSql . '
+        WHERE (dt < :d OR (dt = :d AND id < :id))
+        ORDER BY dt DESC, id DESC
+        LIMIT 1';
+    $stmt = $pdo->prepare($sqlNext);
+    $stmt->execute($params);
+    $navNext = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (Throwable $e) {
+    $navPrev = null;
+    $navNext = null;
+}
+
 try {
     $introId = (int)($package['intro_content_id'] ?? 0);
     if ($introId > 0) {
@@ -352,7 +472,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
     return '<strong>' . htmlspecialchars($jawabanRaw) . '</strong>';
 };
 
-$renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $code): void {
+$renderSidebarKonten = function (string $title, array $list, string $currentCode): void {
     ?>
     <div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
     <?php if (!$list): ?>
@@ -361,27 +481,47 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
         <nav class="nav flex-column mb-3">
             <?php foreach ($list as $row): ?>
                 <?php
-                    $pkgCode = (string)($row['code'] ?? '');
-                    $pkgName = (string)($row['name'] ?? '');
-                    $pkgMateri = trim((string)($row['materi'] ?? ''));
-                    $count = (int)($row['question_count'] ?? 0);
-                    $href = ($pkgCode !== '') ? ('paket.php?code=' . urlencode($pkgCode)) : '';
-                    $isDraft = ((string)($row['status'] ?? '') !== 'published');
-                    $isActive = ($pkgCode !== '' && $pkgCode === $code);
+                    $kind = (string)($row['kind'] ?? '');
+                    $title2 = (string)($row['title'] ?? '');
+                    $materi2 = trim((string)($row['materi'] ?? ''));
+                    $submateri2 = trim((string)($row['submateri'] ?? ''));
+                    $qCount = (int)($row['question_count'] ?? 0);
+                    $href = '';
+                    $badge = '';
+                    $isActive = false;
+                    if ($kind === 'package' && !empty($row['code'])) {
+                        $pkgCode = (string)$row['code'];
+                        $href = 'paket.php?code=' . urlencode($pkgCode);
+                        $badge = 'Paket';
+                        $isActive = ($pkgCode === $currentCode);
+                    } elseif ($kind === 'content' && !empty($row['slug'])) {
+                        $href = 'post.php?slug=' . urlencode((string)$row['slug']);
+                        $ctype = (string)($row['ctype'] ?? 'materi');
+                        $badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
+                    }
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo htmlspecialchars($href !== '' ? $href : '#'); ?>" <?php echo $href === '' ? 'aria-disabled="true"' : ''; ?> <?php echo $isActive ? 'aria-current="page"' : ''; ?>>
                     <div class="d-flex align-items-start justify-content-between gap-2 w-100">
                         <div class="fw-semibold" style="line-height:1.25;">
-                            <?php echo htmlspecialchars($pkgName !== '' ? $pkgName : '(tanpa judul)'); ?>
+                            <?php echo htmlspecialchars($title2 !== '' ? $title2 : '(tanpa judul)'); ?>
                         </div>
-                        <?php if ($isAdmin && $isDraft): ?>
-                            <span class="badge text-bg-secondary">Draft</span>
+                        <?php if ($badge !== ''): ?>
+                            <span class="badge text-bg-light border"><?php echo htmlspecialchars($badge); ?></span>
                         <?php endif; ?>
                     </div>
                     <div class="small text-white-50">
-                        Materi: <?php echo htmlspecialchars($pkgMateri !== '' ? $pkgMateri : '-'); ?>
-                        <span class="mx-1">|</span>
-                        Jumlah soal: <?php echo (int)$count; ?>
+                        <?php
+                            $metaBits = [];
+                            if ($submateri2 !== '') {
+                                $metaBits[] = 'Submateri: ' . $submateri2;
+                            } elseif ($materi2 !== '') {
+                                $metaBits[] = 'Materi: ' . $materi2;
+                            }
+                            if ($kind === 'package') {
+                                $metaBits[] = 'Soal: ' . (string)$qCount;
+                            }
+                            echo htmlspecialchars($metaBits ? implode(' | ', $metaBits) : '-');
+                        ?>
                     </div>
                 </a>
             <?php endforeach; ?>
@@ -395,22 +535,22 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
         <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="index.php" class="btn btn-dark btn-sm fw-semibold">&laquo; Kembali</a>
-                <button type="button" class="btn btn-dark btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Paket</button>
-                <button type="button" class="btn btn-dark btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Tutup Paket</button>
+                    <button type="button" class="btn btn-dark btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Munculkan Sidebar</button>
+                    <button type="button" class="btn btn-dark btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Sembunyikan Sidebar</button>
             </div>
             <div class="text-muted small">Kode: <strong><?php echo htmlspecialchars((string)$package['code']); ?></strong></div>
         </div>
 
         <div class="offcanvas offcanvas-start d-lg-none text-bg-dark" tabindex="-1" id="paketSidebarOffcanvas" aria-labelledby="paketSidebarOffcanvasLabel">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="paketSidebarOffcanvasLabel">Daftar Paket</h5>
+                <h5 class="offcanvas-title" id="paketSidebarOffcanvasLabel">Sidebar</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
             </div>
             <div class="offcanvas-body app-sidebar">
                 <?php
-                    $renderSidebarPackages('5 Paket Terkait', $sidebarPackagesRelated);
-                    $renderSidebarPackages('5 Paket Terbaru', $sidebarPackagesLatest);
-                    $renderSidebarPackages('5 Paket Random', $sidebarPackagesRandom);
+                    $renderSidebarKonten('Konten Terkait', $sidebarRelated, (string)$code);
+                    $renderSidebarKonten('Konten Terbaru', $sidebarLatest, (string)$code);
+                    $renderSidebarKonten('Konten Random', $sidebarRandom, (string)$code);
                 ?>
             </div>
         </div>
@@ -418,12 +558,12 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
         <div class="paket-dock-layout">
             <div class="paket-dock-sidebar d-none d-lg-block app-sidebar bg-dark text-white p-3" id="paketDockSidebar">
                 <div class="d-grid gap-2 mb-2">
-                    <button type="button" class="btn btn-outline-light btn-sm" id="paketDockClose">Tutup Sidebar</button>
+                    <button type="button" class="btn btn-outline-light btn-sm" id="paketDockClose">Sembunyikan Sidebar</button>
                 </div>
                 <?php
-                    $renderSidebarPackages('5 Paket Terkait', $sidebarPackagesRelated);
-                    $renderSidebarPackages('5 Paket Terbaru', $sidebarPackagesLatest);
-                    $renderSidebarPackages('5 Paket Random', $sidebarPackagesRandom);
+                    $renderSidebarKonten('Konten Terkait', $sidebarRelated, (string)$code);
+                    $renderSidebarKonten('Konten Terbaru', $sidebarLatest, (string)$code);
+                    $renderSidebarKonten('Konten Random', $sidebarRandom, (string)$code);
                 ?>
             </div>
 
@@ -841,6 +981,48 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
                 <?php endforeach; ?>
             <?php endif; ?>
 
+            <nav class="mt-4" aria-label="Navigasi paket">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="flex-grow-1 text-start">
+                        <?php
+                            $prevKind = (string)($navPrev['kind'] ?? '');
+                            $prevHref = '';
+                            if ($prevKind === 'package' && !empty($navPrev['code'])) {
+                                $prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
+                            } elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
+                                $prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
+                            }
+                        ?>
+                        <?php if ($prevHref !== ''): ?>
+                            <a class="btn btn-outline-dark" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
+                                &laquo; Sebelumnya
+                            </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="flex-grow-1 text-center">
+                        <a class="btn btn-dark" href="index.php" aria-label="Kembali ke beranda">Beranda</a>
+                    </div>
+
+                    <div class="flex-grow-1 text-end">
+                        <?php
+                            $nextKind = (string)($navNext['kind'] ?? '');
+                            $nextHref = '';
+                            if ($nextKind === 'package' && !empty($navNext['code'])) {
+                                $nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
+                            } elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
+                                $nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
+                            }
+                        ?>
+                        <?php if ($nextHref !== ''): ?>
+                            <a class="btn btn-outline-dark" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
+                                Sesudahnya &raquo;
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </nav>
+
                 </div>
             </div>
         </div>
@@ -873,7 +1055,7 @@ $renderSidebarPackages = function (string $title, array $list) use ($isAdmin, $c
 
             const sync = () => {
                 const collapsed = body.classList.contains(cls);
-                btn.textContent = collapsed ? 'Buka Paket' : 'Tutup Paket';
+                btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
                 btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
             };
 
