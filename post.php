@@ -511,6 +511,20 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 							</div>
 						</div>
 
+						<?php
+							require_once __DIR__ . '/includes/disqus.php';
+							$disqusIdentifier = 'post-' . (string)$slug;
+							$disqusUrl = rtrim((string)$base_url, '/') . '/post.php?slug=' . rawurlencode((string)$slug);
+						?>
+						<div class="custom-card mb-3 d-print-none">
+							<div class="custom-card-header">
+								<div class="small text-muted">Komentar</div>
+							</div>
+							<div class="oke">
+								<?php app_render_disqus($disqusIdentifier, $disqusUrl); ?>
+							</div>
+						</div>
+
 						<nav class="mt-4" aria-label="Navigasi konten">
 							<div class="d-flex align-items-center gap-2">
 								<div class="flex-grow-1 text-start">

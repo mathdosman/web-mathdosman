@@ -881,6 +881,17 @@ function get_home_carousel_slides(): array
                         </ul>
                     </nav>
                 <?php endif; ?>
+
+                <?php
+                    require_once __DIR__ . '/includes/disqus.php';
+                    $disqusUrl = rtrim((string)$base_url, '/') . '/index.php';
+                ?>
+                <div class="card mt-4 d-print-none">
+                    <div class="card-body">
+                        <div class="fw-semibold mb-2">Komentar</div>
+                        <?php app_render_disqus('home', $disqusUrl); ?>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
 

@@ -17,5 +17,11 @@ define('APP_ENABLE_RUNTIME_MIGRATIONS', false);
 // Base URL (sesuaikan dengan lokasi deploy)
 $base_url = 'http://localhost/web-mathdosman';
 
+// Disqus (komentar publik tanpa login aplikasi)
+// Shortname Disqus Anda (contoh: "mathdosman"). Kosongkan untuk menonaktifkan.
+if (!defined('DISQUS_SHORTNAME')) {
+	define('DISQUS_SHORTNAME', 'mathdosman');
+}
+
 // Zona waktu default
 date_default_timezone_set('Asia/Jakarta');

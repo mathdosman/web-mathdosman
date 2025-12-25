@@ -981,6 +981,20 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                 <?php endforeach; ?>
             <?php endif; ?>
 
+            <?php
+                require_once __DIR__ . '/includes/disqus.php';
+                $disqusIdentifier = 'paket-' . (string)$code;
+                $disqusUrl = rtrim((string)$base_url, '/') . '/paket.php?code=' . rawurlencode((string)$code);
+            ?>
+            <div class="custom-card mb-3 d-print-none">
+                <div class="custom-card-header">
+                    <div class="small text-muted">Komentar</div>
+                </div>
+                <div class="oke">
+                    <?php app_render_disqus($disqusIdentifier, $disqusUrl); ?>
+                </div>
+            </div>
+
             <nav class="mt-4" aria-label="Navigasi paket">
                 <div class="d-flex align-items-center gap-2">
                     <div class="flex-grow-1 text-start">

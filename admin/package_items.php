@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/logger.php';
 require_role('admin');
 
 $errors = [];
@@ -184,7 +185,113 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    if ($action === 'set_intro_content') {
+    if ($action === 'update_question_numbers') {
+        $raw = $_POST['question_numbers'] ?? [];
+        if (!is_array($raw)) {
+            $raw = [];
+        }
+
+        try {
+            // Load current package items (authoritative list)
+            $stmt = $pdo->prepare('SELECT question_id, question_number
+                FROM package_questions
+                WHERE package_id = :pid');
+            $stmt->execute([':pid' => $packageId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $allowedIds = [];
+            foreach ($rows as $r) {
+                $allowedIds[(int)($r['question_id'] ?? 0)] = true;
+            }
+
+            // Safety: ensure the form included all current items.
+            // This matters because we may reset numbering to avoid UNIQUE conflicts.
+            foreach (array_keys($allowedIds) as $qid) {
+                if (!array_key_exists((string)$qid, $raw) && !array_key_exists($qid, $raw)) {
+                    $errors[] = 'Form urutan tidak lengkap. Silakan muat ulang halaman dan coba lagi.';
+                    break;
+                }
+            }
+
+            $updates = [];
+            $seen = [];
+            foreach ($raw as $qidStr => $val) {
+                $qid = (int)$qidStr;
+                if ($qid <= 0) {
+                    continue;
+                }
+                if (empty($allowedIds[$qid])) {
+                    continue;
+                }
+
+                $valStr = is_string($val) ? trim($val) : (is_numeric($val) ? (string)$val : '');
+                if ($valStr === '') {
+                    $updates[$qid] = null;
+                    continue;
+                }
+
+                if (!preg_match('/^\d+$/', $valStr)) {
+                    $errors[] = 'Nomor soal harus berupa angka (atau dikosongkan).';
+                    break;
+                }
+
+                $no = (int)$valStr;
+                if ($no <= 0) {
+                    $errors[] = 'Nomor soal harus lebih dari 0 (atau dikosongkan).';
+                    break;
+                }
+
+                if (isset($seen[$no])) {
+                    $errors[] = 'Nomor soal tidak boleh duplikat. (Duplikat: ' . $no . ')';
+                    break;
+                }
+                $seen[$no] = true;
+
+                $updates[$qid] = $no;
+            }
+
+            if (!$errors) {
+                $pdo->beginTransaction();
+
+                // Avoid transient UNIQUE conflicts when (package_id, question_number) is unique.
+                // Reset to NULL first (MySQL allows multiple NULLs in UNIQUE indexes), then set final numbers.
+                $stmtReset = $pdo->prepare('UPDATE package_questions
+                    SET question_number = NULL
+                    WHERE package_id = :pid');
+                $stmtReset->execute([':pid' => $packageId]);
+
+                $stmtUp = $pdo->prepare('UPDATE package_questions
+                    SET question_number = :no
+                    WHERE package_id = :pid AND question_id = :qid');
+
+                foreach ($updates as $qid => $no) {
+                    if ($no === null) {
+                        // Already reset to NULL.
+                        continue;
+                    }
+                    $stmtUp->bindValue(':no', (int)$no, PDO::PARAM_INT);
+                    $stmtUp->bindValue(':pid', $packageId, PDO::PARAM_INT);
+                    $stmtUp->bindValue(':qid', (int)$qid, PDO::PARAM_INT);
+                    $stmtUp->execute();
+                }
+
+                $pdo->commit();
+                header('Location: ' . $returnUrl);
+                exit;
+            }
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            app_log('ERROR', 'Failed to update package question order', [
+                'package_id' => $packageId,
+                'error' => $e->getMessage(),
+            ]);
+            if (!$errors) {
+                $errors[] = 'Gagal menyimpan urutan/nomor soal.';
+            }
+        }
+    } elseif ($action === 'set_intro_content') {
         $contentId = (int)($_POST['content_id'] ?? 0);
         if ($contentId < 0) {
             $contentId = 0;
@@ -712,10 +819,19 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <div class="table-responsive">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+                <div class="small text-muted">
+                    Atur urutan dengan tombol <strong>↑/↓</strong>. Nomor akan dirapikan otomatis menjadi 1..N sesuai urutan.
+                </div>
+                <form method="post" class="m-0" id="updateOrderForm" action="<?php echo htmlspecialchars($returnUrl); ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                    <input type="hidden" name="action" value="update_question_numbers">
+                </form>
+            </div>
             <table class="table table-sm table-striped align-middle mb-0 table-fit small">
                 <thead>
                     <tr>
-                        <th style="width: 90px;">No Soal</th>
+                        <th style="width: 150px;">No Soal</th>
                         <th>Pertanyaan</th>
                         <th style="width: 170px;">Tipe Soal</th>
                         <th style="width: 120px;">Status</th>
@@ -728,7 +844,26 @@ include __DIR__ . '/../includes/header.php';
                 <?php else: ?>
                     <?php foreach ($items as $it): ?>
                         <tr>
-                            <td><?php echo ($it['question_number'] === null ? '-' : (int)$it['question_number']); ?></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input
+                                        type="text"
+                                        class="form-control form-control-sm"
+                                        style="max-width: 86px;"
+                                        inputmode="numeric"
+                                        readonly
+                                        aria-readonly="true"
+                                        form="updateOrderForm"
+                                        name="question_numbers[<?php echo (int)$it['id']; ?>]"
+                                        value="<?php echo ($it['question_number'] === null ? '' : (int)$it['question_number']); ?>"
+                                        aria-label="No soal"
+                                    >
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Geser urutan">
+                                        <button type="button" class="btn btn-outline-secondary fw-bold fs-5 lh-1" data-move="up" title="Geser ke atas" aria-label="Geser ke atas">▲</button>
+                                        <button type="button" class="btn btn-outline-secondary fw-bold fs-5 lh-1" data-move="down" title="Geser ke bawah" aria-label="Geser ke bawah">▼</button>
+                                    </div>
+                                </div>
+                            </td>
                             <?php
                                 $itPlain = preg_replace('/\s+/', ' ', trim(strip_tags((string)($it['pertanyaan'] ?? ''))));
                                 $itPlain = mb_substr($itPlain, 0, 160);
@@ -754,15 +889,16 @@ include __DIR__ . '/../includes/header.php';
                             <td>
                                 <div class="d-flex gap-1 flex-wrap justify-content-end">
                                     <a class="btn btn-outline-secondary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>" title="Lihat" aria-label="Lihat">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
-                                            <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                                            <circle cx="12" cy="12" r="3" />
                                         </svg>
                                         <span class="visually-hidden">Lihat</span>
                                     </a>
                                     <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>" title="Edit" aria-label="Edit">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                                            <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.5 9.5a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.5-9.5zM11.207 2L3 10.207V11h.793L12 2.793 11.207 2z"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 20h9" />
+                                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                                         </svg>
                                         <span class="visually-hidden">Edit</span>
                                     </a>
@@ -771,9 +907,12 @@ include __DIR__ . '/../includes/header.php';
                                         <input type="hidden" name="action" value="remove_question">
                                         <input type="hidden" name="question_id" value="<?php echo (int)$it['id']; ?>">
                                         <button type="submit" class="btn btn-outline-danger btn-sm px-2 d-inline-flex align-items-center justify-content-center" title="Hapus" aria-label="Hapus">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0V6zm2 .0a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0V6z"/>
-                                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2H5.5l1-1h3l1 1H14.5a1 1 0 0 1 1 1zM4 4v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4H4z"/>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M19 6l-1 14H6L5 6" />
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
                                             </svg>
                                             <span class="visually-hidden">Hapus</span>
                                         </button>
@@ -785,7 +924,77 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
                 </tbody>
             </table>
+
+            <div class="d-flex justify-content-end mt-2">
+                <button type="submit" form="updateOrderForm" class="btn btn-primary btn-sm" <?php echo !$items ? 'disabled' : ''; ?>>Simpan Urutan</button>
+            </div>
         </div>
+
+        <script>
+        (function () {
+            var form = document.getElementById('updateOrderForm');
+            var table = document.querySelector('.table-responsive table');
+            if (!form || !table) return;
+
+            var getRows = function () {
+                var tbody = table.tBodies && table.tBodies[0] ? table.tBodies[0] : null;
+                if (!tbody) return [];
+                return Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+            };
+
+            var updateButtons = function () {
+                var rows = getRows();
+                rows.forEach(function (tr, idx) {
+                    var up = tr.querySelector('button[data-move="up"]');
+                    var down = tr.querySelector('button[data-move="down"]');
+                    if (up) up.disabled = (idx === 0);
+                    if (down) down.disabled = (idx === rows.length - 1);
+                });
+            };
+
+            var renumber = function () {
+                var rows = getRows();
+                var n = 1;
+                rows.forEach(function (tr) {
+                    var input = tr.querySelector('input[name^="question_numbers["]');
+                    if (!input) return;
+                    input.value = String(n);
+                    n++;
+                });
+            };
+
+            var moveRow = function (tr, direction) {
+                if (!tr || !tr.parentNode) return;
+                if (direction === 'up') {
+                    var prev = tr.previousElementSibling;
+                    if (prev) {
+                        tr.parentNode.insertBefore(tr, prev);
+                    }
+                } else if (direction === 'down') {
+                    var next = tr.nextElementSibling;
+                    if (next) {
+                        tr.parentNode.insertBefore(next, tr);
+                    }
+                }
+                renumber();
+                updateButtons();
+            };
+
+            table.addEventListener('click', function (ev) {
+                var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-move]') : null;
+                if (!btn) return;
+                var dir = btn.getAttribute('data-move');
+                if (!dir) return;
+                var tr = btn.closest('tr');
+                if (!tr) return;
+                ev.preventDefault();
+                moveRow(tr, dir);
+            });
+
+            // Initial state: reflect current ordering without auto-saving.
+            updateButtons();
+        })();
+        </script>
         </div>
     </div>
 </div>

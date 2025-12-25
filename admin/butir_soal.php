@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
 function build_butir_soal_return_url(array $get): string {
-    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri', 'page'];
+    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri', 'per_page', 'page'];
     $parts = [];
     foreach ($allowed as $k) {
         if (!isset($get[$k])) {
@@ -27,7 +27,12 @@ $page = (int)($_GET['page'] ?? 1);
 if ($page < 1) {
     $page = 1;
 }
-$perPage = 25;
+
+$perPage = (int)($_GET['per_page'] ?? 25);
+$allowedPerPage = [10, 25, 50, 100];
+if (!in_array($perPage, $allowedPerPage, true)) {
+    $perPage = 25;
+}
 $offset = ($page - 1) * $perPage;
 
 $subjects = [];
@@ -186,6 +191,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
 
                 <input type="hidden" name="page" value="<?php echo (int)$page; ?>">
+                <input type="hidden" name="per_page" value="<?php echo (int)$perPage; ?>">
 
                 <div class="col-12">
                     <div class="d-flex gap-2">
@@ -328,20 +334,53 @@ include __DIR__ . '/../includes/header.php';
                 if ($filterSubjectId > 0) $baseParams['filter_subject_id'] = (string)$filterSubjectId;
                 if ($filterMateri !== '') $baseParams['filter_materi'] = $filterMateri;
                 if ($filterSubmateri !== '') $baseParams['filter_submateri'] = $filterSubmateri;
+                if ($perPage !== 25) $baseParams['per_page'] = (string)$perPage;
 
                 $makeUrl = function (int $p) use ($baseParams): string {
                     $params = $baseParams;
                     $params['page'] = (string)$p;
                     return 'butir_soal.php?' . http_build_query($params);
                 };
+
+                // Windowed page numbers (max 5)
+                $maxLinks = 5;
+                $startPage = max(1, $page - (int)floor($maxLinks / 2));
+                $endPage = min($totalPages, $startPage + $maxLinks - 1);
+                $startPage = max(1, $endPage - $maxLinks + 1);
             ?>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <div class="small text-muted">Halaman <?php echo (int)$page; ?> dari <?php echo (int)$totalPages; ?></div>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Pagination">
-                    <a class="btn btn-outline-secondary<?php echo $page <= 1 ? ' disabled' : ''; ?>" href="<?php echo $page <= 1 ? '#' : htmlspecialchars($makeUrl(1)); ?>">Awal</a>
-                    <a class="btn btn-outline-secondary<?php echo $page <= 1 ? ' disabled' : ''; ?>" href="<?php echo $page <= 1 ? '#' : htmlspecialchars($makeUrl($page - 1)); ?>">&laquo;</a>
-                    <a class="btn btn-outline-secondary<?php echo $page >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo $page >= $totalPages ? '#' : htmlspecialchars($makeUrl($page + 1)); ?>">&raquo;</a>
-                    <a class="btn btn-outline-secondary<?php echo $page >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo $page >= $totalPages ? '#' : htmlspecialchars($makeUrl($totalPages)); ?>">Akhir</a>
+            <div class="card-footer">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Pagination">
+                        <a class="btn btn-outline-secondary<?php echo $page <= 1 ? ' disabled' : ''; ?>" href="<?php echo $page <= 1 ? '#' : htmlspecialchars($makeUrl(1)); ?>">Awal</a>
+                        <a class="btn btn-outline-secondary<?php echo $page <= 1 ? ' disabled' : ''; ?>" href="<?php echo $page <= 1 ? '#' : htmlspecialchars($makeUrl($page - 1)); ?>">&laquo;</a>
+
+                        <?php for ($p = $startPage; $p <= $endPage; $p++): ?>
+                            <?php $isActive = ($p === (int)$page); ?>
+                            <a class="btn fw-semibold <?php echo $isActive ? 'btn-primary' : 'btn-outline-secondary'; ?>" href="<?php echo $isActive ? '#' : htmlspecialchars($makeUrl($p)); ?>"<?php echo $isActive ? ' aria-current=\"page\"' : ''; ?>><?php echo (int)$p; ?></a>
+                        <?php endfor; ?>
+
+                        <a class="btn btn-outline-secondary<?php echo $page >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo $page >= $totalPages ? '#' : htmlspecialchars($makeUrl($page + 1)); ?>">&raquo;</a>
+                        <a class="btn btn-outline-secondary<?php echo $page >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo $page >= $totalPages ? '#' : htmlspecialchars($makeUrl($totalPages)); ?>">Akhir</a>
+                    </div>
+
+                    <form method="get" class="d-flex align-items-center gap-2 m-0">
+                        <?php if ($filterSubjectId > 0): ?>
+                            <input type="hidden" name="filter_subject_id" value="<?php echo (int)$filterSubjectId; ?>">
+                        <?php endif; ?>
+                        <?php if ($filterMateri !== ''): ?>
+                            <input type="hidden" name="filter_materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
+                        <?php endif; ?>
+                        <?php if ($filterSubmateri !== ''): ?>
+                            <input type="hidden" name="filter_submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
+                        <?php endif; ?>
+                        <input type="hidden" name="page" value="1">
+
+                        <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit();" aria-label="Jumlah per halaman">
+                            <?php foreach ([10, 25, 50, 100] as $pp): ?>
+                                <option value="<?php echo (int)$pp; ?>"<?php echo $perPage === (int)$pp ? ' selected' : ''; ?>><?php echo (int)$pp; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
                 </div>
             </div>
         <?php endif; ?>
