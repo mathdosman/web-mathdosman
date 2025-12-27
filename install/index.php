@@ -229,24 +229,9 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Import database
-        // 1) Always load schema from database.sql.
-        // 2) If database_snapshot.sql exists, load it as DATA dump (INSERTs) to seed current content.
-        // This avoids FK creation ordering issues that can happen with full schema+data dumps.
+        // Import database schema only (no seed data)
         $schemaFile = __DIR__ . '/../database.sql';
         importSqlFile($pdo, $dbName, $schemaFile);
-
-        $snapshotFile = __DIR__ . '/../database_snapshot.sql';
-        if (file_exists($snapshotFile)) {
-            // Data dumps can be ordered alphabetically (not by FK dependency).
-            // Temporarily disable FK checks to allow inserts to load cleanly.
-            $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
-            try {
-                importSqlFile($pdo, $dbName, $snapshotFile);
-            } finally {
-                $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
-            }
-        }
 
         // Pastikan ada akun admin minimal jika tabel users kosong (jaga-jaga jika import schema saja)
         // Default: admin / 123456
