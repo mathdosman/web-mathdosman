@@ -613,7 +613,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                 </div>
                 <?php if (trim((string)($package['description'] ?? '')) !== ''): ?>
                     <div class="oke">
-                        <div class="text-muted"><?php echo $renderHtml((string)($package['description'] ?? '')); ?></div>
+                        <div class="text-muted richtext-content"><?php echo $renderHtml((string)($package['description'] ?? '')); ?></div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -699,7 +699,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                         </div>
 
                         <div class="oke">
-                            <div class="mb-3"><?php echo $renderHtml((string)($q['pertanyaan'] ?? '')); ?></div>
+                            <div class="mb-3 richtext-content"><?php echo $renderHtml((string)($q['pertanyaan'] ?? '')); ?></div>
 
                             <?php if ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks'): ?>
                                 <?php
@@ -765,7 +765,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                             <div class="<?php echo $boxClass; ?>">
                                                 <div class="opsi-row">
                                                     <div class="opsi-label fw-semibold"><?php echo htmlspecialchars($label); ?>.</div>
-                                                    <div class="opsi-content"><?php echo $renderHtml($val); ?></div>
+                                                    <div class="opsi-content richtext-content"><?php echo $renderHtml($val); ?></div>
                                                     <?php if ($badgeLabel !== ''): ?>
                                                         <div class="ms-auto <?php echo $badgeClass; ?>" style="white-space:nowrap;">
                                                             <?php echo htmlspecialchars($badgeLabel); ?>
@@ -831,7 +831,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
-                                                <div><?php echo $renderHtml($st); ?></div>
+                                                        <div class="richtext-content"><?php echo $renderHtml($st); ?></div>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -893,7 +893,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                             <div class="fw-semibold mb-1">Kolom A</div>
                                             <ol class="mb-0 ps-3">
                                                 <?php foreach ($left as $v): ?>
-                                                    <li><?php echo $renderHtml($v); ?></li>
+                                                        <li class="richtext-content"><?php echo $renderHtml($v); ?></li>
                                                 <?php endforeach; ?>
                                             </ol>
                                         </div>
@@ -901,7 +901,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                             <div class="fw-semibold mb-1">Kolom B</div>
                                             <ol class="mb-0 ps-3">
                                                 <?php foreach ($right as $v): ?>
-                                                    <li><?php echo $renderHtml($v); ?></li>
+                                                        <li class="richtext-content"><?php echo $renderHtml($v); ?></li>
                                                 <?php endforeach; ?>
                                             </ol>
                                         </div>
@@ -928,7 +928,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                     <div class="mt-3 pt-2 border-top">
                                         <div class="small text-muted">Jawaban</div>
                                         <div class="mt-1 form-control border-success bg-success-subtle" style="height:auto;">
-                                            <?php echo $renderHtml((string)($q['jawaban_benar'] ?? '')); ?>
+                                                    <div class="richtext-content"><?php echo $renderHtml((string)($q['jawaban_benar'] ?? '')); ?></div>
                                         </div>
                                     </div>
                                 <?php elseif ($tipe === 'Benar/Salah' || $tipe === 'Menjodohkan'): ?>
@@ -964,7 +964,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                     </div>
                                     <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
                                         <div class="border rounded p-2 bg-warning-subtle small text-break">
-                                            <?php echo $penyelesaianRendered; ?>
+                                                        <div class="richtext-content"><?php echo $penyelesaianRendered; ?></div>
                                         </div>
                                     </div>
                                 </div>
