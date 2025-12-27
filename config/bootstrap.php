@@ -69,6 +69,17 @@ function app_base_url_host(string $url): string
     return strtolower($host);
 }
 
+function app_base_url_origin(string $url): string
+{
+    $host = strtolower((string)(parse_url($url, PHP_URL_HOST) ?? ''));
+    $port = (int)(parse_url($url, PHP_URL_PORT) ?? 0);
+    if ($host === '') {
+        return '';
+    }
+
+    return ($port > 0) ? ($host . ':' . $port) : $host;
+}
+
 function app_request_host(): string
 {
     $host = (string)($_SERVER['HTTP_HOST'] ?? '');
@@ -77,6 +88,11 @@ function app_request_host(): string
     // Strip port
     $host = preg_replace('/:\d+$/', '', $host) ?? $host;
     return $host;
+}
+
+function app_request_origin(): string
+{
+    return strtolower(trim((string)($_SERVER['HTTP_HOST'] ?? '')));
 }
 
 // Best-effort base_url auto-detect when config is missing/empty.
@@ -93,12 +109,21 @@ if (!isset($base_url) || !is_string($base_url) || trim($base_url) === '' || (def
 // to avoid links jumping to an old/canonical domain.
 $currentBaseUrl = app_current_base_url();
 if (is_string($currentBaseUrl) && $currentBaseUrl !== '' && isset($base_url) && is_string($base_url) && trim($base_url) !== '') {
+    $requestOrigin = app_request_origin();
+    $configuredOrigin = app_base_url_origin($base_url);
+    $currentOrigin = app_base_url_origin($currentBaseUrl);
+
     $requestHost = app_request_host();
     $configuredHost = app_base_url_host($base_url);
     $currentHost = app_base_url_host($currentBaseUrl);
 
     // If configured host differs from what is being accessed now, follow the current request.
-    if ($requestHost !== '' && $configuredHost !== '' && $configuredHost !== $requestHost) {
+    // If the origin differs (host or port), follow what is being accessed now.
+    if ($requestOrigin !== '' && $configuredOrigin !== '' && $configuredOrigin !== $requestOrigin) {
+        $base_url = $currentBaseUrl;
+    } elseif ($requestHost !== '' && $configuredHost !== '' && $configuredHost !== $requestHost) {
+        $base_url = $currentBaseUrl;
+    } elseif ($configuredOrigin !== '' && $currentOrigin !== '' && $configuredOrigin !== $currentOrigin) {
         $base_url = $currentBaseUrl;
     } elseif ($configuredHost !== '' && $currentHost !== '' && $configuredHost !== $currentHost) {
         $base_url = $currentBaseUrl;
@@ -110,4 +135,9 @@ if (is_string($currentBaseUrl) && $currentBaseUrl !== '' && isset($base_url) && 
             $base_url = $currentBaseUrl;
         }
     }
+}
+
+// Normalize base_url to avoid accidental double slashes in generated URLs.
+if (isset($base_url) && is_string($base_url)) {
+    $base_url = rtrim(trim($base_url), '/');
 }
