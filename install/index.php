@@ -57,6 +57,146 @@ function updateConfigDbCredentials(string $dbHost, string $dbName, string $dbUse
     file_put_contents($configPath, $content);
 }
 
+/**
+ * Split SQL dump into executable statements.
+ * Handles basic quotes and comments. Designed for typical mysqldump output
+ * (tables + inserts) used by this project.
+ */
+function splitSqlStatements(string $sql): array
+{
+    $statements = [];
+    $buffer = '';
+
+    $len = strlen($sql);
+    $inSingle = false;
+    $inDouble = false;
+    $inBacktick = false;
+    $inLineComment = false;
+    $inBlockComment = false;
+
+    for ($i = 0; $i < $len; $i++) {
+        $ch = $sql[$i];
+        $next = ($i + 1 < $len) ? $sql[$i + 1] : '';
+
+        if ($inLineComment) {
+            if ($ch === "\n") {
+                $inLineComment = false;
+                $buffer .= $ch;
+            }
+            continue;
+        }
+
+        if ($inBlockComment) {
+            if ($ch === '*' && $next === '/') {
+                $inBlockComment = false;
+                $i++;
+            }
+            continue;
+        }
+
+        // Start of comments (only when not inside quotes)
+        if (!$inSingle && !$inDouble && !$inBacktick) {
+            if ($ch === '-' && $next === '-') {
+                // MySQL treats "-- " as comment; still safe to treat any "--" at line start as comment in dumps.
+                $inLineComment = true;
+                $i++;
+                continue;
+            }
+            if ($ch === '#') {
+                $inLineComment = true;
+                continue;
+            }
+            if ($ch === '/' && $next === '*') {
+                $inBlockComment = true;
+                $i++;
+                continue;
+            }
+        }
+
+        // Toggle quote states
+        if ($ch === "\\") {
+            // Escape next char inside quoted strings
+            $buffer .= $ch;
+            if ($i + 1 < $len) {
+                $buffer .= $sql[$i + 1];
+                $i++;
+            }
+            continue;
+        }
+
+        if (!$inDouble && !$inBacktick && $ch === "'") {
+            $inSingle = !$inSingle;
+            $buffer .= $ch;
+            continue;
+        }
+        if (!$inSingle && !$inBacktick && $ch === '"') {
+            $inDouble = !$inDouble;
+            $buffer .= $ch;
+            continue;
+        }
+        if (!$inSingle && !$inDouble && $ch === '`') {
+            $inBacktick = !$inBacktick;
+            $buffer .= $ch;
+            continue;
+        }
+
+        // Statement boundary
+        if (!$inSingle && !$inDouble && !$inBacktick && $ch === ';') {
+            $stmt = trim($buffer);
+            if ($stmt !== '') {
+                $statements[] = $stmt;
+            }
+            $buffer = '';
+            continue;
+        }
+
+        $buffer .= $ch;
+    }
+
+    $tail = trim($buffer);
+    if ($tail !== '') {
+        $statements[] = $tail;
+    }
+
+    return $statements;
+}
+
+/**
+ * Import a SQL dump file into the given database.
+ * Skips CREATE DATABASE / USE statements so it works on shared hosting.
+ */
+function importSqlFile(PDO $pdo, string $dbName, string $sqlFilePath): void
+{
+    if (!is_file($sqlFilePath)) {
+        return;
+    }
+
+    $sql = file_get_contents($sqlFilePath);
+    if ($sql === false) {
+        return;
+    }
+
+    // Strip UTF-8 BOM if present (common when file was generated on Windows).
+    if (strncmp($sql, "\xEF\xBB\xBF", 3) === 0) {
+        $sql = substr($sql, 3);
+    }
+
+    $pdo->exec('USE `'.$dbName.'`');
+
+    foreach (splitSqlStatements($sql) as $stmt) {
+        $stmt = trim($stmt);
+        if ($stmt === '') {
+            continue;
+        }
+        $upper = strtoupper(ltrim($stmt));
+        if (str_starts_with($upper, 'CREATE DATABASE') || str_starts_with($upper, 'USE ')) {
+            continue;
+        }
+
+        $pdo->exec($stmt);
+    }
+}
+
 if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $rootHost = trim($_POST['root_host'] ?? 'localhost');
     $rootUser = trim($_POST['root_user'] ?? 'root');
@@ -90,33 +230,42 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Import database
-        // Prefer snapshot (schema + data) jika tersedia agar instalasi tidak bergantung pada seed/HTML.
+        // 1) Always load schema from database.sql.
+        // 2) If database_snapshot.sql exists, load it as DATA dump (INSERTs) to seed current content.
+        // This avoids FK creation ordering issues that can happen with full schema+data dumps.
+        $schemaFile = __DIR__ . '/../database.sql';
+        importSqlFile($pdo, $dbName, $schemaFile);
+
         $snapshotFile = __DIR__ . '/../database_snapshot.sql';
-        $sqlFile = file_exists($snapshotFile) ? $snapshotFile : (__DIR__ . '/../database.sql');
-        if (file_exists($sqlFile)) {
-            $sql = file_get_contents($sqlFile);
-            if ($sql !== false) {
-                // Pastikan menggunakan DB target
-                $sql = preg_replace('/USE `?[^`]+`?;?/i', 'USE `'.$dbName.'`;', $sql, 1);
-                $pdo->exec($sql);
+        if (file_exists($snapshotFile)) {
+            // Data dumps can be ordered alphabetically (not by FK dependency).
+            // Temporarily disable FK checks to allow inserts to load cleanly.
+            $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+            try {
+                importSqlFile($pdo, $dbName, $snapshotFile);
+            } finally {
+                $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
             }
         }
 
-        // Pastikan akun admin default tersedia (agar login tidak gagal setelah instalasi)
-        // Password default: 123456
+        // Pastikan ada akun admin minimal jika tabel users kosong (jaga-jaga jika import schema saja)
+        // Default: admin / 123456
         $pdo->exec('USE `'.$dbName.'`');
-        $adminHash = password_hash('123456', PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, name, role)
-            VALUES (:u, :ph, :n, 'admin')
-            ON DUPLICATE KEY UPDATE
-                password_hash = VALUES(password_hash),
-                name = VALUES(name),
-                role = VALUES(role)");
-        $stmt->execute([
-            ':u' => 'admin',
-            ':ph' => $adminHash,
-            ':n' => 'Administrator',
-        ]);
+        try {
+            $usersCount = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+            if ($usersCount <= 0) {
+                $adminHash = password_hash('123456', PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, name, role)
+                    VALUES (:u, :ph, :n, 'admin')");
+                $stmt->execute([
+                    ':u' => 'admin',
+                    ':ph' => $adminHash,
+                    ':n' => 'Administrator',
+                ]);
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
 
         // Coba buat user aplikasi dan beri hak akses ke database
         $appUserCreated = false;

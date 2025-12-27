@@ -131,29 +131,3 @@ CREATE TABLE IF NOT EXISTS page_views (
     KEY idx_page_views_views (views),
     KEY idx_page_views_last_viewed (last_viewed_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- User admin contoh (password: 123456)
-INSERT INTO users (username, password_hash, name, role) VALUES
-('admin', '$2y$10$2cKMz2pKAt0np3IvSwyCxOZ7rJjk1z/6GkVGR1Zir/Tc1sOzoVnTu', 'Administrator', 'admin')
-ON DUPLICATE KEY UPDATE
-    password_hash = VALUES(password_hash),
-    name = VALUES(name),
-    role = VALUES(role);
-
--- Tabel konten (materi/berita)
-CREATE TABLE IF NOT EXISTS contents (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    type ENUM('materi','berita') NOT NULL DEFAULT 'materi',
-    title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL,
-    materi VARCHAR(150) NULL,
-    submateri VARCHAR(150) NULL,
-    excerpt VARCHAR(500) NULL,
-    content_html MEDIUMTEXT NULL,
-    status ENUM('draft','published') NOT NULL DEFAULT 'draft',
-    published_at TIMESTAMP NULL DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uniq_contents_slug (slug),
-    KEY idx_contents_status (status),
-    KEY idx_contents_published_at (published_at)
-);
