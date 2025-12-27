@@ -36,6 +36,67 @@ $page_title = 'Daftar Isi';
 $body_class = 'front-page daftar-isi';
 $use_mathjax = true;
 
+if (!function_exists('rgb_to_hex')) {
+    function rgb_to_hex(int $r, int $g, int $b): string
+    {
+        $r = max(0, min(255, $r));
+        $g = max(0, min(255, $g));
+        $b = max(0, min(255, $b));
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+}
+
+if (!function_exists('hsl_to_rgb')) {
+    function hsl_to_rgb(int $h, int $s, int $l): array
+    {
+        $h = $h % 360;
+        if ($h < 0) {
+            $h += 360;
+        }
+        $s = max(0, min(100, $s)) / 100;
+        $l = max(0, min(100, $l)) / 100;
+
+        $c = (1 - abs(2 * $l - 1)) * $s;
+        $x = $c * (1 - abs(fmod(($h / 60), 2) - 1));
+        $m = $l - ($c / 2);
+
+        $r1 = 0;
+        $g1 = 0;
+        $b1 = 0;
+        if ($h < 60) {
+            $r1 = $c;
+            $g1 = $x;
+            $b1 = 0;
+        } elseif ($h < 120) {
+            $r1 = $x;
+            $g1 = $c;
+            $b1 = 0;
+        } elseif ($h < 180) {
+            $r1 = 0;
+            $g1 = $c;
+            $b1 = $x;
+        } elseif ($h < 240) {
+            $r1 = 0;
+            $g1 = $x;
+            $b1 = $c;
+        } elseif ($h < 300) {
+            $r1 = $x;
+            $g1 = 0;
+            $b1 = $c;
+        } else {
+            $r1 = $c;
+            $g1 = 0;
+            $b1 = $x;
+        }
+
+        $r = (int)round(($r1 + $m) * 255);
+        $g = (int)round(($g1 + $m) * 255);
+        $b = (int)round(($b1 + $m) * 255);
+
+        return [$r, $g, $b];
+    }
+}
+
 $page = (int)($_GET['page'] ?? 1);
 if ($page < 1) {
     $page = 1;
@@ -44,14 +105,34 @@ if ($page < 1) {
 $perPage = 16; // 4 kolom x 4 baris
 
 $total = 0;
-$packages = [];
+$feedItems = [];
 $totalPages = 1;
 
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
+        $packageCount = 0;
+        $contentCount = 0;
+
         $stmt = $pdo->query('SELECT COUNT(*) AS cnt FROM packages WHERE status = "published"');
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total = (int)($row['cnt'] ?? 0);
+        $packageCount = (int)$stmt->fetchColumn();
+
+        // Prefer excluding contents that are already attached as package intro (same behavior as homepage).
+        try {
+            $stmt = $pdo->query('SELECT COUNT(*)
+                FROM contents c
+                WHERE c.status = "published"
+                  AND c.id NOT IN (
+                    SELECT intro_content_id
+                    FROM packages
+                    WHERE status = "published" AND intro_content_id IS NOT NULL
+                  )');
+            $contentCount = (int)$stmt->fetchColumn();
+        } catch (Throwable $e2) {
+            $stmt = $pdo->query('SELECT COUNT(*) FROM contents WHERE status = "published"');
+            $contentCount = (int)$stmt->fetchColumn();
+        }
+
+        $total = $packageCount + $contentCount;
 
         $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
         if ($totalPages < 1) {
@@ -63,23 +144,116 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
         $offset = ($page - 1) * $perPage;
 
-        $sql = 'SELECT p.id, p.code, p.name, p.materi, p.submateri, p.created_at, p.published_at,
-                COUNT(DISTINCT pq.question_id) AS total_questions
-            FROM packages p
-            LEFT JOIN package_questions pq ON pq.package_id = p.id
-            WHERE p.status = "published"
-            GROUP BY p.id
-            ORDER BY COALESCE(p.published_at, p.created_at) DESC
+        // Unified feed (packages + contents) ordered by publish/created date, same as homepage.
+        // NOTE: we avoid selecting content_html to keep payload small.
+        $sql = 'SELECT * FROM (
+                SELECT
+                    "package" AS kind,
+                    p.id,
+                    p.name AS title,
+                    NULL AS slug,
+                    NULL AS type,
+                    p.code,
+                    p.materi,
+                    p.submateri,
+                    p.description,
+                    NULL AS excerpt,
+                    p.created_at,
+                    p.published_at,
+                    COUNT(DISTINCT IF(q.status_soal = "published", pq.question_id, NULL)) AS published_questions
+                FROM packages p
+                LEFT JOIN package_questions pq ON pq.package_id = p.id
+                LEFT JOIN questions q ON q.id = pq.question_id
+                WHERE p.status = "published"
+                GROUP BY p.id
+
+                UNION ALL
+
+                SELECT
+                    "content" AS kind,
+                    c.id,
+                    c.title,
+                    c.slug,
+                    c.type,
+                    NULL AS code,
+                    c.materi,
+                    c.submateri,
+                    NULL AS description,
+                    c.excerpt,
+                    c.created_at,
+                    c.published_at,
+                    NULL AS published_questions
+                FROM contents c
+                WHERE c.status = "published"
+                  AND c.id NOT IN (
+                    SELECT intro_content_id
+                    FROM packages
+                    WHERE status = "published" AND intro_content_id IS NOT NULL
+                  )
+            ) t
+            ORDER BY COALESCE(t.published_at, t.created_at) DESC, t.id DESC
             LIMIT :lim OFFSET :off';
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        $packages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Backward compatibility if intro_content_id column isn't available.
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $feedItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $e2) {
+            $sqlFallback = 'SELECT * FROM (
+                    SELECT
+                        "package" AS kind,
+                        p.id,
+                        p.name AS title,
+                        NULL AS slug,
+                        NULL AS type,
+                        p.code,
+                        p.materi,
+                        p.submateri,
+                        p.description,
+                        NULL AS excerpt,
+                        p.created_at,
+                        p.published_at,
+                        COUNT(DISTINCT IF(q.status_soal = "published", pq.question_id, NULL)) AS published_questions
+                    FROM packages p
+                    LEFT JOIN package_questions pq ON pq.package_id = p.id
+                    LEFT JOIN questions q ON q.id = pq.question_id
+                    WHERE p.status = "published"
+                    GROUP BY p.id
+
+                    UNION ALL
+
+                    SELECT
+                        "content" AS kind,
+                        c.id,
+                        c.title,
+                        c.slug,
+                        c.type,
+                        NULL AS code,
+                        c.materi,
+                        c.submateri,
+                        NULL AS description,
+                        c.excerpt,
+                        c.created_at,
+                        c.published_at,
+                        NULL AS published_questions
+                    FROM contents c
+                    WHERE c.status = "published"
+                ) t
+                ORDER BY COALESCE(t.published_at, t.created_at) DESC, t.id DESC
+                LIMIT :lim OFFSET :off';
+
+            $stmt = $pdo->prepare($sqlFallback);
+            $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $feedItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
     } catch (Throwable $e) {
         $total = 0;
-        $packages = [];
+        $feedItems = [];
         $totalPages = 1;
     }
 }
@@ -97,56 +271,90 @@ include __DIR__ . '/includes/header.php';
         <div class="d-flex align-items-end justify-content-between gap-2 mb-3">
             <div>
                 <h1 class="h4 mb-1">Daftar Isi</h1>
-                <div class="text-muted small">Seluruh paket soal (16 paket per halaman).</div>
+                <div class="text-muted small">Seluruh konten materi &amp; paket soal (16 item per halaman).</div>
             </div>
-            <div class="text-muted small">Total: <?php echo (int)$total; ?> paket</div>
+            <div class="text-muted small">Total: <?php echo (int)$total; ?> item</div>
         </div>
 
         <?php if (!$dbPreflightOk): ?>
             <div class="alert alert-warning">Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.</div>
-        <?php elseif (!$packages): ?>
-            <div class="alert alert-info">Belum ada paket soal yang tersedia.</div>
+        <?php elseif (!$feedItems): ?>
+            <div class="alert alert-info">Belum ada konten atau paket soal yang tersedia.</div>
         <?php else: ?>
             <div class="row g-3 justify-content-center toc-grid">
-                <?php foreach ($packages as $p): ?>
+                <?php foreach ($feedItems as $row): ?>
                     <?php
-                        $publishedAt = (string)($p['published_at'] ?? '');
+                        $kind = (string)($row['kind'] ?? '');
+
+                        $publishedAt = (string)($row['published_at'] ?? '');
                         if ($publishedAt === '') {
-                            $publishedAt = (string)($p['created_at'] ?? '');
+                            $publishedAt = (string)($row['created_at'] ?? '');
                         }
-                    ?>
-                    <?php
-                        $codeForAccent = (string)($p['code'] ?? '');
-                        if ($codeForAccent === '') {
-                            $codeForAccent = (string)($p['id'] ?? '');
+
+                        $cardTitle = '';
+                        $href = '#';
+                        $metaLeft = '';
+                        $excerpt = '';
+                        $needsEllipsis = false;
+                        $accentKey = '';
+
+                        if ($kind === 'content') {
+                            $t = (string)($row['type'] ?? 'materi');
+                            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+                            $cardTitle = $badge . ' - ' . (string)($row['title'] ?? '');
+                            $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
+                            $metaLeft = $badge;
+                            $rawExcerpt = strip_tags((string)($row['excerpt'] ?? ''));
+                            $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
+                            $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
+                            $needsEllipsis = mb_strlen((string)$rawExcerpt) > 160;
+                            $accentKey = 'content-' . (string)($row['slug'] ?? $row['id'] ?? '');
+                        } else {
+                            $cardTitle = 'Paket Soal - ' . (string)($row['title'] ?? '');
+                            $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
+                            $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
+                            $raw = strip_tags((string)($row['description'] ?? ''));
+                            $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
+                            $excerpt = (string)mb_substr($raw, 0, 160);
+                            $needsEllipsis = mb_strlen((string)$raw) > 160;
+                            $accentKey = (string)($row['code'] ?? $row['id'] ?? '');
                         }
-                        $hue = abs((int)crc32($codeForAccent)) % 360;
-                        $accentStyle = '--toc-accent:hsl(' . $hue . ', 70%, 35%);';
+
+                        if ($accentKey === '') {
+                            $accentKey = (string)($row['id'] ?? '');
+                        }
+
+                        $hue = abs((int)crc32($accentKey)) % 360;
+                        [$r, $g, $b] = hsl_to_rgb($hue, 72, 42);
+                        $accentHex = rgb_to_hex($r, $g, $b);
+                        $accentRgb = $r . ', ' . $g . ', ' . $b;
+                        $accentStyle = '--package-accent:' . $accentHex . ';--package-accent-rgb:' . $accentRgb . ';';
                     ?>
                     <div class="col-12 col-md-6 col-lg-3">
-                        <a class="toc-card-link-wrapper" href="paket.php?code=<?php echo urlencode((string)($p['code'] ?? '')); ?>" style="<?php echo htmlspecialchars($accentStyle); ?>">
-                            <div class="card h-100 border toc-card">
-                                <div class="card-body py-3">
-                                    <h2 class="h6 mb-2">
-                                        <span class="toc-card-title"><?php echo htmlspecialchars((string)($p['name'] ?? '')); ?></span>
-                                    </h2>
+                        <div class="card h-100 post-card package-card" style="<?php echo htmlspecialchars($accentStyle); ?>">
+                            <div class="card-body">
+                                <div class="d-flex flex-column h-100">
+                                    <div class="mb-2">
+                                        <h3 class="package-card-title mb-1">
+                                            <a class="stretched-link text-decoration-none" href="<?php echo htmlspecialchars($href); ?>">
+                                                <?php echo htmlspecialchars($cardTitle); ?>
+                                            </a>
+                                        </h3>
 
-                                <div class="toc-card-sub text-muted small mb-2">
-                                    <?php if (!empty($p['materi'])): ?>
-                                        <span><?php echo htmlspecialchars((string)$p['materi']); ?></span>
-                                    <?php endif; ?>
-                                    <?php if (!empty($p['submateri'])): ?>
-                                        <span class="ms-1">&bull; <?php echo htmlspecialchars((string)$p['submateri']); ?></span>
-                                    <?php endif; ?>
-                                </div>
-
-                                    <div class="d-flex align-items-center justify-content-between gap-2 text-muted small toc-card-bottom">
-                                        <span><?php echo (int)($p['total_questions'] ?? 0); ?> soal</span>
-                                        <span><?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($publishedAt) : $publishedAt); ?></span>
+                                        <div class="package-card-meta text-muted small">
+                                            <?php echo htmlspecialchars($metaLeft); ?>
+                                            • Publish: <strong><?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($publishedAt) : $publishedAt); ?></strong>
+                                        </div>
                                     </div>
+
+                                    <?php if ($excerpt !== ''): ?>
+                                        <p class="text-muted mb-0 package-card-excerpt"><?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
+                                    <?php else: ?>
+                                        <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        </a>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
