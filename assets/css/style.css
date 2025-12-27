@@ -22,6 +22,19 @@ pre {
     overflow: auto;
 }
 
+/* Richtext tables (public pages) */
+.richtext-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.richtext-content th,
+.richtext-content td {
+    border: 1px solid var(--bs-border-color);
+    padding: 0.25rem 0.5rem;
+    vertical-align: top;
+}
+
 /* Tables that should never overflow the viewport */
 .table-fit {
     table-layout: fixed;

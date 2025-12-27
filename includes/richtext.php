@@ -35,7 +35,9 @@ function sanitize_rich_text(string $html): string
         'sub' => [],
         'sup' => [],
         'span' => [],
-        'table' => [],
+        // Keep basic table attributes so tables remain visually recognizable
+        // even after we strip inline styles.
+        'table' => ['border', 'cellpadding', 'cellspacing'],
         'thead' => [],
         'tbody' => [],
         'tfoot' => [],

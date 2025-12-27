@@ -108,6 +108,9 @@
 		remove_script_host: false,
 		plugins: 'lists link image table code autoresize',
 		toolbar: 'undo redo | bold italic underline | bullist numlist | link image table | code',
+		table_default_attributes: {
+			border: '1',
+		},
 		images_upload_handler: (blobInfo, progress) => {
 			return new Promise((resolve, reject) => {
 				try {
