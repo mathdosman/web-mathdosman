@@ -301,6 +301,38 @@
 
 <script>
 (() => {
+	// Auto-toggle button text for Bootstrap collapse triggers.
+	// Usage: add data-md-toggle-closed="Buka" and data-md-toggle-open="Tutup" on the button.
+	const buttons = document.querySelectorAll('[data-md-toggle-closed][data-md-toggle-open][data-bs-toggle="collapse"]');
+	if (!buttons.length) return;
+
+	const setText = (btn, expanded) => {
+		try {
+			const t = expanded ? (btn.getAttribute('data-md-toggle-open') || '') : (btn.getAttribute('data-md-toggle-closed') || '');
+			if (t) btn.textContent = t;
+		} catch (e) {}
+	};
+
+	buttons.forEach((btn) => {
+		try {
+			const targetSel = btn.getAttribute('data-bs-target') || btn.getAttribute('href') || '';
+			if (!targetSel) return;
+			const target = document.querySelector(targetSel);
+			if (!target) return;
+
+			// Initial state from aria-expanded
+			const expanded = (btn.getAttribute('aria-expanded') === 'true');
+			setText(btn, expanded);
+
+			target.addEventListener('shown.bs.collapse', () => setText(btn, true));
+			target.addEventListener('hidden.bs.collapse', () => setText(btn, false));
+		} catch (e) {}
+	});
+})();
+</script>
+
+<script>
+(() => {
 	// Automatically attach CSRF token to all POST forms.
 	document.addEventListener('DOMContentLoaded', () => {
 		const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';

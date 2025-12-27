@@ -3,6 +3,8 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
+$errors = [];
+
 function build_butir_soal_return_url(array $get): string {
     $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri', 'per_page', 'page'];
     $parts = [];
@@ -82,6 +84,47 @@ if ($filterSubmateri !== '' && !in_array($filterSubmateri, $submaterials, true))
     $filterSubmateri = '';
 }
 
+$returnUrl = build_butir_soal_return_url([
+    'filter_subject_id' => $filterSubjectId > 0 ? (string)$filterSubjectId : '0',
+    'filter_materi' => $filterMateri,
+    'filter_submateri' => $filterSubmateri,
+    'per_page' => (string)$perPage,
+    'page' => (string)$page,
+]);
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $action = (string)($_POST['action'] ?? '');
+
+    if ($action === 'delete_question') {
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            $errors[] = 'Butir soal tidak valid.';
+        } else {
+            try {
+                $pdo->beginTransaction();
+                try {
+                    // Remove references from packages first (safe even without foreign keys).
+                    $stmt = $pdo->prepare('DELETE FROM package_questions WHERE question_id = :id');
+                    $stmt->execute([':id' => $id]);
+
+                    $stmt = $pdo->prepare('DELETE FROM questions WHERE id = :id');
+                    $stmt->execute([':id' => $id]);
+
+                    $pdo->commit();
+                } catch (Throwable $e) {
+                    $pdo->rollBack();
+                    throw $e;
+                }
+
+                header('Location: ' . $returnUrl);
+                exit;
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal menghapus butir soal.';
+            }
+        }
+    }
+}
+
 $where = [];
 $params = [];
 if ($filterSubjectId > 0) {
@@ -111,6 +154,7 @@ try {
 $rows = [];
 try {
     $sql = 'SELECT q.id, q.subject_id, q.pertanyaan, q.tipe_soal, q.status_soal, q.materi, q.submateri, q.created_at,
+        q.jawaban_benar, q.penyelesaian,
         s.name AS subject_name,
         pk.cnt AS package_count,
         pk.codes AS package_codes
@@ -139,8 +183,6 @@ $totalPages = max(1, (int)ceil($total / $perPage));
 if ($page > $totalPages) {
     $page = $totalPages;
 }
-
-$returnUrl = build_butir_soal_return_url($_GET);
 
 $page_title = 'Butir Soal';
 include __DIR__ . '/../includes/header.php';
@@ -204,6 +246,15 @@ include __DIR__ . '/../includes/header.php';
 
     <div class="card">
         <div class="card-body p-0">
+            <?php if ($errors): ?>
+                <div class="alert alert-danger m-3 mb-0 py-2 small">
+                    <ul class="mb-0">
+                        <?php foreach ($errors as $e): ?>
+                            <li><?php echo htmlspecialchars((string)$e); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle mb-0 table-fit table-sm table-compact butir-soal-table">
                     <thead class="table-light">
@@ -211,16 +262,19 @@ include __DIR__ . '/../includes/header.php';
                             <th class="text-nowrap d-none d-sm-table-cell" style="width: 70px;">ID</th>
                             <th class="butir-col-info">Info</th>
                             <th>Soal</th>
-                            <th class="text-nowrap d-none d-md-table-cell" style="width: 110px;">Deskripsi</th>
-                            <th class="text-end text-nowrap butir-col-actions" style="width: 160px;">Aksi</th>
+                            <th class="text-end text-nowrap butir-col-actions">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (!$rows): ?>
                         <tr>
-                            <td colspan="5" class="text-center text-muted p-4">Tidak ada data.</td>
+                            <td colspan="4" class="text-center text-muted p-4">Tidak ada data.</td>
                         </tr>
                     <?php else: ?>
+                        <?php
+                            $iconYes = '<span class="text-success fw-semibold" title="Ada" aria-label="Ada">✓</span>';
+                            $iconNo = '<span class="text-muted" title="Kosong" aria-label="Kosong">—</span>';
+                        ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
                                 $tipe = (string)($r['tipe_soal'] ?? '');
@@ -269,6 +323,21 @@ include __DIR__ . '/../includes/header.php';
                                     <div class="text-muted small text-truncate d-none d-md-block" title="<?php echo htmlspecialchars($tipe); ?>">
                                         <?php echo htmlspecialchars($tipe); ?>
                                     </div>
+                                    <div class="mt-1 d-none d-md-block">
+                                        <?php if ($status === 'published'): ?>
+                                            <span class="badge text-bg-success">published</span>
+                                        <?php else: ?>
+                                            <span class="badge text-bg-secondary">draft</span>
+                                        <?php endif; ?>
+                                        <?php
+                                            $jawabanRaw = (string)($r['jawaban_benar'] ?? '');
+                                            $jawabanHas = trim(strip_tags($jawabanRaw)) !== '';
+                                            $penyRaw = (string)($r['penyelesaian'] ?? '');
+                                            $penyHas = trim(strip_tags($penyRaw)) !== '';
+                                        ?>
+                                        <span class="ms-2 small text-muted text-nowrap">J: <?php echo $jawabanHas ? $iconYes : $iconNo; ?></span>
+                                        <span class="ms-2 small text-muted text-nowrap">P: <?php echo $penyHas ? $iconYes : $iconNo; ?></span>
+                                    </div>
                                     <div class="mt-1">
                                         <?php if ($pkgCnt <= 0): ?>
                                             <span class="badge text-bg-light">Belum</span>
@@ -279,19 +348,12 @@ include __DIR__ . '/../includes/header.php';
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <td class="d-none d-md-table-cell">
-                                    <?php if ($status === 'published'): ?>
-                                        <span class="badge text-bg-success">published</span>
-                                    <?php else: ?>
-                                        <span class="badge text-bg-secondary">draft</span>
-                                    <?php endif; ?>
-                                </td>
                                 <td class="text-muted small">
                                     <div class="md-cell-clamp" title="<?php echo htmlspecialchars($qTextFull); ?>"><?php echo htmlspecialchars($qText); ?></div>
                                 </td>
                                 <td class="text-end">
-                                    <div style="display:grid;grid-template-columns:repeat(3,max-content);gap:.25rem;justify-content:end;">
-                                        <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat Soal" aria-label="Lihat Soal">
+                                    <div class="d-flex gap-1 flex-wrap justify-content-end">
+                                        <a class="btn btn-outline-secondary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat Soal" aria-label="Lihat Soal">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
                                                 <circle cx="12" cy="12" r="3"/>
@@ -299,7 +361,7 @@ include __DIR__ . '/../includes/header.php';
                                             <span class="visually-hidden">Lihat</span>
                                         </a>
 
-                                        <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Edit Soal" aria-label="Edit Soal">
+                                        <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Edit Soal" aria-label="Edit Soal">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                 <path d="M12 20h9"/>
                                                 <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
@@ -307,17 +369,21 @@ include __DIR__ . '/../includes/header.php';
                                             <span class="visually-hidden">Edit</span>
                                         </a>
 
-                                        <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Atur Paket" aria-label="Atur Paket">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M8 6h13"/>
-                                                <path d="M8 12h13"/>
-                                                <path d="M8 18h13"/>
-                                                <path d="M3 6h.01"/>
-                                                <path d="M3 12h.01"/>
-                                                <path d="M3 18h.01"/>
-                                            </svg>
-                                            <span class="visually-hidden">Paket</span>
-                                        </a>
+                                        <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Soal?" data-swal-text="Hapus butir soal ini? (Akan dikeluarkan juga dari semua paket)">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                            <input type="hidden" name="action" value="delete_question">
+                                            <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm px-2 d-inline-flex align-items-center justify-content-center" title="Hapus Soal" aria-label="Hapus Soal">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M8 6V4h8v2"/>
+                                                    <path d="M19 6l-1 14H6L5 6"/>
+                                                    <path d="M10 11v6"/>
+                                                    <path d="M14 11v6"/>
+                                                </svg>
+                                                <span class="visually-hidden">Hapus</span>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

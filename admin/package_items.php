@@ -531,7 +531,9 @@ try {
 
 $items = [];
 try {
-    $stmt = $pdo->prepare('SELECT q.id, q.pertanyaan, q.tipe_soal, q.status_soal, pq.question_number, pq.added_at
+    $stmt = $pdo->prepare('SELECT q.id, q.pertanyaan, q.tipe_soal, q.status_soal,
+            q.jawaban_benar, q.penyelesaian,
+            pq.question_number, pq.added_at
         FROM package_questions pq
         JOIN questions q ON q.id = pq.question_id
         WHERE pq.package_id = :pid
@@ -662,41 +664,47 @@ include __DIR__ . '/../includes/header.php';
                             <?php else: ?>
                                 <span class="small text-muted">Belum dipilih.</span>
                             <?php endif; ?>
+
+                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#pickIntroContent" aria-expanded="false" aria-controls="pickIntroContent" data-md-toggle-closed="Buka" data-md-toggle-open="Tutup">
+                                Buka
+                            </button>
                         </div>
                     </div>
 
-                    <form method="post" class="row g-2 align-items-end mt-2">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                        <input type="hidden" name="action" value="set_intro_content">
-                        <div class="col-12 col-md-10">
-                            <label class="form-label small mb-1">Pilih Konten</label>
-                            <select name="content_id" class="form-select form-select-sm">
-                                <option value="0">-- Tanpa materi --</option>
-                                <?php foreach ($contentOptions as $c): ?>
-                                    <?php
-                                        $cid = (int)($c['id'] ?? 0);
-                                        $ct = (string)($c['title'] ?? '');
-                                        $cs = (string)($c['status'] ?? '');
-                                        $ctype = (string)($c['type'] ?? '');
-                                        $cslug = (string)($c['slug'] ?? '');
-                                        $label = '[' . $ctype . '] ' . $ct;
-                                        if ($cs !== '') {
-                                            $label .= ' (' . $cs . ')';
-                                        }
-                                        if ($cslug !== '') {
-                                            $label .= ' — ' . $cslug;
-                                        }
-                                        $selected = ((int)($package['intro_content_id'] ?? 0) === $cid) ? 'selected' : '';
-                                    ?>
-                                    <option value="<?php echo (int)$cid; ?>" <?php echo $selected; ?>><?php echo htmlspecialchars($label); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="form-text small">Yang tampil ke publik hanya konten berstatus <strong>published</strong>. Admin tetap bisa memilih draft untuk persiapan.</div>
-                        </div>
-                        <div class="col-12 col-md-2 d-grid">
-                            <button type="submit" class="btn btn-primary btn-sm" <?php echo !$contentOptions ? 'disabled' : ''; ?>>Simpan</button>
-                        </div>
-                    </form>
+                    <div class="collapse mt-2" id="pickIntroContent">
+                        <form method="post" class="row g-2 align-items-end m-0">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                            <input type="hidden" name="action" value="set_intro_content">
+                            <div class="col-12 col-md-10">
+                                <label class="form-label small mb-1">Pilih Konten</label>
+                                <select name="content_id" class="form-select form-select-sm">
+                                    <option value="0">-- Tanpa materi --</option>
+                                    <?php foreach ($contentOptions as $c): ?>
+                                        <?php
+                                            $cid = (int)($c['id'] ?? 0);
+                                            $ct = (string)($c['title'] ?? '');
+                                            $cs = (string)($c['status'] ?? '');
+                                            $ctype = (string)($c['type'] ?? '');
+                                            $cslug = (string)($c['slug'] ?? '');
+                                            $label = '[' . $ctype . '] ' . $ct;
+                                            if ($cs !== '') {
+                                                $label .= ' (' . $cs . ')';
+                                            }
+                                            if ($cslug !== '') {
+                                                $label .= ' — ' . $cslug;
+                                            }
+                                            $selected = ((int)($package['intro_content_id'] ?? 0) === $cid) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?php echo (int)$cid; ?>" <?php echo $selected; ?>><?php echo htmlspecialchars($label); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="form-text small">Yang tampil ke publik hanya konten berstatus <strong>published</strong>. Admin tetap bisa memilih draft untuk persiapan.</div>
+                            </div>
+                            <div class="col-12 col-md-2 d-grid">
+                                <button type="submit" class="btn btn-primary btn-sm" <?php echo !$contentOptions ? 'disabled' : ''; ?>>Simpan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -831,17 +839,19 @@ include __DIR__ . '/../includes/header.php';
             <table class="table table-sm table-striped align-middle mb-0 table-fit small">
                 <thead>
                     <tr>
-                        <th style="width: 150px;">No Soal</th>
-                        <th>Pertanyaan</th>
-                        <th style="width: 170px;">Tipe Soal</th>
-                        <th style="width: 120px;">Status</th>
-                        <th style="width: 220px;">Aksi</th>
+                        <th style="width: 130px;">No Soal</th>
+                        <th>Soal</th>
+                        <th style="width: 160px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (!$items): ?>
-                    <tr><td colspan="5" class="text-center">Belum ada butir soal dalam paket ini.</td></tr>
+                    <tr><td colspan="3" class="text-center">Belum ada butir soal dalam paket ini.</td></tr>
                 <?php else: ?>
+                    <?php
+                        $iconYes = '<span class="text-success fw-semibold" title="Ada" aria-label="Ada">✓</span>';
+                        $iconNo = '<span class="text-muted" title="Kosong" aria-label="Kosong">—</span>';
+                    ?>
                     <?php foreach ($items as $it): ?>
                         <tr>
                             <td>
@@ -868,23 +878,33 @@ include __DIR__ . '/../includes/header.php';
                                 $itPlain = preg_replace('/\s+/', ' ', trim(strip_tags((string)($it['pertanyaan'] ?? ''))));
                                 $itPlain = mb_substr($itPlain, 0, 160);
                             ?>
-                            <td class="text-break"><?php echo htmlspecialchars($itPlain); ?></td>
                             <td class="text-break">
                                 <?php
                                     $tipeView = (string)($it['tipe_soal'] ?? '');
                                     if ($tipeView === 'pg') {
                                         $tipeView = 'Pilihan Ganda';
                                     }
+                                    $st = (string)($it['status_soal'] ?? 'draft');
+
+                                    $jawabanRaw = (string)($it['jawaban_benar'] ?? '');
+                                    $jawabanHas = trim(strip_tags($jawabanRaw)) !== '';
+
+                                    $penyRaw = (string)($it['penyelesaian'] ?? '');
+                                    $penyHas = trim(strip_tags($penyRaw)) !== '';
                                 ?>
-                                <?php echo htmlspecialchars($tipeView); ?>
-                            </td>
-                            <td>
-                                <?php $st = (string)($it['status_soal'] ?? 'draft'); ?>
-                                <?php if ($st === 'published'): ?>
-                                    <span class="badge text-bg-success">published</span>
-                                <?php else: ?>
-                                    <span class="badge text-bg-secondary">draft</span>
-                                <?php endif; ?>
+                                <div class="md-cell-clamp" title="<?php echo htmlspecialchars((string)($it['pertanyaan'] ?? '')); ?>">
+                                    <?php echo htmlspecialchars($itPlain); ?>
+                                </div>
+                                <div class="mt-1 d-flex flex-wrap align-items-center gap-2 small text-muted">
+                                    <span class="badge text-bg-light border text-dark text-nowrap"><?php echo htmlspecialchars($tipeView !== '' ? $tipeView : '-'); ?></span>
+                                    <?php if ($st === 'published'): ?>
+                                        <span class="badge text-bg-success text-nowrap">published</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary text-nowrap">draft</span>
+                                    <?php endif; ?>
+                                    <span class="text-nowrap">Jawaban: <?php echo $jawabanHas ? $iconYes : $iconNo; ?></span>
+                                    <span class="text-nowrap">Penyelesaian: <?php echo $penyHas ? $iconYes : $iconNo; ?></span>
+                                </div>
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap justify-content-end">

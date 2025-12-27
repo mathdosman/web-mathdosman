@@ -396,7 +396,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
 
     $jawabanRaw = trim((string)($q['jawaban_benar'] ?? ''));
     if ($jawabanRaw === '') {
-        return '<strong>-</strong>';
+        return '<span class="text-muted">Soal ini belum memiliki kunci jawaban.</span>';
     }
 
     if ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks') {
@@ -468,7 +468,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
     if ($tipe === 'Uraian') {
         $html = $renderHtml($jawabanRaw);
         if (trim($html) === '') {
-            return '<strong>-</strong>';
+            return '<span class="text-muted">Soal ini belum memiliki jawaban yang tersimpan.</span>';
         }
         return '<div class="fw-semibold">' . $html . '</div>';
     }
@@ -924,11 +924,21 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                             <?php endif; ?>
 
                             <?php if ($showAnswers): ?>
+                                <?php
+                                    $jawabanRendered = $renderHtml((string)($q['jawaban_benar'] ?? ''));
+                                    $jawabanHasContent = trim(strip_tags($jawabanRendered)) !== '';
+                                ?>
                                 <?php if ($tipe === 'Uraian'): ?>
                                     <div class="mt-3 pt-2 border-top">
                                         <div class="small text-muted">Jawaban</div>
-                                        <div class="mt-1 form-control border-success bg-success-subtle" style="height:auto;">
-                                                    <div class="richtext-content"><?php echo $renderHtml((string)($q['jawaban_benar'] ?? '')); ?></div>
+                                        <div class="mt-1 form-control <?php echo $jawabanHasContent ? 'border-success bg-success-subtle' : 'border-secondary bg-body-tertiary'; ?>" style="height:auto;">
+                                            <?php if ($jawabanHasContent): ?>
+                                                <div class="richtext-content"><?php echo $jawabanRendered; ?></div>
+                                            <?php else: ?>
+                                                <div class="small text-muted">
+                                                    Soal ini belum memiliki jawaban yang tersimpan. Jika kamu mengetahui jawaban yang benar, silakan informasikan melalui halaman Kontak agar bisa kami lengkapi.
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php elseif ($tipe === 'Benar/Salah' || $tipe === 'Menjodohkan'): ?>
@@ -942,33 +952,46 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                     </div>
                                 <?php endif; ?>
 
+                                <?php if (!$jawabanHasContent && ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks' || $tipe === 'Benar/Salah' || $tipe === 'Menjodohkan')): ?>
+                                    <div class="mt-3 pt-2 border-top">
+                                        <div class="small text-muted">Kunci Jawaban</div>
+                                        <div class="mt-1 border rounded px-2 py-2 bg-body-tertiary small text-muted">
+                                            Soal ini belum memiliki kunci jawaban. Jika kamu menemukan kunci yang tepat, silakan laporkan melalui halaman Kontak agar dapat kami perbarui.
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
                             <?php
                                 $penyelesaianHtmlRaw = (string)($q['penyelesaian'] ?? '');
                                 $penyelesaianRendered = $renderHtml($penyelesaianHtmlRaw);
-                                $penyelesaianHasContent = $penyelesaianRendered !== '';
+                                $penyelesaianHasContent = trim(strip_tags($penyelesaianRendered)) !== '';
                                 $collapseId = 'collapsePenyelesaian_' . (int)($q['id'] ?? 0);
                             ?>
-                            <?php if ($penyelesaianHasContent): ?>
-                                <div class="mt-3 pt-2 border-top">
-                                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                                        <button
-                                            type="button"
-                                            class="btn btn-outline-secondary btn-sm"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>"
-                                            aria-controls="<?php echo htmlspecialchars($collapseId); ?>"
-                                            aria-expanded="false"
-                                        >
-                                            Penyelesaian
-                                        </button>
-                                    </div>
-                                    <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
-                                        <div class="border rounded p-2 bg-warning-subtle small text-break">
-                                                        <div class="richtext-content"><?php echo $penyelesaianRendered; ?></div>
-                                        </div>
+                            <div class="mt-3 pt-2 border-top">
+                                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>"
+                                        aria-controls="<?php echo htmlspecialchars($collapseId); ?>"
+                                        aria-expanded="false"
+                                    >
+                                        Penyelesaian
+                                    </button>
+                                </div>
+                                <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
+                                    <div class="border rounded p-2 bg-warning-subtle small text-break">
+                                        <?php if ($penyelesaianHasContent): ?>
+                                            <div class="richtext-content"><?php echo $penyelesaianRendered; ?></div>
+                                        <?php else: ?>
+                                            <div class="small text-muted">
+                                                Belum ada detail penyelesaian untuk soal ini. Jika kamu punya langkah penyelesaian yang benar dan rapi, silakan kirimkan melalui halaman Kontak agar bisa kami tambahkan.
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-                            <?php endif; ?>
+                            </div>
                             <?php endif; ?>
                         </div>
                     </div>

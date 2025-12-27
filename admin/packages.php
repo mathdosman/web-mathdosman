@@ -79,7 +79,7 @@ function generate_unique_package_code(PDO $pdo): string
 }
 
 function build_packages_return_url(array $get): string {
-    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri'];
+    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri', 'page', 'per_page'];
     $parts = [];
     foreach ($allowed as $k) {
         if (!isset($get[$k])) {
@@ -100,6 +100,18 @@ $returnUrl = build_packages_return_url($_GET);
 $filterSubjectId = (int)($_GET['filter_subject_id'] ?? 0);
 $filterMateri = trim((string)($_GET['filter_materi'] ?? ''));
 $filterSubmateri = trim((string)($_GET['filter_submateri'] ?? ''));
+
+// Pagination params
+$page = (int)($_GET['page'] ?? 1);
+if ($page < 1) {
+    $page = 1;
+}
+
+$perPage = (int)($_GET['per_page'] ?? 50);
+$allowedPerPage = [25, 50, 100];
+if (!in_array($perPage, $allowedPerPage, true)) {
+    $perPage = 50;
+}
 
 $subjects = [];
 $materials = [];
@@ -278,24 +290,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $packages = [];
+$totalRows = 0;
+$totalPages = 1;
+$offset = 0;
 try {
     $params = [];
-    $buildWhere = function () use ($filterSubjectId, $filterMateri, $filterSubmateri, &$params): string {
-        $where = ' WHERE 1=1';
-        if ($filterSubjectId > 0) {
-            $where .= ' AND p.subject_id = :fsid';
-            $params[':fsid'] = $filterSubjectId;
-        }
-        if ($filterMateri !== '') {
-            $where .= ' AND p.materi = :fm';
-            $params[':fm'] = $filterMateri;
-        }
-        if ($filterSubmateri !== '') {
-            $where .= ' AND p.submateri = :fsm';
-            $params[':fsm'] = $filterSubmateri;
-        }
-        return $where;
-    };
+    $where = ' WHERE 1=1';
+    if ($filterSubjectId > 0) {
+        $where .= ' AND p.subject_id = :fsid';
+        $params[':fsid'] = $filterSubjectId;
+    }
+    if ($filterMateri !== '') {
+        $where .= ' AND p.materi = :fm';
+        $params[':fm'] = $filterMateri;
+    }
+    if ($filterSubmateri !== '') {
+        $where .= ' AND p.submateri = :fsm';
+        $params[':fsm'] = $filterSubmateri;
+    }
+
+    // Total rows for pagination
+    try {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM packages p' . $where);
+        $stmt->execute($params);
+        $totalRows = (int)$stmt->fetchColumn();
+    } catch (Throwable $eCount) {
+        $totalRows = 0;
+    }
+
+    $totalPages = $perPage > 0 ? (int)ceil($totalRows / $perPage) : 1;
+    if ($totalPages < 1) {
+        $totalPages = 1;
+    }
+    if ($page > $totalPages) {
+        $page = $totalPages;
+    }
+
+    $offset = ($page - 1) * $perPage;
+    if ($offset < 0) {
+        $offset = 0;
+    }
 
     // Prefer analytics views; fallback gracefully if page_views doesn't exist.
     try {
@@ -313,14 +347,14 @@ try {
                 WHERE q.status_soal IS NULL OR q.status_soal <> "published"
                 GROUP BY pq.package_id
             ) d ON d.package_id = p.id';
-        $sql .= $buildWhere();
+        $sql .= $where;
         $sql .= ' ORDER BY p.created_at DESC';
+        $sql .= ' LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$offset;
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $packages = $stmt->fetchAll();
     } catch (Throwable $e2) {
-        $params = [];
         $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
             COALESCE(d.cnt, 0) AS draft_count,
             s.name AS subject_name,
@@ -334,8 +368,9 @@ try {
                 WHERE q.status_soal IS NULL OR q.status_soal <> "published"
                 GROUP BY pq.package_id
             ) d ON d.package_id = p.id';
-        $sql .= $buildWhere();
+        $sql .= $where;
         $sql .= ' ORDER BY p.created_at DESC';
+        $sql .= ' LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$offset;
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -418,18 +453,28 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <div class="border rounded p-2 bg-body-tertiary">
-                <div class="text-muted small mb-1">Import paket soal dari Excel</div>
-                <form action="questions_import.php" method="post" enctype="multipart/form-data" class="m-0">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                    <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
-                        <div class="input-group input-group-sm">
-                            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
-                            <button type="submit" class="btn btn-outline-primary">Upload</button>
-                        </div>
-                        <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xls" download>Contoh File XLS</a>
+            <div class="border rounded bg-body-tertiary">
+                <div class="d-flex align-items-center justify-content-between gap-2 p-2">
+                    <div class="text-muted small">Import paket soal dari Excel</div>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#importPaketCollapse" aria-expanded="false" aria-controls="importPaketCollapse" data-md-toggle-closed="Buka" data-md-toggle-open="Tutup">
+                        Buka
+                    </button>
+                </div>
+
+                <div class="collapse" id="importPaketCollapse">
+                    <div class="p-2 pt-0">
+                        <form action="questions_import.php" method="post" enctype="multipart/form-data" class="m-0">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                            <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
+                                <div class="input-group input-group-sm">
+                                    <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
+                                    <button type="submit" class="btn btn-outline-primary">Upload</button>
+                                </div>
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xls" download>Contoh File XLS</a>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
 
@@ -443,16 +488,63 @@ include __DIR__ . '/../includes/header.php';
             </div>
         <?php endif; ?>
 
+        <?php
+            $buildHref = function (int $p) use ($filterSubjectId, $filterMateri, $filterSubmateri, $perPage): string {
+                $p = max(1, $p);
+                $qs = http_build_query([
+                    'filter_subject_id' => $filterSubjectId > 0 ? $filterSubjectId : null,
+                    'filter_materi' => $filterMateri !== '' ? $filterMateri : null,
+                    'filter_submateri' => $filterSubmateri !== '' ? $filterSubmateri : null,
+                    'per_page' => $perPage,
+                    'page' => $p,
+                ]);
+                $qs = preg_replace('/(?:^|&)(?:[^=]+)=(&|$)/', '$1', (string)$qs);
+                $qs = trim((string)$qs, '&');
+                return 'packages.php' . ($qs !== '' ? ('?' . $qs) : '');
+            };
+
+            $startNumber = $offset + 1;
+            if ($startNumber < 1) {
+                $startNumber = 1;
+            }
+            $endNumber = $offset + count($packages);
+            if ($endNumber < 0) {
+                $endNumber = 0;
+            }
+        ?>
+
+        <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center justify-content-between mb-2">
+            <div class="text-muted small">
+                <?php if ($totalRows > 0): ?>
+                    Menampilkan <?php echo (int)$startNumber; ?>–<?php echo (int)$endNumber; ?> dari <?php echo (int)$totalRows; ?> paket.
+                <?php else: ?>
+                    &nbsp;
+                <?php endif; ?>
+            </div>
+            <form method="get" class="m-0 d-flex align-items-center gap-2">
+                <input type="hidden" name="filter_subject_id" value="<?php echo (int)$filterSubjectId; ?>">
+                <input type="hidden" name="filter_materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
+                <input type="hidden" name="filter_submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
+                <input type="hidden" name="page" value="1">
+                <label class="text-muted small" for="perPageSelect">Per halaman</label>
+                <select id="perPageSelect" name="per_page" class="form-select form-select-sm" style="width: 110px;" onchange="this.form.submit();">
+                    <option value="25" <?php echo $perPage === 25 ? 'selected' : ''; ?>>25</option>
+                    <option value="50" <?php echo $perPage === 50 ? 'selected' : ''; ?>>50</option>
+                    <option value="100" <?php echo $perPage === 100 ? 'selected' : ''; ?>>100</option>
+                </select>
+            </form>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-sm table-striped align-middle mb-0 table-fit small packages-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 56px;">No</th>
+                        <th class="text-center packages-col-no">No</th>
                         <th class="packages-col-paket">Paket</th>
-                        <th class="text-center" style="width: 130px;">Status</th>
+                        <th class="text-center packages-col-status d-none d-sm-table-cell">Status</th>
                         <th class="text-end d-none d-sm-table-cell" style="width: 90px;">Views</th>
                         <th class="d-none d-md-table-cell text-center" style="width: 150px;">Dibuat</th>
-                        <th class="text-end" style="width: 220px;">Aksi</th>
+                        <th class="text-end packages-col-actions">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -461,9 +553,21 @@ include __DIR__ . '/../includes/header.php';
                 <?php else: ?>
                     <?php foreach ($packages as $i => $p): ?>
                         <tr>
-                            <td class="text-center text-muted"><?php echo $i + 1; ?></td>
+                            <td class="text-center text-muted"><?php echo (int)($offset + $i + 1); ?></td>
                             <td class="text-break">
                                 <div class="fw-semibold md-cell-truncate"><?php echo htmlspecialchars($p['name']); ?></div>
+
+                                <div class="mt-1 d-sm-none">
+                                    <?php if ($p['status'] === 'published'): ?>
+                                        <span class="badge text-bg-success">Terbit</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary">Draft</span>
+                                    <?php endif; ?>
+                                    <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
+                                        <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>
+                                    <?php endif; ?>
+                                </div>
+
                                 <div class="text-muted small md-cell-clamp">
                                     <?php
                                         $meta = [];
@@ -482,7 +586,7 @@ include __DIR__ . '/../includes/header.php';
                                     ?>
                                 </div>
                             </td>
-                            <td class="text-center">
+                            <td class="text-center d-none d-sm-table-cell">
                                 <?php if ($p['status'] === 'published'): ?>
                                     <span class="badge text-bg-success">Terbit</span>
                                 <?php else: ?>
@@ -494,7 +598,7 @@ include __DIR__ . '/../includes/header.php';
                             </td>
                             <td class="text-end d-none d-sm-table-cell"><span class="text-muted"><?php echo (int)($p['views'] ?? 0); ?></span></td>
                             <td class="d-none d-md-table-cell text-center"><span class="text-muted text-nowrap"><?php echo htmlspecialchars(format_id_date((string)($p['created_at'] ?? ''))); ?></span></td>
-                            <td class="text-end">
+                            <td class="text-end packages-col-actions">
                                 <div class="packages-actions">
                                     <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_edit.php?id=<?php echo (int)$p['id']; ?>" title="Edit Paket" aria-label="Edit Paket">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -613,6 +717,34 @@ include __DIR__ . '/../includes/header.php';
                 </tbody>
             </table>
         </div>
+
+        <?php if ($totalPages > 1): ?>
+            <?php
+                $prev = max(1, $page - 1);
+                $next = min($totalPages, $page + 1);
+                $start = max(1, $page - 3);
+                $end = min($totalPages, $page + 3);
+                $prevDisabled = ($page <= 1);
+                $nextDisabled = ($page >= $totalPages);
+            ?>
+            <nav class="mt-3" aria-label="Pagination">
+                <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+                    <li class="page-item<?php echo $prevDisabled ? ' disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo $prevDisabled ? '#' : htmlspecialchars($buildHref($prev)); ?>" aria-label="Sebelumnya"<?php echo $prevDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&laquo;</a>
+                    </li>
+
+                    <?php for ($i = $start; $i <= $end; $i++): ?>
+                        <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
+                            <a class="page-link" href="<?php echo htmlspecialchars($buildHref((int)$i)); ?>"><?php echo (int)$i; ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <li class="page-item<?php echo $nextDisabled ? ' disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo $nextDisabled ? '#' : htmlspecialchars($buildHref($next)); ?>" aria-label="Berikutnya"<?php echo $nextDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        <?php endif; ?>
     </div>
 </div>
 </div>

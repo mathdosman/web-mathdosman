@@ -56,13 +56,87 @@ pre {
 }
 
 /* Packages list (admin): responsive table tuning */
+.packages-table {
+    /* Override .table-fit's fixed layout for this table.
+       Fixed layout + overflow-wrap:anywhere can cause headers to stack per-letter on narrow screens. */
+    width: 100%;
+    table-layout: auto;
+}
+
+.packages-table th,
+.packages-table td {
+    /* Reset aggressive wrapping from .table-fit; allow cells to control wrapping via Bootstrap helpers */
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.packages-table th {
+    white-space: nowrap;
+}
+
+.packages-table .packages-col-no {
+    width: 56px;
+}
+
+.packages-table .packages-col-status {
+    width: 130px;
+}
+
 .packages-table .packages-col-paket {
     min-width: 320px;
 }
 
+/* Packages list (admin): allow long titles to wrap up to 4 lines */
+.packages-table .md-cell-truncate {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: clip;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
 @media (max-width: 575.98px) {
+    .packages-table {
+        font-size: 0.8rem;
+        table-layout: fixed;
+    }
+
+    .packages-table .packages-col-no {
+        width: 44px;
+    }
+
+    .packages-table .packages-col-status {
+        width: 96px;
+    }
+
     .packages-table .packages-col-paket {
-        min-width: 220px;
+        min-width: 0;
+    }
+
+    /* Keep action buttons visible on very narrow screens */
+    .packages-table .packages-col-actions {
+        width: 104px;
+    }
+
+    .packages-table th,
+    .packages-table td {
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+    }
+
+    /* Stack action buttons vertically to reduce column width */
+    .packages-actions {
+        grid-template-columns: max-content;
+    }
+
+    .packages-actions .btn {
+        padding: 0.15rem 0.35rem;
+    }
+
+    .packages-actions svg {
+        width: 14px;
+        height: 14px;
     }
 }
 
