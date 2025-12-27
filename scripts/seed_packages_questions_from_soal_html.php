@@ -17,10 +17,13 @@
  *   --dry-run=1                Tidak menulis DB
  *   --limit=5                  Batasi jumlah file
  *   --skip-existing=1          Skip jika code paket sudah ada (default: 1)
+ *   --overwrite=1              Jika paket sudah ada (code sama), hapus relasi+soal lama lalu import ulang
  *   --package-status=draft     draft|published (default: draft)
  *   --question-status=draft    draft|published (default: draft)
  *   --show-answers-public=0    0|1 (default: 0)
  *   --subject=Matematika       Nama mapel (default: Matematika)
+ *   --materi=US                Override materi paket+soal (opsional)
+ *   --submateri=Wajib Kelas12  Override submateri paket+soal (opsional)
  */
 
 declare(strict_types=1);
@@ -284,6 +287,48 @@ function ensureUniquePackageCode(PDO $pdo, string $baseCode): string
 	}
 }
 
+function detectMateriFromFilename(string $baseNoExt): ?string
+{
+	$u = strtoupper($baseNoExt);
+	if (str_contains($u, 'PAT')) {
+		return 'PAT';
+	}
+	if (str_contains($u, 'PAS')) {
+		return 'PAS';
+	}
+	if (str_contains($u, 'US')) {
+		return 'US';
+	}
+	return null;
+}
+
+function detectSubmateriFromFilename(string $baseNoExt): ?string
+{
+	$l = strtolower($baseNoExt);
+	$parts = [];
+
+	if (str_contains($l, 'wajib')) {
+		$parts[] = 'Wajib';
+	} elseif (str_contains($l, 'minat')) {
+		$parts[] = 'Minat';
+	}
+
+	if (preg_match('/kelas\s*([0-9]{1,2})/i', $baseNoExt, $m)) {
+		$parts[] = 'Kelas' . $m[1];
+	} else {
+		if (preg_match('/\b10\b/', $baseNoExt)) {
+			$parts[] = 'Kelas10';
+		} elseif (preg_match('/\b11\b/', $baseNoExt)) {
+			$parts[] = 'Kelas11';
+		} elseif (preg_match('/\b12\b/', $baseNoExt)) {
+			$parts[] = 'Kelas12';
+		}
+	}
+
+	$s = trim(implode(' ', $parts));
+	return $s !== '' ? $s : null;
+}
+
 $folderArg = argValue($argv, 'folder', null);
 $folder = $folderArg ? $folderArg : (__DIR__ . '/../soal');
 if (!str_contains($folder, ':') && !str_starts_with($folder, '/') && !str_starts_with($folder, '\\')) {
@@ -292,11 +337,14 @@ if (!str_contains($folder, ':') && !str_starts_with($folder, '/') && !str_starts
 
 $dryRun = argBool($argv, 'dry-run', false);
 $skipExisting = argBool($argv, 'skip-existing', true);
+$overwrite = argBool($argv, 'overwrite', false);
 $limit = (int)(argValue($argv, 'limit', '0') ?: 0);
 $packageStatus = (string)(argValue($argv, 'package-status', 'draft') ?: 'draft');
 $questionStatus = (string)(argValue($argv, 'question-status', 'draft') ?: 'draft');
 $showAnswersPublic = argBool($argv, 'show-answers-public', false) ? 1 : 0;
 $subjectName = (string)(argValue($argv, 'subject', 'Matematika') ?: 'Matematika');
+$materiOverride = argValue($argv, 'materi', null);
+$submateriOverride = argValue($argv, 'submateri', null);
 
 if (!is_dir($folder)) {
 	fwrite(STDERR, "Folder not found: {$folder}\n");
@@ -362,10 +410,25 @@ foreach ($files as $filePath) {
 	$packageName = trim(implode(' - ', $titleParts));
 	$packageCodeBase = slugify($baseNoExt);
 
+	$materi = $materiOverride !== null ? trim($materiOverride) : (detectMateriFromFilename($baseNoExt) ?? null);
+	$submateri = $submateriOverride !== null ? trim($submateriOverride) : (detectSubmateriFromFilename($baseNoExt) ?? null);
+	if ($materi === '') {
+		$materi = null;
+	}
+	if ($submateri === '') {
+		$submateri = null;
+	}
+	if ($materi !== null && strlen($materi) > 150) {
+		$materi = substr($materi, 0, 150);
+	}
+	if ($submateri !== null && strlen($submateri) > 150) {
+		$submateri = substr($submateri, 0, 150);
+	}
+
 	$stmt = $pdo->prepare('SELECT id FROM packages WHERE code = :c LIMIT 1');
 	$stmt->execute([':c' => $packageCodeBase]);
 	$existingPackageId = (int)($stmt->fetchColumn() ?: 0);
-	if ($existingPackageId > 0 && $skipExisting) {
+	if ($existingPackageId > 0 && $skipExisting && !$overwrite) {
 		fwrite(STDOUT, "[SKIP] {$base} (package exists: {$packageCodeBase})\n");
 		continue;
 	}
@@ -387,20 +450,68 @@ foreach ($files as $filePath) {
 			$pdo->beginTransaction();
 		}
 
-		$packageCode = $dryRun ? $packageCodeBase : ensureUniquePackageCode($pdo, $packageCodeBase);
-
+		$packageCode = $packageCodeBase;
 		$packageId = 0;
-		if (!$dryRun) {
-			$stmtPkg = $pdo->prepare('INSERT INTO packages (code, name, subject_id, intro_content_id, description, show_answers_public, status, published_at) VALUES (:c, :n, :sid, NULL, :d, :sap, :st, NULL)');
-			$stmtPkg->execute([
-				':c' => $packageCode,
-				':n' => $packageName,
-				':sid' => $subjectId,
-				':d' => 'Imported from soal/' . $base,
-				':sap' => $showAnswersPublic,
-				':st' => $packageStatus,
-			]);
-			$packageId = (int)$pdo->lastInsertId();
+
+		if ($existingPackageId > 0 && $overwrite) {
+			// Reuse existing package, clear old attachments, and delete questions that are only used by this package.
+			$packageId = $existingPackageId;
+
+			if (!$dryRun) {
+				$stmtUpd = $pdo->prepare('UPDATE packages SET name = :n, subject_id = :sid, description = :d, show_answers_public = :sap, status = :st, materi = :m, submateri = :sm WHERE id = :id');
+				$stmtUpd->execute([
+					':id' => $packageId,
+					':n' => $packageName,
+					':sid' => $subjectId,
+					':d' => 'Imported from soal/' . $base,
+					':sap' => $showAnswersPublic,
+					':st' => $packageStatus,
+					':m' => $materi,
+					':sm' => $submateri,
+				]);
+
+				$stmtQids = $pdo->prepare('SELECT question_id FROM package_questions WHERE package_id = :pid');
+				$stmtQids->execute([':pid' => $packageId]);
+				$qids = $stmtQids->fetchAll(PDO::FETCH_COLUMN);
+
+				$pdo->prepare('DELETE FROM package_questions WHERE package_id = :pid')->execute([':pid' => $packageId]);
+
+				if ($qids) {
+					$stmtCount = $pdo->prepare('SELECT COUNT(*) FROM package_questions WHERE question_id = :qid');
+					$stmtDelQ = $pdo->prepare('DELETE FROM questions WHERE id = :qid');
+					foreach ($qids as $qid) {
+						$qid = (int)$qid;
+						if ($qid <= 0) {
+							continue;
+						}
+						$stmtCount->execute([':qid' => $qid]);
+						$c = (int)$stmtCount->fetchColumn();
+						if ($c <= 0) {
+							$stmtDelQ->execute([':qid' => $qid]);
+						}
+					}
+				}
+			}
+		} else {
+			// Create new package (or a unique code variant if base already exists).
+			if (!$dryRun) {
+				if ($existingPackageId > 0) {
+					$packageCode = ensureUniquePackageCode($pdo, $packageCodeBase);
+				}
+
+				$stmtPkg = $pdo->prepare('INSERT INTO packages (code, name, subject_id, materi, submateri, intro_content_id, description, show_answers_public, status, published_at) VALUES (:c, :n, :sid, :m, :sm, NULL, :d, :sap, :st, NULL)');
+				$stmtPkg->execute([
+					':c' => $packageCode,
+					':n' => $packageName,
+					':sid' => $subjectId,
+					':m' => $materi,
+					':sm' => $submateri,
+					':d' => 'Imported from soal/' . $base,
+					':sap' => $showAnswersPublic,
+					':st' => $packageStatus,
+				]);
+				$packageId = (int)$pdo->lastInsertId();
+			}
 		}
 
 		$qCount = 0;
@@ -482,7 +593,7 @@ foreach ($files as $filePath) {
 			$c5 = basicAllowlistHtml($choices[4]);
 
 			if (!$dryRun) {
-				$stmtQ = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, penyelesaian, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, materi, submateri, status_soal) VALUES (:sid, :qt, :pz, :t, :a, :b, :c, :d, :e, :jb, NULL, NULL, :st)');
+				$stmtQ = $pdo->prepare('INSERT INTO questions (subject_id, pertanyaan, penyelesaian, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, materi, submateri, status_soal) VALUES (:sid, :qt, :pz, :t, :a, :b, :c, :d, :e, :jb, :m, :sm, :st)');
 				$stmtQ->execute([
 					':sid' => $subjectId,
 					':qt' => $questionHtmlDb,
@@ -494,6 +605,8 @@ foreach ($files as $filePath) {
 					':d' => $c4,
 					':e' => $c5,
 					':jb' => ($jawabanField === null ? null : $jawabanField),
+					':m' => $materi,
+					':sm' => $submateri,
 					':st' => $questionStatus,
 				]);
 				$questionId = (int)$pdo->lastInsertId();
