@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/bootstrap.php';
 
 if (!function_exists('app_runtime_migrations_enabled')) {
     function app_runtime_migrations_enabled(): bool

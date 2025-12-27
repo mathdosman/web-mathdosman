@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/bootstrap.php';
 
 // Fail-fast: allow the page shell to load even when MySQL is down.
 $dbPreflightOk = false;

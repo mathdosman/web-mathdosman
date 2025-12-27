@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/bootstrap.php';
 
 // Fail-fast: allow the page shell to load even when MySQL is down.
 $dbPreflightOk = false;
@@ -42,16 +42,26 @@ if ($page < 1) {
 }
 
 $perPage = 16; // 4 kolom x 4 baris
-$offset = ($page - 1) * $perPage;
 
 $total = 0;
 $packages = [];
+$totalPages = 1;
 
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
         $stmt = $pdo->query('SELECT COUNT(*) AS cnt FROM packages WHERE status = "published"');
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $total = (int)($row['cnt'] ?? 0);
+
+        $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+        if ($totalPages < 1) {
+            $totalPages = 1;
+        }
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $perPage;
 
         $sql = 'SELECT p.id, p.code, p.name, p.materi, p.submateri, p.created_at, p.published_at,
                 COUNT(DISTINCT pq.question_id) AS total_questions
@@ -70,15 +80,13 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     } catch (Throwable $e) {
         $total = 0;
         $packages = [];
+        $totalPages = 1;
     }
 }
 
-$totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+// If DB is not available, keep sane defaults
 if ($totalPages < 1) {
     $totalPages = 1;
-}
-if ($page > $totalPages) {
-    $page = $totalPages;
 }
 
 include __DIR__ . '/includes/header.php';
@@ -143,32 +151,33 @@ include __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
             </div>
 
-            <?php if ($totalPages > 1): ?>
-                <nav class="mt-4" aria-label="Pagination">
-                    <ul class="pagination justify-content-center flex-wrap">
-                        <?php
-                            $prev = $page - 1;
-                            $next = $page + 1;
+            <nav class="mt-4" aria-label="Pagination">
+                <ul class="pagination justify-content-center flex-wrap">
+                    <?php
+                        $prev = max(1, $page - 1);
+                        $next = min($totalPages, $page + 1);
 
-                            $start = max(1, $page - 3);
-                            $end = min($totalPages, $page + 3);
-                        ?>
-                        <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
-                            <a class="page-link" href="daftar-isi.php?page=<?php echo (int)$prev; ?>" aria-label="Sebelumnya">&laquo;</a>
+                        $start = max(1, $page - 3);
+                        $end = min($totalPages, $page + 3);
+
+                        $prevDisabled = ($page <= 1);
+                        $nextDisabled = ($page >= $totalPages);
+                    ?>
+                    <li class="page-item<?php echo $prevDisabled ? ' disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo $prevDisabled ? '#' : ('daftar-isi.php?page=' . (int)$prev); ?>" aria-label="Sebelumnya"<?php echo $prevDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&laquo;</a>
+                    </li>
+
+                    <?php for ($i = $start; $i <= $end; $i++): ?>
+                        <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
+                            <a class="page-link" href="daftar-isi.php?page=<?php echo (int)$i; ?>"><?php echo (int)$i; ?></a>
                         </li>
+                    <?php endfor; ?>
 
-                        <?php for ($i = $start; $i <= $end; $i++): ?>
-                            <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
-                                <a class="page-link" href="daftar-isi.php?page=<?php echo (int)$i; ?>"><?php echo (int)$i; ?></a>
-                            </li>
-                        <?php endfor; ?>
-
-                        <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
-                            <a class="page-link" href="daftar-isi.php?page=<?php echo (int)$next; ?>" aria-label="Berikutnya">&raquo;</a>
-                        </li>
-                    </ul>
-                </nav>
-            <?php endif; ?>
+                    <li class="page-item<?php echo $nextDisabled ? ' disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo $nextDisabled ? '#' : ('daftar-isi.php?page=' . (int)$next); ?>" aria-label="Berikutnya"<?php echo $nextDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
         <?php endif; ?>
     </div>
 </div>

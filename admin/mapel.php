@@ -6,6 +6,48 @@ require_role('admin');
 $errors = [];
 $success = null;
 
+// Toggle lock/unlock mapel management (session-based)
+// Default: locked to Matematika.
+$isSubjectUnlocked = !empty($_SESSION['mapel_subject_unlocked']);
+$isSubjectLocked = !$isSubjectUnlocked;
+
+$lockedSubjectName = 'Matematika';
+$lockedSubjectId = 0;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'toggle_subject_lock') {
+    if ($isSubjectLocked) {
+        $_SESSION['mapel_subject_unlocked'] = true;
+    } else {
+        unset($_SESSION['mapel_subject_unlocked']);
+    }
+    header('Location: mapel.php');
+    exit;
+}
+
+if ($isSubjectLocked) {
+    // Ensure Matematika exists.
+    try {
+        $stmt = $pdo->prepare('SELECT id FROM subjects WHERE name = :n LIMIT 1');
+        $stmt->execute([':n' => $lockedSubjectName]);
+        $lockedSubjectId = (int)$stmt->fetchColumn();
+
+        if ($lockedSubjectId <= 0) {
+            try {
+                $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
+                $stmt->execute([':n' => $lockedSubjectName]);
+                $lockedSubjectId = (int)$pdo->lastInsertId();
+            } catch (Throwable $e) {
+                // In case of race/duplicate, re-select.
+                $stmt = $pdo->prepare('SELECT id FROM subjects WHERE name = :n LIMIT 1');
+                $stmt->execute([':n' => $lockedSubjectName]);
+                $lockedSubjectId = (int)$stmt->fetchColumn();
+            }
+        }
+    } catch (Throwable $e) {
+        $lockedSubjectId = 0;
+    }
+}
+
 if (app_runtime_migrations_enabled()) {
     // Ensure master tables exist (opt-in)
     try {
@@ -32,6 +74,12 @@ if (app_runtime_migrations_enabled()) {
 }
 
 $selectedSubjectId = (int)($_GET['subject_id'] ?? 0);
+$selectedSubjectId = max(0, $selectedSubjectId);
+
+// Force selection to locked subject; ignore any subject_id from request.
+if ($isSubjectLocked && $lockedSubjectId > 0) {
+    $selectedSubjectId = (int)$lockedSubjectId;
+}
 $selectedMaterialId = (int)($_GET['material_id'] ?? 0);
 
 $perPage = (int)($_GET['per_page'] ?? 10);
@@ -112,34 +160,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
 
     if ($action === 'add_subject') {
-        $name = trim((string)($_POST['name'] ?? ''));
-        if ($name === '') {
-            $errors[] = 'Nama mapel wajib diisi.';
+        if ($isSubjectLocked) {
+            $errors[] = 'Mapel dikunci pada "' . $lockedSubjectName . '".';
         } else {
-            try {
-                $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
-                $stmt->execute([':n' => $name]);
-                $success = 'Mapel berhasil ditambahkan.';
-            } catch (Throwable $e) {
-                $errors[] = 'Gagal menambah mapel (mungkin sudah ada).';
+            $name = trim((string)($_POST['name'] ?? ''));
+            if ($name === '') {
+                $errors[] = 'Nama mapel wajib diisi.';
+            } else {
+                try {
+                    $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
+                    $stmt->execute([':n' => $name]);
+                    $success = 'Mapel berhasil ditambahkan.';
+                } catch (Throwable $e) {
+                    $errors[] = 'Gagal menambah mapel (mungkin sudah ada).';
+                }
             }
         }
     } elseif ($action === 'delete_subject') {
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) {
-            try {
-                $stmt = $pdo->prepare('DELETE FROM subjects WHERE id = :id');
-                $stmt->execute([':id' => $id]);
-                $success = 'Mapel berhasil dihapus.';
-                if ($selectedSubjectId === $id) {
-                    $selectedSubjectId = 0;
+        if ($isSubjectLocked) {
+            $errors[] = 'Mapel dikunci pada "' . $lockedSubjectName . '".';
+        } else {
+            $id = (int)($_POST['id'] ?? 0);
+            if ($id > 0) {
+                try {
+                    $stmt = $pdo->prepare('DELETE FROM subjects WHERE id = :id');
+                    $stmt->execute([':id' => $id]);
+                    $success = 'Mapel berhasil dihapus.';
+                    if ($selectedSubjectId === $id) {
+                        $selectedSubjectId = 0;
+                        $selectedMaterialId = 0;
+                    }
+                } catch (Throwable $e) {
+                    $errors[] = 'Gagal menghapus mapel.';
                 }
-            } catch (Throwable $e) {
-                $errors[] = 'Gagal menghapus mapel.';
             }
         }
     } elseif ($action === 'add_material') {
-        $subjectId = (int)($_POST['subject_id'] ?? 0);
+        $subjectId = $isSubjectLocked ? (int)$lockedSubjectId : (int)($_POST['subject_id'] ?? 0);
         $name = trim((string)($_POST['name'] ?? ''));
         if ($subjectId <= 0) {
             $errors[] = 'Pilih mapel terlebih dahulu.';
@@ -210,23 +267,38 @@ $subjectsAll = [];
 $subjectsPage = [];
 $subjectsTotal = 0;
 try {
-    $subjectsAll = $pdo->query('SELECT id, name FROM subjects ORDER BY name ASC')->fetchAll();
-    $subjectsTotal = (int)$pdo->query('SELECT COUNT(*) FROM subjects')->fetchColumn();
+    if ($isSubjectLocked) {
+        if ($lockedSubjectId > 0) {
+            $stmt = $pdo->prepare('SELECT id, name FROM subjects WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $lockedSubjectId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $subjectsAll = [$row];
+                $subjectsPage = [$row];
+                $subjectsTotal = 1;
+            }
+        }
+    } else {
+        $subjectsAll = $pdo->query('SELECT id, name FROM subjects ORDER BY name ASC')->fetchAll();
+        $subjectsTotal = (int)$pdo->query('SELECT COUNT(*) FROM subjects')->fetchColumn();
 
-    $offset = ($subjectPage - 1) * $perPage;
-    $stmt = $pdo->prepare('SELECT id, name FROM subjects ORDER BY name ASC LIMIT :lim OFFSET :off');
-    $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
-    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    $subjectsPage = $stmt->fetchAll();
+        $offset = ($subjectPage - 1) * $perPage;
+        $stmt = $pdo->prepare('SELECT id, name FROM subjects ORDER BY name ASC LIMIT :lim OFFSET :off');
+        $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $subjectsPage = $stmt->fetchAll();
+    }
 } catch (Throwable $e) {
     $subjectsAll = [];
     $subjectsPage = [];
     $subjectsTotal = 0;
 }
 
-if ($selectedSubjectId <= 0 && $subjectsAll) {
-    $selectedSubjectId = (int)$subjectsAll[0]['id'];
+if (!$isSubjectLocked) {
+    if ($selectedSubjectId <= 0 && $subjectsAll) {
+        $selectedSubjectId = (int)$subjectsAll[0]['id'];
+    }
 }
 
 $materialsAll = [];
@@ -256,8 +328,13 @@ try {
     $materialsTotal = 0;
 }
 
-if ($selectedMaterialId <= 0 && $materialsAll) {
-    $selectedMaterialId = (int)$materialsAll[0]['id'];
+if ($materialsAll) {
+    $validMaterialIds = array_map(static fn($row) => (int)$row['id'], $materialsAll);
+    if ($selectedMaterialId <= 0 || !in_array((int)$selectedMaterialId, $validMaterialIds, true)) {
+        $selectedMaterialId = (int)$materialsAll[0]['id'];
+    }
+} else {
+    $selectedMaterialId = 0;
 }
 
 $submaterialsPage = [];
@@ -323,31 +400,66 @@ include __DIR__ . '/../includes/header.php';
 
 <div class="row g-3">
     <div class="col-12 col-lg-4">
+        <div class="d-flex justify-content-end mb-2">
+            <form method="post" class="d-inline">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                <input type="hidden" name="action" value="toggle_subject_lock">
+                <?php if ($isSubjectLocked): ?>
+                    <button type="submit" class="btn btn-success btn-sm d-inline-flex align-items-center gap-2" title="Klik untuk lepas kunci" aria-label="Terkunci ke Matematika. Klik untuk lepas kunci.">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="3" y="7" width="18" height="10" rx="5" stroke="currentColor" stroke-width="2" />
+                            <circle cx="8" cy="12" r="3" fill="currentColor" />
+                        </svg>
+                        <span>Terkunci: <?php echo htmlspecialchars($lockedSubjectName); ?></span>
+                    </button>
+                <?php else: ?>
+                    <button type="submit" class="btn btn-warning btn-sm d-inline-flex align-items-center gap-2" title="Klik untuk kunci ke Matematika" aria-label="Mapel terbuka. Klik untuk kunci ke Matematika.">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <rect x="3" y="7" width="18" height="10" rx="5" stroke="currentColor" stroke-width="2" />
+                            <circle cx="16" cy="12" r="3" fill="currentColor" />
+                        </svg>
+                        <span>Terbuka</span>
+                    </button>
+                <?php endif; ?>
+            </form>
+        </div>
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="mb-0">Mapel</h6>
-                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalAddSubject">Tambah</button>
+                    <?php if ($isSubjectLocked): ?>
+                        <span class="badge text-bg-secondary">Terkunci</span>
+                    <?php else: ?>
+                        <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalAddSubject">Tambah</button>
+                    <?php endif; ?>
                 </div>
 
                 <div class="list-group small">
                     <?php if (!$subjectsPage): ?>
                         <div class="text-muted">Belum ada mapel.</div>
                     <?php else: ?>
-                        <?php $no = (($subjectPage - 1) * $perPage) + 1; ?>
-                        <?php foreach ($subjectsPage as $s): ?>
-                            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? 'active' : ''; ?>"
-                               href="mapel.php?<?php echo htmlspecialchars($qs(['subject_id' => (int)$s['id'], 'material_id' => null, 'material_page' => 1, 'submaterial_page' => 1])); ?>">
-                                <span class="text-truncate"><span class="me-2 text-muted"><?php echo (int)$no; ?>.</span><?php echo htmlspecialchars($s['name']); ?></span>
-                                <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Mapel?" data-swal-text="Hapus mapel ini beserta materi/submaterinya?">
-                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                                    <input type="hidden" name="action" value="delete_subject">
-                                    <input type="hidden" name="id" value="<?php echo (int)$s['id']; ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline-light<?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? '' : ' btn-outline-danger'; ?>" style="min-width:60px;">Hapus</button>
-                                </form>
-                            </a>
-                            <?php $no++; ?>
-                        <?php endforeach; ?>
+                        <?php if ($isSubjectLocked): ?>
+                            <?php foreach ($subjectsPage as $s): ?>
+                                <div class="list-group-item d-flex justify-content-between align-items-center active">
+                                    <span class="text-truncate"><?php echo htmlspecialchars($s['name']); ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <?php $no = (($subjectPage - 1) * $perPage) + 1; ?>
+                            <?php foreach ($subjectsPage as $s): ?>
+                                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? 'active' : ''; ?>"
+                                   href="mapel.php?<?php echo htmlspecialchars($qs(['subject_id' => (int)$s['id'], 'material_id' => null, 'material_page' => 1, 'submaterial_page' => 1])); ?>">
+                                    <span class="text-truncate"><span class="me-2 text-muted"><?php echo (int)$no; ?>.</span><?php echo htmlspecialchars($s['name']); ?></span>
+                                    <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus Mapel?" data-swal-text="Hapus mapel ini beserta materi/submaterinya?">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                        <input type="hidden" name="action" value="delete_subject">
+                                        <input type="hidden" name="id" value="<?php echo (int)$s['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-light<?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? '' : ' btn-outline-danger'; ?>" style="min-width:60px;">Hapus</button>
+                                    </form>
+                                </a>
+                                <?php $no++; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
 
@@ -368,11 +480,20 @@ include __DIR__ . '/../includes/header.php';
 
                 <form method="get" class="mb-2">
                     <label class="form-label small">Mapel aktif</label>
-                    <select name="subject_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <?php foreach ($subjectsAll as $s): ?>
-                            <option value="<?php echo (int)$s['id']; ?>" <?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? 'selected' : ''; ?>><?php echo htmlspecialchars($s['name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <?php if ($isSubjectLocked): ?>
+                        <select name="subject_id" class="form-select form-select-sm" disabled>
+                            <?php foreach ($subjectsAll as $s): ?>
+                                <option value="<?php echo (int)$s['id']; ?>" selected><?php echo htmlspecialchars($s['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="hidden" name="subject_id" value="<?php echo (int)$selectedSubjectId; ?>">
+                    <?php else: ?>
+                        <select name="subject_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <?php foreach ($subjectsAll as $s): ?>
+                                <option value="<?php echo (int)$s['id']; ?>" <?php echo ((int)$s['id'] === (int)$selectedSubjectId) ? 'selected' : ''; ?>><?php echo htmlspecialchars($s['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
                     <input type="hidden" name="per_page" value="<?php echo (int)$perPage; ?>">
                     <input type="hidden" name="subject_page" value="<?php echo (int)$subjectPage; ?>">
                     <input type="hidden" name="material_page" value="1">
@@ -458,29 +579,31 @@ include __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Modals -->
-<div class="modal fade" id="modalAddSubject" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                <div class="modal-header">
-                    <h5 class="modal-title">Tambah Mapel</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="action" value="add_subject">
-                    <label class="form-label">Nama Mapel</label>
-                    <input type="text" name="name" class="form-control" placeholder="contoh: Matematika" required>
-                    <div class="form-text">Mapel akan muncul di dropdown saat input soal.</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
+<?php if (!$isSubjectLocked): ?>
+    <div class="modal fade" id="modalAddSubject" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Mapel</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add_subject">
+                        <label class="form-label">Nama Mapel</label>
+                        <input type="text" name="name" class="form-control" placeholder="contoh: Matematika" required>
+                        <div class="form-text">Mapel akan muncul di dropdown saat input soal.</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+<?php endif; ?>
 
 <div class="modal fade" id="modalAddMaterial" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
