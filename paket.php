@@ -368,6 +368,8 @@ try {
     $navNext = null;
 }
 
+$introContent = null;
+
 try {
     $introId = (int)($package['intro_content_id'] ?? 0);
     if ($introId > 0) {
