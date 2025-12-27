@@ -6,6 +6,28 @@ require_once __DIR__ . '/../config/bootstrap.php';
 
 require_once __DIR__ . '/session.php';
 
+if (!function_exists('asset_url')) {
+    function asset_url(string $relativePath, string $base_url): string
+    {
+        $relativePath = '/' . ltrim($relativePath, '/');
+        $fsPath = __DIR__ . '/..' . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+        $v = '';
+        try {
+            if (is_file($fsPath)) {
+                $v = (string)@filemtime($fsPath);
+            }
+        } catch (Throwable $e) {
+            $v = '';
+        }
+
+        $url = rtrim((string)$base_url, '/') . $relativePath;
+        if ($v !== '') {
+            $url .= (str_contains($url, '?') ? '&' : '?') . 'v=' . rawurlencode($v);
+        }
+        return $url;
+    }
+}
+
 app_session_start();
 
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
@@ -159,12 +181,12 @@ try {
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4649430696681971" crossorigin="anonymous"></script>
     <?php endif; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?php echo $base_url; ?>/assets/css/style.css" rel="stylesheet">
+    <link href="<?php echo htmlspecialchars(asset_url('assets/css/style.css', (string)$base_url)); ?>" rel="stylesheet">
     <?php if ($isFrontArea): ?>
-        <link href="<?php echo $base_url; ?>/assets/css/front.css" rel="stylesheet">
+        <link href="<?php echo htmlspecialchars(asset_url('assets/css/front.css', (string)$base_url)); ?>" rel="stylesheet">
     <?php endif; ?>
     <?php if ($use_print_soal_css): ?>
-        <link href="<?php echo $base_url; ?>/assets/css/print-soal.css" rel="stylesheet">
+        <link href="<?php echo htmlspecialchars(asset_url('assets/css/print-soal.css', (string)$base_url)); ?>" rel="stylesheet">
     <?php endif; ?>
 
     <?php if ($use_mathjax): ?>
