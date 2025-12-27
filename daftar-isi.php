@@ -110,30 +110,99 @@ $totalPages = 1;
 
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
-        $packageCount = 0;
-        $contentCount = 0;
+        // Fetch packages (published) + published_questions, then fetch published contents.
+        // We intentionally avoid a SQL UNION because some MySQL/MariaDB setups error out on collation mixing.
+        $packages = [];
+        $contents = [];
 
-        $stmt = $pdo->query('SELECT COUNT(*) AS cnt FROM packages WHERE status = "published"');
-        $packageCount = (int)$stmt->fetchColumn();
+        try {
+            $sqlPackages = 'SELECT
+                    p.id,
+                    p.code,
+                    p.name,
+                    p.materi,
+                    p.submateri,
+                    p.description,
+                    p.created_at,
+                    p.published_at,
+                    COALESCE(ps.published_questions, 0) AS published_questions
+                FROM packages p
+                LEFT JOIN (
+                    SELECT pq.package_id,
+                           COUNT(DISTINCT IF(q.status_soal = "published", pq.question_id, NULL)) AS published_questions
+                    FROM package_questions pq
+                    LEFT JOIN questions q ON q.id = pq.question_id
+                    GROUP BY pq.package_id
+                ) ps ON ps.package_id = p.id
+                WHERE p.status = "published"
+                ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC';
+            $packages = $pdo->query($sqlPackages)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable $e2) {
+            $packages = [];
+        }
 
         // Prefer excluding contents that are already attached as package intro (same behavior as homepage).
         try {
-            $stmt = $pdo->query('SELECT COUNT(*)
-                FROM contents c
-                WHERE c.status = "published"
-                  AND c.id NOT IN (
+            $sqlContents = 'SELECT id, type, title, slug, excerpt, materi, submateri, created_at,
+                    COALESCE(published_at, created_at) AS published_at
+                FROM contents
+                WHERE status = "published"
+                  AND id NOT IN (
                     SELECT intro_content_id
                     FROM packages
                     WHERE status = "published" AND intro_content_id IS NOT NULL
-                  )');
-            $contentCount = (int)$stmt->fetchColumn();
+                  )
+                ORDER BY COALESCE(published_at, created_at) DESC, id DESC';
+            $contents = $pdo->query($sqlContents)->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $e2) {
-            $stmt = $pdo->query('SELECT COUNT(*) FROM contents WHERE status = "published"');
-            $contentCount = (int)$stmt->fetchColumn();
+            try {
+                $sqlContents = 'SELECT id, type, title, slug, excerpt, materi, submateri, created_at,
+                        COALESCE(published_at, created_at) AS published_at
+                    FROM contents
+                    WHERE status = "published"
+                    ORDER BY COALESCE(published_at, created_at) DESC, id DESC';
+                $contents = $pdo->query($sqlContents)->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Throwable $e3) {
+                $contents = [];
+            }
         }
 
-        $total = $packageCount + $contentCount;
+        $allItems = [];
+        foreach ($packages as $p) {
+            $publishedAt = (string)($p['published_at'] ?? '');
+            if ($publishedAt === '') {
+                $publishedAt = (string)($p['created_at'] ?? '');
+            }
+            $allItems[] = [
+                'kind' => 'package',
+                'date' => $publishedAt,
+                'id' => (int)($p['id'] ?? 0),
+                'row' => $p,
+            ];
+        }
+        foreach ($contents as $c) {
+            $publishedAt = (string)($c['published_at'] ?? '');
+            if ($publishedAt === '') {
+                $publishedAt = (string)($c['created_at'] ?? '');
+            }
+            $allItems[] = [
+                'kind' => 'content',
+                'date' => $publishedAt,
+                'id' => (int)($c['id'] ?? 0),
+                'row' => $c,
+            ];
+        }
 
+        usort($allItems, function (array $a, array $b): int {
+            $ta = strtotime((string)($a['date'] ?? '')) ?: 0;
+            $tb = strtotime((string)($b['date'] ?? '')) ?: 0;
+            if ($ta === $tb) {
+                return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
+            }
+            return $tb <=> $ta;
+        });
+
+        $total = count($allItems);
         $totalPages = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
         if ($totalPages < 1) {
             $totalPages = 1;
@@ -143,113 +212,30 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
         }
 
         $offset = ($page - 1) * $perPage;
+        if ($perPage > 0) {
+            $allItems = array_slice($allItems, $offset, $perPage);
+        }
 
-        // Unified feed (packages + contents) ordered by publish/created date, same as homepage.
-        // NOTE: we avoid selecting content_html to keep payload small.
-        $sql = 'SELECT * FROM (
-                SELECT
-                    "package" AS kind,
-                    p.id,
-                    p.name AS title,
-                    NULL AS slug,
-                    NULL AS type,
-                    p.code,
-                    p.materi,
-                    p.submateri,
-                    p.description,
-                    NULL AS excerpt,
-                    p.created_at,
-                    p.published_at,
-                    COUNT(DISTINCT IF(q.status_soal = "published", pq.question_id, NULL)) AS published_questions
-                FROM packages p
-                LEFT JOIN package_questions pq ON pq.package_id = p.id
-                LEFT JOIN questions q ON q.id = pq.question_id
-                WHERE p.status = "published"
-                GROUP BY p.id
-
-                UNION ALL
-
-                SELECT
-                    "content" AS kind,
-                    c.id,
-                    c.title,
-                    c.slug,
-                    c.type,
-                    NULL AS code,
-                    c.materi,
-                    c.submateri,
-                    NULL AS description,
-                    c.excerpt,
-                    c.created_at,
-                    c.published_at,
-                    NULL AS published_questions
-                FROM contents c
-                WHERE c.status = "published"
-                  AND c.id NOT IN (
-                    SELECT intro_content_id
-                    FROM packages
-                    WHERE status = "published" AND intro_content_id IS NOT NULL
-                  )
-            ) t
-            ORDER BY COALESCE(t.published_at, t.created_at) DESC, t.id DESC
-            LIMIT :lim OFFSET :off';
-
-        // Backward compatibility if intro_content_id column isn't available.
-        try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
-            $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-            $feedItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Throwable $e2) {
-            $sqlFallback = 'SELECT * FROM (
-                    SELECT
-                        "package" AS kind,
-                        p.id,
-                        p.name AS title,
-                        NULL AS slug,
-                        NULL AS type,
-                        p.code,
-                        p.materi,
-                        p.submateri,
-                        p.description,
-                        NULL AS excerpt,
-                        p.created_at,
-                        p.published_at,
-                        COUNT(DISTINCT IF(q.status_soal = "published", pq.question_id, NULL)) AS published_questions
-                    FROM packages p
-                    LEFT JOIN package_questions pq ON pq.package_id = p.id
-                    LEFT JOIN questions q ON q.id = pq.question_id
-                    WHERE p.status = "published"
-                    GROUP BY p.id
-
-                    UNION ALL
-
-                    SELECT
-                        "content" AS kind,
-                        c.id,
-                        c.title,
-                        c.slug,
-                        c.type,
-                        NULL AS code,
-                        c.materi,
-                        c.submateri,
-                        NULL AS description,
-                        c.excerpt,
-                        c.created_at,
-                        c.published_at,
-                        NULL AS published_questions
-                    FROM contents c
-                    WHERE c.status = "published"
-                ) t
-                ORDER BY COALESCE(t.published_at, t.created_at) DESC, t.id DESC
-                LIMIT :lim OFFSET :off';
-
-            $stmt = $pdo->prepare($sqlFallback);
-            $stmt->bindValue(':lim', $perPage, PDO::PARAM_INT);
-            $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-            $feedItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Flatten to the existing renderer shape.
+        $feedItems = [];
+        foreach ($allItems as $it) {
+            $kind = (string)($it['kind'] ?? '');
+            $row = is_array($it['row'] ?? null) ? (array)$it['row'] : [];
+            $feedItems[] = [
+                'kind' => $kind,
+                'id' => (int)($it['id'] ?? 0),
+                'title' => (string)($row['title'] ?? ($row['name'] ?? '')),
+                'slug' => (string)($row['slug'] ?? ''),
+                'type' => (string)($row['type'] ?? ''),
+                'code' => (string)($row['code'] ?? ''),
+                'materi' => (string)($row['materi'] ?? ''),
+                'submateri' => (string)($row['submateri'] ?? ''),
+                'description' => (string)($row['description'] ?? ''),
+                'excerpt' => (string)($row['excerpt'] ?? ''),
+                'created_at' => (string)($row['created_at'] ?? ''),
+                'published_at' => (string)($row['published_at'] ?? ''),
+                'published_questions' => (int)($row['published_questions'] ?? 0),
+            ];
         }
     } catch (Throwable $e) {
         $total = 0;
