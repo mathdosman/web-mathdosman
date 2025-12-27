@@ -26,6 +26,7 @@ pre {
 .richtext-content table {
     width: 100%;
     border-collapse: collapse;
+    border: 1px solid var(--bs-border-color);
 }
 
 .richtext-content th,

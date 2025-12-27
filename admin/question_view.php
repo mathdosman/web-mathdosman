@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="mb-3">
                     <div class="fw-semibold mb-1">Teks Soal</div>
-                    <div class="border rounded p-3 bg-light small text-break"><?php echo (string)($question['pertanyaan'] ?? ''); ?></div>
+                    <div class="border rounded p-3 bg-light small text-break richtext-content"><?php echo (string)($question['pertanyaan'] ?? ''); ?></div>
                 </div>
 
                 <?php
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <?php if ($penyelesaianHasContent): ?>
                     <div class="mb-3">
                         <div class="fw-semibold mb-1">Penyelesaian</div>
-                        <div class="border rounded p-3 bg-light small text-break"><?php echo $penyelesaianHtml; ?></div>
+                        <div class="border rounded p-3 bg-light small text-break richtext-content"><?php echo $penyelesaianHtml; ?></div>
                     </div>
                 <?php endif; ?>
 
@@ -115,31 +115,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-2">
                             <div class="fw-semibold">Pilihan 1 (A)</div>
-                            <div class="text-break"><?php echo (string)($question['pilihan_1'] ?? ''); ?></div>
+                            <div class="text-break richtext-content"><?php echo (string)($question['pilihan_1'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-2">
                             <div class="fw-semibold">Pilihan 2 (B)</div>
-                            <div class="text-break"><?php echo (string)($question['pilihan_2'] ?? ''); ?></div>
+                            <div class="text-break richtext-content"><?php echo (string)($question['pilihan_2'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-2">
                             <div class="fw-semibold">Pilihan 3 (C)</div>
-                            <div class="text-break"><?php echo (string)($question['pilihan_3'] ?? ''); ?></div>
+                            <div class="text-break richtext-content"><?php echo (string)($question['pilihan_3'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-2">
                             <div class="fw-semibold">Pilihan 4 (D)</div>
-                            <div class="text-break"><?php echo (string)($question['pilihan_4'] ?? ''); ?></div>
+                            <div class="text-break richtext-content"><?php echo (string)($question['pilihan_4'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border rounded p-2">
                             <div class="fw-semibold">Pilihan 5 (E)</div>
-                            <div class="text-break"><?php echo (string)($question['pilihan_5'] ?? ''); ?></div>
+                            <div class="text-break richtext-content"><?php echo (string)($question['pilihan_5'] ?? ''); ?></div>
                         </div>
                     </div>
                 </div>

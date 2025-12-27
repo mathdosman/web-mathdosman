@@ -1,7 +1,8 @@
 <?php
 
-    // Sanitizer sederhana untuk HTML hasil editor (Summernote).
-    // Tujuan: mencegah XSS dengan allowlist tag/atribut, dan membatasi <img src> hanya ke folder gambar aplikasi.
+    // Sanitizer sederhana untuk HTML hasil editor.
+    // Tujuan: mencegah XSS dengan allowlist tag/atribut, membatasi <img src> ke folder gambar aplikasi,
+    // dan mengizinkan subset kecil style untuk kebutuhan tabel (border).
 
 function sanitize_rich_text(string $html): string
 {
@@ -35,19 +36,194 @@ function sanitize_rich_text(string $html): string
         'sub' => [],
         'sup' => [],
         'span' => [],
-        // Keep basic table attributes so tables remain visually recognizable
-        // even after we strip inline styles.
-        'table' => ['border', 'cellpadding', 'cellspacing'],
+        // Keep basic table attributes so tables remain visually recognizable.
+        // We also allow a very small safe subset of inline styles (border-color only)
+        // to support TinyMCE's table border color settings.
+        'table' => ['border', 'cellpadding', 'cellspacing', 'bordercolor', 'style'],
         'thead' => [],
         'tbody' => [],
         'tfoot' => [],
-        'tr' => [],
-        'th' => ['colspan', 'rowspan'],
-        'td' => ['colspan', 'rowspan'],
+        'tr' => ['style'],
+        'th' => ['colspan', 'rowspan', 'bordercolor', 'style'],
+        'td' => ['colspan', 'rowspan', 'bordercolor', 'style'],
         'caption' => [],
         'a' => ['href', 'title', 'target', 'rel'],
         'img' => ['src', 'alt', 'width', 'height'],
     ];
+
+    $isSafeColorValue = static function (string $val): bool {
+        $val = trim($val);
+        if ($val === '') {
+            return false;
+        }
+
+        // Allow named CSS colors too (e.g. "red"), since TinyMCE can emit them.
+        // Keep it conservative: letters only.
+        $lower = strtolower($val);
+        if (preg_match('/^[a-z]{3,30}$/', $lower)) {
+            return true;
+        }
+
+        return (
+            preg_match('/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i', $val)
+            // rgb/rgba: comma-separated
+            || preg_match('/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(\s*,\s*(0|1|0?\.\d+))?\s*\)$/i', $val)
+            // rgb/rgba: space-separated (CSS Color 4), optional "/ alpha"
+            || preg_match('/^rgba?\(\s*\d{1,3}\s+\d{1,3}\s+\d{1,3}(\s*\/\s*(0|1|0?\.\d+))?\s*\)$/i', $val)
+            // hsl/hsla: comma-separated
+            || preg_match('/^hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(\s*,\s*(0|1|0?\.\d+))?\s*\)$/i', $val)
+            // hsl/hsla: space-separated (CSS Color 4), optional "/ alpha"
+            || preg_match('/^hsla?\(\s*\d{1,3}\s+\d{1,3}%\s+\d{1,3}%(\s*\/\s*(0|1|0?\.\d+))?\s*\)$/i', $val)
+            || preg_match('/^var\(\s*--bs-[a-z0-9-]+\s*\)$/i', $val)
+            || in_array(strtolower($val), ['transparent', 'currentcolor'], true)
+        );
+    };
+
+    $sanitizeTableStyle = static function (?string $style) use ($isSafeColorValue): string {
+        $style = trim((string)$style);
+        if ($style === '') {
+            return '';
+        }
+
+        // Hard block obviously dangerous tokens.
+        $lower = strtolower($style);
+        if (str_contains($lower, 'expression') || str_contains($lower, 'url(') || str_contains($lower, 'javascript:')) {
+            return '';
+        }
+
+        // Only keep border-related styling to support TinyMCE table border settings.
+        $allowedProps = ['border', 'border-color', 'border-width', 'border-style'];
+        $out = [];
+
+        foreach (preg_split('/;\s*/', $style) as $decl) {
+            $decl = trim((string)$decl);
+            if ($decl === '' || !str_contains($decl, ':')) {
+                continue;
+            }
+
+            [$prop, $val] = array_map('trim', explode(':', $decl, 2));
+            $propLower = strtolower($prop);
+            if (!in_array($propLower, $allowedProps, true)) {
+                continue;
+            }
+
+            $val = trim((string)$val);
+            // Strip !important (TinyMCE can emit it)
+            $val = preg_replace('/\s*!important\s*$/i', '', $val);
+            if ($val === '') {
+                continue;
+            }
+
+            if ($propLower === 'border-color') {
+                if ($isSafeColorValue($val)) {
+                    $out[] = $propLower . ': ' . $val;
+                }
+                continue;
+            }
+
+            if ($propLower === 'border-style') {
+                $v = strtolower($val);
+                if (in_array($v, ['solid', 'dashed', 'dotted', 'double', 'none'], true)) {
+                    $out[] = $propLower . ': ' . $v;
+                }
+                continue;
+            }
+
+            if ($propLower === 'border-width') {
+                $v = strtolower($val);
+                if (preg_match('/^(0|[1-9]\d?)(px)?$/', $v) || in_array($v, ['thin', 'medium', 'thick'], true)) {
+                    $out[] = $propLower . ': ' . $v;
+                }
+                continue;
+            }
+
+            if ($propLower === 'border') {
+                // Accept common variants and recompose to a safe form.
+                // TinyMCE may output: "1px solid rgb(255, 0, 0)" (note spaces).
+                $v = trim($val);
+                $v = preg_replace('/\s+/', ' ', $v);
+
+                $width = null;
+                $styleToken = null;
+                $color = null;
+
+                // Try to parse "{width} {style} {color...}" first.
+                if (preg_match('/^(?:(0|[1-9]\d?)(px)?\s+|\b(thin|medium|thick)\s+)?\b(solid|dashed|dotted|double|none)\b\s+(.+)$/i', $v, $m)) {
+                    $widthNum = (string)($m[1] ?? '');
+                    $widthUnit = (string)($m[2] ?? '');
+                    $widthWord = (string)($m[3] ?? '');
+                    $styleToken = strtolower((string)($m[4] ?? ''));
+                    $colorCandidate = trim((string)($m[5] ?? ''));
+
+                    if ($widthWord !== '') {
+                        $width = strtolower($widthWord);
+                    } elseif ($widthNum !== '') {
+                        $width = strtolower($widthNum . ($widthUnit !== '' ? $widthUnit : ''));
+                    }
+
+                    // Strip trailing !important if present.
+                    $colorCandidate = preg_replace('/\s*!important\s*$/i', '', $colorCandidate);
+                    if ($isSafeColorValue($colorCandidate)) {
+                        $color = $colorCandidate;
+                    }
+                }
+
+                // Fallback: try to find a safe color anywhere.
+                if ($color === null) {
+                    // Look for hex
+                    if (preg_match('/#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})/i', $v, $cm)) {
+                        if ($isSafeColorValue($cm[0])) {
+                            $color = $cm[0];
+                        }
+                    }
+                }
+                if ($color === null) {
+                    // Look for rgb()/rgba()/hsl()/hsla()
+                    if (preg_match('/\b(?:rgba?|hsla?)\([^)]*\)/i', $v, $cm)) {
+                        $cand = preg_replace('/\s*!important\s*$/i', '', $cm[0]);
+                        if ($isSafeColorValue($cand)) {
+                            $color = $cand;
+                        }
+                    }
+                }
+                if ($color === null) {
+                    // Look for var(--bs-...)
+                    if (preg_match('/var\(\s*--bs-[a-z0-9-]+\s*\)/i', $v, $cm)) {
+                        if ($isSafeColorValue($cm[0])) {
+                            $color = $cm[0];
+                        }
+                    }
+                }
+
+                if ($color !== null) {
+                    // Try to keep width/style if they exist; otherwise default.
+                    if ($width === null) {
+                        if (preg_match('/\b(0|[1-9]\d?)(px)?\b/i', $v, $wm)) {
+                            $width = strtolower($wm[0]);
+                            if (!str_ends_with($width, 'px') && $width !== '0') {
+                                $width .= 'px';
+                            }
+                        } elseif (preg_match('/\b(thin|medium|thick)\b/i', $v, $wm)) {
+                            $width = strtolower($wm[1]);
+                        } else {
+                            $width = '1px';
+                        }
+                    }
+                    if ($styleToken === null) {
+                        if (preg_match('/\b(solid|dashed|dotted|double|none)\b/i', $v, $sm)) {
+                            $styleToken = strtolower($sm[1]);
+                        } else {
+                            $styleToken = 'solid';
+                        }
+                    }
+
+                    $out[] = 'border: ' . $width . ' ' . $styleToken . ' ' . $color;
+                }
+            }
+        }
+
+        return implode('; ', $out);
+    };
 
     $isSafeHref = static function (?string $href): bool {
         if (!$href) {
@@ -135,7 +311,7 @@ function sanitize_rich_text(string $html): string
         return '';
     }
 
-    $removeDisallowed = static function (DOMNode $node) use (&$removeDisallowed, $doc, $allowedTags, $isSafeHref, $isSafeImgSrc): void {
+    $removeDisallowed = static function (DOMNode $node) use (&$removeDisallowed, $doc, $allowedTags, $isSafeHref, $isSafeImgSrc, $sanitizeTableStyle): void {
         if ($node instanceof DOMElement) {
             $tag = strtolower($node->tagName);
 
@@ -148,17 +324,50 @@ function sanitize_rich_text(string $html): string
                 return;
             }
 
+            // TinyMCE sometimes stores inline styles in data-mce-style.
+            // Merge into style (then sanitize) so formatting persists.
+            if ($node->hasAttribute('data-mce-style')) {
+                $allowedAttrsForTag = $allowedTags[$tag] ?? [];
+                if (in_array('style', $allowedAttrsForTag, true)) {
+                    $mceStyle = trim((string)$node->getAttribute('data-mce-style'));
+                    if ($mceStyle !== '') {
+                        $existingStyle = trim((string)$node->getAttribute('style'));
+                        if ($existingStyle === '') {
+                            $node->setAttribute('style', $mceStyle);
+                        } else {
+                            $node->setAttribute('style', $existingStyle . '; ' . $mceStyle);
+                        }
+                    }
+                }
+            }
+
             // Clean attributes
             $allowedAttrs = $allowedTags[$tag];
             if ($node->hasAttributes()) {
                 $toRemove = [];
                 foreach ($node->attributes as $attr) {
                     $name = strtolower($attr->name);
-                    // remove event handlers/style always
-                    if (str_starts_with($name, 'on') || $name === 'style') {
+                    // remove event handlers always
+                    if (str_starts_with($name, 'on')) {
                         $toRemove[] = $attr->name;
                         continue;
                     }
+
+                    // style: allow only for specific tags and sanitize it aggressively
+                    if ($name === 'style') {
+                        if (!in_array('style', $allowedAttrs, true)) {
+                            $toRemove[] = $attr->name;
+                            continue;
+                        }
+                        $cleanStyle = $sanitizeTableStyle($node->getAttribute('style'));
+                        if ($cleanStyle === '') {
+                            $toRemove[] = $attr->name;
+                        } else {
+                            $node->setAttribute('style', $cleanStyle);
+                        }
+                        continue;
+                    }
+
                     if (!in_array($name, $allowedAttrs, true)) {
                         $toRemove[] = $attr->name;
                     }
