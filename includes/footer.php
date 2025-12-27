@@ -81,7 +81,9 @@
 		return;
 	}
 
-	const uploadUrl = <?php echo json_encode(rtrim((string)$base_url, '/') . '/admin/uploadeditor.php'); ?>;
+	// Use a relative URL so it automatically matches the current scheme (http/https)
+	// and avoids Mixed Content issues behind reverse proxies.
+	const uploadUrl = 'uploadeditor.php';
 
 	const triggerSaveSafe = () => {
 		try {

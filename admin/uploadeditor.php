@@ -172,10 +172,20 @@ try {
     // ignore resize errors
 }
 
-$url = rtrim((string)($base_url ?? ''), '/') . '/gambar/' . $newFileName;
-if ($url === '/gambar/' . $newFileName) {
-    // Fallback (should not happen unless config missing)
-    $url = '../gambar/' . $newFileName;
+// Build a scheme-agnostic URL (path only) to avoid Mixed Content when the site
+// is behind a reverse proxy that terminates HTTPS.
+$basePath = '';
+if (isset($base_url) && is_string($base_url) && trim($base_url) !== '') {
+    $p = (string)(parse_url($base_url, PHP_URL_PATH) ?? '');
+    $p = rtrim($p, '/');
+    if ($p !== '' && $p !== '/') {
+        $basePath = $p;
+    }
+}
+
+$url = ($basePath !== '' ? $basePath : '') . '/gambar/' . $newFileName;
+if (!str_starts_with($url, '/')) {
+    $url = '/' . $url;
 }
 
 $imgTag = '<img src="' . htmlspecialchars($url, ENT_QUOTES) . '" style="max-width: 100%; height: auto;">';

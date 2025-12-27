@@ -46,8 +46,35 @@ function app_current_base_url(): ?string
         return null;
     }
 
+    // Detect HTTPS reliably, including when behind a reverse proxy (common on hosting/CDN).
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || ((int)($_SERVER['SERVER_PORT'] ?? 0) === 443);
+
+    if (!$https) {
+        $xfp = strtolower(trim((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')));
+        if ($xfp === 'https') {
+            $https = true;
+        }
+    }
+    if (!$https) {
+        $xfs = strtolower(trim((string)($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '')));
+        if ($xfs === 'on' || $xfs === '1') {
+            $https = true;
+        }
+    }
+    if (!$https) {
+        $rs = strtolower(trim((string)($_SERVER['REQUEST_SCHEME'] ?? '')));
+        if ($rs === 'https') {
+            $https = true;
+        }
+    }
+    if (!$https) {
+        // Cloudflare: HTTP_CF_VISITOR: {"scheme":"https"}
+        $cfv = (string)($_SERVER['HTTP_CF_VISITOR'] ?? '');
+        if ($cfv !== '' && stripos($cfv, '"scheme":"https"') !== false) {
+            $https = true;
+        }
+    }
     $scheme = $https ? 'https' : 'http';
 
     $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '/');
