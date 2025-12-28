@@ -107,6 +107,28 @@ if ($slug === '') {
 
 			// Sidebar: 3 list konten (gabungan materi + paket), semua published.
 			try {
+				$excludeExamPackages = false;
+				try {
+					$pdo->query('SELECT 1 FROM student_assignments LIMIT 1');
+					$excludeExamPackages = true;
+				} catch (Throwable $e0) {
+					$excludeExamPackages = false;
+				}
+				$excludeIsExamFlag = false;
+				try {
+					$stmtC = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+					$stmtC->execute([':c' => 'is_exam']);
+					$excludeIsExamFlag = (bool)$stmtC->fetch();
+				} catch (Throwable $e0b) {
+					$excludeIsExamFlag = false;
+				}
+				$excludeExamSql = $excludeExamPackages
+					? ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")'
+					: '';
+				if ($excludeIsExamFlag) {
+					$excludeExamSql .= ' AND COALESCE(p.is_exam, 0) = 0';
+				}
+
 				$currKindForSidebar = 'content';
 				$currIdForSidebar = (int)($content['id'] ?? 0);
 				if ($linkedIntroPackage) {
@@ -139,7 +161,7 @@ if ($slug === '') {
 						FROM package_questions
 						GROUP BY package_id
 					) qc ON qc.package_id = p.id
-					WHERE p.status = "published"
+					WHERE p.status = "published"' . $excludeExamSql . '
 					UNION ALL
 					SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
 						c.id AS id,
@@ -177,7 +199,7 @@ if ($slug === '') {
 						FROM package_questions
 						GROUP BY package_id
 					) qc ON qc.package_id = p.id
-					WHERE p.status = "published"
+					WHERE p.status = "published"' . $excludeExamSql . '
 					UNION ALL
 					SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
 						c.id AS id,

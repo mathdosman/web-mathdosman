@@ -3,6 +3,16 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_role('admin');
 
+// Hide exam packages from Web -> Paket Soal list (if column exists).
+$hasIsExamColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+    $stmt->execute([':c' => 'is_exam']);
+    $hasIsExamColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasIsExamColumn = false;
+}
+
 if (app_runtime_migrations_enabled()) {
     // Ensure tables/columns exist for older installs (opt-in).
     try {
@@ -296,6 +306,10 @@ $offset = 0;
 try {
     $params = [];
     $where = ' WHERE 1=1';
+
+    if ($hasIsExamColumn) {
+        $where .= ' AND COALESCE(p.is_exam, 0) = 0';
+    }
     if ($filterSubjectId > 0) {
         $where .= ' AND p.subject_id = :fsid';
         $params[':fsid'] = $filterSubjectId;
@@ -335,6 +349,7 @@ try {
     try {
         $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
             COALESCE(d.cnt, 0) AS draft_count,
+            COALESCE(pub.cnt, 0) AS published_count,
             s.name AS subject_name,
             COALESCE(pv.views, 0) AS views
             FROM packages p
@@ -346,7 +361,14 @@ try {
                 JOIN questions q ON q.id = pq.question_id
                 WHERE q.status_soal IS NULL OR q.status_soal <> "published"
                 GROUP BY pq.package_id
-            ) d ON d.package_id = p.id';
+            ) d ON d.package_id = p.id
+            LEFT JOIN (
+                SELECT pq.package_id, COUNT(*) AS cnt
+                FROM package_questions pq
+                JOIN questions q ON q.id = pq.question_id
+                WHERE q.status_soal = "published"
+                GROUP BY pq.package_id
+            ) pub ON pub.package_id = p.id';
         $sql .= $where;
         $sql .= ' ORDER BY p.created_at DESC';
         $sql .= ' LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$offset;
@@ -357,6 +379,7 @@ try {
     } catch (Throwable $e2) {
         $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
             COALESCE(d.cnt, 0) AS draft_count,
+            COALESCE(pub.cnt, 0) AS published_count,
             s.name AS subject_name,
             0 AS views
             FROM packages p
@@ -367,7 +390,14 @@ try {
                 JOIN questions q ON q.id = pq.question_id
                 WHERE q.status_soal IS NULL OR q.status_soal <> "published"
                 GROUP BY pq.package_id
-            ) d ON d.package_id = p.id';
+            ) d ON d.package_id = p.id
+            LEFT JOIN (
+                SELECT pq.package_id, COUNT(*) AS cnt
+                FROM package_questions pq
+                JOIN questions q ON q.id = pq.question_id
+                WHERE q.status_soal = "published"
+                GROUP BY pq.package_id
+            ) pub ON pub.package_id = p.id';
         $sql .= $where;
         $sql .= ' ORDER BY p.created_at DESC';
         $sql .= ' LIMIT ' . (int)$perPage . ' OFFSET ' . (int)$offset;
@@ -563,6 +593,9 @@ include __DIR__ . '/../includes/header.php';
                                     <?php else: ?>
                                         <span class="badge text-bg-secondary">Draft</span>
                                     <?php endif; ?>
+                                    <?php if ((int)($p['published_count'] ?? 0) > 0): ?>
+                                        <span class="badge text-bg-success ms-1">Soal Terbit: <?php echo (int)$p['published_count']; ?></span>
+                                    <?php endif; ?>
                                     <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
                                         <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>
                                     <?php endif; ?>
@@ -591,6 +624,9 @@ include __DIR__ . '/../includes/header.php';
                                     <span class="badge text-bg-success">Terbit</span>
                                 <?php else: ?>
                                     <span class="badge text-bg-secondary">Draft</span>
+                                <?php endif; ?>
+                                <?php if ((int)($p['published_count'] ?? 0) > 0): ?>
+                                    <span class="badge text-bg-success ms-1">Soal Terbit: <?php echo (int)$p['published_count']; ?></span>
                                 <?php endif; ?>
                                 <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
                                     <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>

@@ -1,18 +1,30 @@
-<?php if (empty($useAdminSidebar)): ?>
+<?php if (empty($useAdminSidebar) && empty($useStudentSidebar)): ?>
+	<?php
+		$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+		$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
+	?>
 	<footer class="mt-4 pt-3 border-top">
 		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
-			<div><a href="<?php echo $base_url; ?>/login.php" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> MATHDOSMAN</a></div>
-			<div class="d-flex flex-wrap gap-3">
-				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
-				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
-				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kebijakan-privasi.php">Kebijakan Privasi</a>
-				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/syarat-ketentuan.php">Syarat &amp; Ketentuan</a>
+			<div>
+				<?php if ($isHomePage): ?>
+					<a href="<?php echo htmlspecialchars((string)$base_url); ?>/login.php" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> MATHDOSMAN</a>
+				<?php else: ?>
+					<span>&copy; <?php echo date('Y'); ?> MATHDOSMAN</span>
+				<?php endif; ?>
 			</div>
+			<?php if (empty($hide_public_footer_links)): ?>
+				<div class="d-flex flex-wrap gap-3">
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kebijakan-privasi.php">Kebijakan Privasi</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/syarat-ketentuan.php">Syarat &amp; Ketentuan</a>
+				</div>
+			<?php endif; ?>
 		</div>
 	</footer>
 <?php endif; ?>
 
-<?php if (!empty($useAdminSidebar)): ?>
+<?php if (!empty($useAdminSidebar) || !empty($useStudentSidebar)): ?>
 			</div>
 		</div>
 <?php endif; ?>
@@ -58,6 +70,172 @@
 	window.addEventListener('resize', syncDefault);
 })();
 </script>
+
+<?php if (!empty($useAdminSidebar)): ?>
+<script>
+(() => {
+	// Keep sidebar scroll position and active item between page loads.
+	const sidebar = document.getElementById('adminSidebar');
+	if (!sidebar) return;
+
+	const path = String(window.location.pathname || '');
+	let cut = path.indexOf('/siswa/admin/');
+	if (cut < 0) cut = path.indexOf('/admin/');
+	const base = (cut >= 0) ? path.slice(0, cut) : '';
+	const scrollKey = 'md_admin_sidebar_scroll:' + base;
+	const activeKey = 'md_admin_sidebar_active:' + base;
+
+	// Restore scroll position early.
+	try {
+		const saved = sessionStorage.getItem(scrollKey);
+		if (saved !== null) {
+			const n = parseInt(saved, 10);
+			if (!Number.isNaN(n)) {
+				sidebar.scrollTop = n;
+			}
+		}
+	} catch (e) {}
+
+	// Persist scroll position.
+	let scrollTimer = 0;
+	const saveScroll = () => {
+		try { sessionStorage.setItem(scrollKey, String(sidebar.scrollTop || 0)); } catch (e) {}
+	};
+	sidebar.addEventListener('scroll', () => {
+		if (scrollTimer) return;
+		scrollTimer = window.setTimeout(() => {
+			scrollTimer = 0;
+			saveScroll();
+		}, 120);
+	}, { passive: true });
+
+	// Ensure we save scroll before navigating via sidebar clicks.
+	sidebar.addEventListener('click', (e) => {
+		const a = e.target && (e.target.closest ? e.target.closest('a') : null);
+		if (!a) return;
+		if (!(a instanceof HTMLAnchorElement)) return;
+		// Skip if link opens in new tab/window.
+		if (a.target && a.target !== '_self') return;
+		saveScroll();
+		try { sessionStorage.setItem(activeKey, a.href || ''); } catch (err) {}
+	});
+
+	// Apply active styling based on current URL (fallback if PHP-side detection misses a page).
+	try {
+		const currentPath = new URL(window.location.href).pathname;
+		const links = Array.from(sidebar.querySelectorAll('a.sidebar-link'));
+		let matched = null;
+		for (const link of links) {
+			try {
+				const linkPath = new URL(link.href, window.location.href).pathname;
+				if (linkPath === currentPath) {
+					matched = link;
+					break;
+				}
+			} catch (e) {}
+		}
+
+		if (!matched) {
+			// Optional fallback: last clicked sidebar link.
+			const last = sessionStorage.getItem(activeKey) || '';
+			if (last) {
+				for (const link of links) {
+					if (String(link.href || '') === String(last)) {
+						matched = link;
+						break;
+					}
+				}
+			}
+		}
+
+		if (matched) {
+			for (const link of links) {
+				link.classList.toggle('active', link === matched);
+				if (link === matched) {
+					link.setAttribute('aria-current', 'page');
+				} else {
+					if (link.getAttribute('aria-current') === 'page') {
+						link.removeAttribute('aria-current');
+					}
+				}
+			}
+		}
+	} catch (e) {}
+})();
+</script>
+<?php endif; ?>
+
+<?php if (empty($useAdminSidebar) && !empty($useStudentSidebar)): ?>
+<script>
+(() => {
+	// Keep sidebar scroll position and active item between page loads (student).
+	const sidebar = document.getElementById('studentSidebar');
+	if (!sidebar) return;
+
+	const path = String(window.location.pathname || '');
+	let cut = path.indexOf('/siswa/');
+	const base = (cut >= 0) ? path.slice(0, cut) : '';
+	const scrollKey = 'md_student_sidebar_scroll:' + base;
+	const activeKey = 'md_student_sidebar_active:' + base;
+
+	try {
+		const saved = sessionStorage.getItem(scrollKey);
+		if (saved !== null) {
+			const n = parseInt(saved, 10);
+			if (!Number.isNaN(n)) sidebar.scrollTop = n;
+		}
+	} catch (e) {}
+
+	let scrollTimer = 0;
+	const saveScroll = () => {
+		try { sessionStorage.setItem(scrollKey, String(sidebar.scrollTop || 0)); } catch (e) {}
+	};
+	sidebar.addEventListener('scroll', () => {
+		if (scrollTimer) return;
+		scrollTimer = window.setTimeout(() => {
+			scrollTimer = 0;
+			saveScroll();
+		}, 120);
+	}, { passive: true });
+
+	sidebar.addEventListener('click', (e) => {
+		const a = e.target && (e.target.closest ? e.target.closest('a') : null);
+		if (!a) return;
+		if (!(a instanceof HTMLAnchorElement)) return;
+		if (a.target && a.target !== '_self') return;
+		saveScroll();
+		try { sessionStorage.setItem(activeKey, a.href || ''); } catch (err) {}
+	});
+
+	try {
+		const currentPath = new URL(window.location.href).pathname;
+		const links = Array.from(sidebar.querySelectorAll('a.sidebar-link'));
+		let matched = null;
+		for (const link of links) {
+			try {
+				const linkPath = new URL(link.href, window.location.href).pathname;
+				if (linkPath === currentPath) { matched = link; break; }
+			} catch (e) {}
+		}
+		if (!matched) {
+			const last = sessionStorage.getItem(activeKey) || '';
+			if (last) {
+				for (const link of links) {
+					if (String(link.href || '') === String(last)) { matched = link; break; }
+				}
+			}
+		}
+		if (matched) {
+			for (const link of links) {
+				link.classList.toggle('active', link === matched);
+				if (link === matched) link.setAttribute('aria-current', 'page');
+				else if (link.getAttribute('aria-current') === 'page') link.removeAttribute('aria-current');
+			}
+		}
+	} catch (e) {}
+})();
+</script>
+<?php endif; ?>
 
 <script>
 (() => {
@@ -363,7 +541,12 @@
 		if (!(form instanceof HTMLFormElement)) {
 			return;
 		}
-		if (!form.hasAttribute('data-swal-confirm')) {
+
+		// Allow confirmation to be configured either on the form or on the submit button.
+		const submitter = e.submitter || document.activeElement;
+		const hasOnSubmitter = submitter && submitter instanceof HTMLElement && submitter.hasAttribute('data-swal-confirm');
+		const hasOnForm = form.hasAttribute('data-swal-confirm');
+		if (!hasOnForm && !hasOnSubmitter) {
 			return;
 		}
 		// Avoid infinite loop when we re-submit programmatically.
@@ -372,10 +555,11 @@
 		}
 
 		e.preventDefault();
-		const title = form.getAttribute('data-swal-title') || 'Konfirmasi';
-		const text = form.getAttribute('data-swal-text') || 'Lanjutkan aksi ini?';
-		const confirmText = form.getAttribute('data-swal-confirm-text') || 'Ya';
-		const cancelText = form.getAttribute('data-swal-cancel-text') || 'Batal';
+		const src = hasOnSubmitter ? submitter : form;
+		const title = src.getAttribute('data-swal-title') || 'Konfirmasi';
+		const text = src.getAttribute('data-swal-text') || 'Lanjutkan aksi ini?';
+		const confirmText = src.getAttribute('data-swal-confirm-text') || 'Ya';
+		const cancelText = src.getAttribute('data-swal-cancel-text') || 'Batal';
 
 		Swal.fire({
 			title,
@@ -388,20 +572,48 @@
 		}).then((res) => {
 			if (res.isConfirmed) {
 				form.dataset.swalConfirmed = '1';
-				// Prefer requestSubmit() so normal submit events fire (important for editor sync/validation hooks).
+				// Prefer requestSubmit(submitter) to preserve which button was clicked (important for name/value like action=mark_done).
 				if (typeof form.requestSubmit === 'function') {
-					form.requestSubmit();
-				} else {
-					form.submit();
+					try {
+						if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
+							form.requestSubmit(submitter);
+						} else {
+							form.requestSubmit();
+						}
+						return;
+					} catch (err) {
+						// Fallback below.
+					}
 				}
+
+				// Fallback for older browsers: ensure submitter name/value is present by appending a hidden input.
+				try {
+					if (submitter && submitter instanceof HTMLElement) {
+						const n = submitter.getAttribute('name') || '';
+						if (n) {
+							const v = submitter.getAttribute('value') || '';
+							const hidden = document.createElement('input');
+							hidden.type = 'hidden';
+							hidden.name = n;
+							hidden.value = v;
+							form.appendChild(hidden);
+						}
+					}
+				} catch (e) {}
+				form.submit();
 			}
 		});
 	}, true);
 
-	// Convert Bootstrap alerts (danger/success/warning) into SweetAlert2 popups.
-	// Keep alert-info for inline informational messages.
+	// Convert Bootstrap alerts into SweetAlert2 popups.
+	// Keep complex/interactive inline callouts (forms/buttons/links) in place.
 	document.addEventListener('DOMContentLoaded', () => {
-		const candidates = Array.from(document.querySelectorAll('.alert.alert-danger, .alert.alert-success, .alert.alert-warning'));
+		const selector = '.alert.alert-danger, .alert.alert-success, .alert.alert-warning';
+		const candidates = Array.from(document.querySelectorAll(selector)).filter((el) => {
+			// Don't convert alerts that contain interactive elements.
+			if (el.querySelector('form, button, a, .btn, input, select, textarea')) return false;
+			return true;
+		});
 		if (candidates.length === 0) {
 			return;
 		}
@@ -440,6 +652,50 @@
 			html: html !== '' ? html : undefined,
 			text: html !== '' ? undefined : text,
 		});
+	});
+})();
+</script>
+
+<script>
+(() => {
+	if (typeof Swal === 'undefined') return;
+	const body = document.body;
+	if (!body || !body.classList || !body.classList.contains('student-area')) return;
+
+	const params = new URLSearchParams(window.location.search || '');
+	const flash = String(params.get('flash') || '').trim();
+	if (!flash) return;
+
+	const messages = {
+		login_success: { icon: 'success', title: 'Berhasil', text: 'Login berhasil.' },
+		logout_success: { icon: 'success', title: 'Berhasil', text: 'Logout berhasil.' },
+		login_required: { icon: 'info', title: 'Perlu Login', text: 'Silakan login dulu untuk melanjutkan.' },
+
+		saved: { icon: 'success', title: 'Tersimpan', text: 'Jawaban berhasil disimpan.' },
+			done: { icon: 'success', title: 'Dikumpulkan', text: 'Tugas/ujian berhasil dikumpulkan. Nilai dan jawaban ditampilkan.' },
+			already_done: { icon: 'info', title: 'Selesai', text: 'Tugas/ujian sudah dikumpulkan. Nilai dan jawaban ditampilkan.' },
+		started: { icon: 'success', title: 'Ujian Dimulai', text: 'Ujian dimulai. Timer sudah berjalan.' },
+		reopened: { icon: 'success', title: 'Diubah', text: 'Status selesai dibatalkan. Kamu bisa mengerjakan lagi.' },
+	};
+
+	const msg = messages[flash];
+	if (!msg) {
+		// Unknown flash codes are ignored on purpose.
+		return;
+	}
+
+	// Remove flash from URL to prevent showing again on refresh.
+	try {
+		params.delete('flash');
+		const qs = params.toString();
+		const nextUrl = window.location.pathname + (qs ? ('?' + qs) : '') + (window.location.hash || '');
+		window.history.replaceState({}, '', nextUrl);
+	} catch (e) {}
+
+	Swal.fire({
+		icon: msg.icon,
+		title: msg.title,
+		text: msg.text,
 	});
 })();
 </script>

@@ -31,11 +31,25 @@ if (!function_exists('asset_url')) {
 app_session_start();
 
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
+$isStudent = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
 
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 $currentPage = basename($scriptName);
-$isAdminArea = (strpos($scriptName, '/admin/') !== false) || (basename($scriptName) === 'dashboard.php');
+$isAdminArea = (strpos($scriptName, '/admin/') !== false)
+    || (strpos($scriptName, '/siswa/admin/') !== false)
+    || (basename($scriptName) === 'dashboard.php');
 $useAdminSidebar = $isAdmin && $isAdminArea;
+
+$isStudentArea = (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+$disable_student_sidebar = !empty($disable_student_sidebar);
+$useStudentSidebar = $isStudent && $isStudentArea && !$disable_student_sidebar;
+
+$studentAreaBodyClass = $isStudentArea ? ' student-area' : '';
+$studentLayoutBodyClass = $useStudentSidebar ? ' student-layout' : '';
+
+$useSidebar = $useAdminSidebar || $useStudentSidebar;
+
+$disable_navbar = !empty($disable_navbar);
 
 $use_print_soal_css = !empty($use_print_soal_css);
 $body_class = isset($body_class) && is_string($body_class) ? trim($body_class) : '';
@@ -73,26 +87,26 @@ if (!function_exists('format_id_date')) {
         }
 
         $months = [
-            1 => 'jan',
-            2 => 'feb',
-            3 => 'mar',
-            4 => 'apr',
-            5 => 'mei',
-            6 => 'jun',
-            7 => 'jul',
-            8 => 'agu',
-            9 => 'sep',
-            10 => 'okt',
-            11 => 'nov',
-            12 => 'des',
+            1 => 'Jan',
+            2 => 'Feb',
+            3 => 'Mar',
+            4 => 'Apr',
+            5 => 'Mei',
+            6 => 'Jun',
+            7 => 'Jul',
+            8 => 'Agu',
+            9 => 'Sep',
+            10 => 'Okt',
+            11 => 'Nov',
+            12 => 'Des',
         ];
 
-        $day = (int)$dt->format('d');
+        $day = (int)$dt->format('j');
         $monthNum = (int)$dt->format('n');
         $year = (int)$dt->format('Y');
-        $mon = $months[$monthNum] ?? strtolower($dt->format('M'));
+        $mon = $months[$monthNum] ?? $dt->format('M');
 
-        return sprintf('%02d %s %04d', $day, $mon, $year);
+        return sprintf('%d %s %04d', $day, $mon, $year);
     }
 }
 
@@ -176,7 +190,7 @@ try {
         <meta property="og:image" content="<?php echo htmlspecialchars($meta_og_image); ?>">
     <?php endif; ?>
 
-    <?php if (!$useAdminSidebar && !$disable_adsense): ?>
+    <?php if (!$useSidebar && !$disable_adsense): ?>
         <meta name="google-adsense-account" content="ca-pub-4649430696681971">
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4649430696681971" crossorigin="anonymous"></script>
     <?php endif; ?>
@@ -207,10 +221,11 @@ try {
         <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <?php endif; ?>
 </head>
-<body class="bg-light<?php echo $useAdminSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
+<body class="bg-light<?php echo $useSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
+<?php if (!$disable_navbar): ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 app-navbar">
-    <div class="<?php echo $useAdminSidebar ? 'container-fluid' : 'container'; ?>">
-        <?php if ($useAdminSidebar): ?>
+    <div class="<?php echo $useSidebar ? 'container-fluid' : 'container'; ?>">
+        <?php if ($useSidebar): ?>
             <button class="btn btn-outline-light me-2" type="button" id="sidebarToggle" aria-controls="adminSidebar" aria-label="Toggle sidebar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -235,7 +250,7 @@ try {
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <?php if (!$useAdminSidebar): ?>
+            <?php if (!$useSidebar): ?>
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <?php $isActive = ($currentPage === '' || $currentPage === 'index.php'); ?>
@@ -256,8 +271,35 @@ try {
                 </ul>
             <?php endif; ?>
             <ul class="navbar-nav ms-auto">
+                <?php if (!$useSidebar): ?>
+                    <?php if ($isStudent): ?>
+                        <li class="nav-item dropdown me-2">
+                            <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Siswa
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <span class="dropdown-item-text">
+                                        <?php echo htmlspecialchars((string)($_SESSION['student']['nama_siswa'] ?? 'Siswa')); ?>
+                                        <small class="d-block opacity-75">
+                                            <?php echo htmlspecialchars((string)($_SESSION['student']['kelas'] ?? '')); ?>
+                                            <?php echo htmlspecialchars((string)($_SESSION['student']['rombel'] ?? '')); ?>
+                                        </small>
+                                    </span>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<?php echo $base_url; ?>/siswa/dashboard.php">Dashboard Siswa</a></li>
+                                <!-- Logout siswa hanya lewat sidebar -->
+                            </ul>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-light" href="<?php echo $base_url; ?>/siswa/login.php">Login Siswa</a>
+                        </li>
+                    <?php endif; ?>
+                <?php endif; ?>
                 <?php if (!empty($_SESSION['user'])): ?>
-                    <?php if (!$useAdminSidebar): ?>
+                    <?php if (!$useSidebar): ?>
                         <li class="nav-item me-2">
                             <a class="btn btn-outline-light" href="<?php echo $base_url; ?>/dashboard.php">Admin</a>
                         </li>
@@ -284,6 +326,7 @@ try {
         </div>
     </div>
 </nav>
+<?php endif; ?>
 <?php if ($useAdminSidebar): ?>
     <aside class="app-sidebar bg-dark text-white" id="adminSidebar" aria-label="Sidebar Admin">
         <div class="app-sidebar-inner">
@@ -299,6 +342,10 @@ try {
                     </svg>
                     <span>Dashboard</span>
                 </a>
+
+                <hr class="my-2 opacity-25">
+                <div class="small text-white-50 mt-2 mb-2">Web</div>
+
                 <?php
                     $isActive = in_array($currentPage, ['packages.php', 'package_add.php', 'package_edit.php', 'package_items.php', 'package_question_add.php'], true);
                 ?>
@@ -309,37 +356,6 @@ try {
                         <path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/>
                     </svg>
                     <span>Paket Soal</span>
-                </a>
-
-                <?php
-                    $isActive = in_array($currentPage, ['contents.php', 'content_add.php', 'content_edit.php'], true);
-                ?>
-                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/contents.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 4h16v16H4z"/>
-                        <path d="M8 8h8"/>
-                        <path d="M8 12h8"/>
-                        <path d="M8 16h6"/>
-                    </svg>
-                    <span>Konten</span>
-                </a>
-
-                <?php $isActive = ($currentPage === 'home_carousel.php'); ?>
-                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/home_carousel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="5" width="18" height="14" rx="2"/>
-                        <path d="M8 13l2.5-3 3.5 4.5 2.5-3 3.5 4"/>
-                    </svg>
-                    <span>Carousel Beranda</span>
-                </a>
-                <?php $isActive = ($currentPage === 'mapel.php'); ?>
-                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/mapel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M4 19a2 2 0 0 0 2 2h14"/>
-                        <path d="M4 5a2 2 0 0 1 2-2h14v18H6a2 2 0 0 1-2-2z"/>
-                        <path d="M8 7h8"/>
-                    </svg>
-                    <span>Kategori</span>
                 </a>
 
                 <?php
@@ -369,6 +385,99 @@ try {
                     </svg>
                     <span>Bank Soal</span>
                 </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['contents.php', 'content_add.php', 'content_edit.php'], true);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/contents.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 4h16v16H4z"/>
+                        <path d="M8 8h8"/>
+                        <path d="M8 12h8"/>
+                        <path d="M8 16h6"/>
+                    </svg>
+                    <span>Konten</span>
+                </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['posts.php', 'post_add.php'], true);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/posts.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                        <path d="M8 13h8"/>
+                        <path d="M8 17h6"/>
+                    </svg>
+                    <span>Posting</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'home_carousel.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/home_carousel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <path d="M8 13l2.5-3 3.5 4.5 2.5-3 3.5 4"/>
+                    </svg>
+                    <span>Carousel Beranda</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'mapel.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/mapel.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 19a2 2 0 0 0 2 2h14"/>
+                        <path d="M4 5a2 2 0 0 1 2-2h14v18H6a2 2 0 0 1-2-2z"/>
+                        <path d="M8 7h8"/>
+                    </svg>
+                    <span>Kategori</span>
+                </a>
+
+                <hr class="my-2 opacity-25">
+                <div class="small text-white-50 mt-2 mb-2">Ujian</div>
+
+                <?php
+                    $isActive = ($currentPage === 'exam_packages.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/exam_packages.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2l7 4v6c0 5-3 9-7 10-4-1-7-5-7-10V6l7-4z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    <span>Paket Ujian</span>
+                </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['assignments.php', 'assignment_add.php', 'assignment_edit.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/assignments.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    <span>Penugasan Siswa</span>
+                </a>
+
+                <?php
+                    $isActive = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/results.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v18h18"/>
+                        <path d="M7 14l3-3 3 2 5-6"/>
+                    </svg>
+                    <span>Hasil</span>
+                </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['students.php', 'student_add.php', 'student_edit.php', 'student_view.php', 'seed_dummy_students.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/students.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Data Siswa</span>
+                </a>
+
                 <hr class="my-2">
                 <?php $isActive = ($currentPage === 'change_password.php'); ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/change_password.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
@@ -395,9 +504,49 @@ try {
     <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 <?php endif; ?>
 
-<div class="container mb-5 app-container">
+<?php if ($useStudentSidebar): ?>
+    <aside class="app-sidebar bg-dark text-white" id="studentSidebar" aria-label="Sidebar Siswa">
+        <div class="app-sidebar-inner">
+            <div class="small text-white-50 mb-2">Menu Siswa</div>
+            <nav class="nav flex-column">
+                <?php $isActive = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/dashboard.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 13h8V3H3z"/>
+                        <path d="M13 21h8V11h-8z"/>
+                        <path d="M13 3h8v6h-8z"/>
+                        <path d="M3 17h8v4H3z"/>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/results.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v18h18"/>
+                        <path d="M7 14l3-3 3 2 5-6"/>
+                    </svg>
+                    <span>Hasil</span>
+                </a>
+
+                <hr class="my-2">
+                <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/siswa/logout.php">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <path d="M16 17l5-5-5-5"/>
+                        <path d="M21 12H9"/>
+                    </svg>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+<?php endif; ?>
+
+<div class="container mb-5 app-container<?php echo $disable_navbar ? ' mt-4' : ''; ?>">
     <div class="content-card">
-        <?php if ($useAdminSidebar): ?>
+        <?php if ($useSidebar): ?>
             <div class="row">
                 <div class="col-12">
         <?php endif; ?>

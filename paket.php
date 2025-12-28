@@ -78,6 +78,65 @@ if (!$package) {
     exit;
 }
 
+// If this package is used as an exam (ujian), do not show it on public pages.
+if (!$isAdmin) {
+    try {
+        // Explicit exam package flag.
+        try {
+            $stmtC = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+            $stmtC->execute([':c' => 'is_exam']);
+            $hasIsExamColumn = (bool)$stmtC->fetch();
+            if ($hasIsExamColumn) {
+                $stmtF = $pdo->prepare('SELECT COALESCE(is_exam, 0) FROM packages WHERE id = :pid LIMIT 1');
+                $stmtF->execute([':pid' => (int)($package['id'] ?? 0)]);
+                $isExamFlag = ((int)$stmtF->fetchColumn()) === 1;
+                if ($isExamFlag) {
+                    http_response_code(404);
+                    $page_title = 'Paket tidak ditemukan';
+                    $use_print_soal_css = true;
+                    $body_class = 'front-page paket-preview';
+                    include __DIR__ . '/includes/header.php';
+                    ?>
+                    <div class="row">
+                        <div class="col-12 col-lg-10 mx-auto">
+                            <div class="alert alert-warning">Paket soal ini tidak tersedia di halaman publik.</div>
+                            <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+                        </div>
+                    </div>
+                    <?php
+                    include __DIR__ . '/includes/footer.php';
+                    exit;
+                }
+            }
+        } catch (Throwable $eCol) {
+            // ignore
+        }
+
+        $stmtX = $pdo->prepare('SELECT 1 FROM student_assignments WHERE package_id = :pid AND jenis = "ujian" LIMIT 1');
+        $stmtX->execute([':pid' => (int)($package['id'] ?? 0)]);
+        $isExamPackage = (bool)$stmtX->fetchColumn();
+        if ($isExamPackage) {
+            http_response_code(404);
+            $page_title = 'Paket tidak ditemukan';
+            $use_print_soal_css = true;
+            $body_class = 'front-page paket-preview';
+            include __DIR__ . '/includes/header.php';
+            ?>
+            <div class="row">
+                <div class="col-12 col-lg-10 mx-auto">
+                    <div class="alert alert-warning">Paket soal ini tidak tersedia di halaman publik.</div>
+                    <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+                </div>
+            </div>
+            <?php
+            include __DIR__ . '/includes/footer.php';
+            exit;
+        }
+    } catch (Throwable $e) {
+        // If the table doesn't exist yet, ignore.
+    }
+}
+
 // Track views (best-effort) for published packages.
 // Note: count views even when admin is logged in (this is a public page).
 try {
@@ -128,6 +187,31 @@ try {
     if (!isset($pdo) || !($pdo instanceof PDO)) {
         throw new RuntimeException('db_not_ready');
     }
+
+    $excludeExamPackages = false;
+    try {
+        $pdo->query('SELECT 1 FROM student_assignments LIMIT 1');
+        $excludeExamPackages = true;
+    } catch (Throwable $e0) {
+        $excludeExamPackages = false;
+    }
+
+    $excludeIsExamFlag = false;
+    try {
+        $stmtC = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+        $stmtC->execute([':c' => 'is_exam']);
+        $excludeIsExamFlag = (bool)$stmtC->fetch();
+    } catch (Throwable $e0b) {
+        $excludeIsExamFlag = false;
+    }
+
+    $excludeExamSql = $excludeExamPackages
+        ? ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")'
+        : '';
+
+    if ($excludeIsExamFlag) {
+        $excludeExamSql .= ' AND COALESCE(p.is_exam, 0) = 0';
+    }
     $currIdForSidebar = (int)($package['id'] ?? 0);
     $paramsBase = [':kind' => 'package', ':curr' => $currIdForSidebar];
     $ctxSubmateri = trim((string)($package['submateri'] ?? ''));
@@ -152,7 +236,7 @@ try {
              GROUP BY package_id
          ) qc ON qc.package_id = p.id
          LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
-         WHERE p.status = "published"
+         WHERE p.status = "published"' . $excludeExamSql . '
          UNION ALL
          SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
              c.id AS id,
@@ -194,7 +278,7 @@ try {
              GROUP BY package_id
          ) qc ON qc.package_id = p.id
          LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
-         WHERE p.status = "published"
+         WHERE p.status = "published"' . $excludeExamSql . '
          UNION ALL
          SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
              c.id AS id,

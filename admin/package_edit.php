@@ -5,6 +5,15 @@ require_role('admin');
 
 $errors = [];
 
+$hasIsExamColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+    $stmt->execute([':c' => 'is_exam']);
+    $hasIsExamColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasIsExamColumn = false;
+}
+
 if (app_runtime_migrations_enabled()) {
     function ensure_package_column(PDO $pdo, string $column, string $definition): void {
         try {
@@ -68,6 +77,20 @@ try {
 if (!$package) {
     header('Location: packages.php');
     exit;
+}
+
+// Block direct access for exam packages (managed in Ujian 0 Paket Ujian)
+if ($hasIsExamColumn) {
+    try {
+        $stmt = $pdo->prepare('SELECT COALESCE(is_exam, 0) FROM packages WHERE id = :id');
+        $stmt->execute([':id' => $packageId]);
+        $isExam = (int)$stmt->fetchColumn();
+        if ($isExam === 1) {
+            header('Location: ../siswa/admin/exam_packages.php');
+            exit;
+        }
+    } catch (Throwable $e) {
+    }
 }
 
 $subjects = [];

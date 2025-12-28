@@ -1,0 +1,13 @@
+<?php
+require_once __DIR__ . '/auth.php';
+
+// Clear student session only.
+unset($_SESSION['student']);
+
+// Best-effort: regenerate id.
+try {
+    session_regenerate_id(true);
+} catch (Throwable $e) {
+}
+
+siswa_redirect_to('siswa/login.php?flash=logout_success');

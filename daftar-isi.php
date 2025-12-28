@@ -125,6 +125,23 @@ $submateriOptions = [];
 
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
+        $hasStudentAssignmentsTable = false;
+        try {
+            $pdo->query('SELECT 1 FROM student_assignments LIMIT 1');
+            $hasStudentAssignmentsTable = true;
+        } catch (Throwable $e0) {
+            $hasStudentAssignmentsTable = false;
+        }
+
+        $hasIsExamColumn = false;
+        try {
+            $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+            $stmt->execute([':c' => 'is_exam']);
+            $hasIsExamColumn = (bool)$stmt->fetch();
+        } catch (Throwable $e0b) {
+            $hasIsExamColumn = false;
+        }
+
         // Fetch packages (published) + published_questions, then fetch published contents.
         // We intentionally avoid a SQL UNION because some MySQL/MariaDB setups error out on collation mixing.
         $packages = [];
@@ -149,7 +166,14 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
                     LEFT JOIN questions q ON q.id = pq.question_id
                     GROUP BY pq.package_id
                 ) ps ON ps.package_id = p.id
-                WHERE p.status = "published"
+                WHERE p.status = "published"';
+            if ($hasStudentAssignmentsTable) {
+                $sqlPackages .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
+            }
+            if ($hasIsExamColumn) {
+                $sqlPackages .= ' AND COALESCE(p.is_exam, 0) = 0';
+            }
+            $sqlPackages .= '
                 ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC';
             $packages = $pdo->query($sqlPackages)->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $e2) {

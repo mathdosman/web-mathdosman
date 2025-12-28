@@ -82,6 +82,23 @@ $popularItems = [];
 $total = 0;
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     try {
+    $hasStudentAssignmentsTable = false;
+    try {
+        $pdo->query('SELECT 1 FROM student_assignments LIMIT 1');
+        $hasStudentAssignmentsTable = true;
+    } catch (Throwable $e0) {
+        $hasStudentAssignmentsTable = false;
+    }
+
+    $hasIsExamColumn = false;
+    try {
+        $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+        $stmt->execute([':c' => 'is_exam']);
+        $hasIsExamColumn = (bool)$stmt->fetch();
+    } catch (Throwable $e0b) {
+        $hasIsExamColumn = false;
+    }
+
     $where = [];
     $params = [];
 
@@ -89,6 +106,16 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
     // Beranda publik: paket draft tidak boleh tampil, meskipun admin sedang login.
     $where[] = 'p.status = "published"';
+
+    // Hide packages that are used as exams (ujian) in student assignments.
+    if ($hasStudentAssignmentsTable) {
+        $where[] = 'NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
+    }
+
+    // Hide packages that are explicitly marked as exams.
+    if ($hasIsExamColumn) {
+        $where[] = 'COALESCE(p.is_exam, 0) = 0';
+    }
 
     if ($filterSubjectId > 0) {
         $where[] = 'p.subject_id = :sid';
@@ -163,11 +190,17 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
     // Sidebar: Kategori (Materi/Submateri) from published packages.
     try {
-        $stmt = $pdo->query('SELECT materi, COUNT(*) AS package_count
-            FROM packages
-            WHERE status = "published" AND materi IS NOT NULL AND materi <> ""
-            GROUP BY materi
-            ORDER BY materi ASC');
+        $sql = 'SELECT p.materi, COUNT(*) AS package_count
+            FROM packages p
+            WHERE p.status = "published" AND p.materi IS NOT NULL AND p.materi <> ""';
+        if ($hasStudentAssignmentsTable) {
+            $sql .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
+        }
+        if ($hasIsExamColumn) {
+            $sql .= ' AND COALESCE(p.is_exam, 0) = 0';
+        }
+        $sql .= ' GROUP BY p.materi ORDER BY p.materi ASC';
+        $stmt = $pdo->query($sql);
         $materiCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Throwable $e2) {
         $materiCategories = [];
@@ -175,13 +208,19 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
     if ($filterMateri !== '') {
         try {
-            $stmt = $pdo->prepare('SELECT submateri, COUNT(*) AS package_count
-                FROM packages
-                WHERE status = "published"
-                  AND materi = :m
-                  AND submateri IS NOT NULL AND submateri <> ""
-                GROUP BY submateri
-                ORDER BY submateri ASC');
+            $sql = 'SELECT p.submateri, COUNT(*) AS package_count
+                FROM packages p
+                WHERE p.status = "published"
+                  AND p.materi = :m
+                  AND p.submateri IS NOT NULL AND p.submateri <> ""';
+            if ($hasStudentAssignmentsTable) {
+                $sql .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
+            }
+            if ($hasIsExamColumn) {
+                $sql .= ' AND COALESCE(p.is_exam, 0) = 0';
+            }
+            $sql .= ' GROUP BY p.submateri ORDER BY p.submateri ASC';
+            $stmt = $pdo->prepare($sql);
             $stmt->execute([':m' => $filterMateri]);
             $submateriCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $e3) {
@@ -195,22 +234,36 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
     $popularContents = [];
 
     try {
-        $stmt = $pdo->query('SELECT p.id, p.code, p.name,
+        $sql = 'SELECT p.id, p.code, p.name,
             COALESCE(p.published_at, p.created_at) AS published_at,
             COALESCE(pv.views, 0) AS views
             FROM packages p
             LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
-            WHERE p.status = "published"
-            ORDER BY COALESCE(pv.views, 0) DESC, COALESCE(p.published_at, p.created_at) DESC, p.id DESC
-            LIMIT 5');
+            WHERE p.status = "published"';
+        if ($hasStudentAssignmentsTable) {
+            $sql .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
+        }
+        if ($hasIsExamColumn) {
+            $sql .= ' AND COALESCE(p.is_exam, 0) = 0';
+        }
+        $sql .= ' ORDER BY COALESCE(pv.views, 0) DESC, COALESCE(p.published_at, p.created_at) DESC, p.id DESC
+            LIMIT 5';
+        $stmt = $pdo->query($sql);
         $popularPackages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Throwable $e) {
         try {
-            $stmt = $pdo->query('SELECT id, code, name, COALESCE(published_at, created_at) AS published_at, 0 AS views
-                FROM packages
-                WHERE status = "published"
-                ORDER BY COALESCE(published_at, created_at) DESC, id DESC
-                LIMIT 5');
+            $sql = 'SELECT p.id, p.code, p.name, COALESCE(p.published_at, p.created_at) AS published_at, 0 AS views
+                FROM packages p
+                WHERE p.status = "published"';
+            if ($hasStudentAssignmentsTable) {
+                $sql .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
+            }
+            if ($hasIsExamColumn) {
+                $sql .= ' AND COALESCE(p.is_exam, 0) = 0';
+            }
+            $sql .= ' ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC
+                LIMIT 5';
+            $stmt = $pdo->query($sql);
             $popularPackages = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $e2) {
             $popularPackages = [];

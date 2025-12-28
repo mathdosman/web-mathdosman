@@ -413,6 +413,362 @@ body.admin-layout.sidebar-collapsed .app-container {
 
 /* ====== Backend / Admin (ringan & simple) ====== */
 
+/* ====== Student area (lebih menarik, khusus /siswa/) ====== */
+
+/* Soft background accent using Bootstrap color tokens */
+body.student-area {
+    background-image:
+        radial-gradient(1000px 520px at 12% -10%, rgba(var(--bs-primary-rgb), 0.10), transparent 60%),
+        radial-gradient(900px 520px at 88% -10%, rgba(var(--bs-info-rgb), 0.08), transparent 60%);
+    background-attachment: fixed;
+}
+
+/* Student results: large centered score with threshold colors */
+body.student-area .score-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body.student-area .score-pill {
+    width: min(420px, 100%);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(0,0,0,.08);
+}
+
+body.student-area .score-label {
+    font-weight: 600;
+    letter-spacing: .02em;
+    opacity: .85;
+}
+
+body.student-area .score-value {
+    font-weight: 800;
+    line-height: 1;
+    font-size: clamp(2.5rem, 6vw, 3.75rem);
+}
+
+body.student-area .score-danger {
+    background: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger-text-emphasis);
+    border-color: rgba(var(--bs-danger-rgb), .25);
+}
+
+body.student-area .score-warning {
+    background: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+    border-color: rgba(var(--bs-warning-rgb), .25);
+}
+
+body.student-area .score-primary {
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+    border-color: rgba(var(--bs-primary-rgb), .25);
+}
+
+body.student-area .score-success {
+    background: var(--bs-success-bg-subtle);
+    color: var(--bs-success-text-emphasis);
+    border-color: rgba(var(--bs-success-rgb), .25);
+}
+
+body.student-area .score-badge {
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: .35rem .6rem;
+    border: 1px solid transparent;
+}
+
+/* Make the top bar feel more premium (student pages only) */
+body.student-area .app-navbar {
+    border-bottom: 1px solid rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Slight glass effect for the main content wrapper */
+body.student-area .content-card {
+    background-color: rgba(var(--bs-body-bg-rgb), 0.92);
+    border-color: rgba(var(--bs-body-color-rgb), 0.10);
+    box-shadow: var(--bs-box-shadow-sm);
+    backdrop-filter: saturate(120%) blur(6px);
+}
+
+body.student-area .content-card {
+    border-radius: var(--bs-border-radius-xl);
+}
+
+/* Make cards feel more "app-like" */
+body.student-area .card {
+    border-color: var(--bs-border-color-translucent);
+    border-radius: var(--bs-border-radius-xl);
+}
+
+body.student-area .card.shadow-sm {
+    box-shadow: var(--bs-box-shadow-sm) !important;
+}
+
+body.student-area .card-body {
+    padding: 1.25rem;
+}
+
+body.student-area h5 {
+    font-weight: 750;
+    letter-spacing: .01em;
+}
+
+body.student-area .text-muted.small {
+    letter-spacing: .01em;
+}
+
+/* Tables: slightly cleaner headers and spacing */
+body.student-area .table {
+    --bs-table-bg: transparent;
+}
+
+body.student-area .table thead th {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: rgba(var(--bs-body-color-rgb), 0.75);
+}
+
+body.student-area .table-sm > :not(caption) > * > * {
+    padding-top: .55rem;
+    padding-bottom: .55rem;
+}
+
+body.student-area .table tbody tr:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+/* Buttons: slightly rounder to match cards */
+body.student-area .btn {
+    border-radius: .9rem;
+}
+
+body.student-area .btn.btn-sm {
+    border-radius: .85rem;
+}
+
+/* Form controls: a bit more polished */
+body.student-area .form-control,
+body.student-area .form-select {
+    border-radius: .9rem;
+}
+
+body.student-area .alert {
+    border-radius: var(--bs-border-radius-xl);
+}
+
+/* Assignment/exam view: keep the card centered and not overly wide */
+body.student-area .md-assignment-card {
+    width: 100%;
+    max-width: 784px; /* ~20% narrower than 980 */
+}
+
+/* Assignment/exam view: never allow horizontal page scroll */
+body.student-area.assignment-view {
+    overflow-x: hidden;
+}
+
+body.student-area.assignment-view .md-assignment-card,
+body.student-area.assignment-view .md-assignment-card .card-body {
+    overflow-x: hidden;
+}
+
+/* Minimal dark header for assignment view */
+body.student-area.assignment-view .md-assignment-header-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .75rem;
+}
+
+body.student-area.assignment-view .md-assignment-header-left {
+    justify-self: start;
+}
+
+body.student-area.assignment-view .md-assignment-logo-wrap {
+    line-height: 0;
+    padding: .25rem; /* white padding around logo */
+}
+
+body.student-area.assignment-view .md-assignment-brand {
+    letter-spacing: .06em;
+}
+
+body.student-area.assignment-view .md-assignment-header-center {
+    justify-self: center;
+    max-width: 100%;
+    line-height: 1.1;
+}
+
+body.student-area.assignment-view .md-assignment-header-title {
+    font-size: 1.05rem;
+}
+
+/* Bottom nav: 3 columns (Prev | Daftar Soal | Next) */
+body.student-area.assignment-view .md-nav-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: .75rem;
+}
+
+/* Answer choices as clickable boxes */
+body.student-area.assignment-view .md-answer-box {
+    width: 100%;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .85rem;
+    padding: .65rem .75rem;
+    cursor: pointer;
+    background: var(--bs-body-bg);
+}
+
+body.student-area.assignment-view .md-answer-box:hover {
+    background: var(--bs-tertiary-bg);
+}
+
+body.student-area.assignment-view .md-answer-box.md-answer-checked {
+    border-color: rgba(var(--bs-success-rgb), 0.55);
+    background: rgba(var(--bs-success-rgb), 0.12);
+}
+
+body.student-area.assignment-view .md-answer-box input.form-check-input:disabled {
+    cursor: not-allowed;
+}
+
+body.student-area.assignment-view .md-answer-box.md-answer-disabled {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+body.student-area.assignment-view .md-assignment-header-title {
+    justify-self: center;
+    max-width: 100%;
+}
+
+body.student-area.assignment-view .md-assignment-header-right {
+    justify-self: end;
+}
+
+@media (max-width: 575.98px) {
+    body.student-area.assignment-view .md-assignment-header-grid {
+        grid-template-columns: auto 1fr;
+        grid-template-areas:
+            "logo title"
+            "right right";
+        gap: .5rem;
+    }
+
+    body.student-area.assignment-view .md-assignment-header-left {
+        grid-area: logo;
+    }
+
+    body.student-area.assignment-view .md-assignment-header-title {
+        grid-area: title;
+        justify-self: center;
+    }
+
+    body.student-area.assignment-view .md-assignment-header-right {
+        grid-area: right;
+        justify-self: stretch;
+    }
+}
+
+/* Long words/URLs in questions should wrap instead of widening the page */
+body.student-area.assignment-view .richtext-content {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Tables in richtext: keep within viewport; scroll inside table if needed */
+body.student-area.assignment-view .richtext-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Embedded content should not force the page wider */
+body.student-area.assignment-view .richtext-content iframe,
+body.student-area.assignment-view .richtext-content embed,
+body.student-area.assignment-view .richtext-content object,
+body.student-area.assignment-view .richtext-content video {
+    max-width: 100%;
+}
+
+/* Math blocks can be wider than viewport; keep scroll inside the formula */
+body.student-area.assignment-view mjx-container[display="true"],
+body.student-area.assignment-view .katex-display {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* Bootstrap modal safety: keep modal above backdrop on assignment view */
+body.student-area.assignment-view .modal {
+    z-index: 2000;
+}
+
+body.student-area.assignment-view .modal-backdrop {
+    z-index: 1990;
+}
+
+/* Daftar Soal modal: grid 5 kolom + ukuran seragam */
+body.student-area.assignment-view .md-soal-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .5rem;
+}
+
+body.student-area.assignment-view .md-soal-num-btn {
+    width: 100%;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+body.student-area .md-nav-btn {
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: .55rem 1rem;
+    border-radius: 1rem;
+}
+
+/* Student sidebar label */
+body.student-area .app-sidebar .small {
+    letter-spacing: .04em;
+}
+
+/* Distinct student sidebar look (do not affect admin sidebar) */
+body.student-layout #studentSidebar {
+    background-image:
+        radial-gradient(900px 520px at 10% -10%, rgba(var(--bs-primary-rgb), 0.22), transparent 60%),
+        linear-gradient(180deg, rgba(var(--bs-dark-rgb), 1), rgba(var(--bs-dark-rgb), 0.96));
+    border-right: 1px solid rgba(var(--bs-light-rgb), 0.12);
+}
+
+body.student-layout #studentSidebar .sidebar-link {
+    background: rgba(var(--bs-light-rgb), 0.06);
+    border-color: rgba(var(--bs-light-rgb), 0.12);
+}
+
+body.student-layout #studentSidebar .sidebar-link:hover,
+body.student-layout #studentSidebar .sidebar-link:focus {
+    background: rgba(var(--bs-light-rgb), 0.10);
+    border-color: rgba(var(--bs-light-rgb), 0.18);
+}
+
+body.student-layout #studentSidebar .sidebar-link.active,
+body.student-layout #studentSidebar .sidebar-link[aria-current="page"] {
+    background: rgba(var(--bs-primary-rgb), 0.22);
+    border-color: rgba(var(--bs-primary-rgb), 0.38);
+}
+
 /* Constrain admin pages for nicer readability */
 body.admin-layout .admin-page {
     max-width: 1240px;
