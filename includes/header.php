@@ -259,7 +259,7 @@ try {
                 <?php if (!empty($_SESSION['user'])): ?>
                     <?php if (!$useAdminSidebar): ?>
                         <li class="nav-item me-2">
-                            <a class="btn btn-outline-light" href="<?php echo $base_url; ?>/dashboard.php">Home</a>
+                            <a class="btn btn-outline-light" href="<?php echo $base_url; ?>/dashboard.php">Admin</a>
                         </li>
                     <?php endif; ?>
                     <li class="nav-item dropdown">
@@ -278,10 +278,6 @@ try {
                                 <a class="dropdown-item" href="<?php echo $base_url; ?>/logout.php">Logout</a>
                             </li>
                         </ul>
-                    </li>
-                <?php else: ?>
-                    <li class="nav-item">
-                        <a class="btn btn-outline-light" href="<?php echo $base_url; ?>/login.php">Login</a>
                     </li>
                 <?php endif; ?>
             </ul>

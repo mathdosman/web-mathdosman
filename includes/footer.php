@@ -1,7 +1,7 @@
 <?php if (empty($useAdminSidebar)): ?>
 	<footer class="mt-4 pt-3 border-top">
 		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
-			<div>&copy; <?php echo date('Y'); ?> MATHDOSMAN</div>
+			<div><a href="<?php echo $base_url; ?>/login.php" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> MATHDOSMAN</a></div>
 			<div class="d-flex flex-wrap gap-3">
 				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
 				<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>

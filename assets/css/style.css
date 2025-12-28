@@ -320,8 +320,13 @@ body.admin-layout.sidebar-collapsed .app-sidebar {
 
 body.admin-layout.sidebar-collapsed .app-navbar,
 body.admin-layout.sidebar-collapsed .app-container {
-    margin-left: 0;
     width: 100%;
+}
+
+/* Keep Bootstrap .container centered when sidebar is hidden */
+body.admin-layout.sidebar-collapsed .app-container {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .sidebar-backdrop {
@@ -335,8 +340,9 @@ body.admin-layout.sidebar-collapsed .app-container {
 @media (max-width: 767.98px) {
     body.admin-layout .app-navbar,
     body.admin-layout .app-container {
-        margin-left: 0;
         width: 100%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     body.admin-layout:not(.sidebar-collapsed) .sidebar-backdrop {

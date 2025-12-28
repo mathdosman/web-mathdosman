@@ -131,6 +131,7 @@ try {
     $currIdForSidebar = (int)($package['id'] ?? 0);
     $paramsBase = [':kind' => 'package', ':curr' => $currIdForSidebar];
     $ctxSubmateri = trim((string)($package['submateri'] ?? ''));
+    $ctxMateri = trim((string)($package['materi'] ?? ''));
 
         $feedSqlWithTax = '(
          SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
@@ -142,13 +143,15 @@ try {
              COALESCE(p.published_at, p.created_at) AS dt,
              p.materi COLLATE utf8mb4_unicode_ci AS materi,
              p.submateri COLLATE utf8mb4_unicode_ci AS submateri,
-             COALESCE(qc.question_count, 0) AS question_count
+             COALESCE(qc.question_count, 0) AS question_count,
+             COALESCE(pv.views, 0) AS views
          FROM packages p
          LEFT JOIN (
              SELECT package_id, COUNT(*) AS question_count
              FROM package_questions
              GROUP BY package_id
          ) qc ON qc.package_id = p.id
+         LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
          WHERE p.status = "published"
          UNION ALL
          SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
@@ -160,8 +163,10 @@ try {
              COALESCE(c.published_at, c.created_at) AS dt,
              c.materi COLLATE utf8mb4_unicode_ci AS materi,
              c.submateri COLLATE utf8mb4_unicode_ci AS submateri,
-             CAST(NULL AS SIGNED) AS question_count
+             CAST(NULL AS SIGNED) AS question_count,
+             COALESCE(pv2.views, 0) AS views
          FROM contents c
+         LEFT JOIN page_views pv2 ON pv2.kind = "content" AND pv2.item_id = c.id
          WHERE c.status = "published"
            AND c.id NOT IN (
              SELECT intro_content_id
@@ -180,13 +185,15 @@ try {
              COALESCE(p.published_at, p.created_at) AS dt,
              p.materi COLLATE utf8mb4_unicode_ci AS materi,
              p.submateri COLLATE utf8mb4_unicode_ci AS submateri,
-             COALESCE(qc.question_count, 0) AS question_count
+             COALESCE(qc.question_count, 0) AS question_count,
+             COALESCE(pv.views, 0) AS views
          FROM packages p
          LEFT JOIN (
              SELECT package_id, COUNT(*) AS question_count
              FROM package_questions
              GROUP BY package_id
          ) qc ON qc.package_id = p.id
+         LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
          WHERE p.status = "published"
          UNION ALL
          SELECT "content" COLLATE utf8mb4_unicode_ci AS kind,
@@ -198,8 +205,10 @@ try {
              COALESCE(c.published_at, c.created_at) AS dt,
              CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS materi,
              CAST(NULL AS CHAR) COLLATE utf8mb4_unicode_ci AS submateri,
-             CAST(NULL AS SIGNED) AS question_count
+             CAST(NULL AS SIGNED) AS question_count,
+             COALESCE(pv2.views, 0) AS views
          FROM contents c
+         LEFT JOIN page_views pv2 ON pv2.kind = "content" AND pv2.item_id = c.id
          WHERE c.status = "published"
            AND c.id NOT IN (
              SELECT intro_content_id
@@ -216,7 +225,7 @@ try {
     }
 
     // Konten terbaru
-    $stmtL = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count
+    $stmtL = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count, views
         FROM ' . $feedSql . '
         WHERE NOT (kind = :kind AND id = :curr)
         ORDER BY dt DESC, id DESC
@@ -225,7 +234,7 @@ try {
     $sidebarLatest = $stmtL->fetchAll(PDO::FETCH_ASSOC);
 
     // Konten random
-    $stmtX = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count
+    $stmtX = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count, views
         FROM ' . $feedSql . '
         WHERE NOT (kind = :kind AND id = :curr)
         ORDER BY RAND()
@@ -233,15 +242,30 @@ try {
     $stmtX->execute($paramsBase);
     $sidebarRandom = $stmtX->fetchAll(PDO::FETCH_ASSOC);
 
-    // Konten terkait (berdasarkan submateri)
+    // Konten terkait:
+    // 1) Submateri sama (jika ada) dengan view terbanyak
+    // 2) Jika tidak ada yang cocok submateri, fallback ke materi sama (view terbanyak)
     if ($ctxSubmateri !== '') {
         $paramsRel = $paramsBase + [':sm' => $ctxSubmateri];
-        $stmtR = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count
+        $stmtR = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count, views
             FROM ' . $feedSql . '
             WHERE submateri = :sm
               AND submateri IS NOT NULL AND submateri <> ""
               AND NOT (kind = :kind AND id = :curr)
-            ORDER BY RAND()
+            ORDER BY views DESC, dt DESC, id DESC
+            LIMIT 5');
+        $stmtR->execute($paramsRel);
+        $sidebarRelated = $stmtR->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    if (!$sidebarRelated && $ctxMateri !== '') {
+        $paramsRel = $paramsBase + [':m' => $ctxMateri];
+        $stmtR = $pdo->prepare('SELECT kind, id, code, slug, ctype, title, dt, materi, submateri, question_count, views
+            FROM ' . $feedSql . '
+            WHERE materi = :m
+              AND materi IS NOT NULL AND materi <> ""
+              AND NOT (kind = :kind AND id = :curr)
+            ORDER BY views DESC, dt DESC, id DESC
             LIMIT 5');
         $stmtR->execute($paramsRel);
         $sidebarRelated = $stmtR->fetchAll(PDO::FETCH_ASSOC);

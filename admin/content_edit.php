@@ -53,6 +53,23 @@ if (app_runtime_migrations_enabled()) {
     ensure_contents_column($pdo, 'updated_at', 'updated_at TIMESTAMP NULL DEFAULT NULL');
 }
 
+// Materi/Submateri master (dibuat/diatur dari admin/mapel.php)
+$materials = [];
+$submaterials = [];
+try {
+    $materials = $pdo->query('SELECT id, name FROM materials ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $materials = [];
+}
+try {
+    $submaterials = $pdo->query('SELECT sm.id, sm.name, m.name AS materi_name
+        FROM submaterials sm
+        JOIN materials m ON m.id = sm.material_id
+        ORDER BY m.name ASC, sm.name ASC')->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $submaterials = [];
+}
+
 function normalize_datetime_local(?string $value): ?string
 {
     $value = trim((string)$value);
@@ -249,7 +266,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $stmt = $pdo->prepare($updateSql);
             $stmt->execute($params);
 
-            header('Location: content_edit.php?id=' . $id . '&success=' . rawurlencode('Perubahan tersimpan.'));
+            header('Location: content_view.php?id=' . $id . '&success=' . rawurlencode('Perubahan tersimpan.'));
             exit;
         } catch (PDOException $e) {
             $errors[] = 'Gagal menyimpan perubahan.';
@@ -329,12 +346,54 @@ include __DIR__ . '/../includes/header.php';
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Materi (opsional)</label>
-                                <input type="text" name="materi" class="form-control" value="<?php echo htmlspecialchars($materi); ?>" />
+                                <?php if ($materials): ?>
+                                    <select name="materi" id="materiSelect" class="form-select">
+                                        <option value="">- Pilih Materi -</option>
+                                        <?php
+                                            $materiFound = false;
+                                            foreach ($materials as $mRow) {
+                                                $mName = (string)($mRow['name'] ?? '');
+                                                $selected = ($mName !== '' && $mName === $materi) ? 'selected' : '';
+                                                if ($selected) {
+                                                    $materiFound = true;
+                                                }
+                                                echo '<option value="' . htmlspecialchars($mName) . '" ' . $selected . '>' . htmlspecialchars($mName) . '</option>';
+                                            }
+                                            if ($materi !== '' && !$materiFound) {
+                                                echo '<option value="' . htmlspecialchars($materi) . '" selected>' . htmlspecialchars($materi) . '</option>';
+                                            }
+                                        ?>
+                                    </select>
+                                <?php else: ?>
+                                    <input type="text" name="materi" class="form-control" value="<?php echo htmlspecialchars($materi); ?>" />
+                                <?php endif; ?>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Submateri (opsional)</label>
-                                <input type="text" name="submateri" class="form-control" value="<?php echo htmlspecialchars($submateri); ?>" />
+                                <?php if ($submaterials): ?>
+                                    <select name="submateri" id="submateriSelect" class="form-select">
+                                        <option value="">- Pilih Submateri -</option>
+                                        <?php
+                                            $submateriFound = false;
+                                            foreach ($submaterials as $smRow) {
+                                                $smName = (string)($smRow['name'] ?? '');
+                                                $materiName = (string)($smRow['materi_name'] ?? '');
+                                                $selected = ($smName !== '' && $smName === $submateri) ? 'selected' : '';
+                                                if ($selected) {
+                                                    $submateriFound = true;
+                                                }
+                                                echo '<option value="' . htmlspecialchars($smName) . '" data-materi="' . htmlspecialchars($materiName) . '" ' . $selected . '>' . htmlspecialchars($smName) . '</option>';
+                                            }
+                                            if ($submateri !== '' && !$submateriFound) {
+                                                echo '<option value="' . htmlspecialchars($submateri) . '" data-materi="" selected>' . htmlspecialchars($submateri) . '</option>';
+                                            }
+                                        ?>
+                                    </select>
+                                    <div class="form-text">Submateri akan otomatis difilter sesuai materi.</div>
+                                <?php else: ?>
+                                    <input type="text" name="submateri" class="form-control" value="<?php echo htmlspecialchars($submateri); ?>" />
+                                <?php endif; ?>
                             </div>
 
                             <div class="col-12">
@@ -353,6 +412,47 @@ include __DIR__ . '/../includes/header.php';
                             </div>
                         </div>
                     </form>
+
+                    <?php if ($materials && $submaterials): ?>
+                        <script>
+                        (function () {
+                            var materiSelect = document.getElementById('materiSelect');
+                            var subSelect = document.getElementById('submateriSelect');
+                            if (!materiSelect || !subSelect) return;
+
+                            function applyFilter() {
+                                var materi = (materiSelect.value || '').trim();
+                                var opts = subSelect.querySelectorAll('option');
+                                opts.forEach(function (opt) {
+                                    if (!opt.value) {
+                                        opt.hidden = false;
+                                        opt.disabled = false;
+                                        return;
+                                    }
+
+                                    var parentMateri = (opt.getAttribute('data-materi') || '').trim();
+                                    if (!materi || !parentMateri) {
+                                        opt.hidden = false;
+                                        opt.disabled = false;
+                                        return;
+                                    }
+
+                                    var match = (parentMateri === materi);
+                                    opt.hidden = !match;
+                                    opt.disabled = !match;
+                                });
+
+                                var sel = subSelect.options[subSelect.selectedIndex];
+                                if (sel && sel.hidden) {
+                                    subSelect.value = '';
+                                }
+                            }
+
+                            materiSelect.addEventListener('change', applyFilter);
+                            applyFilter();
+                        })();
+                        </script>
+                    <?php endif; ?>
 
                 </div>
             </div>

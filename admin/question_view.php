@@ -111,34 +111,85 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 <?php endif; ?>
 
+                <?php
+                    // Highlight jawaban benar (hanya jika sudah terisi)
+                    $tipeDisplay = (string)($question['tipe_soal'] ?? '');
+                    if ($tipeDisplay === 'pg') {
+                        $tipeDisplay = 'Pilihan Ganda';
+                    }
+
+                    $ansRawForHighlight = (string)($question['jawaban_benar'] ?? '');
+                    $hasAnswer = trim($ansRawForHighlight) !== '';
+
+                    $toPilihanKeyMap = [
+                        'A' => 'pilihan_1',
+                        'B' => 'pilihan_2',
+                        'C' => 'pilihan_3',
+                        'D' => 'pilihan_4',
+                        'E' => 'pilihan_5',
+                        '1' => 'pilihan_1',
+                        '2' => 'pilihan_2',
+                        '3' => 'pilihan_3',
+                        '4' => 'pilihan_4',
+                        '5' => 'pilihan_5',
+                        'pilihan_1' => 'pilihan_1',
+                        'pilihan_2' => 'pilihan_2',
+                        'pilihan_3' => 'pilihan_3',
+                        'pilihan_4' => 'pilihan_4',
+                        'pilihan_5' => 'pilihan_5',
+                    ];
+
+                    $correctPilihanKeys = [];
+                    if ($hasAnswer) {
+                        if ($tipeDisplay === 'Pilihan Ganda') {
+                            $k = strtoupper(trim($ansRawForHighlight));
+                            $correctPilihanKeys = isset($toPilihanKeyMap[$k]) ? [$toPilihanKeyMap[$k]] : [];
+                        } elseif ($tipeDisplay === 'Pilihan Ganda Kompleks') {
+                            $parts = array_filter(array_map('trim', explode(',', $ansRawForHighlight)));
+                            foreach ($parts as $p) {
+                                $k = strtoupper($p);
+                                if (isset($toPilihanKeyMap[$k])) {
+                                    $correctPilihanKeys[] = $toPilihanKeyMap[$k];
+                                }
+                            }
+                            $correctPilihanKeys = array_values(array_unique($correctPilihanKeys));
+                        }
+                    }
+                ?>
+
                 <div class="row g-2 small">
                     <div class="col-12 col-md-6">
-                        <div class="border rounded p-2">
-                            <div class="fw-semibold">Pilihan 1 (A)</div>
+                        <?php $isCorrect = $hasAnswer && in_array('pilihan_1', $correctPilihanKeys, true); ?>
+                        <div class="border rounded p-2<?php echo $isCorrect ? ' border-success bg-success-subtle text-success' : ''; ?>">
+                            <div class="fw-semibold<?php echo $isCorrect ? ' text-success' : ''; ?>">Pilihan 1 (A)</div>
                             <div class="text-break richtext-content"><?php echo (string)($question['pilihan_1'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="border rounded p-2">
-                            <div class="fw-semibold">Pilihan 2 (B)</div>
+                        <?php $isCorrect = $hasAnswer && in_array('pilihan_2', $correctPilihanKeys, true); ?>
+                        <div class="border rounded p-2<?php echo $isCorrect ? ' border-success bg-success-subtle text-success' : ''; ?>">
+                            <div class="fw-semibold<?php echo $isCorrect ? ' text-success' : ''; ?>">Pilihan 2 (B)</div>
                             <div class="text-break richtext-content"><?php echo (string)($question['pilihan_2'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="border rounded p-2">
-                            <div class="fw-semibold">Pilihan 3 (C)</div>
+                        <?php $isCorrect = $hasAnswer && in_array('pilihan_3', $correctPilihanKeys, true); ?>
+                        <div class="border rounded p-2<?php echo $isCorrect ? ' border-success bg-success-subtle text-success' : ''; ?>">
+                            <div class="fw-semibold<?php echo $isCorrect ? ' text-success' : ''; ?>">Pilihan 3 (C)</div>
                             <div class="text-break richtext-content"><?php echo (string)($question['pilihan_3'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="border rounded p-2">
-                            <div class="fw-semibold">Pilihan 4 (D)</div>
+                        <?php $isCorrect = $hasAnswer && in_array('pilihan_4', $correctPilihanKeys, true); ?>
+                        <div class="border rounded p-2<?php echo $isCorrect ? ' border-success bg-success-subtle text-success' : ''; ?>">
+                            <div class="fw-semibold<?php echo $isCorrect ? ' text-success' : ''; ?>">Pilihan 4 (D)</div>
                             <div class="text-break richtext-content"><?php echo (string)($question['pilihan_4'] ?? ''); ?></div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="border rounded p-2">
-                            <div class="fw-semibold">Pilihan 5 (E)</div>
+                        <?php $isCorrect = $hasAnswer && in_array('pilihan_5', $correctPilihanKeys, true); ?>
+                        <div class="border rounded p-2<?php echo $isCorrect ? ' border-success bg-success-subtle text-success' : ''; ?>">
+                            <div class="fw-semibold<?php echo $isCorrect ? ' text-success' : ''; ?>">Pilihan 5 (E)</div>
                             <div class="text-break richtext-content"><?php echo (string)($question['pilihan_5'] ?? ''); ?></div>
                         </div>
                     </div>
