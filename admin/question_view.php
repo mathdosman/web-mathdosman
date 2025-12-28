@@ -47,6 +47,52 @@ try {
 $page_title = 'Lihat Butir Soal';
 include __DIR__ . '/../includes/header.php';
 
+function normalize_tipe_soal_view(string $v): string
+{
+    $raw = trim($v);
+    if ($raw === '') {
+        return '';
+    }
+
+    $l = strtolower($raw);
+    $l = str_replace(['_', '-'], ' ', $l);
+    $l = preg_replace('/\s+/', ' ', $l);
+    $l = trim($l);
+
+    if ($l === 'pg' || $l === 'pilihan ganda' || $l === 'pil ganda' || $l === 'multiple choice') {
+        return 'Pilihan Ganda';
+    }
+    if ($l === 'pilihan ganda kompleks' || $l === 'pg kompleks' || $l === 'kompleks') {
+        return 'Pilihan Ganda Kompleks';
+    }
+    if ($l === 'benar/salah' || $l === 'benar salah' || $l === 'true false') {
+        return 'Benar/Salah';
+    }
+    if ($l === 'menjodohkan' || $l === 'jodohkan' || $l === 'matching') {
+        return 'Menjodohkan';
+    }
+    if ($l === 'uraian' || $l === 'essay' || $l === 'isian') {
+        return 'Uraian';
+    }
+
+    return $raw;
+}
+
+function normalize_pg_answer_token_for_view(string $v): string
+{
+    $v = trim($v);
+    if ($v === '') {
+        return '';
+    }
+
+    if (preg_match('/^pilihan_[1-5]$/i', $v)) {
+        return strtolower($v);
+    }
+
+    // Letters/digits are treated case-insensitively
+    return strtoupper($v);
+}
+
 $swalFlash = null;
 if (isset($_SESSION['swal_flash']) && is_array($_SESSION['swal_flash'])) {
     $swalFlash = $_SESSION['swal_flash'];
@@ -113,10 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <?php
                     // Highlight jawaban benar (hanya jika sudah terisi)
-                    $tipeDisplay = (string)($question['tipe_soal'] ?? '');
-                    if ($tipeDisplay === 'pg') {
-                        $tipeDisplay = 'Pilihan Ganda';
-                    }
+                    $tipeDisplay = normalize_tipe_soal_view((string)($question['tipe_soal'] ?? ''));
 
                     $ansRawForHighlight = (string)($question['jawaban_benar'] ?? '');
                     $hasAnswer = trim($ansRawForHighlight) !== '';
@@ -142,12 +185,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     $correctPilihanKeys = [];
                     if ($hasAnswer) {
                         if ($tipeDisplay === 'Pilihan Ganda') {
-                            $k = strtoupper(trim($ansRawForHighlight));
+                            $k = normalize_pg_answer_token_for_view($ansRawForHighlight);
                             $correctPilihanKeys = isset($toPilihanKeyMap[$k]) ? [$toPilihanKeyMap[$k]] : [];
                         } elseif ($tipeDisplay === 'Pilihan Ganda Kompleks') {
                             $parts = array_filter(array_map('trim', explode(',', $ansRawForHighlight)));
                             foreach ($parts as $p) {
-                                $k = strtoupper($p);
+                                $k = normalize_pg_answer_token_for_view($p);
                                 if (isset($toPilihanKeyMap[$k])) {
                                     $correctPilihanKeys[] = $toPilihanKeyMap[$k];
                                 }
@@ -197,10 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="mt-3 small">
                     <?php
-                        $tipe = (string)($question['tipe_soal'] ?? '');
-                        if ($tipe === 'pg') {
-                            $tipe = 'Pilihan Ganda';
-                        }
+                        $tipe = normalize_tipe_soal_view((string)($question['tipe_soal'] ?? ''));
                         $ansRaw = (string)($question['jawaban_benar'] ?? '');
                         $ansLabel = $ansRaw;
                         $map = [
@@ -218,18 +258,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         if ($tipe === 'Pilihan Ganda') {
                             $key = trim($ansRaw);
-                            $ansLabel = $map[$key] ?? $key;
+                            $upper = strtoupper($key);
+                            $lower = strtolower($key);
+                            $ansLabel = $map[$key] ?? $map[$upper] ?? $map[$lower] ?? $key;
                         } elseif ($tipe === 'Pilihan Ganda Kompleks') {
                             $parts = array_filter(array_map('trim', explode(',', $ansRaw)));
                             $labels = [];
                             foreach ($parts as $p) {
-                                $labels[] = $map[$p] ?? $p;
+                                $upper = strtoupper($p);
+                                $lower = strtolower($p);
+                                $labels[] = $map[$p] ?? $map[$upper] ?? $map[$lower] ?? $p;
                             }
                             $ansLabel = implode(', ', $labels);
                         } elseif ($tipe === 'Benar/Salah') {
                             $parts = array_map('trim', explode('|', $ansRaw));
                             $ansLabel = implode(' | ', $parts);
                         }
+
+                        $ansBadgeClass = trim($ansRaw) !== '' ? 'text-bg-success' : 'text-bg-secondary';
                     ?>
                     <?php if (trim((string)($question['materi'] ?? '')) !== ''): ?>
                         <span class="badge text-bg-primary">Materi: <?php echo htmlspecialchars((string)$question['materi']); ?></span>
@@ -237,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <?php if (trim((string)($question['submateri'] ?? '')) !== ''): ?>
                         <span class="badge text-bg-primary ms-1">Submateri: <?php echo htmlspecialchars((string)$question['submateri']); ?></span>
                     <?php endif; ?>
-                    <span class="badge text-bg-info">Jawaban Benar: <?php echo htmlspecialchars($ansLabel); ?></span>
+                    <span class="badge <?php echo $ansBadgeClass; ?>">Jawaban Benar: <?php echo htmlspecialchars($ansLabel); ?></span>
                     <span class="badge text-bg-secondary ms-1">Tipe: <?php echo htmlspecialchars($question['tipe_soal'] ?? ''); ?></span>
                     <span class="badge text-bg-light ms-1">Status: <?php echo htmlspecialchars($question['status_soal'] ?? 'draft'); ?></span>
 

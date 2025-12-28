@@ -47,6 +47,12 @@ if (isset($_GET['success']) && is_string($_GET['success']) && $_GET['success'] !
     $success = (string)$_GET['success'];
 }
 
+$return = trim((string)($_GET['return'] ?? ''));
+$returnLink = 'contents.php';
+if ($return !== '' && strpos($return, '://') === false && $return[0] !== '/' && preg_match('/^[a-z0-9_\-\.\?=&]+$/i', $return)) {
+    $returnLink = $return;
+}
+
 $title = (string)($row['title'] ?? '');
 $slug = (string)($row['slug'] ?? '');
 $type = (string)($row['type'] ?? 'materi');
@@ -86,8 +92,8 @@ include __DIR__ . '/../includes/header.php';
             <p class="admin-page-subtitle">ID: <strong><?php echo (int)$row['id']; ?></strong><?php echo $slug !== '' ? ' • Slug: <strong>' . htmlspecialchars($slug) . '</strong>' : ''; ?></p>
         </div>
         <div class="admin-page-actions d-flex gap-2">
-            <a href="contents.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
-            <a href="content_edit.php?id=<?php echo (int)$row['id']; ?>" class="btn btn-primary btn-sm">Edit</a>
+            <a href="<?php echo htmlspecialchars($returnLink); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
+            <a href="content_edit.php?id=<?php echo (int)$row['id']; ?>&return=<?php echo urlencode($returnLink); ?>" class="btn btn-primary btn-sm">Edit</a>
         </div>
     </div>
 

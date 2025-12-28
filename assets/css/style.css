@@ -323,6 +323,11 @@ body.admin-layout.sidebar-collapsed .app-container {
     width: 100%;
 }
 
+/* When the sidebar is hidden, the navbar/content should start from the very left */
+body.admin-layout.sidebar-collapsed .app-navbar {
+    margin-left: 0;
+}
+
 /* Keep Bootstrap .container centered when sidebar is hidden */
 body.admin-layout.sidebar-collapsed .app-container {
     margin-left: auto;

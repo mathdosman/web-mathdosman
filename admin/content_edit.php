@@ -7,6 +7,14 @@ require_role('admin');
 $errors = [];
 $success = null;
 
+$return = trim((string)($_GET['return'] ?? ''));
+$returnLink = 'contents.php';
+$hasReturn = false;
+if ($return !== '' && strpos($return, '://') === false && $return[0] !== '/' && preg_match('/^[a-z0-9_\-\.\?=&]+$/i', $return)) {
+    $returnLink = $return;
+    $hasReturn = true;
+}
+
 if (app_runtime_migrations_enabled()) {
     // Ensure table/columns exist for older installs (opt-in).
     try {
@@ -145,6 +153,12 @@ if (isset($_GET['success']) && is_string($_GET['success']) && $_GET['success'] !
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $returnPost = trim((string)($_POST['return'] ?? ''));
+    if ($returnPost !== '' && strpos($returnPost, '://') === false && $returnPost[0] !== '/' && preg_match('/^[a-z0-9_\-\.\?=&]+$/i', $returnPost)) {
+        $returnLink = $returnPost;
+        $hasReturn = true;
+    }
+
     $type = trim((string)($_POST['type'] ?? $type));
     if (!in_array($type, ['materi', 'berita'], true)) {
         $type = 'materi';
@@ -266,6 +280,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $stmt = $pdo->prepare($updateSql);
             $stmt->execute($params);
 
+            if ($hasReturn) {
+                header('Location: ' . $returnLink);
+                exit;
+            }
+
             header('Location: content_view.php?id=' . $id . '&success=' . rawurlencode('Perubahan tersimpan.'));
             exit;
         } catch (PDOException $e) {
@@ -284,7 +303,7 @@ include __DIR__ . '/../includes/header.php';
             <p class="admin-page-subtitle">Slug tidak berubah agar link tetap stabil.</p>
         </div>
         <div class="admin-page-actions d-flex gap-2">
-            <a href="contents.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+            <a href="<?php echo htmlspecialchars($returnLink); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
             <?php if ($status === 'published'): ?>
                 <a href="<?php echo htmlspecialchars($publicUrl); ?>" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">Lihat</a>
             <?php endif; ?>
@@ -317,6 +336,7 @@ include __DIR__ . '/../includes/header.php';
                     <form method="post" class="m-0">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                         <input type="hidden" name="published_at_original" value="<?php echo htmlspecialchars($publishedAtOriginalLocal); ?>">
+                        <input type="hidden" name="return" value="<?php echo htmlspecialchars($returnLink); ?>">
                         <div class="row g-3">
                             <div class="col-12 col-md-4">
                                 <label class="form-label">Tipe</label>

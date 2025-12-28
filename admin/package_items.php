@@ -628,7 +628,8 @@ include __DIR__ . '/../includes/header.php';
                                     $introTitle = (string)($introContent['title'] ?? '');
                                     $introStatus = (string)($introContent['status'] ?? '');
                                     $introType = (string)($introContent['type'] ?? '');
-                                    $adminEditUrl = 'content_edit.php?id=' . (int)($introContent['id'] ?? 0);
+                                    $adminEditUrl = 'content_edit.php?id=' . (int)($introContent['id'] ?? 0)
+                                        . '&return=' . urlencode('package_items.php?package_id=' . (int)$packageId);
                                     $publicUrl = '../post.php?slug=' . rawurlencode($introSlug);
                                 ?>
                                 <span class="badge text-bg-light border"><?php echo htmlspecialchars($introType); ?></span>
