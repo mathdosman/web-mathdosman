@@ -11,11 +11,20 @@ if ($studentId <= 0 || $id <= 0) {
     siswa_redirect_to('siswa/results.php');
 }
 
+$hasReviewDetailsColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'allow_review_details']);
+    $hasReviewDetailsColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasReviewDetailsColumn = false;
+}
+
 // Only allow viewing results for completed assignments.
 $assignment = null;
 try {
     $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.status, sa.assigned_at, sa.due_at, sa.updated_at,
-            sa.score, sa.correct_count, sa.total_count, sa.graded_at,
+            sa.score, sa.correct_count, sa.total_count, sa.graded_at' . ($hasReviewDetailsColumn ? ', sa.allow_review_details' : '') . ',
             p.id AS package_id, p.code, p.name, p.description
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
@@ -55,6 +64,11 @@ if ((string)($assignment['status'] ?? '') !== 'done') {
     siswa_redirect_to('siswa/dashboard.php');
 }
 
+$allowReviewDetails = false;
+if ($hasReviewDetailsColumn) {
+    $allowReviewDetails = ((int)($assignment['allow_review_details'] ?? 0)) === 1;
+}
+
 $packageId = (int)($assignment['package_id'] ?? 0);
 
 $renderHtml = function (?string $html): string {
@@ -63,38 +77,42 @@ $renderHtml = function (?string $html): string {
 
 // Load questions (published only) in the same order as assignment_view.
 $items = [];
-try {
-    $sql = 'SELECT q.id, q.pertanyaan, q.tipe_soal, q.jawaban_benar,
-            q.pilihan_1, q.pilihan_2, q.pilihan_3, q.pilihan_4, q.pilihan_5,
-            pq.question_number, pq.added_at
-        FROM package_questions pq
-        JOIN questions q ON q.id = pq.question_id
-        WHERE pq.package_id = :pid
-          AND q.status_soal = "published"
-        ORDER BY (pq.question_number IS NULL) ASC, pq.question_number ASC, pq.added_at DESC';
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':pid' => $packageId]);
-    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Throwable $e) {
-    $items = [];
+if ($allowReviewDetails) {
+    try {
+        $sql = 'SELECT q.id, q.pertanyaan, q.tipe_soal, q.jawaban_benar,
+                q.pilihan_1, q.pilihan_2, q.pilihan_3, q.pilihan_4, q.pilihan_5,
+                pq.question_number, pq.added_at
+            FROM package_questions pq
+            JOIN questions q ON q.id = pq.question_id
+            WHERE pq.package_id = :pid
+              AND q.status_soal = "published"
+            ORDER BY (pq.question_number IS NULL) ASC, pq.question_number ASC, pq.added_at DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':pid' => $packageId]);
+        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $items = [];
+    }
 }
 
 // Load saved answers.
 $savedAnswers = [];
 $perCorrect = [];
 $hasAnswersTable = true;
-try {
-    $stmt = $pdo->prepare('SELECT question_id, answer, is_correct FROM student_assignment_answers WHERE assignment_id = :aid AND student_id = :sid');
-    $stmt->execute([':aid' => $id, ':sid' => $studentId]);
-    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $qid = (int)($row['question_id'] ?? 0);
-        if ($qid <= 0) continue;
-        $savedAnswers[$qid] = (string)($row['answer'] ?? '');
-        $c = $row['is_correct'] ?? null;
-        $perCorrect[$qid] = ($c === null ? null : ((int)$c === 1));
+if ($allowReviewDetails) {
+    try {
+        $stmt = $pdo->prepare('SELECT question_id, answer, is_correct FROM student_assignment_answers WHERE assignment_id = :aid AND student_id = :sid');
+        $stmt->execute([':aid' => $id, ':sid' => $studentId]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $qid = (int)($row['question_id'] ?? 0);
+            if ($qid <= 0) continue;
+            $savedAnswers[$qid] = (string)($row['answer'] ?? '');
+            $c = $row['is_correct'] ?? null;
+            $perCorrect[$qid] = ($c === null ? null : ((int)$c === 1));
+        }
+    } catch (Throwable $e) {
+        $hasAnswersTable = false;
     }
-} catch (Throwable $e) {
-    $hasAnswersTable = false;
 }
 
 $judul = trim((string)($assignment['judul'] ?? ''));
@@ -164,6 +182,14 @@ include __DIR__ . '/../includes/header.php';
                 <span class="small text-muted ms-2">Nilai otomatis hanya tersedia untuk soal yang punya kunci jawaban.</span>
             <?php endif; ?>
         </div>
+
+        <?php if (!$allowReviewDetails): ?>
+            <div class="alert alert-secondary mt-3 mb-0">
+                Detail jawaban dan kunci disembunyikan oleh admin untuk menjaga kerahasiaan. Jika diperlukan, hubungi admin.
+            </div>
+            <?php include __DIR__ . '/../includes/footer.php'; ?>
+            <?php exit; ?>
+        <?php endif; ?>
 
         <?php if (!$hasAnswersTable): ?>
             <div class="alert alert-warning mt-3 mb-0">Detail jawaban belum tersedia di database (tabel jawaban belum ada).</div>

@@ -6,11 +6,21 @@ require_once __DIR__ . '/../lib.php';
 require_role('admin');
 
 $errors = [];
+$hasParentPhoneColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+    $stmt->execute([':c' => 'no_hp_ortu']);
+    $hasParentPhoneColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasParentPhoneColumn = false;
+}
+
 $values = [
     'nama_siswa' => '',
     'kelas' => '',
     'rombel' => '',
     'no_hp' => '',
+    'no_hp_ortu' => '',
     'username' => '',
 ];
 
@@ -19,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values['kelas'] = siswa_clean_string($_POST['kelas'] ?? '');
     $values['rombel'] = siswa_clean_string($_POST['rombel'] ?? '');
     $values['no_hp'] = siswa_clean_phone($_POST['no_hp'] ?? '');
+    $values['no_hp_ortu'] = siswa_clean_phone($_POST['no_hp_ortu'] ?? '');
     $values['username'] = siswa_clean_string($_POST['username'] ?? '');
     $password = (string)($_POST['password'] ?? '');
 
@@ -28,16 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($values['username'] === '') $errors[] = 'Username wajib diisi.';
     if (trim($password) === '') {
         $password = '123456';
-    }
-
-    $fotoPath = '';
-    if (!$errors && !empty($_FILES['foto'])) {
-        [$stored, $err] = siswa_upload_photo($_FILES['foto']);
-        if ($err !== '') {
-            $errors[] = $err;
-        } elseif ($stored !== null && $stored !== '') {
-            $fotoPath = $stored;
-        }
     }
 
     if (!$errors) {
@@ -52,26 +53,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    $fotoPath = '';
+    if (!$errors && !empty($_FILES['foto']) && isset($_FILES['foto']['error']) && (int)$_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+        [$stored, $err] = siswa_upload_photo($_FILES['foto']);
+        if ($err !== '') {
+            $errors[] = $err;
+        } elseif ($stored !== null && $stored !== '') {
+            $fotoPath = $stored;
+        }
+    }
+
     if (!$errors) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
         try {
-            $stmt = $pdo->prepare('INSERT INTO students (nama_siswa, kelas, rombel, no_hp, foto, username, password_hash) VALUES (:n, :k, :r, :hp, :f, :u, :ph)');
-            $stmt->execute([
-                ':n' => $values['nama_siswa'],
-                ':k' => $values['kelas'],
-                ':r' => $values['rombel'],
-                ':hp' => $values['no_hp'],
-                ':f' => $fotoPath,
-                ':u' => $values['username'],
-                ':ph' => $hash,
-            ]);
+            if (method_exists($pdo, 'beginTransaction')) {
+                $pdo->beginTransaction();
+            }
+            if ($hasParentPhoneColumn) {
+                $stmt = $pdo->prepare('INSERT INTO students (nama_siswa, kelas, rombel, no_hp, no_hp_ortu, foto, username, password_hash)
+                    VALUES (:n, :k, :r, :hp, :hpo, :f, :u, :ph)');
+                $stmt->execute([
+                    ':n' => $values['nama_siswa'],
+                    ':k' => $values['kelas'],
+                    ':r' => $values['rombel'],
+                    ':hp' => $values['no_hp'],
+                    ':hpo' => $values['no_hp_ortu'],
+                    ':f' => $fotoPath,
+                    ':u' => $values['username'],
+                    ':ph' => $hash,
+                ]);
+            } else {
+                $stmt = $pdo->prepare('INSERT INTO students (nama_siswa, kelas, rombel, no_hp, foto, username, password_hash)
+                    VALUES (:n, :k, :r, :hp, :f, :u, :ph)');
+                $stmt->execute([
+                    ':n' => $values['nama_siswa'],
+                    ':k' => $values['kelas'],
+                    ':r' => $values['rombel'],
+                    ':hp' => $values['no_hp'],
+                    ':f' => $fotoPath,
+                    ':u' => $values['username'],
+                    ':ph' => $hash,
+                ]);
+            }
+
+            if (method_exists($pdo, 'inTransaction') && $pdo->inTransaction()) {
+                $pdo->commit();
+            }
             header('Location: students.php');
             exit;
         } catch (Throwable $e) {
+            if (method_exists($pdo, 'inTransaction') && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             if ($fotoPath !== '') {
                 siswa_delete_photo($fotoPath);
             }
-            $errors[] = 'Gagal menyimpan data siswa.';
+
+            $isDuplicate = false;
+            if ($e instanceof PDOException) {
+                $info = $e->errorInfo ?? null;
+                if (is_array($info) && isset($info[1]) && (int)$info[1] === 1062) {
+                    $isDuplicate = true;
+                }
+                if ((string)$e->getCode() === '23000') {
+                    $isDuplicate = true;
+                }
+            }
+
+            $errors[] = $isDuplicate ? 'Username sudah digunakan.' : 'Gagal menyimpan data siswa.';
         }
     }
 }
@@ -120,7 +169,11 @@ include __DIR__ . '/../../includes/header.php';
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">No HP</label>
-                        <input type="text" name="no_hp" class="form-control" value="<?php echo htmlspecialchars($values['no_hp']); ?>" placeholder="08...">
+                        <input type="text" name="no_hp" class="form-control" value="<?php echo htmlspecialchars($values['no_hp']); ?>" placeholder="08..." inputmode="numeric" pattern="[0-9]*" maxlength="30">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">No HP Ortu</label>
+                        <input type="text" name="no_hp_ortu" class="form-control" value="<?php echo htmlspecialchars($values['no_hp_ortu']); ?>" placeholder="08..." inputmode="numeric" pattern="[0-9]*" maxlength="30">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Username</label>
@@ -134,7 +187,7 @@ include __DIR__ . '/../../includes/header.php';
                     <div class="col-md-6">
                         <label class="form-label">Foto (opsional)</label>
                         <input type="file" name="foto" class="form-control" accept="image/jpeg,image/png,image/webp">
-                        <div class="form-text">JPG/PNG/WEBP, max 2MB.</div>
+                        <div class="form-text">JPG/PNG/WEBP, max 1MB.</div>
                     </div>
                 </div>
 

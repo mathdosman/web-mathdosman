@@ -382,6 +382,116 @@ try {
         }
     }
 
+    if (!function_exists('app_ensure_student_assignments_review_schema')) {
+        function app_ensure_student_assignments_review_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'student_assignments'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('allow_review_details'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN allow_review_details TINYINT(1) NOT NULL DEFAULT 0');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_students_parent_phone_schema')) {
+        function app_ensure_students_parent_phone_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'students'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM students LIKE " . $pdo->quote('no_hp_ortu'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE students ADD COLUMN no_hp_ortu VARCHAR(30) NULL');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_student_assignments_token_schema')) {
+        function app_ensure_student_assignments_token_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'student_assignments'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('token_code'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN token_code CHAR(6) NULL');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            try {
+                $idx = $pdo->query("SHOW INDEX FROM student_assignments WHERE Key_name = 'idx_sa_token'")->fetch();
+                if (!$idx) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD KEY idx_sa_token (token_code)');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_student_assignments_exam_revoked_schema')) {
+        function app_ensure_student_assignments_exam_revoked_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'student_assignments'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('exam_revoked_at'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN exam_revoked_at TIMESTAMP NULL DEFAULT NULL');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            try {
+                $idx = $pdo->query("SHOW INDEX FROM student_assignments WHERE Key_name = 'idx_sa_exam_revoked'")->fetch();
+                if (!$idx) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD KEY idx_sa_exam_revoked (exam_revoked_at)');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
     // Runtime migrations are allowed only when explicitly enabled AND only on CLI.
     // This avoids web requests hanging due to metadata locks.
     if (app_runtime_migrations_enabled() && PHP_SAPI === 'cli') {
@@ -392,6 +502,10 @@ try {
             try {
                 if (@flock($fp, LOCK_EX | LOCK_NB)) {
                     app_ensure_excel_schema($pdo);
+                    app_ensure_student_assignments_review_schema($pdo);
+                    app_ensure_students_parent_phone_schema($pdo);
+                    app_ensure_student_assignments_token_schema($pdo);
+                    app_ensure_student_assignments_exam_revoked_schema($pdo);
                 }
             } catch (Throwable $e) {
                 // ignore

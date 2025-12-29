@@ -7,6 +7,8 @@ $error = '';
 $lockFile = __DIR__ . '/installed.lock';
 $isInstalled = is_file($lockFile);
 $force = ((string)($_GET['force'] ?? '')) === '1';
+$reset = ((string)($_GET['reset'] ?? '')) === '1';
+$seed = ((string)($_GET['seed'] ?? '')) === '1';
 $remoteAddr = (string)($_SERVER['REMOTE_ADDR'] ?? '');
 $isLocalRequest = in_array($remoteAddr, ['127.0.0.1', '::1'], true);
 $allowForce = $force && $isLocalRequest;
@@ -197,6 +199,360 @@ function importSqlFile(PDO $pdo, string $dbName, string $sqlFilePath): void
     }
 }
 
+/**
+ * Reset database content by dropping all tables in the target database.
+ * Local-only safeguard: intended for reinstall on XAMPP/dev environments.
+ */
+function dropAllTables(PDO $pdo, string $dbName): void
+{
+    $pdo->exec('USE `'.$dbName.'`');
+    try {
+        $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+    } catch (Throwable $e) {
+        // ignore
+    }
+
+    $tables = [];
+    try {
+        $rows = $pdo->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_NUM);
+        foreach ($rows as $r) {
+            if (is_array($r) && isset($r[0]) && is_string($r[0]) && $r[0] !== '') {
+                $tables[] = $r[0];
+            }
+        }
+    } catch (Throwable $e) {
+        $tables = [];
+    }
+
+    foreach ($tables as $t) {
+        $tSafe = str_replace('`', '``', $t);
+        try {
+            $pdo->exec('DROP TABLE IF EXISTS `'.$tSafe.'`');
+        } catch (Throwable $e) {
+            // ignore
+        }
+    }
+
+    try {
+        $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+    } catch (Throwable $e) {
+        // ignore
+    }
+}
+
+function ensureSubject(PDO $pdo, string $name, ?string $description = null): int
+{
+    $stmt = $pdo->prepare('SELECT id FROM subjects WHERE name = :n LIMIT 1');
+    $stmt->execute([':n' => $name]);
+    $id = (int)$stmt->fetchColumn();
+    if ($id > 0) {
+        return $id;
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO subjects (name, description) VALUES (:n, :d)');
+    $stmt->execute([':n' => $name, ':d' => $description]);
+    return (int)$pdo->lastInsertId();
+}
+
+function ensureMaterial(PDO $pdo, int $subjectId, string $name): int
+{
+    $stmt = $pdo->prepare('SELECT id FROM materials WHERE subject_id = :sid AND name = :n LIMIT 1');
+    $stmt->execute([':sid' => $subjectId, ':n' => $name]);
+    $id = (int)$stmt->fetchColumn();
+    if ($id > 0) {
+        return $id;
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO materials (subject_id, name) VALUES (:sid, :n)');
+    $stmt->execute([':sid' => $subjectId, ':n' => $name]);
+    return (int)$pdo->lastInsertId();
+}
+
+function ensureSubmaterial(PDO $pdo, int $materialId, string $name): int
+{
+    $stmt = $pdo->prepare('SELECT id FROM submaterials WHERE material_id = :mid AND name = :n LIMIT 1');
+    $stmt->execute([':mid' => $materialId, ':n' => $name]);
+    $id = (int)$stmt->fetchColumn();
+    if ($id > 0) {
+        return $id;
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO submaterials (material_id, name) VALUES (:mid, :n)');
+    $stmt->execute([':mid' => $materialId, ':n' => $name]);
+    return (int)$pdo->lastInsertId();
+}
+
+function seedDummyStudents(PDO $pdo): void
+{
+    $rows = [
+        ['username' => 'siswa1', 'nama' => 'Siswa 1'],
+        ['username' => 'siswa2', 'nama' => 'Siswa 2'],
+        ['username' => 'siswa3', 'nama' => 'Siswa 3'],
+    ];
+
+    $stmtExists = $pdo->prepare('SELECT 1 FROM students WHERE username = :u LIMIT 1');
+    $stmtInsert = $pdo->prepare('INSERT INTO students (nama_siswa, kelas, rombel, no_hp, foto, username, password_hash)
+        VALUES (:nama, :kelas, :rombel, NULL, NULL, :u, :ph)');
+
+    $passHash = password_hash('123456', PASSWORD_DEFAULT);
+
+    foreach ($rows as $r) {
+        $stmtExists->execute([':u' => $r['username']]);
+        if ($stmtExists->fetchColumn()) {
+            continue;
+        }
+        $stmtInsert->execute([
+            ':nama' => $r['nama'],
+            ':kelas' => 'X',
+            ':rombel' => 'A',
+            ':u' => $r['username'],
+            ':ph' => $passHash,
+        ]);
+    }
+}
+
+function seedDummyPackagesQuestions(PDO $pdo): void
+{
+    // Only seed when the DB is still mostly empty.
+    try {
+        $packagesCount = (int)$pdo->query('SELECT COUNT(*) FROM packages')->fetchColumn();
+        $questionsCount = (int)$pdo->query('SELECT COUNT(*) FROM questions')->fetchColumn();
+        if ($packagesCount > 0 || $questionsCount > 0) {
+            // Avoid polluting an existing DB.
+            return;
+        }
+    } catch (Throwable $e) {
+        // If counts fail, do nothing.
+        return;
+    }
+
+    $subjectId = ensureSubject($pdo, 'Matematika', 'Mata pelajaran Matematika');
+    // Also keep a generic subject for compatibility with some pages.
+    try {
+        ensureSubject($pdo, 'Umum', null);
+    } catch (Throwable $e) {
+        // ignore
+    }
+
+    $materiMap = [
+        ['materi' => 'Aritmetika', 'sub' => 'Operasi Bilangan'],
+        ['materi' => 'Aljabar', 'sub' => 'Persamaan Linear'],
+        ['materi' => 'Geometri', 'sub' => 'Bangun Datar'],
+        ['materi' => 'Trigonometri', 'sub' => 'Sudut Istimewa'],
+    ];
+
+    foreach ($materiMap as $m) {
+        $mid = ensureMaterial($pdo, $subjectId, $m['materi']);
+        ensureSubmaterial($pdo, $mid, $m['sub']);
+    }
+
+    $now = date('Y-m-d H:i:s');
+
+    $packages = [
+        [
+            'code' => 'dummy-math-01',
+            'name' => 'Paket Dummy Matematika 1 (Aritmetika Dasar)',
+            'materi' => 'Aritmetika',
+            'submateri' => 'Operasi Bilangan',
+        ],
+        [
+            'code' => 'dummy-math-02',
+            'name' => 'Paket Dummy Matematika 2 (Aljabar)',
+            'materi' => 'Aljabar',
+            'submateri' => 'Persamaan Linear',
+        ],
+        [
+            'code' => 'dummy-math-03',
+            'name' => 'Paket Dummy Matematika 3 (Geometri)',
+            'materi' => 'Geometri',
+            'submateri' => 'Bangun Datar',
+        ],
+        [
+            'code' => 'dummy-math-04',
+            'name' => 'Paket Dummy Matematika 4 (Trigonometri)',
+            'materi' => 'Trigonometri',
+            'submateri' => 'Sudut Istimewa',
+        ],
+    ];
+
+    $questionsByPackageCode = [
+        'dummy-math-01' => [
+            [
+                'q' => 'Berapakah hasil $2 + 3 \times 4$?',
+                'opts' => ['14', '20', '12', '9', '24'],
+                'ans' => 'pilihan_1',
+            ],
+            [
+                'q' => '15% dari 200 adalah ...',
+                'opts' => ['25', '30', '35', '20', '15'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Pecahan $\frac{18}{24}$ disederhanakan menjadi ...',
+                'opts' => ['2/3', '3/4', '3/5', '4/5', '5/6'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Rata-rata dari 6, 8, 10, 12 adalah ...',
+                'opts' => ['8', '9', '10', '7', '9.5'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Jika $a=5$ dan $b=2$, maka nilai $a^2 - b^2$ adalah ...',
+                'opts' => ['17', '19', '21', '23', '25'],
+                'ans' => 'pilihan_3',
+            ],
+        ],
+        'dummy-math-02' => [
+            [
+                'q' => 'Penyelesaian persamaan $2x + 3 = 11$ adalah ...',
+                'opts' => ['3', '4', '5', '6', '7'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Faktorisasi dari $x^2 - 9$ adalah ...',
+                'opts' => ['(x-3)(x+3)', '(x-9)(x+1)', '(x-3)^2', '(x+3)^2', 'x(x-9)'],
+                'ans' => 'pilihan_1',
+            ],
+            [
+                'q' => 'Jika $f(x)=2x-5$, maka $f(7)$ adalah ...',
+                'opts' => ['7', '8', '9', '10', '11'],
+                'ans' => 'pilihan_3',
+            ],
+            [
+                'q' => 'Jika $x+y=10$ dan $x-y=2$, maka nilai $x$ adalah ...',
+                'opts' => ['4', '5', '6', '7', '8'],
+                'ans' => 'pilihan_3',
+            ],
+            [
+                'q' => 'Sederhanakan: $x^3 \cdot x^2 = ...$',
+                'opts' => ['x^6', 'x^5', 'x^3', 'x^4', 'x'],
+                'ans' => 'pilihan_2',
+            ],
+        ],
+        'dummy-math-03' => [
+            [
+                'q' => 'Luas persegi panjang dengan panjang 8 dan lebar 5 adalah ...',
+                'opts' => ['13', '40', '30', '45', '25'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Keliling persegi dengan sisi 7 adalah ...',
+                'opts' => ['21', '24', '28', '35', '49'],
+                'ans' => 'pilihan_3',
+            ],
+            [
+                'q' => 'Jumlah sudut dalam segitiga adalah ...',
+                'opts' => ['90°', '180°', '270°', '360°', '120°'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Jika segitiga siku-siku memiliki sisi siku-siku 6 dan 8, maka sisi miringnya adalah ...',
+                'opts' => ['12', '10', '14', '16', '9'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Keliling lingkaran dengan $r=7$ (gunakan $\pi=\frac{22}{7}$) adalah ...',
+                'opts' => ['22', '44', '154', '49', '88'],
+                'ans' => 'pilihan_2',
+            ],
+        ],
+        'dummy-math-04' => [
+            [
+                'q' => 'Nilai $\sin 30^\circ$ adalah ...',
+                'opts' => ['1/2', '√3/2', '√2/2', '1', '0'],
+                'ans' => 'pilihan_1',
+            ],
+            [
+                'q' => 'Nilai $\cos 60^\circ$ adalah ...',
+                'opts' => ['0', '1/2', '√3/2', '√2/2', '1'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Nilai $\tan 45^\circ$ adalah ...',
+                'opts' => ['0', '1', '√3', '√3/3', '2'],
+                'ans' => 'pilihan_2',
+            ],
+            [
+                'q' => 'Jika $\sin \theta = \frac{\sqrt{3}}{2}$ dan $\theta$ lancip, maka $\theta$ adalah ...',
+                'opts' => ['30°', '45°', '60°', '90°', '120°'],
+                'ans' => 'pilihan_3',
+            ],
+            [
+                'q' => 'Konversi $180^\circ$ ke radian adalah ...',
+                'opts' => ['π/2', 'π', '2π', '3π/2', 'π/3'],
+                'ans' => 'pilihan_2',
+            ],
+        ],
+    ];
+
+    $pdo->beginTransaction();
+    try {
+        $stmtPackage = $pdo->prepare('INSERT INTO packages
+            (code, name, subject_id, materi, submateri, intro_content_id, description, show_answers_public, is_exam, status, published_at)
+            VALUES
+            (:code, :name, :sid, :materi, :sub, NULL, :desc, 0, 0, \"draft\", NULL)');
+
+        $stmtQuestion = $pdo->prepare('INSERT INTO questions
+            (subject_id, pertanyaan, gambar_pertanyaan, tipe_soal,
+             pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5,
+             jawaban_benar, penyelesaian, status_soal, materi, submateri, created_at)
+            VALUES
+            (:sid, :q, NULL, :tipe, :p1, :p2, :p3, :p4, :p5, :ans, NULL, \"draft\", :materi, :sub, :created_at)');
+
+        $stmtLink = $pdo->prepare('INSERT INTO package_questions (package_id, question_id, question_number)
+            VALUES (:pid, :qid, :no)');
+
+        $packageIds = [];
+        foreach ($packages as $p) {
+                $stmtPackage->execute([
+                    ':code' => $p['code'],
+                    ':name' => $p['name'],
+                    ':sid' => $subjectId,
+                    ':materi' => $p['materi'],
+                    ':sub' => $p['submateri'],
+                    ':desc' => 'Paket soal dummy untuk testing (otomatis dibuat saat install).',
+                ]);
+            $packageIds[$p['code']] = (int)$pdo->lastInsertId();
+        }
+
+        foreach ($packages as $p) {
+            $pid = (int)($packageIds[$p['code']] ?? 0);
+            if ($pid <= 0) {
+                continue;
+            }
+
+            $qs = $questionsByPackageCode[$p['code']] ?? [];
+            $no = 1;
+            foreach ($qs as $q) {
+                $opts = $q['opts'] ?? [];
+                $stmtQuestion->execute([
+                    ':sid' => $subjectId,
+                    ':q' => (string)($q['q'] ?? ''),
+                    ':tipe' => 'Pilihan Ganda',
+                    ':p1' => (string)($opts[0] ?? ''),
+                    ':p2' => (string)($opts[1] ?? ''),
+                    ':p3' => (string)($opts[2] ?? ''),
+                    ':p4' => (string)($opts[3] ?? ''),
+                    ':p5' => (string)($opts[4] ?? ''),
+                    ':ans' => (string)($q['ans'] ?? ''),
+                    ':materi' => $p['materi'],
+                    ':sub' => $p['submateri'],
+                    ':created_at' => $now,
+                ]);
+                $qid = (int)$pdo->lastInsertId();
+                $stmtLink->execute([':pid' => $pid, ':qid' => $qid, ':no' => $no]);
+                $no++;
+            }
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
 if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $rootHost = trim($_POST['root_host'] ?? 'localhost');
     $rootUser = trim($_POST['root_user'] ?? 'root');
@@ -205,6 +561,14 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $dbName = 'web-mathdosman';
     $appUser = 'mathdosman';
     $appPass = 'admin 007007';
+
+    $seedDummy = $seed;
+    if (isset($_POST['seed_dummy'])) {
+        $seedDummy = true;
+    } elseif (!$seed && $isLocalRequest) {
+        // Default: seed dummy data on localhost to make the app usable immediately.
+        $seedDummy = true;
+    }
 
     try {
         $dsn = 'mysql:host=' . $rootHost . ';charset=utf8mb4';
@@ -229,6 +593,12 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Optional: full reset for reinstall (drop ALL tables), local-only.
+        // Use: /install/?force=1&reset=1 (then submit the form)
+        if ($allowForce && $reset) {
+            dropAllTables($pdo, $dbName);
+        }
+
         // Import database schema only (no seed data)
         $schemaFile = __DIR__ . '/../database.sql';
         importSqlFile($pdo, $dbName, $schemaFile);
@@ -250,6 +620,20 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (Throwable $e) {
             // ignore
+        }
+
+        // Optional: seed dummy packages/questions + dummy student accounts.
+        if ($seedDummy) {
+            try {
+                seedDummyPackagesQuestions($pdo);
+            } catch (Throwable $e) {
+                // If seeding fails, continue installation; user can seed manually later.
+            }
+            try {
+                seedDummyStudents($pdo);
+            } catch (Throwable $e) {
+                // ignore
+            }
         }
 
         // Coba buat user aplikasi dan beri hak akses ke database
@@ -339,6 +723,21 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label class="form-label">Password MySQL (root)</label>
                     <input type="password" name="root_pass" class="form-control" value="<?php echo htmlspecialchars($_POST['root_pass'] ?? ''); ?>">
+                </div>
+                <div class="form-check mb-3">
+                    <?php
+                        $seedChecked = $isLocalRequest;
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            $seedChecked = !empty($_POST['seed_dummy']);
+                        } elseif ($seed) {
+                            $seedChecked = true;
+                        }
+                    ?>
+                    <input class="form-check-input" type="checkbox" id="seed_dummy" name="seed_dummy" value="1"<?php echo $seedChecked ? ' checked' : ''; ?>>
+                    <label class="form-check-label" for="seed_dummy">
+                        Install dengan data dummy (4 paket × 5 soal PG + 3 siswa)
+                    </label>
+                    <div class="form-text">Akun siswa: siswa1/siswa2/siswa3 (password: 123456), kelas X rombel A.</div>
                 </div>
                 <button type="submit" class="btn btn-primary">Jalankan Instalasi</button>
             </form>

@@ -29,7 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($error === '') {
         require_once __DIR__ . '/../config/db.php';
         try {
-            $stmt = $pdo->prepare('SELECT id, nama_siswa, kelas, rombel, no_hp, foto, username, password_hash FROM students WHERE username = :u LIMIT 1');
+            $hasParentPhoneColumn = false;
+            try {
+                $stmtCol = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+                $stmtCol->execute([':c' => 'no_hp_ortu']);
+                $hasParentPhoneColumn = (bool)$stmtCol->fetch();
+            } catch (Throwable $eCol) {
+                $hasParentPhoneColumn = false;
+            }
+
+            $stmt = $pdo->prepare('SELECT id, nama_siswa, kelas, rombel, no_hp' . ($hasParentPhoneColumn ? ', no_hp_ortu' : '') . ', foto, username, password_hash FROM students WHERE username = :u LIMIT 1');
             $stmt->execute([':u' => $username]);
             $student = $stmt->fetch();
 
@@ -41,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'kelas' => (string)$student['kelas'],
                     'rombel' => (string)$student['rombel'],
                     'no_hp' => (string)$student['no_hp'],
+                    'no_hp_ortu' => $hasParentPhoneColumn ? (string)($student['no_hp_ortu'] ?? '') : '',
                     'foto' => (string)($student['foto'] ?? ''),
                     'username' => (string)$student['username'],
                 ];
@@ -61,67 +71,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$page_title = 'Login Siswa';
+$page_title = 'Login Siswa | MATHDOSMAN';
+$disable_navbar = true;
+$disable_adsense = true;
+$use_mathjax = false;
+$disable_public_footer = true;
+$body_class = 'student-login-page';
+$extra_stylesheets = ['assets/css/student-login.css'];
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card card-login shadow-sm">
-    <div class="card-body">
-        <h5 class="card-title mb-3 text-center">Login Siswa</h5>
-        <?php if ($error): ?>
-            <div class="alert alert-danger py-2"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
-        <form method="post" autocomplete="off">
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" name="username" class="form-control" required>
+<div class="login-container">
+    <div class="login-card">
+        <header class="header-section">
+            <div class="logo-wrapper">
+                <img
+                    src="<?php echo htmlspecialchars(asset_url('assets/img/icon.svg', (string)$base_url)); ?>"
+                    width="60"
+                    height="60"
+                    alt="Mathdosman"
+                >
+                <h1>MATHDOSMAN</h1>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <div class="input-group">
-                    <input id="password" type="password" name="password" class="form-control" required>
-                    <button id="togglePassword" class="btn btn-outline-secondary" type="button" aria-label="Tampilkan password" title="Tampilkan password">
-                        <span id="togglePasswordIcon" aria-hidden="true">
-                            <svg id="iconEye" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            <svg id="iconEyeOff" class="d-none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M4 5l16 16" />
-                                <path d="M3 12s3.5-7 10-7c2.05 0 3.86.67 5.34 1.63" />
-                                <path d="M21 12s-3.5 7-10 7c-2.05 0-3.86-.67-5.34-1.63" />
-                                <path d="M10.5 10.5a3 3 0 0 0 3.99 3.99" />
-                            </svg>
-                        </span>
+            <p>Platform Belajar Matematika Terpadu &amp; Interaktif</p>
+        </header>
+
+        <?php if ($error): ?>
+            <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+
+        <form method="post" autocomplete="off">
+            <div class="input-group">
+                <label for="nisn">NISN</label>
+                <input type="text" id="nisn" name="username" placeholder="Masukkan nomor induk siswa" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <button type="button" class="toggle-password" data-target="#password" data-visible="0" aria-label="Tampilkan password" aria-pressed="false">
+                        <svg class="icon icon-eye" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <svg class="icon icon-eye-off" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M2 12s3.5-7 10-7c2.1 0 4 .7 5.6 1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7c2 0 3.8-.6 5.3-1.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10.6 10.6a3 3 0 0 0 2.8 2.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M9.9 5.2a3 3 0 0 1 4.9 4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
                     </button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+            <button type="submit" class="btn-login">Masuk ke Dashboard</button>
         </form>
+
+        <footer>
+            <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/kontak.php'); ?>">Lupa password?</a>
+            <span>Belum punya akun? <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/kontak.php'); ?>">Daftar</a></span>
+        </footer>
     </div>
 </div>
 
 <script>
-    (function () {
-        var input = document.getElementById('password');
-        var btn = document.getElementById('togglePassword');
-        var iconEye = document.getElementById('iconEye');
-        var iconEyeOff = document.getElementById('iconEyeOff');
-        if (!input || !btn || !iconEye || !iconEyeOff) return;
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.querySelector('.toggle-password');
+    if (!btn) return;
 
-        function render(isVisible) {
-            btn.setAttribute('aria-label', isVisible ? 'Sembunyikan password' : 'Tampilkan password');
-            btn.setAttribute('title', isVisible ? 'Sembunyikan password' : 'Tampilkan password');
-            iconEye.classList.toggle('d-none', isVisible);
-            iconEyeOff.classList.toggle('d-none', !isVisible);
-        }
+    var targetSelector = btn.getAttribute('data-target');
+    var input = targetSelector ? document.querySelector(targetSelector) : null;
+    if (!input) return;
 
-        render(false);
-        btn.addEventListener('click', function () {
-            var visible = input.getAttribute('type') === 'text';
-            input.setAttribute('type', visible ? 'password' : 'text');
-            render(!visible);
-            input.focus();
-        });
-    })();
+    btn.addEventListener('click', function () {
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.setAttribute('data-visible', show ? '1' : '0');
+        btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+        btn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+    });
+});
 </script>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

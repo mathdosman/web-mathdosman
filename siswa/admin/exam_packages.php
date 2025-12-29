@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: exam_packages.php');
                 exit;
             } catch (Throwable $e) {
-                $errors[] = 'Gagal mengubah status paket ujian.';
+                $errors[] = 'Gagal mengubah status paket.';
             }
         }
     }
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: exam_packages.php?success=added');
                 exit;
             } catch (Throwable $e) {
-                $errors[] = 'Gagal menambahkan paket ujian.';
+                $errors[] = 'Gagal menambahkan paket.';
             }
         }
     }
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: exam_packages.php?success=removed');
                 exit;
             } catch (Throwable $e) {
-                $errors[] = 'Gagal membatalkan paket ujian.';
+                $errors[] = 'Gagal membatalkan paket.';
             }
         }
     }
@@ -153,14 +153,14 @@ try {
     $errors[] = 'Gagal memuat data paket.';
 }
 
-$page_title = 'Paket Ujian';
+$page_title = 'Paket';
 include __DIR__ . '/../../includes/header.php';
 ?>
 <div class="admin-page">
     <div class="admin-page-header">
         <div>
-            <h4 class="admin-page-title">Paket Ujian</h4>
-            <p class="admin-page-subtitle">Pilih paket <b>draft</b> yang ditandai sebagai ujian (paket ujian tidak tampil di halaman web publik).</p>
+            <h4 class="admin-page-title">Paket</h4>
+            <p class="admin-page-subtitle">Pilih paket <b>draft</b> yang ditandai khusus (paket ini tidak tampil di halaman web publik).</p>
         </div>
         <div class="admin-page-actions">
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan Siswa</a>
@@ -186,8 +186,8 @@ include __DIR__ . '/../../includes/header.php';
         $success = (string)($_GET['success'] ?? '');
         $successMsg = '';
         if ($success === 'column') $successMsg = 'Kolom packages.is_exam berhasil dibuat.';
-        if ($success === 'added') $successMsg = 'Paket berhasil ditambahkan sebagai ujian.';
-        if ($success === 'removed') $successMsg = 'Paket ujian berhasil dibatalkan.';
+        if ($success === 'added') $successMsg = 'Paket berhasil ditambahkan.';
+        if ($success === 'removed') $successMsg = 'Paket berhasil dibatalkan.';
     ?>
     <?php if ($successMsg !== ''): ?>
         <div class="alert alert-success"><?php echo htmlspecialchars($successMsg); ?></div>
@@ -219,7 +219,7 @@ include __DIR__ . '/../../includes/header.php';
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="form-text">Hanya paket <b>draft</b> yang bisa dipilih menjadi paket ujian.</div>
+                        <div class="form-text">Hanya paket <b>draft</b> yang bisa dipilih.</div>
                     </div>
                     <div class="col-12 col-md-3 d-grid">
                         <button type="submit" class="btn btn-warning"<?php echo $availablePackages ? '' : ' disabled'; ?>>Tambah</button>
@@ -228,9 +228,9 @@ include __DIR__ . '/../../includes/header.php';
             <?php endif; ?>
 
             <?php if (!$hasIsExamColumn): ?>
-                <div class="alert alert-info mb-0">Buat kolom <b>packages.is_exam</b> dulu agar fitur Paket Ujian bisa dipakai.</div>
+                <div class="alert alert-info mb-0">Buat kolom <b>packages.is_exam</b> dulu agar fitur ini bisa dipakai.</div>
             <?php elseif (!$rows): ?>
-                <div class="alert alert-info mb-0">Belum ada paket yang dipilih sebagai ujian.</div>
+                <div class="alert alert-info mb-0">Belum ada paket yang dipilih.</div>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover table-compact align-middle">
@@ -251,9 +251,6 @@ include __DIR__ . '/../../includes/header.php';
                                     <td class="fw-semibold"><?php echo htmlspecialchars((string)($p['code'] ?? '')); ?></td>
                                     <td>
                                         <div class="fw-semibold"><?php echo htmlspecialchars((string)($p['name'] ?? '')); ?></div>
-                                        <?php if ($isExam): ?>
-                                            <span class="badge text-bg-warning">UJIAN</span>
-                                        <?php endif; ?>
                                         <?php if ((int)($p['published_count'] ?? 0) > 0): ?>
                                             <span class="badge text-bg-success ms-1">Soal Terbit: <?php echo (int)$p['published_count']; ?></span>
                                         <?php endif; ?>
@@ -265,12 +262,14 @@ include __DIR__ . '/../../includes/header.php';
                                         <?php $st = (string)($p['status'] ?? ''); ?>
                                         <?php if ($st === 'published'): ?>
                                             <span class="badge text-bg-success">PUBLISHED</span>
+                                        <?php elseif ($st === 'draft'): ?>
+                                            <span class="badge text-bg-secondary">AKTIF</span>
                                         <?php else: ?>
-                                            <span class="badge text-bg-secondary">DRAFT</span>
+                                            <span class="badge text-bg-secondary"><?php echo htmlspecialchars(strtoupper($st)); ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-end">
-                                        <form method="post" class="d-inline m-0" data-swal-confirm data-swal-title="Batalkan Paket Ujian?" data-swal-text="Paket ini tidak lagi masuk daftar ujian." data-swal-confirm-text="Batalkan" data-swal-cancel-text="Batal">
+                                        <form method="post" class="d-inline m-0" data-swal-confirm data-swal-title="Batalkan Paket?" data-swal-text="Paket ini tidak lagi masuk daftar khusus." data-swal-confirm-text="Batalkan" data-swal-cancel-text="Batal">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                             <input type="hidden" name="action" value="remove_exam">
                                             <input type="hidden" name="package_id" value="<?php echo (int)($p['id'] ?? 0); ?>">

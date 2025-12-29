@@ -12,6 +12,27 @@ if ($studentId <= 0 || $id <= 0) {
     siswa_redirect_to('siswa/dashboard.php');
 }
 
+$hasTokenColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'token_code']);
+    $hasTokenColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasTokenColumn = false;
+}
+
+$hasExamRevokedColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'exam_revoked_at']);
+    $hasExamRevokedColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasExamRevokedColumn = false;
+}
+
+$tokenSelect = $hasTokenColumn ? ', sa.token_code' : '';
+$revokedSelect = $hasExamRevokedColumn ? ', sa.exam_revoked_at' : '';
+
 $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at,
         p.id AS package_id, p.code, p.name, p.description
     FROM student_assignments sa
@@ -21,7 +42,7 @@ $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, 
 
 try {
     // Newer schema (exam mode)
-    $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at, sa.duration_minutes, sa.started_at,
+    $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at' . $tokenSelect . $revokedSelect . ', sa.duration_minutes, sa.started_at,
             sa.correct_count, sa.total_count, sa.score, sa.graded_at,
             p.id AS package_id, p.code, p.name, p.description
         FROM student_assignments sa
@@ -32,7 +53,7 @@ try {
     $assignment = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     // Backward compatible: older schema without duration_minutes/started_at.
-    $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at,
+    $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at' . $tokenSelect . $revokedSelect . ',
             p.id AS package_id, p.code, p.name, p.description
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
@@ -45,6 +66,52 @@ try {
 // If already completed, do not allow reopening/viewing the assignment content.
 if ($assignment && (string)($assignment['status'] ?? '') === 'done') {
     siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=already_done');
+}
+
+$jenisAssignment = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
+$isExamAssignment = ($jenisAssignment === 'ujian');
+
+$tokenCode = trim((string)($assignment['token_code'] ?? ''));
+$tokenAvailable = ($tokenCode !== '');
+// Token policy:
+// - TUGAS: token only required if admin generated it.
+// - UJIAN: token always required; if admin hasn't generated it yet, student must contact admin.
+$requiresToken = ($isExamAssignment || $tokenAvailable);
+$tokenOk = false;
+if ($requiresToken) {
+    $tok = $_SESSION['assignment_token_ok'] ?? null;
+    $stored = (is_array($tok) && isset($tok[$id])) ? (string)$tok[$id] : '';
+    $tokenOk = ($stored !== '' && $tokenAvailable && $stored === $tokenCode);
+}
+
+// Allow forcing a token re-check (used by client-side focus/visibility logic).
+// This only clears the session flag (never grants access), so it's safe as a best-effort GET.
+if ($assignment && $isExamAssignment && $requiresToken && isset($_GET['force_token'])) {
+    if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
+        unset($_SESSION['assignment_token_ok'][$id]);
+    }
+    $tokenOk = false;
+}
+
+// One-time exam access: if the student ever leaves after starting, lock and require admin reset.
+$examRevokedAt = trim((string)($assignment['exam_revoked_at'] ?? ''));
+if ($assignment && $isExamAssignment && $hasExamRevokedColumn && $examRevokedAt !== '' && (string)($assignment['status'] ?? 'assigned') !== 'done') {
+    $page_title = 'Ujian Terkunci';
+    $body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view');
+    $hide_public_footer_links = true;
+    $disable_student_sidebar = true;
+    $disable_adsense = true;
+    $disable_navbar = true;
+    include __DIR__ . '/../includes/header.php';
+    ?>
+    <div class="alert alert-warning" data-no-swal="1">
+        <div class="fw-semibold mb-1">Ujian terkunci</div>
+        <div class="small">Kamu sudah keluar dari halaman ujian. Hubungi admin untuk reset ujian.</div>
+    </div>
+    <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+    <?php
+    include __DIR__ . '/../includes/footer.php';
+    exit;
 }
 
 $isLocked = false;
@@ -167,6 +234,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If we also keep a hidden input named "action" inside the form, the posted value can be overwritten due to DOM order.
     // Use a separate default_action instead and fall back to it only when no explicit action is posted.
     $action = (string)($_POST['action'] ?? ($_POST['default_action'] ?? ''));
+
+    // Mark exam as started when student begins working (used for monitoring + lock-on-leave).
+    if ($action === 'touch_started' && $assignment) {
+        $jenisNow = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
+        $statusNow = (string)($assignment['status'] ?? 'assigned');
+        $startedNow = trim((string)($assignment['started_at'] ?? ''));
+
+        if ($jenisNow === 'ujian' && $statusNow !== 'done' && $startedNow === '') {
+            try {
+                $stmt = $pdo->prepare('UPDATE student_assignments
+                    SET started_at = NOW(), updated_at = NOW()
+                    WHERE id = :id AND student_id = :sid AND (started_at IS NULL OR started_at = "")');
+                $stmt->execute([':id' => $id, ':sid' => $studentId]);
+            } catch (Throwable $e) {
+                // best-effort
+            }
+        }
+
+        http_response_code(204);
+        exit;
+    }
+
+    // If the student leaves the exam page after it has started, lock the exam (one-time access).
+    if ($action === 'leave_exam' && $assignment && $hasExamRevokedColumn) {
+        $jenisNow = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
+        $statusNow = (string)($assignment['status'] ?? 'assigned');
+        $startedNow = trim((string)($assignment['started_at'] ?? ''));
+
+        if ($jenisNow === 'ujian' && $statusNow !== 'done' && $startedNow !== '') {
+            try {
+                $stmt = $pdo->prepare('UPDATE student_assignments
+                    SET exam_revoked_at = NOW(), updated_at = NOW()
+                    WHERE id = :id AND student_id = :sid AND (exam_revoked_at IS NULL OR exam_revoked_at = "")');
+                $stmt->execute([':id' => $id, ':sid' => $studentId]);
+            } catch (Throwable $e) {
+                // best-effort
+            }
+        }
+
+        // Force token re-check after reset (best-effort).
+        if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
+            unset($_SESSION['assignment_token_ok'][$id]);
+        }
+
+        http_response_code(204);
+        exit;
+    }
+
+    // Clear token OK flag (forces the token form on next reload).
+    // Only used for UJIAN focus/visibility rule.
+    if ($action === 'clear_token_ok') {
+        if ($assignment && $isExamAssignment) {
+            if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
+                unset($_SESSION['assignment_token_ok'][$id]);
+            }
+        }
+        http_response_code(204);
+        exit;
+    }
+
+    $stopAction = false;
+    if ($action === 'verify_token') {
+        if (!$assignment) {
+            $actionError = 'Penugasan tidak ditemukan.';
+        } elseif (!$requiresToken) {
+            siswa_redirect_to('siswa/assignment_view.php?id=' . $id);
+        } elseif (!$tokenAvailable) {
+            $actionError = $isExamAssignment
+                ? 'Token ujian belum tersedia. Minta admin untuk generate token.'
+                : 'Token belum tersedia.';
+        } else {
+            $input = (string)($_POST['token_code'] ?? '');
+            $input = preg_replace('/\D+/', '', $input);
+            $input = substr((string)$input, 0, 6);
+
+            if ($input === '') {
+                $actionError = 'Token wajib diisi.';
+            } elseif (strlen($input) !== 6) {
+                $actionError = 'Token harus 6 angka.';
+            } elseif ($input !== $tokenCode) {
+                $actionError = 'Token salah.';
+            } else {
+                if (!isset($_SESSION['assignment_token_ok']) || !is_array($_SESSION['assignment_token_ok'])) {
+                    $_SESSION['assignment_token_ok'] = [];
+                }
+                $_SESSION['assignment_token_ok'][$id] = $tokenCode;
+                siswa_redirect_to('siswa/assignment_view.php?id=' . $id . '&flash=token_ok');
+            }
+        }
+        $stopAction = true;
+    }
+
+    if (!$stopAction && $requiresToken && !$tokenOk) {
+        if ($isExamAssignment && !$tokenAvailable) {
+            $actionError = 'Token ujian belum tersedia. Minta admin untuk generate token.';
+        } else {
+            $actionError = 'Masukkan token terlebih dahulu.';
+        }
+        $stopAction = true;
+    }
 
     $saveAnswersAndMaybeGrade = function (bool $finalize) use ($pdo, $assignment, $id, $studentId, $ensureAnswersTable, $ensureScoringColumns): string {
         if (!$assignment) return 'Penugasan tidak ditemukan.';
@@ -398,7 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return '';
     };
 
-    if ($action === 'start_exam' && $assignment) {
+    if (!$stopAction && $action === 'start_exam' && $assignment) {
         if ($isLocked) {
             $actionError = $lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.';
         } else {
@@ -429,7 +596,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'mark_done' && $assignment) {
+    if (!$stopAction && $action === 'mark_done' && $assignment) {
         if ($isLocked) {
             $actionError = $lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.';
         } else {
@@ -440,7 +607,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'save_answers' && $assignment) {
+    if (!$stopAction && $action === 'save_answers' && $assignment) {
         if ($isLocked) {
             $actionError = $lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.';
         } else {
@@ -451,7 +618,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'mark_assigned' && $assignment) {
+    if (!$stopAction && $action === 'mark_assigned' && $assignment) {
         try {
             $stmt = $pdo->prepare('UPDATE student_assignments
                 SET status = "assigned", updated_at = NOW()
@@ -565,7 +732,41 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <?php if ($isLocked): ?>
-            <div class="alert alert-warning mt-3 mb-0"><?php echo htmlspecialchars($lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.'); ?></div>
+            <div class="alert alert-warning mt-3 mb-0" data-no-swal="1"><?php echo htmlspecialchars($lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.'); ?></div>
+            <?php include __DIR__ . '/../includes/footer.php'; ?>
+            <?php exit; ?>
+        <?php endif; ?>
+
+        <?php if ($requiresToken && !$tokenOk): ?>
+            <?php if ($isExamAssignment && !$tokenAvailable): ?>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <div class="fw-semibold mb-1">Token ujian belum tersedia</div>
+                    <div class="small">Minta admin untuk generate token sebelum kamu bisa mulai ujian.</div>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-info mt-3 mb-0">
+                    <div class="fw-semibold mb-1">Token diperlukan</div>
+                    <div class="small"><?php echo $isExamAssignment ? 'Masukkan token 6 digit sebelum mulai ujian.' : 'Masukkan token 6 digit sebelum mulai.'; ?></div>
+                    <form method="post" class="mt-2" style="max-width: 360px;">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                        <input type="hidden" name="action" value="verify_token">
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                name="token_code"
+                                class="form-control"
+                                inputmode="numeric"
+                                pattern="[0-9]{6}"
+                                maxlength="6"
+                                placeholder="Token 6 digit"
+                                autocomplete="off"
+                                required
+                            >
+                            <button type="submit" class="btn btn-primary">Lanjut</button>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
             <?php include __DIR__ . '/../includes/footer.php'; ?>
             <?php exit; ?>
         <?php endif; ?>
@@ -654,6 +855,9 @@ include __DIR__ . '/../includes/header.php';
                         <span class="d-block mt-1">Mode ujian: waktu berjalan terus setelah dimulai.</span>
                     <?php endif; ?>
                 </div>
+                <?php if ($requiresToken && $tokenOk && $tokenAvailable): ?>
+                    <div class="small mt-2">Token: <b><?php echo htmlspecialchars($tokenCode); ?></b></div>
+                <?php endif; ?>
             </div>
 
             <form id="answerForm" method="post">
@@ -993,6 +1197,9 @@ include __DIR__ . '/../includes/header.php';
                         function show(index) {
                             // index = -1 means "intro" (no question visible).
                             if (index === -1) {
+                                try {
+                                    window.__mdOnSoal = false;
+                                } catch (e) {}
                                 currentIndex = -1;
                                 questions.forEach(function (el) {
                                     el.classList.add('d-none');
@@ -1011,6 +1218,10 @@ include __DIR__ . '/../includes/header.php';
                             if (index < 0) index = 0;
                             if (index >= questions.length) index = questions.length - 1;
                             currentIndex = index;
+
+                            try {
+                                window.__mdOnSoal = true;
+                            } catch (e) {}
 
                             setNavVisibilityForQuestion();
 
@@ -1078,6 +1289,69 @@ include __DIR__ . '/../includes/header.php';
 
                         if (startBtn) {
                             startBtn.addEventListener('click', function () {
+                                // For exams without the separate "Mulai Ujian" POST gate, record started_at when the student begins.
+                                try {
+                                    var isExam = <?php echo json_encode(strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian'); ?>;
+                                    var statusNotDone = <?php echo json_encode(strtolower(trim((string)($assignment['status'] ?? 'assigned'))) !== 'done'); ?>;
+                                    var hasRevokedCol = <?php echo json_encode((bool)$hasExamRevokedColumn); ?>;
+                                    var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
+                                    var url = window.location.href;
+
+                                    function installLeaveLock() {
+                                        if (!hasRevokedCol || !isExam || !statusNotDone) return;
+                                        if (window.__mdLeaveLockInstalled) return;
+                                        window.__mdLeaveLockInstalled = true;
+
+                                        var allowLeave = true;
+                                        var sent = false;
+
+                                        var formEl3 = document.getElementById('answerForm');
+                                        if (formEl3) {
+                                            formEl3.addEventListener('submit', function () {
+                                                allowLeave = false;
+                                            });
+                                        }
+
+                                        function sendLeave() {
+                                            if (!allowLeave || sent) return;
+                                            sent = true;
+                                            try {
+                                                var fd = new FormData();
+                                                fd.append('csrf_token', csrf);
+                                                fd.append('action', 'leave_exam');
+
+                                                if (navigator.sendBeacon) {
+                                                    navigator.sendBeacon(url, fd);
+                                                } else {
+                                                    fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
+                                                }
+                                            } catch (e) {
+                                                // ignore
+                                            }
+                                        }
+
+                                        window.addEventListener('pagehide', sendLeave);
+                                        window.addEventListener('beforeunload', sendLeave);
+                                    }
+
+                                    if (isExam && statusNotDone) {
+                                        var fd2 = new FormData();
+                                        fd2.append('csrf_token', csrf);
+                                        fd2.append('action', 'touch_started');
+
+                                        if (navigator.sendBeacon) {
+                                            navigator.sendBeacon(url, fd2);
+                                        } else {
+                                            fetch(url, { method: 'POST', body: fd2, credentials: 'same-origin', keepalive: true });
+                                        }
+
+                                        // Enable lock-on-leave after the student starts.
+                                        installLeaveLock();
+                                    }
+                                } catch (e) {
+                                    // ignore
+                                }
+
                                 // Requirement: start goes to question no 1
                                 show(0);
                             });
@@ -1119,6 +1393,128 @@ include __DIR__ . '/../includes/header.php';
 
                         // Init: start on intro (no question shown) until user clicks Mulai.
                         show(-1);
+
+                        // Exam focus rule: if the student leaves the question screen for > 5 seconds,
+                        // require token re-entry.
+                        (function () {
+                            try {
+                                var enableReauth = <?php echo json_encode((bool)($assignment && $isExamAssignment && $requiresToken && $tokenAvailable && $tokenOk)); ?>;
+                                if (!enableReauth) return;
+
+                                // Ensure default state on initial load.
+                                window.__mdOnSoal = false;
+
+                                var hiddenAt = null;
+                                var thresholdMs = 5000;
+
+                                function getForceUrl() {
+                                    try {
+                                        var u = new URL(window.location.href);
+                                        u.searchParams.set('force_token', '1');
+                                        u.searchParams.set('flash', 'token_required');
+                                        return u.toString();
+                                    } catch (e) {
+                                        var href = window.location.href;
+                                        if (href.indexOf('force_token=') >= 0) return href;
+                                        return href + (href.indexOf('?') >= 0 ? '&' : '?') + 'force_token=1&flash=token_required';
+                                    }
+                                }
+
+                                function forceReauth() {
+                                    if (window.__mdForcingToken) return;
+                                    window.__mdForcingToken = true;
+
+                                    // Best-effort: clear via POST (CSRF protected), then navigate with GET fallback.
+                                    try {
+                                        var fd = new FormData();
+                                        fd.append('csrf_token', <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>);
+                                        fd.append('action', 'clear_token_ok');
+
+                                        fetch(window.location.href, {
+                                            method: 'POST',
+                                            body: fd,
+                                            credentials: 'same-origin'
+                                        }).catch(function () {}).finally(function () {
+                                            window.location.href = getForceUrl();
+                                        });
+                                    } catch (e) {
+                                        window.location.href = getForceUrl();
+                                    }
+                                }
+
+                                function markHidden() {
+                                    if (!window.__mdOnSoal) return;
+                                    hiddenAt = Date.now();
+                                }
+
+                                function markVisible() {
+                                    if (!window.__mdOnSoal) return;
+                                    if (!hiddenAt) return;
+                                    var awayMs = Date.now() - hiddenAt;
+                                    hiddenAt = null;
+                                    if (awayMs > thresholdMs) {
+                                        forceReauth();
+                                    }
+                                }
+
+                                document.addEventListener('visibilitychange', function () {
+                                    if (document.hidden) {
+                                        markHidden();
+                                    } else {
+                                        markVisible();
+                                    }
+                                });
+
+                                // Also cover app switching where visibilitychange isn't reliable.
+                                window.addEventListener('blur', markHidden);
+                                window.addEventListener('focus', markVisible);
+                            } catch (e) {
+                                // ignore
+                            }
+                        })();
+
+                        // One-time exam access: if this exam page is left after starting, lock it.
+                        <?php
+                            $statusNow = (string)($assignment['status'] ?? 'assigned');
+                            $startedNow = trim((string)($assignment['started_at'] ?? ''));
+                            $shouldLockOnLeave = ($hasExamRevokedColumn && strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian' && $statusNow !== 'done' && $startedNow !== '');
+                        ?>
+                        <?php if ($shouldLockOnLeave): ?>
+                            (function () {
+                                var allowLeave = true;
+                                var sent = false;
+                                var url = window.location.href;
+                                var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
+
+                                var formEl3 = document.getElementById('answerForm');
+                                if (formEl3) {
+                                    formEl3.addEventListener('submit', function () {
+                                        allowLeave = false;
+                                    });
+                                }
+
+                                function sendLeave() {
+                                    if (!allowLeave || sent) return;
+                                    sent = true;
+                                    try {
+                                        var fd = new FormData();
+                                        fd.append('csrf_token', csrf);
+                                        fd.append('action', 'leave_exam');
+
+                                        if (navigator.sendBeacon) {
+                                            navigator.sendBeacon(url, fd);
+                                        } else {
+                                            fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
+                                        }
+                                    } catch (e) {
+                                        // ignore
+                                    }
+                                }
+
+                                window.addEventListener('pagehide', sendLeave);
+                                window.addEventListener('beforeunload', sendLeave);
+                            })();
+                        <?php endif; ?>
                     });
                 })();
             </script>

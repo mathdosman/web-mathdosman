@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/security.php';
 
 require_role('admin');
 
@@ -21,11 +22,58 @@ try {
     $hasIsExamColumn = false;
 }
 
+$hasReviewDetailsColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'allow_review_details']);
+    $hasReviewDetailsColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasReviewDetailsColumn = false;
+}
+
+$hasDurationMinutesColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'duration_minutes']);
+    $hasDurationMinutesColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasDurationMinutesColumn = false;
+}
+
 try {
     $students = $pdo->query('SELECT id, nama_siswa, kelas, rombel FROM students ORDER BY nama_siswa ASC, id ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     $students = [];
     $errors[] = 'Tabel students belum ada. Import database.sql.';
+}
+
+// Extra columns for reset/reassign behavior.
+$saCols = [];
+try {
+    $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
+    if ($rs) {
+        foreach ($rs->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $saCols[strtolower((string)($c['Field'] ?? ''))] = true;
+        }
+    }
+} catch (Throwable $e) {
+    $saCols = [];
+}
+
+$hasStartedAtColumn = !empty($saCols['started_at']);
+$hasExamRevokedAtColumn = !empty($saCols['exam_revoked_at']);
+$hasGradedAtColumn = !empty($saCols['graded_at']);
+$hasScoreColumn = !empty($saCols['score']);
+$hasCorrectCountColumn = !empty($saCols['correct_count']);
+$hasTotalCountColumn = !empty($saCols['total_count']);
+$hasUpdatedAtColumn = !empty($saCols['updated_at']);
+
+$hasAnswersTable = false;
+try {
+    $stmt = $pdo->query("SHOW TABLES LIKE 'student_assignment_answers'");
+    $hasAnswersTable = (bool)$stmt->fetchColumn();
+} catch (Throwable $e) {
+    $hasAnswersTable = false;
 }
 
 try {
@@ -95,9 +143,12 @@ $values = [
     'judul' => '',
     'catatan' => '',
     'due_at' => '',
+    'allow_review_details' => '0',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+	require_csrf_valid();
+
     $values['target_scope'] = (string)($_POST['target_scope'] ?? 'student');
     $values['student_id'] = (int)($_POST['student_id'] ?? 0);
     $values['kelas'] = trim((string)($_POST['kelas'] ?? ''));
@@ -108,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values['judul'] = trim((string)($_POST['judul'] ?? ''));
     $values['catatan'] = trim((string)($_POST['catatan'] ?? ''));
     $values['due_at'] = trim((string)($_POST['due_at'] ?? ''));
+    $values['allow_review_details'] = !empty($_POST['allow_review_details']) ? '1' : '0';
 
     if ($values['package_id'] <= 0) $errors[] = 'Paket wajib dipilih.';
     if (!in_array($values['jenis'], ['tugas', 'ujian'], true)) $errors[] = 'Jenis tidak valid.';
@@ -194,38 +246,132 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo->beginTransaction();
 
-                // Skip duplicates: same student_id + package_id + jenis still assigned
-                $existingMap = [];
+                // Existing assignments map: prevent duplicates. Reassign is allowed ONLY if previous results are deleted.
+                $existingMap = []; // student_id => ['id' => int, 'status' => string]
                 try {
                     $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
-                    $sql = 'SELECT student_id FROM student_assignments WHERE package_id = ? AND jenis = ? AND status = "assigned" AND student_id IN (' . $placeholders . ')';
+                    $sql = 'SELECT id, student_id, status FROM student_assignments
+                        WHERE package_id = ? AND jenis = ? AND student_id IN (' . $placeholders . ')
+                        ORDER BY id DESC';
                     $stmt = $pdo->prepare($sql);
                     $params = array_merge([(int)$values['package_id'], (string)$values['jenis']], $studentIds);
                     $stmt->execute($params);
-                    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $sid) {
-                        $existingMap[(int)$sid] = true;
+                    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                        $sid = (int)($row['student_id'] ?? 0);
+                        if ($sid <= 0) continue;
+                        if (isset($existingMap[$sid])) continue; // keep latest id
+                        $existingMap[$sid] = [
+                            'id' => (int)($row['id'] ?? 0),
+                            'status' => (string)($row['status'] ?? ''),
+                        ];
                     }
                 } catch (Throwable $eDup) {
                     $existingMap = [];
                 }
 
                 $created = 0;
+                $updated = 0;
                 $skipped = 0;
+                $skippedHasResult = 0;
 
                 $stmtNew = null;
                 $stmtOld = null;
+                $stmtDurOnly = null;
+                $stmtReviewOnly = null;
+				$stmtCountAnswers = null;
+				$stmtUpdateExisting = null;
+
+                $allowReviewSql = ($hasReviewDetailsColumn ? ((int)$values['allow_review_details'] === 1 ? 1 : 0) : null);
                 foreach ($studentIds as $sid) {
-                    if (!empty($existingMap[(int)$sid])) {
-                        $skipped++;
+                    $existing = $existingMap[(int)$sid] ?? null;
+                    if ($existing && !empty($existing['id'])) {
+                        $hasResult = false;
+                        if (strtolower((string)($existing['status'] ?? '')) === 'done') {
+                            $hasResult = true;
+                        }
+                        if (!$hasResult && $hasAnswersTable) {
+                            try {
+                                if ($stmtCountAnswers === null) {
+                                    $stmtCountAnswers = $pdo->prepare('SELECT COUNT(*) FROM student_assignment_answers WHERE assignment_id = :aid AND student_id = :sid');
+                                }
+                                $stmtCountAnswers->execute([':aid' => (int)$existing['id'], ':sid' => (int)$sid]);
+                                $cnt = (int)$stmtCountAnswers->fetchColumn();
+                                if ($cnt > 0) $hasResult = true;
+                            } catch (Throwable $eCnt) {
+                                // If we can't verify, be conservative and treat as having results.
+                                $hasResult = true;
+                            }
+                        }
+
+                        if ($hasResult) {
+                            $skipped++;
+                            $skippedHasResult++;
+                            continue;
+                        }
+
+                        // Reassign by resetting existing row (no duplicate rows).
+                        if ($stmtUpdateExisting === null) {
+                            $setParts = [
+                                'status = "assigned"',
+                                'judul = :t',
+                                'catatan = :c',
+                                'due_at = :due',
+                            ];
+                            if ($hasDurationMinutesColumn) $setParts[] = 'duration_minutes = :dur';
+                            if ($hasReviewDetailsColumn) $setParts[] = 'allow_review_details = :rev';
+                            if ($hasStartedAtColumn) $setParts[] = 'started_at = NULL';
+                            if ($hasExamRevokedAtColumn) $setParts[] = 'exam_revoked_at = NULL';
+                            if ($hasGradedAtColumn) $setParts[] = 'graded_at = NULL';
+                            if ($hasScoreColumn) $setParts[] = 'score = NULL';
+                            if ($hasCorrectCountColumn) $setParts[] = 'correct_count = NULL';
+                            if ($hasTotalCountColumn) $setParts[] = 'total_count = NULL';
+                            if ($hasUpdatedAtColumn) $setParts[] = 'updated_at = NOW()';
+
+                            $sqlUp = 'UPDATE student_assignments SET ' . implode(', ', $setParts) . ' WHERE id = :id AND student_id = :sid AND package_id = :pid AND jenis = :j LIMIT 1';
+                            $stmtUpdateExisting = $pdo->prepare($sqlUp);
+                        }
+
+                        $paramsUp = [
+                            ':id' => (int)$existing['id'],
+                            ':sid' => (int)$sid,
+                            ':pid' => (int)$values['package_id'],
+                            ':j' => (string)$values['jenis'],
+                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                            ':due' => $dueSql,
+                        ];
+                        if ($hasDurationMinutesColumn) $paramsUp[':dur'] = $durSql;
+                        if ($hasReviewDetailsColumn) $paramsUp[':rev'] = $allowReviewSql;
+                        $stmtUpdateExisting->execute($paramsUp);
+                        $updated++;
                         continue;
                     }
 
-                    try {
+                    if ($hasDurationMinutesColumn && $hasReviewDetailsColumn) {
                         if ($stmtNew === null) {
-                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c, "assigned", :due)');
+                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_review_details, status, due_at)
+                                VALUES (:sid, :pid, :j, :dur, :t, :c, :rev, "assigned", :due)');
                         }
                         $stmtNew->execute([
+                            ':sid' => (int)$sid,
+                            ':pid' => (int)$values['package_id'],
+                            ':j' => (string)$values['jenis'],
+                            ':dur' => $durSql,
+                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                            ':rev' => $allowReviewSql,
+                            ':due' => $dueSql,
+                        ]);
+                        $created++;
+                        continue;
+                    }
+
+                    if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn) {
+                        if ($stmtDurOnly === null) {
+                            $stmtDurOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, status, due_at)
+                                VALUES (:sid, :pid, :j, :dur, :t, :c, "assigned", :due)');
+                        }
+                        $stmtDurOnly->execute([
                             ':sid' => (int)$sid,
                             ':pid' => (int)$values['package_id'],
                             ':j' => (string)$values['jenis'],
@@ -235,26 +381,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':due' => $dueSql,
                         ]);
                         $created++;
-                    } catch (Throwable $eCol) {
-                        // Backward compatible: older schema without duration_minutes.
-                        if ($stmtOld === null) {
-                            $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, status, due_at)
-                                VALUES (:sid, :pid, :j, :t, :c, "assigned", :due)');
+                        continue;
+                    }
+
+                    if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn) {
+                        if ($stmtReviewOnly === null) {
+                            $stmtReviewOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_review_details, status, due_at)
+                                VALUES (:sid, :pid, :j, :t, :c, :rev, "assigned", :due)');
                         }
-                        $stmtOld->execute([
+                        $stmtReviewOnly->execute([
                             ':sid' => (int)$sid,
                             ':pid' => (int)$values['package_id'],
                             ':j' => (string)$values['jenis'],
                             ':t' => $values['judul'] !== '' ? $values['judul'] : null,
                             ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                            ':rev' => $allowReviewSql,
                             ':due' => $dueSql,
                         ]);
                         $created++;
+                        continue;
                     }
+
+                    // Backward compatible: older schema.
+                    if ($stmtOld === null) {
+                        $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, status, due_at)
+                            VALUES (:sid, :pid, :j, :t, :c, "assigned", :due)');
+                    }
+                    $stmtOld->execute([
+                        ':sid' => (int)$sid,
+                        ':pid' => (int)$values['package_id'],
+                        ':j' => (string)$values['jenis'],
+                        ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                        ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                        ':due' => $dueSql,
+                    ]);
+                    $created++;
                 }
 
                 $pdo->commit();
-                header('Location: assignments.php?success=1&created=' . (int)$created . '&skipped=' . (int)$skipped);
+				header('Location: assignments.php?success=1&created=' . (int)$created . '&updated=' . (int)$updated . '&skipped=' . (int)$skipped . '&skipped_has_result=' . (int)$skippedHasResult);
                 exit;
             } catch (Throwable $e) {
                 try {
@@ -295,7 +460,7 @@ include __DIR__ . '/../../includes/header.php';
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form method="post">
+            <form method="post" data-swal-confirm>
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
 
                 <div class="row g-3">
@@ -389,6 +554,22 @@ include __DIR__ . '/../../includes/header.php';
                     </div>
 
                     <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
+                            <label class="form-check-label" for="allow_review_details">
+                                Izinkan siswa melihat detail jawaban & kunci setelah selesai
+                            </label>
+                        </div>
+                        <?php if (!$hasReviewDetailsColumn): ?>
+                            <div class="form-text text-warning">
+                                Fitur ini butuh kolom <code>student_assignments.allow_review_details</code>. Jalankan <code>php scripts/migrate_db.php</code> terlebih dahulu.
+                            </div>
+                        <?php else: ?>
+                            <div class="form-text">Default: disembunyikan (nilai/rekap saja).</div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="col-12">
                         <label class="form-label">Catatan (opsional)</label>
                         <textarea name="catatan" class="form-control" rows="3"><?php echo htmlspecialchars($values['catatan']); ?></textarea>
                     </div>
@@ -417,6 +598,7 @@ include __DIR__ . '/../../includes/header.php';
 
     const jenisSelect = document.querySelector('select[name="jenis"]');
     const paketSelect = document.querySelector('select[name="package_id"]');
+    const form = document.querySelector('form[method="post"]');
 
     const setRombelOptions = (list) => {
         if (!rombelSelect) return;
@@ -465,6 +647,19 @@ include __DIR__ . '/../../includes/header.php';
     };
 
     // Paket sudah dibatasi dari server (is_exam=1), jadi tidak perlu filter paket berdasarkan jenis.
+    if (form) {
+        const getJenisLabel = () => {
+            const v = String((jenisSelect && jenisSelect.value) || 'tugas').toLowerCase();
+            return v === 'ujian' ? 'UJIAN' : 'TUGAS';
+        };
+        form.addEventListener('submit', () => {
+            const jenisLabel = getJenisLabel();
+            form.setAttribute('data-swal-title', 'Simpan penugasan?');
+            form.setAttribute('data-swal-text', 'Yakin ingin memberikan ' + jenisLabel + ' ini kepada siswa/target yang dipilih?');
+            form.setAttribute('data-swal-confirm-text', 'Ya, Simpan');
+            form.setAttribute('data-swal-cancel-text', 'Batal');
+        }, true);
+    }
     if (scopeSelect) scopeSelect.addEventListener('change', applyScope);
     if (kelasSelect) kelasSelect.addEventListener('change', applyRombelFilter);
     applyScope();

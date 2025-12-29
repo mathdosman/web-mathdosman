@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/security.php';
 
 require_role('admin');
 
@@ -24,6 +25,24 @@ if (!$row) {
 
 $errors = [];
 
+$hasReviewDetailsColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'allow_review_details']);
+    $hasReviewDetailsColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasReviewDetailsColumn = false;
+}
+
+$hasDurationMinutesColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'duration_minutes']);
+    $hasDurationMinutesColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasDurationMinutesColumn = false;
+}
+
 $values = [
     'jenis' => (string)($row['jenis'] ?? 'tugas'),
     'duration_minutes' => isset($row['duration_minutes']) ? (string)($row['duration_minutes'] ?? '') : '',
@@ -31,6 +50,7 @@ $values = [
     'catatan' => (string)($row['catatan'] ?? ''),
     'status' => (string)($row['status'] ?? 'assigned'),
     'due_at' => '',
+    'allow_review_details' => ($hasReviewDetailsColumn && isset($row['allow_review_details']) && (int)$row['allow_review_details'] === 1) ? '1' : '0',
 ];
 
 if (!empty($row['due_at'])) {
@@ -39,12 +59,15 @@ if (!empty($row['due_at'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_valid();
+
     $values['jenis'] = (string)($_POST['jenis'] ?? $values['jenis']);
     $values['duration_minutes'] = trim((string)($_POST['duration_minutes'] ?? $values['duration_minutes']));
     $values['judul'] = trim((string)($_POST['judul'] ?? ''));
     $values['catatan'] = trim((string)($_POST['catatan'] ?? ''));
     $values['status'] = (string)($_POST['status'] ?? $values['status']);
     $values['due_at'] = trim((string)($_POST['due_at'] ?? ''));
+    $values['allow_review_details'] = (!empty($_POST['allow_review_details']) && $hasReviewDetailsColumn) ? '1' : '0';
 
     if (!in_array($values['jenis'], ['tugas', 'ujian'], true)) $errors[] = 'Jenis tidak valid.';
     if (!in_array($values['status'], ['assigned', 'done'], true)) $errors[] = 'Status tidak valid.';
@@ -75,7 +98,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
-            try {
+            $allowReviewSql = ($hasReviewDetailsColumn ? ((int)$values['allow_review_details'] === 1 ? 1 : 0) : null);
+
+            if ($hasDurationMinutesColumn && $hasReviewDetailsColumn) {
+                $stmt = $pdo->prepare('UPDATE student_assignments
+                    SET jenis = :j,
+                        duration_minutes = :dur,
+                        judul = :t,
+                        catatan = :c,
+                        allow_review_details = :rev,
+                        status = :st,
+                        due_at = :due,
+                        updated_at = NOW()
+                    WHERE id = :id');
+                $stmt->execute([
+                    ':j' => $values['jenis'],
+                    ':dur' => $durSql,
+                    ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                    ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                    ':rev' => $allowReviewSql,
+                    ':st' => $values['status'],
+                    ':due' => $dueSql,
+                    ':id' => $id,
+                ]);
+            } elseif ($hasDurationMinutesColumn && !$hasReviewDetailsColumn) {
                 $stmt = $pdo->prepare('UPDATE student_assignments
                     SET jenis = :j,
                         duration_minutes = :dur,
@@ -94,8 +140,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':due' => $dueSql,
                     ':id' => $id,
                 ]);
-            } catch (Throwable $eCol) {
-                // Backward compatible: older schema without duration_minutes.
+            } elseif (!$hasDurationMinutesColumn && $hasReviewDetailsColumn) {
+                $stmt = $pdo->prepare('UPDATE student_assignments
+                    SET jenis = :j,
+                        judul = :t,
+                        catatan = :c,
+                        allow_review_details = :rev,
+                        status = :st,
+                        due_at = :due,
+                        updated_at = NOW()
+                    WHERE id = :id');
+                $stmt->execute([
+                    ':j' => $values['jenis'],
+                    ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                    ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                    ':rev' => $allowReviewSql,
+                    ':st' => $values['status'],
+                    ':due' => $dueSql,
+                    ':id' => $id,
+                ]);
+            } else {
                 $stmt = $pdo->prepare('UPDATE student_assignments
                     SET jenis = :j,
                         judul = :t,
@@ -176,6 +240,22 @@ include __DIR__ . '/../../includes/header.php';
                     <div class="col-md-6">
                         <label class="form-label">Batas Waktu (opsional)</label>
                         <input type="datetime-local" name="due_at" class="form-control" value="<?php echo htmlspecialchars($values['due_at']); ?>">
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
+                            <label class="form-check-label" for="allow_review_details">
+                                Izinkan siswa melihat detail jawaban & kunci setelah selesai
+                            </label>
+                        </div>
+                        <?php if (!$hasReviewDetailsColumn): ?>
+                            <div class="form-text text-warning">
+                                Fitur ini butuh kolom <code>student_assignments.allow_review_details</code>. Jalankan <code>php scripts/migrate_db.php</code>.
+                            </div>
+                        <?php else: ?>
+                            <div class="form-text">Jika tidak dicentang, siswa hanya melihat nilai/rekap.</div>
+                        <?php endif; ?>
                     </div>
                     <div class="col-12">
                         <?php $st = (string)($row['started_at'] ?? ''); ?>

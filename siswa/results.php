@@ -164,7 +164,7 @@ include __DIR__ . '/../includes/header.php';
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="text-end">
-                                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/result_view.php?id=<?php echo (int)($r['id'] ?? 0); ?>">Detail</a>
+                                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/result_view.php?id=<?php echo (int)($r['id'] ?? 0); ?>">Rekap</a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -241,7 +241,7 @@ include __DIR__ . '/../includes/header.php';
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="text-end">
-                                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/result_view.php?id=<?php echo (int)($r['id'] ?? 0); ?>">Detail</a>
+                                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/result_view.php?id=<?php echo (int)($r['id'] ?? 0); ?>">Rekap</a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

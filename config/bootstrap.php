@@ -84,8 +84,10 @@ function app_current_base_url(): ?string
         $dir = '';
     }
 
-    // If accessed from admin/install, point to project root.
+    // If accessed from admin/install/siswa areas, point to project root.
+    // Without this, auto-detected base_url may become ".../siswa" which breaks asset URLs.
     $dir = preg_replace('~/(admin|install)$~', '', $dir);
+    $dir = preg_replace('~/(siswa)(/admin)?$~', '', $dir);
 
     return $scheme . '://' . $host . $dir;
 }

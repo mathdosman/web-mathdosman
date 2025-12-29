@@ -7,6 +7,27 @@ $student = $_SESSION['student'];
 
 require_once __DIR__ . '/../config/db.php';
 
+$hasParentPhoneColumn = false;
+try {
+    $stmtCol = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+    $stmtCol->execute([':c' => 'no_hp_ortu']);
+    $hasParentPhoneColumn = (bool)$stmtCol->fetch();
+} catch (Throwable $eCol) {
+    $hasParentPhoneColumn = false;
+}
+
+if ($hasParentPhoneColumn && !array_key_exists('no_hp_ortu', $student)) {
+    try {
+        $stmt = $pdo->prepare('SELECT no_hp_ortu FROM students WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => (int)($student['id'] ?? 0)]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $student['no_hp_ortu'] = (string)($row['no_hp_ortu'] ?? '');
+        $_SESSION['student']['no_hp_ortu'] = $student['no_hp_ortu'];
+    } catch (Throwable $eFetch) {
+        $student['no_hp_ortu'] = '';
+    }
+}
+
 $assignments = [];
 try {
     try {
@@ -68,21 +89,43 @@ include __DIR__ . '/../includes/header.php';
             <div class="col-md-4">
                 <div class="border rounded-3 p-3 h-100">
                     <div class="fw-semibold mb-2">Profil</div>
-                    <?php if (!empty($student['foto'])): ?>
-                        <img src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$student['foto'], '/')); ?>" alt="Foto siswa" class="img-thumbnail mb-2" style="max-width: 180px;">
-                    <?php endif; ?>
-                    <div><span class="text-muted">Nama:</span> <?php echo htmlspecialchars((string)($student['nama_siswa'] ?? '')); ?></div>
-                    <div><span class="text-muted">Kelas:</span> <?php echo htmlspecialchars((string)($student['kelas'] ?? '')); ?></div>
-                    <div><span class="text-muted">Rombel:</span> <?php echo htmlspecialchars((string)($student['rombel'] ?? '')); ?></div>
-                    <div><span class="text-muted">No HP:</span> <?php echo htmlspecialchars((string)($student['no_hp'] ?? '')); ?></div>
-                    <div><span class="text-muted">Username:</span> <?php echo htmlspecialchars((string)($student['username'] ?? '')); ?></div>
+                    <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
+                        <div class="text-center">
+                            <?php if (!empty($student['foto'])): ?>
+                                <img
+                                    src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)($student['foto'] ?? ''), '/')); ?>"
+                                    alt="Foto siswa"
+                                    class="img-thumbnail rounded-circle"
+                                    style="width: 110px; height: 110px; object-fit: cover;"
+                                >
+                            <?php else: ?>
+                                <img
+                                    src="<?php echo htmlspecialchars(asset_url('assets/img/no-photo.png', (string)$base_url)); ?>"
+                                    alt="No Foto"
+                                    class="img-thumbnail rounded-circle"
+                                    style="width: 110px; height: 110px; object-fit: cover;"
+                                >
+                            <?php endif; ?>
+                            <div class="text-muted small mt-2">Foto Profil</div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div><span class="text-muted">Nama:</span> <?php echo htmlspecialchars((string)($student['nama_siswa'] ?? '')); ?></div>
+                            <div><span class="text-muted">Kelas:</span> <?php echo htmlspecialchars((string)($student['kelas'] ?? '')); ?></div>
+                            <div><span class="text-muted">Rombel:</span> <?php echo htmlspecialchars((string)($student['rombel'] ?? '')); ?></div>
+                            <div><span class="text-muted">No HP:</span> <?php echo htmlspecialchars((string)($student['no_hp'] ?? '')); ?></div>
+                            <?php if ($hasParentPhoneColumn): ?>
+                                <div><span class="text-muted">No HP Ortu:</span> <?php echo htmlspecialchars((string)($student['no_hp_ortu'] ?? '')); ?></div>
+                            <?php endif; ?>
+                            <div><span class="text-muted">Username:</span> <?php echo htmlspecialchars((string)($student['username'] ?? '')); ?></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-8">
                 <div class="border rounded-3 p-3 h-100">
                     <div class="fw-semibold mb-2">Tugas / Ujian</div>
                     <?php if (!$assignments): ?>
-                        <div class="alert alert-info mb-0">Belum ada tugas/ujian yang ditugaskan.</div>
+                        <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang ditugaskan.</div>
                     <?php else: ?>
                         <div class="vstack gap-2">
                             <?php foreach ($assignments as $idx => $a): ?>

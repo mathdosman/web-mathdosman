@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS students (
     kelas VARCHAR(30) NOT NULL,
     rombel VARCHAR(30) NOT NULL,
     no_hp VARCHAR(30) NULL,
+    no_hp_ortu VARCHAR(30) NULL,
     foto VARCHAR(255) NULL,
     username VARCHAR(60) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -27,52 +28,6 @@ CREATE TABLE IF NOT EXISTS students (
     updated_at TIMESTAMP NULL DEFAULT NULL,
     KEY idx_students_kelas (kelas),
     KEY idx_students_rombel (rombel)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabel penugasan siswa (paket soal -> siswa)
-CREATE TABLE IF NOT EXISTS student_assignments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
-    package_id INT NOT NULL,
-    jenis ENUM('tugas','ujian') NOT NULL DEFAULT 'tugas',
-    duration_minutes INT NULL,
-    judul VARCHAR(200) NULL,
-    catatan TEXT NULL,
-    status ENUM('assigned','done') NOT NULL DEFAULT 'assigned',
-    correct_count INT NULL,
-    total_count INT NULL,
-    score DECIMAL(5,2) NULL,
-    graded_at TIMESTAMP NULL DEFAULT NULL,
-    assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    started_at TIMESTAMP NULL DEFAULT NULL,
-    due_at TIMESTAMP NULL DEFAULT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT NULL,
-    KEY idx_sa_student (student_id),
-    KEY idx_sa_package (package_id),
-    KEY idx_sa_started (started_at),
-    KEY idx_sa_due (due_at),
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Tabel jawaban siswa per penugasan (untuk hitung nilai otomatis)
-CREATE TABLE IF NOT EXISTS student_assignment_answers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    assignment_id INT NOT NULL,
-    student_id INT NOT NULL,
-    question_id INT NOT NULL,
-    answer TEXT NULL,
-    is_correct TINYINT(1) NULL,
-    answered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT NULL,
-    UNIQUE KEY uniq_saa (assignment_id, question_id),
-    KEY idx_saa_student (student_id),
-    KEY idx_saa_assignment (assignment_id),
-    KEY idx_saa_question (question_id),
-    FOREIGN KEY (assignment_id) REFERENCES student_assignments(id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabel paket soal
@@ -94,7 +49,7 @@ CREATE TABLE IF NOT EXISTS packages (
     KEY idx_packages_subject (subject_id),
     KEY idx_packages_subject_status (subject_id, status),
     KEY idx_packages_intro_content (intro_content_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabel konten (materi/berita)
 CREATE TABLE IF NOT EXISTS contents (
@@ -168,7 +123,7 @@ CREATE TABLE IF NOT EXISTS questions (
     KEY idx_questions_subject_status (subject_id, status_soal),
     KEY idx_questions_created_at (created_at),
     FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Relasi paket soal -> butir soal
 CREATE TABLE IF NOT EXISTS package_questions (
@@ -181,7 +136,63 @@ CREATE TABLE IF NOT EXISTS package_questions (
     UNIQUE KEY uniq_package_question_number (package_id, question_number),
     FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabel penugasan siswa (paket soal -> siswa)
+-- Ditaruh setelah packages/questions agar FOREIGN KEY bisa dibuat.
+CREATE TABLE IF NOT EXISTS student_assignments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    package_id INT NOT NULL,
+    jenis ENUM('tugas','ujian') NOT NULL DEFAULT 'tugas',
+    duration_minutes INT NULL,
+    judul VARCHAR(200) NULL,
+    catatan TEXT NULL,
+    -- Jika 1: siswa boleh melihat detail jawaban + kunci setelah status DONE.
+    -- Default 0 untuk menjaga kerahasiaan kunci.
+    allow_review_details TINYINT(1) NOT NULL DEFAULT 0,
+    -- Token 6 digit (opsional) untuk akses/validasi ujian dari sisi admin.
+    token_code CHAR(6) NULL,
+    status ENUM('assigned','done') NOT NULL DEFAULT 'assigned',
+    correct_count INT NULL,
+    total_count INT NULL,
+    score DECIMAL(5,2) NULL,
+    graded_at TIMESTAMP NULL DEFAULT NULL,
+    assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP NULL DEFAULT NULL,
+    -- Jika tidak NULL: ujian terkunci (siswa pernah keluar), perlu reset admin.
+    exam_revoked_at TIMESTAMP NULL DEFAULT NULL,
+    due_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    KEY idx_sa_student (student_id),
+    KEY idx_sa_package (package_id),
+    KEY idx_sa_token (token_code),
+    KEY idx_sa_exam_revoked (exam_revoked_at),
+    KEY idx_sa_started (started_at),
+    KEY idx_sa_due (due_at),
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabel jawaban siswa per penugasan (untuk hitung nilai otomatis)
+CREATE TABLE IF NOT EXISTS student_assignment_answers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    assignment_id INT NOT NULL,
+    student_id INT NOT NULL,
+    question_id INT NOT NULL,
+    answer TEXT NULL,
+    is_correct TINYINT(1) NULL,
+    answered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE KEY uniq_saa (assignment_id, question_id),
+    KEY idx_saa_student (student_id),
+    KEY idx_saa_assignment (assignment_id),
+    KEY idx_saa_question (question_id),
+    FOREIGN KEY (assignment_id) REFERENCES student_assignments(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Analitik sederhana: hitung total view per halaman (paket/konten)
 CREATE TABLE IF NOT EXISTS page_views (

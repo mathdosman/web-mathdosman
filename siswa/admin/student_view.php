@@ -4,13 +4,22 @@ require_once __DIR__ . '/../../includes/auth.php';
 
 require_role('admin');
 
+$hasParentPhoneColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+    $stmt->execute([':c' => 'no_hp_ortu']);
+    $hasParentPhoneColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasParentPhoneColumn = false;
+}
+
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
     header('Location: students.php');
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT id, nama_siswa, kelas, rombel, no_hp, foto, username, created_at FROM students WHERE id = :id');
+$stmt = $pdo->prepare('SELECT id, nama_siswa, kelas, rombel, no_hp' . ($hasParentPhoneColumn ? ', no_hp_ortu' : '') . ', foto, username, created_at FROM students WHERE id = :id');
 $stmt->execute([':id' => $id]);
 $student = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$student) {
@@ -63,6 +72,9 @@ include __DIR__ . '/../../includes/header.php';
                         <tr><th>Kelas</th><td><?php echo htmlspecialchars((string)$student['kelas']); ?></td></tr>
                         <tr><th>Rombel</th><td><?php echo htmlspecialchars((string)$student['rombel']); ?></td></tr>
                         <tr><th>No HP</th><td><?php echo htmlspecialchars((string)$student['no_hp']); ?></td></tr>
+                        <?php if ($hasParentPhoneColumn): ?>
+                            <tr><th>No HP Ortu</th><td><?php echo htmlspecialchars((string)($student['no_hp_ortu'] ?? '')); ?></td></tr>
+                        <?php endif; ?>
                         <tr><th>Username</th><td><?php echo htmlspecialchars((string)$student['username']); ?></td></tr>
                         <tr><th>Dibuat</th><td><?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date((string)($student['created_at'] ?? '')) : (string)($student['created_at'] ?? '')); ?></td></tr>
                     </table>

@@ -157,7 +157,7 @@ include __DIR__ . '/../../includes/header.php';
 
             <form method="post" class="mt-3">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                <button type="submit" class="btn btn-primary" onclick="return confirm('Buat 3 akun dummy sekarang?');">Buat 3 Akun Dummy</button>
+                <button type="submit" class="btn btn-primary" data-swal-confirm data-swal-title="Buat Akun Dummy?" data-swal-text="Buat 3 akun dummy sekarang?" data-swal-confirm-text="Buat" data-swal-cancel-text="Batal">Buat 3 Akun Dummy</button>
             </form>
         </div>
     </div>

@@ -14,6 +14,7 @@ if (app_runtime_migrations_enabled()) {
             kelas VARCHAR(30) NOT NULL,
             rombel VARCHAR(30) NOT NULL,
             no_hp VARCHAR(30) NULL,
+            no_hp_ortu VARCHAR(30) NULL,
             foto VARCHAR(255) NULL,
             username VARCHAR(60) NOT NULL UNIQUE,
             password_hash VARCHAR(255) NOT NULL,
@@ -25,6 +26,15 @@ if (app_runtime_migrations_enabled()) {
     } catch (Throwable $e) {
         // ignore
     }
+}
+
+$hasParentPhoneColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+    $stmt->execute([':c' => 'no_hp_ortu']);
+    $hasParentPhoneColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasParentPhoneColumn = false;
 }
 
 $errors = [];
@@ -74,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $rows = [];
 try {
-    $rows = $pdo->query('SELECT id, nama_siswa, kelas, rombel, no_hp, foto, username, created_at FROM students ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
+    $rows = $pdo->query('SELECT id, nama_siswa, kelas, rombel, no_hp' . ($hasParentPhoneColumn ? ', no_hp_ortu' : '') . ', foto, username, created_at FROM students ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     $errors[] = 'Tabel students belum ada. Jalankan installer / import database.sql.';
 }
@@ -126,13 +136,16 @@ include __DIR__ . '/../../includes/header.php';
                             <th>Nama</th>
                             <th style="width:180px">Kelas / Rombel</th>
                             <th style="width:160px">No HP</th>
+                            <?php if ($hasParentPhoneColumn): ?>
+                                <th style="width:160px">No HP Ortu</th>
+                            <?php endif; ?>
                             <th style="width:160px">Username</th>
                             <th style="width:170px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="7" class="text-center text-muted">Belum ada data siswa.</td></tr>
+                            <tr><td colspan="<?php echo $hasParentPhoneColumn ? '8' : '7'; ?>" class="text-center text-muted">Belum ada data siswa.</td></tr>
                         <?php endif; ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
@@ -172,6 +185,9 @@ include __DIR__ . '/../../includes/header.php';
                                     </span>
                                 </td>
                                 <td><?php echo htmlspecialchars((string)$r['no_hp']); ?></td>
+                                <?php if ($hasParentPhoneColumn): ?>
+                                    <td><?php echo htmlspecialchars((string)($r['no_hp_ortu'] ?? '')); ?></td>
+                                <?php endif; ?>
                                 <td><?php echo htmlspecialchars((string)$r['username']); ?></td>
                                 <td>
                                     <div class="d-grid gap-1 justify-content-end" style="grid-template-columns: repeat(2, 34px);">

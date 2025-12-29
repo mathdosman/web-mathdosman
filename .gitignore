@@ -5,6 +5,9 @@ logs/
 # Upload directories (keep local)
 gambar/
 
+# Student uploads (photos, etc) must stay local
+siswa/uploads/
+
 # Local backups
 backups/
 *.zip

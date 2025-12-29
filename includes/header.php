@@ -203,6 +203,28 @@ try {
         <link href="<?php echo htmlspecialchars(asset_url('assets/css/print-soal.css', (string)$base_url)); ?>" rel="stylesheet">
     <?php endif; ?>
 
+    <?php
+        // Optional per-page stylesheets.
+        // Usage before include header.php:
+        //   $extra_stylesheets = ['assets/css/some-page.css'];
+        $extra_stylesheets = $extra_stylesheets ?? [];
+        if (is_string($extra_stylesheets) && trim($extra_stylesheets) !== '') {
+            $extra_stylesheets = [trim($extra_stylesheets)];
+        }
+        if (is_array($extra_stylesheets)) {
+            foreach ($extra_stylesheets as $cssPath) {
+                if (!is_string($cssPath)) {
+                    continue;
+                }
+                $cssPath = trim($cssPath);
+                if ($cssPath === '') {
+                    continue;
+                }
+                echo '<link href="' . htmlspecialchars(asset_url($cssPath, (string)$base_url)) . '" rel="stylesheet">';
+            }
+        }
+    ?>
+
     <?php if ($use_mathjax): ?>
         <script>
             window.MathJax = {
@@ -468,6 +490,20 @@ try {
                 </a>
 
                 <?php
+                    $isActive = ($currentPage === 'monitoring_ujian.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/monitoring_ujian.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v18h18"/>
+                        <path d="M7 15v2"/>
+                        <path d="M11 11v6"/>
+                        <path d="M15 7v10"/>
+                        <path d="M19 5v12"/>
+                    </svg>
+                    <span>Monitoring Ujian</span>
+                </a>
+
+                <?php
                     $isActive = in_array($currentPage, ['students.php', 'student_add.php', 'student_edit.php', 'student_view.php', 'seed_dummy_students.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/students.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
@@ -507,7 +543,7 @@ try {
 <?php if ($useStudentSidebar): ?>
     <aside class="app-sidebar bg-dark text-white" id="studentSidebar" aria-label="Sidebar Siswa">
         <div class="app-sidebar-inner">
-            <div class="small text-white-50 mb-2">Menu Siswa</div>
+            <div class="student-sidebar-title text-white-50 mb-3">Menu Siswa</div>
             <nav class="nav flex-column">
                 <?php $isActive = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false); ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/dashboard.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
@@ -518,6 +554,15 @@ try {
                         <path d="M3 17h8v4H3z"/>
                     </svg>
                     <span>Dashboard</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/profile_edit.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Edit Profil</span>
                 </a>
 
                 <?php $isActive = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>

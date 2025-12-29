@@ -16,8 +16,8 @@ function siswa_clean_string(?string $value): string
 function siswa_clean_phone(?string $value): string
 {
     $value = siswa_clean_string($value);
-    // keep digits + plus
-    $value = preg_replace('/[^0-9+]/', '', $value);
+    // keep digits only
+    $value = preg_replace('/[^0-9]/', '', $value);
     return (string)$value;
 }
 
@@ -41,10 +41,10 @@ function siswa_upload_photo(array $file, ?string $oldStoredPath = null): array
         return [null, 'Upload foto tidak valid.'];
     }
 
-    $maxBytes = 2 * 1024 * 1024;
+    $maxBytes = 1 * 1024 * 1024;
     $size = (int)($file['size'] ?? 0);
     if ($size <= 0 || $size > $maxBytes) {
-        return [null, 'Ukuran foto maksimal 2MB.'];
+        return [null, 'Ukuran foto maksimal 1MB.'];
     }
 
     $ext = '';

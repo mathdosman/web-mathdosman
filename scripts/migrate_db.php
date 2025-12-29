@@ -36,6 +36,26 @@ if (!function_exists('app_ensure_contents_taxonomy_schema')) {
     exit(1);
 }
 
+if (!function_exists('app_ensure_student_assignments_review_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_student_assignments_review_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_students_parent_phone_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_students_parent_phone_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_student_assignments_token_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_student_assignments_token_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_student_assignments_exam_revoked_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_student_assignments_exam_revoked_schema).\n");
+    exit(1);
+}
+
 $argv = $_SERVER['argv'] ?? [];
 if (!is_array($argv)) {
     $argv = [];
@@ -115,6 +135,18 @@ try {
 
     echo "Menjalankan migrasi skema (Analytics/page_views)...\n";
     app_ensure_analytics_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/review detail jawaban)...\n";
+    app_ensure_student_assignments_review_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/no HP orang tua)...\n";
+    app_ensure_students_parent_phone_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/token penugasan)...\n";
+    app_ensure_student_assignments_token_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/lock ujian saat keluar)...\n";
+    app_ensure_student_assignments_exam_revoked_schema($pdo);
 
     if ($withIndexes) {
         echo "Menjalankan patch index...\n";

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/security.php';
 
 require_role('admin');
 
@@ -55,34 +56,138 @@ if (app_runtime_migrations_enabled()) {
 
 $errors = [];
 
+
+$cols = [];
+try {
+    $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
+    if ($rs) {
+        foreach ($rs->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $cols[strtolower((string)($c['Field'] ?? ''))] = true;
+        }
+    }
+} catch (Throwable $e) {
+    $cols = [];
+}
+
+$hasTokenColumn = !empty($cols['token_code']);
+$hasReviewDetailsColumn = !empty($cols['allow_review_details']);
+$hasDurationMinutesColumn = !empty($cols['duration_minutes']);
+$hasDueAtColumn = !empty($cols['due_at']);
+$hasCatatanColumn = !empty($cols['catatan']);
+$hasJudulColumn = !empty($cols['judul']);
+
 $successMsg = '';
 if (!empty($_GET['success'])) {
-    $created = (int)($_GET['created'] ?? 0);
-    $skipped = (int)($_GET['skipped'] ?? 0);
-    if ($created > 0 || $skipped > 0) {
-        $successMsg = 'Penugasan dibuat: ' . $created . ' siswa';
-        if ($skipped > 0) {
-            $successMsg .= ' (dilewati duplikat: ' . $skipped . ')';
-        }
-        $successMsg .= '.';
-    } else {
-        $successMsg = 'Aksi berhasil.';
-    }
+    $successMsg = 'Aksi berhasil.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = (string)($_POST['action'] ?? '');
+    require_csrf_valid();
 
-    if ($action === 'delete') {
-        $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) {
-            try {
-                $stmt = $pdo->prepare('DELETE FROM student_assignments WHERE id = :id');
-                $stmt->execute([':id' => $id]);
-                header('Location: assignments.php');
-                exit;
-            } catch (Throwable $e) {
-                $errors[] = 'Gagal menghapus penugasan.';
+    $action = (string)($_POST['action'] ?? '');
+    $seedId = (int)($_POST['id'] ?? 0);
+    if ($seedId <= 0) {
+        $errors[] = 'Parameter tidak valid.';
+    }
+
+    $seed = null;
+    if (!$errors) {
+        try {
+            $select = 'SELECT id, package_id, jenis';
+            if ($hasJudulColumn) $select .= ', judul';
+            if ($hasCatatanColumn) $select .= ', catatan';
+            if ($hasDueAtColumn) $select .= ', due_at';
+            if ($hasDurationMinutesColumn) $select .= ', duration_minutes';
+            if ($hasReviewDetailsColumn) $select .= ', allow_review_details';
+            if ($hasTokenColumn) $select .= ', token_code';
+            $select .= ' FROM student_assignments WHERE id = :id LIMIT 1';
+            $stmt = $pdo->prepare($select);
+            $stmt->execute([':id' => $seedId]);
+            $seed = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (Throwable $e) {
+            $seed = null;
+        }
+        if (!$seed) {
+            $errors[] = 'Data penugasan tidak ditemukan.';
+        }
+    }
+
+    $whereSql = '';
+    $whereParams = [];
+    if ($seed) {
+        $whereSql = 'package_id = :pid AND jenis = :jenis';
+        $whereParams[':pid'] = (int)$seed['package_id'];
+        $whereParams[':jenis'] = (string)$seed['jenis'];
+
+        if ($hasJudulColumn) {
+            $whereSql .= ' AND judul <=> :judul';
+            $whereParams[':judul'] = ($seed['judul'] ?? null);
+        }
+        if ($hasCatatanColumn) {
+            $whereSql .= ' AND catatan <=> :catatan';
+            $whereParams[':catatan'] = ($seed['catatan'] ?? null);
+        }
+        if ($hasDueAtColumn) {
+            $whereSql .= ' AND due_at <=> :due';
+            $whereParams[':due'] = ($seed['due_at'] ?? null);
+        }
+        if ($hasDurationMinutesColumn) {
+            $whereSql .= ' AND duration_minutes <=> :dur';
+            $whereParams[':dur'] = ($seed['duration_minutes'] ?? null);
+        }
+        if ($hasReviewDetailsColumn) {
+            $whereSql .= ' AND allow_review_details <=> :rev';
+            $whereParams[':rev'] = ($seed['allow_review_details'] ?? null);
+        }
+    }
+
+    if (!$errors && $action === 'delete_group') {
+        try {
+            $stmt = $pdo->prepare('DELETE FROM student_assignments WHERE ' . $whereSql);
+            $stmt->execute($whereParams);
+            header('Location: assignments.php?success=1');
+            exit;
+        } catch (Throwable $e) {
+            $errors[] = 'Gagal menghapus penugasan.';
+        }
+    }
+
+    if (!$errors && $action === 'generate_token') {
+        if (!$hasTokenColumn) {
+            $errors[] = 'Fitur token butuh kolom student_assignments.token_code. Jalankan php scripts/migrate_db.php.';
+        } else {
+            $token = null;
+            for ($attempt = 0; $attempt < 25; $attempt++) {
+                try {
+                    $token = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                } catch (Throwable $e) {
+                    $token = str_pad((string)mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                }
+
+                try {
+                    $stmt = $pdo->prepare('SELECT 1 FROM student_assignments WHERE token_code = :t LIMIT 1');
+                    $stmt->execute([':t' => $token]);
+                    if (!$stmt->fetchColumn()) {
+                        break;
+                    }
+                    $token = null;
+                } catch (Throwable $e) {
+                    // If check fails, still proceed with generated token.
+                    break;
+                }
+            }
+
+            if ($token === null) {
+                $errors[] = 'Gagal membuat token. Coba lagi.';
+            } else {
+                try {
+                    $stmt = $pdo->prepare('UPDATE student_assignments SET token_code = :t, updated_at = NOW() WHERE ' . $whereSql);
+                    $stmt->execute(array_merge([':t' => $token], $whereParams));
+                    header('Location: assignments.php?success=1');
+                    exit;
+                } catch (Throwable $e) {
+                    $errors[] = 'Gagal menyimpan token.';
+                }
             }
         }
     }
@@ -90,27 +195,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $rows = [];
 try {
-    if ($hasIsExamColumn) {
-        $rows = $pdo->query('SELECT sa.id, sa.jenis, sa.judul, sa.status, sa.assigned_at, sa.started_at, sa.duration_minutes, sa.due_at,
-                s.id AS student_id, s.nama_siswa, s.kelas, s.rombel,
-                p.id AS package_id, p.code AS package_code, p.name AS package_name, COALESCE(p.is_exam, 0) AS package_is_exam
-            FROM student_assignments sa
-            JOIN students s ON s.id = sa.student_id
-            JOIN packages p ON p.id = sa.package_id
-            ORDER BY sa.id DESC
-            LIMIT 500')->fetchAll(PDO::FETCH_ASSOC);
+    $select = 'SELECT
+            MIN(sa.id) AS id,
+            sa.package_id,
+            p.code AS package_code,
+            p.name AS package_name,
+            sa.jenis,
+            COUNT(DISTINCT sa.student_id) AS student_distinct,
+            GROUP_CONCAT(DISTINCT NULLIF(TRIM(s.nama_siswa), \'\') ORDER BY s.nama_siswa SEPARATOR \' , \') AS siswa_list,
+            COUNT(DISTINCT NULLIF(TRIM(CONCAT(TRIM(s.kelas), TRIM(s.rombel))), \'\')) AS kr_distinct,
+            GROUP_CONCAT(DISTINCT NULLIF(UPPER(TRIM(CONCAT(TRIM(s.kelas), TRIM(s.rombel)))), \'\') ORDER BY UPPER(TRIM(CONCAT(TRIM(s.kelas), TRIM(s.rombel)))) SEPARATOR \' , \') AS kr_list,
+            COUNT(DISTINCT NULLIF(TRIM(s.kelas), \'\')) AS kelas_distinct,
+            MIN(NULLIF(TRIM(s.kelas), \'\')) AS kelas_one,
+            MAX(sc.class_total) AS class_total,
+            COUNT(*) AS total_count,
+            SUM(CASE WHEN sa.status = "done" THEN 1 ELSE 0 END) AS done_count';
+
+    if ($hasTokenColumn) {
+        $select .= ', COUNT(DISTINCT sa.token_code) AS token_distinct, MAX(sa.token_code) AS token_max';
     } else {
-        $rows = $pdo->query('SELECT sa.id, sa.jenis, sa.judul, sa.status, sa.assigned_at, sa.started_at, sa.duration_minutes, sa.due_at,
-                s.id AS student_id, s.nama_siswa, s.kelas, s.rombel,
-                p.id AS package_id, p.code AS package_code, p.name AS package_name, 0 AS package_is_exam
-            FROM student_assignments sa
-            JOIN students s ON s.id = sa.student_id
-            JOIN packages p ON p.id = sa.package_id
-            ORDER BY sa.id DESC
-            LIMIT 500')->fetchAll(PDO::FETCH_ASSOC);
+        $select .= ', 0 AS token_distinct, NULL AS token_max';
     }
+
+    $select .= '
+        FROM student_assignments sa
+        JOIN packages p ON p.id = sa.package_id
+        JOIN students s ON s.id = sa.student_id
+        LEFT JOIN (
+            SELECT kelas, COUNT(*) AS class_total
+            FROM students
+            GROUP BY kelas
+        ) sc ON sc.kelas = s.kelas';
+
+    $groupBy = [
+        'sa.package_id',
+        'p.code',
+        'p.name',
+        'sa.jenis',
+    ];
+    if ($hasJudulColumn) $groupBy[] = 'sa.judul';
+    if ($hasCatatanColumn) $groupBy[] = 'sa.catatan';
+    if ($hasDueAtColumn) $groupBy[] = 'sa.due_at';
+    if ($hasDurationMinutesColumn) $groupBy[] = 'sa.duration_minutes';
+    if ($hasReviewDetailsColumn) $groupBy[] = 'sa.allow_review_details';
+
+    $sql = $select . '
+        GROUP BY ' . implode(', ', $groupBy) . '
+        ORDER BY MAX(sa.id) DESC
+        LIMIT 500';
+
+    $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-    $errors[] = 'Tabel student_assignments belum ada. Import database.sql.';
+    $errors[] = 'Tabel student_assignments belum ada (atau skema belum cocok). Import database.sql / jalankan php scripts/migrate_db.php.';
 }
 
 $page_title = 'Penugasan Siswa';
@@ -150,46 +286,72 @@ include __DIR__ . '/../../includes/header.php';
                 <table class="table table-striped table-hover table-compact align-middle">
                     <thead>
                         <tr>
-                            <th style="width:70px">ID</th>
-                            <th>Siswa</th>
+                            <th style="width:64px">No</th>
                             <th>Paket</th>
                             <th style="width:110px">Jenis</th>
                             <th style="width:120px">Status</th>
-                            <th style="width:170px">Mulai</th>
-                            <th style="width:170px">Batas</th>
+                            <th style="width:140px">Token</th>
                             <th style="width:190px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="8" class="text-center text-muted">Belum ada penugasan.</td></tr>
+                            <tr><td colspan="6" class="text-center text-muted">Belum ada penugasan.</td></tr>
                         <?php endif; ?>
-                        <?php foreach ($rows as $r): ?>
+                        <?php $no = 0; foreach ($rows as $r): $no++; ?>
                             <?php
-                                $judul = trim((string)($r['judul'] ?? ''));
-                                if ($judul === '') {
-                                    $judul = (string)($r['package_name'] ?? '');
-                                }
-                                $due = (string)($r['due_at'] ?? '');
                                 $jenis = (string)($r['jenis'] ?? 'tugas');
-                                $status = (string)($r['status'] ?? 'assigned');
-                                $startedAt = (string)($r['started_at'] ?? '');
-                                $dur = (int)($r['duration_minutes'] ?? 0);
+                                $totalCount = (int)($r['total_count'] ?? 0);
+                                $doneCount = (int)($r['done_count'] ?? 0);
+                                $isDone = ($totalCount > 0 && $doneCount >= $totalCount);
+
+                                $studentDistinct = (int)($r['student_distinct'] ?? 0);
+                                $siswaList = trim((string)($r['siswa_list'] ?? ''));
+                                $krList = trim((string)($r['kr_list'] ?? ''));
+                                $krDistinct = (int)($r['kr_distinct'] ?? 0);
+                                $kelasDistinct = (int)($r['kelas_distinct'] ?? 0);
+                                $kelasOne = trim((string)($r['kelas_one'] ?? ''));
+                                $classTotal = (int)($r['class_total'] ?? 0);
+
+                                $tokenLabel = '-';
+                                $tokenDistinct = (int)($r['token_distinct'] ?? 0);
+                                $tokenMax = (string)($r['token_max'] ?? '');
+                                if ($hasTokenColumn) {
+                                    if ($tokenDistinct === 0) {
+                                        $tokenLabel = '-';
+                                    } elseif ($tokenDistinct === 1 && $tokenMax !== '') {
+                                        $tokenLabel = $tokenMax;
+                                    } else {
+                                        $tokenLabel = 'MIX';
+                                    }
+                                }
                             ?>
                             <tr>
-                                <td><?php echo (int)$r['id']; ?></td>
+                                <td class="text-muted"><?php echo $no; ?></td>
                                 <td>
-                                    <div class="fw-semibold"><?php echo htmlspecialchars((string)$r['nama_siswa']); ?></div>
-                                    <div class="small text-muted"><?php echo htmlspecialchars((string)$r['kelas']); ?> <?php echo htmlspecialchars((string)$r['rombel']); ?></div>
-                                </td>
-                                <td>
-                                    <div class="fw-semibold"><?php echo htmlspecialchars($judul); ?></div>
+                                    <div class="fw-semibold"><?php echo htmlspecialchars((string)($r['package_name'] ?? '')); ?></div>
                                     <div class="small text-muted">
-                                        Code: <?php echo htmlspecialchars((string)$r['package_code']); ?>
-                                        <?php if (!empty($r['package_is_exam'])): ?>
-                                            <span class="badge text-bg-warning ms-1">Paket Ujian</span>
-                                        <?php endif; ?>
+                                        Code: <?php echo htmlspecialchars((string)($r['package_code'] ?? '')); ?>
+                                        <span class="ms-1 text-muted">(<?php echo $doneCount; ?>/<?php echo $totalCount; ?> selesai)</span>
                                     </div>
+                                    <?php
+                                        $targetLabel = '';
+                                        if ($kelasDistinct === 1 && $kelasOne !== '' && $classTotal > 0 && $studentDistinct >= $classTotal) {
+                                            $targetLabel = 'Seluruh Kelas ' . $kelasOne;
+                                        } elseif ($studentDistinct > 1 && $krList !== '') {
+                                            $targetLabel = 'Kelas/Rombel: ' . $krList;
+                                        } elseif ($studentDistinct > 1 && $krDistinct > 0 && $kelasOne !== '') {
+                                            // Fallback if list isn't available but we have some class info.
+                                            $targetLabel = 'Kelas/Rombel: ' . $kelasOne;
+                                        } elseif ($siswaList !== '') {
+                                            $targetLabel = $siswaList;
+                                        } elseif ($kelasOne !== '') {
+                                            $targetLabel = 'Kelas: ' . $kelasOne;
+                                        }
+                                    ?>
+                                    <?php if ($targetLabel !== ''): ?>
+                                        <div class="small text-muted">Target: <?php echo htmlspecialchars($targetLabel); ?></div>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if ($jenis === 'ujian'): ?>
@@ -199,37 +361,28 @@ include __DIR__ . '/../../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if ($status === 'done'): ?>
+                                    <?php if ($isDone): ?>
                                         <span class="badge text-bg-success">DONE</span>
                                     <?php else: ?>
                                         <span class="badge text-bg-secondary">ASSIGNED</span>
                                     <?php endif; ?>
                                 </td>
-                                <td>
-                                    <?php if ($startedAt !== ''): ?>
-                                        <div class="small"><?php echo htmlspecialchars($startedAt); ?></div>
-                                    <?php else: ?>
-                                        <div class="small text-muted">-</div>
-                                    <?php endif; ?>
-                                    <?php if ($jenis === 'ujian' && $dur > 0): ?>
-                                        <div class="small text-muted">Durasi: <?php echo (int)$dur; ?> menit</div>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($due !== ''): ?>
-                                        <span class="small"><?php echo htmlspecialchars($due); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                </td>
+                                <td><span class="fw-semibold"><?php echo htmlspecialchars($tokenLabel); ?></span></td>
                                 <td>
                                     <div class="d-flex gap-1 flex-wrap">
-                                        <a class="btn btn-outline-primary btn-sm" href="assignment_edit.php?id=<?php echo (int)$r['id']; ?>">Edit</a>
-                                        <form method="post" class="d-inline" onsubmit="return confirm('Hapus penugasan ini?');">
+                                        <a class="btn btn-outline-secondary btn-sm" href="assignment_students.php?id=<?php echo (int)$r['id']; ?>">Detail Siswa</a>
+                                        <a class="btn btn-outline-primary btn-sm" href="assignment_batch_edit.php?id=<?php echo (int)$r['id']; ?>">Edit</a>
+                                        <form method="post" class="d-inline" data-swal-confirm data-swal-title="Hapus Penugasan?" data-swal-text="Hapus semua penugasan untuk paket ini?" data-swal-confirm-text="Hapus" data-swal-cancel-text="Batal">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="action" value="delete_group">
                                             <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                                             <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
+                                        </form>
+                                        <form method="post" class="d-inline" data-swal-confirm data-swal-title="Generate Token?" data-swal-text="Generate token 6 digit untuk semua siswa di penugasan ini?" data-swal-confirm-text="Generate" data-swal-cancel-text="Batal">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                            <input type="hidden" name="action" value="generate_token">
+                                            <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                                            <button type="submit" class="btn btn-outline-dark btn-sm">Generate Token</button>
                                         </form>
                                     </div>
                                 </td>

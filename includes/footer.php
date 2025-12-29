@@ -1,4 +1,4 @@
-<?php if (empty($useAdminSidebar) && empty($useStudentSidebar)): ?>
+<?php if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer)): ?>
 	<?php
 		$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
 		$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
@@ -560,8 +560,11 @@
 		const text = src.getAttribute('data-swal-text') || 'Lanjutkan aksi ini?';
 		const confirmText = src.getAttribute('data-swal-confirm-text') || 'Ya';
 		const cancelText = src.getAttribute('data-swal-cancel-text') || 'Batal';
+		const requireCheck = (src.getAttribute('data-swal-require-check') || '') === '1';
+		const checkText = src.getAttribute('data-swal-check-text') || 'Saya yakin dan paham konsekuensinya.';
+		const checkError = src.getAttribute('data-swal-check-error') || 'Wajib centang dulu sebelum melanjutkan.';
 
-		Swal.fire({
+		const swalOpts = {
 			title,
 			text,
 			icon: 'warning',
@@ -569,7 +572,19 @@
 			confirmButtonText: confirmText,
 			cancelButtonText: cancelText,
 			reverseButtons: true,
-		}).then((res) => {
+		};
+
+		if (requireCheck) {
+			swalOpts.input = 'checkbox';
+			swalOpts.inputPlaceholder = checkText;
+			swalOpts.inputValue = 0;
+			swalOpts.inputValidator = (value) => {
+				// For checkbox input: value is 1 when checked, 0 otherwise.
+				return value ? undefined : checkError;
+			};
+		}
+
+		Swal.fire(swalOpts).then((res) => {
 			if (res.isConfirmed) {
 				form.dataset.swalConfirmed = '1';
 				// Prefer requestSubmit(submitter) to preserve which button was clicked (important for name/value like action=mark_done).
@@ -608,8 +623,12 @@
 	// Convert Bootstrap alerts into SweetAlert2 popups.
 	// Keep complex/interactive inline callouts (forms/buttons/links) in place.
 	document.addEventListener('DOMContentLoaded', () => {
-		const selector = '.alert.alert-danger, .alert.alert-success, .alert.alert-warning';
+		const selector = '.alert.alert-danger, .alert.alert-success, .alert.alert-warning, .alert.alert-info';
 		const candidates = Array.from(document.querySelectorAll(selector)).filter((el) => {
+			// Allow opting out per-alert (keep narrative inline on "locked" pages, etc).
+			if (el.getAttribute && el.getAttribute('data-no-swal') === '1') return false;
+			// Don't convert alerts inside Bootstrap modals (often hidden content).
+			if (el.closest && el.closest('.modal')) return false;
 			// Don't convert alerts that contain interactive elements.
 			if (el.querySelector('form, button, a, .btn, input, select, textarea')) return false;
 			return true;
@@ -619,7 +638,7 @@
 		}
 
 		const pick = (cls) => candidates.find((el) => el.classList.contains(cls));
-		const alertEl = pick('alert-danger') || pick('alert-success') || pick('alert-warning') || candidates[0];
+		const alertEl = pick('alert-danger') || pick('alert-success') || pick('alert-warning') || pick('alert-info') || candidates[0];
 		if (!alertEl) {
 			return;
 		}
@@ -670,6 +689,7 @@
 		login_success: { icon: 'success', title: 'Berhasil', text: 'Login berhasil.' },
 		logout_success: { icon: 'success', title: 'Berhasil', text: 'Logout berhasil.' },
 		login_required: { icon: 'info', title: 'Perlu Login', text: 'Silakan login dulu untuk melanjutkan.' },
+		profile_updated: { icon: 'success', title: 'Tersimpan', text: 'Profil berhasil diperbarui.' },
 
 		saved: { icon: 'success', title: 'Tersimpan', text: 'Jawaban berhasil disimpan.' },
 			done: { icon: 'success', title: 'Dikumpulkan', text: 'Tugas/ujian berhasil dikumpulkan. Nilai dan jawaban ditampilkan.' },
@@ -697,6 +717,80 @@
 		title: msg.title,
 		text: msg.text,
 	});
+})();
+</script>
+
+<script>
+(() => {
+	// Ensure tables use Bootstrap table styling site-wide.
+	// Excludes richtext content tables because they have their own styling.
+	const tables = Array.from(document.querySelectorAll('table'));
+	for (const table of tables) {
+		if (!(table instanceof HTMLTableElement)) continue;
+		if (table.closest && table.closest('.richtext-content')) continue;
+		if (table.getAttribute('data-no-bootstrap') === '1') continue;
+		if (table.classList.contains('table')) continue;
+		table.classList.add('table', 'table-striped', 'table-sm', 'align-middle');
+	}
+})();
+</script>
+
+<script>
+(() => {
+	// Add row numbering column (No) to all tables site-wide.
+	// Excludes richtext content tables.
+	const tables = Array.from(document.querySelectorAll('table'));
+	for (const table of tables) {
+		if (!(table instanceof HTMLTableElement)) continue;
+		if (table.closest && table.closest('.richtext-content')) continue;
+		if (table.getAttribute('data-no-numbering') === '1') continue;
+		if (table.dataset && table.dataset.numberingApplied === '1') continue;
+
+		// Detect existing numbering by header text.
+		const firstHeaderCell = table.querySelector('thead tr th, thead tr td');
+		if (firstHeaderCell) {
+			const txt = (firstHeaderCell.textContent || '').trim().toLowerCase();
+			if (txt === 'no' || txt === '#') {
+				continue;
+			}
+		}
+
+		// Insert header cell.
+		const headRow = table.querySelector('thead tr');
+		if (headRow) {
+			const th = document.createElement('th');
+			th.textContent = 'No';
+			th.style.width = '64px';
+			headRow.insertBefore(th, headRow.firstElementChild);
+		}
+
+		// Insert numbering cells.
+		let n = 1;
+		const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+		for (const tr of bodyRows) {
+			if (!(tr instanceof HTMLTableRowElement)) continue;
+			// Skip header-like rows inside tbody.
+			if (tr.querySelector('th')) {
+				// still number if it's a normal row with th? keep simple: do nothing.
+			}
+			const firstCell = tr.firstElementChild;
+			// If this looks like a single "empty state" row with colspan, expand colspan.
+			if (tr.children.length === 1 && firstCell && (firstCell instanceof HTMLTableCellElement)) {
+				const colspan = parseInt(firstCell.getAttribute('colspan') || '0', 10);
+				if (colspan > 0) {
+					firstCell.setAttribute('colspan', String(colspan + 1));
+					continue;
+				}
+			}
+
+			const td = document.createElement('td');
+			td.className = 'text-muted';
+			td.textContent = String(n++);
+			tr.insertBefore(td, tr.firstElementChild);
+		}
+
+		table.dataset.numberingApplied = '1';
+	}
 })();
 </script>
 </body>

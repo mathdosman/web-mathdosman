@@ -1,0 +1,190 @@
+/* Scoped styles for siswa/login.php only */
+
+body.student-login-page * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.student-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    padding: 20px;
+}
+
+/* Remove the default app chrome so only the login card is visible */
+body.student-login-page .app-container {
+    margin-bottom: 0 !important;
+}
+
+body.student-login-page .content-card {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+body.student-login-page .login-container {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+body.student-login-page .login-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+/* Header Styles */
+body.student-login-page .header-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+body.student-login-page .logo-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+body.student-login-page .header-section h1 {
+    color: #1e40af;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    font-weight: 800;
+}
+
+body.student-login-page .header-section p {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Form Styles */
+body.student-login-page .input-group {
+    margin-bottom: 20px;
+    display: block;
+}
+
+body.student-login-page .input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+body.student-login-page .input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+body.student-login-page .password-wrapper {
+    position: relative;
+}
+
+body.student-login-page .password-wrapper input {
+    padding-right: 120px;
+}
+
+body.student-login-page .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: #2563eb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+body.student-login-page .toggle-password:hover {
+    background: rgba(37, 99, 235, 0.08);
+}
+
+body.student-login-page .toggle-password .icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+body.student-login-page .toggle-password .icon-eye-off {
+    display: none;
+}
+
+body.student-login-page .toggle-password[data-visible="1"] .icon-eye {
+    display: none;
+}
+
+body.student-login-page .toggle-password[data-visible="1"] .icon-eye-off {
+    display: block;
+}
+
+body.student-login-page .toggle-password:focus {
+    outline: none;
+}
+
+body.student-login-page .input-group input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+body.student-login-page .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+}
+
+body.student-login-page .btn-login:hover {
+    background: #1d4ed8;
+}
+
+/* Footer Styles */
+body.student-login-page .login-card footer {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+body.student-login-page .login-card footer a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+body.student-login-page .login-card footer span {
+    display: block;
+    margin-top: 10px;
+    color: #64748b;
+}

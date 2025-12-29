@@ -10,4 +10,5 @@ try {
 } catch (Throwable $e) {
 }
 
-siswa_redirect_to('siswa/login.php?flash=logout_success');
+siswa_redirect_to('index.php');
+

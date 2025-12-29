@@ -7,7 +7,6 @@ require_role('admin');
 $errors = [];
 
 $hasScoreColumn = false;
-$hasStartedAtColumn = false;
 $hasGradedAtColumn = false;
 try {
     $cols = [];
@@ -18,11 +17,9 @@ try {
         }
     }
     $hasScoreColumn = !empty($cols['score']);
-    $hasStartedAtColumn = !empty($cols['started_at']);
     $hasGradedAtColumn = !empty($cols['graded_at']);
 } catch (Throwable $e) {
     $hasScoreColumn = false;
-    $hasStartedAtColumn = false;
     $hasGradedAtColumn = false;
 }
 
@@ -31,108 +28,70 @@ if (!in_array($tab, ['ujian', 'tugas'], true)) {
     $tab = 'ujian';
 }
 
-$fetchRecap = function (string $jenis) use ($pdo, $hasScoreColumn, $hasStartedAtColumn, $hasGradedAtColumn): array {
-    $jenis = strtolower(trim($jenis));
-    if (!in_array($jenis, ['ujian', 'tugas'], true)) {
-        $jenis = 'ujian';
-    }
+$qNama = trim((string)($_GET['nama'] ?? ''));
+$qKelasRombel = trim((string)($_GET['kelas'] ?? ''));
+$qPaket = trim((string)($_GET['paket'] ?? ''));
 
-    $scoreAgg = $hasScoreColumn
-        ? 'AVG(CASE WHEN sa.status = "done" THEN sa.score END) AS avg_score,'
-        : 'NULL AS avg_score,';
-
-    $startedAgg = $hasStartedAtColumn
-        ? 'MAX(sa.started_at) AS last_started_at,'
-        : 'NULL AS last_started_at,';
-
+$rows = [];
+try {
     // Prefer graded_at for determining "latest" if available.
     $latestExpr = $hasGradedAtColumn
         ? 'COALESCE(sa.graded_at, sa.updated_at, sa.assigned_at)'
         : 'COALESCE(sa.updated_at, sa.assigned_at)';
 
-    $latestExpr2 = $hasGradedAtColumn
-        ? 'COALESCE(sa2.graded_at, sa2.updated_at, sa2.assigned_at)'
-        : 'COALESCE(sa2.updated_at, sa2.assigned_at)';
+    $titleExpr = 'COALESCE(NULLIF(TRIM(sa.judul), ""), p.name)';
 
-    $latestExpr3 = $hasGradedAtColumn
-        ? 'COALESCE(sa3.graded_at, sa3.updated_at, sa3.assigned_at)'
-        : 'COALESCE(sa3.updated_at, sa3.assigned_at)';
-
-    $lastDoneScoreSql = 'NULL';
-    if ($hasScoreColumn) {
-        $lastDoneScoreSql = '(SELECT sa3.score
-            FROM student_assignments sa3
-            WHERE sa3.student_id = s.id AND sa3.jenis = :jenis AND sa3.status = "done"
-            ORDER BY ' . $latestExpr3 . ' DESC, sa3.id DESC
-            LIMIT 1)';
-    }
-
-    $sql = 'SELECT
-            s.id AS student_id,
+    $select = 'SELECT
+            sa.id AS assignment_id,
+            sa.student_id,
             s.nama_siswa,
             s.kelas,
             s.rombel,
-            COALESCE(x.total_all, 0) AS total_all,
-            COALESCE(x.total_done, 0) AS total_done,
-            COALESCE(x.total_pending, 0) AS total_pending,
-            x.avg_score,
-            ' . $lastDoneScoreSql . ' AS last_score,
-            x.last_assigned_at,
-            x.last_started_at,
-            x.last_done_at,
-            lp.package_code AS last_package_code,
-            lp.package_name AS last_package_name,
-            lp.last_status AS last_status,
-            lp.last_title AS last_title
-        FROM students s
-        LEFT JOIN (
-            SELECT
-                sa.student_id,
-                COUNT(*) AS total_all,
-                SUM(sa.status = "done") AS total_done,
-                SUM(sa.status <> "done") AS total_pending,
-                ' . $scoreAgg . '
-                MAX(sa.assigned_at) AS last_assigned_at,
-                ' . $startedAgg . '
-                MAX(CASE WHEN sa.status = "done" THEN ' . $latestExpr . ' END) AS last_done_at
-            FROM student_assignments sa
-            WHERE sa.jenis = :jenis
-            GROUP BY sa.student_id
-        ) x ON x.student_id = s.id
-        LEFT JOIN (
-            SELECT
-                sa.id,
-                sa.student_id,
-                sa.status AS last_status,
-                sa.judul AS last_title,
-                p.code AS package_code,
-                p.name AS package_name
-            FROM student_assignments sa
-            JOIN packages p ON p.id = sa.package_id
-        ) lp ON lp.id = (
-            SELECT sa2.id
-            FROM student_assignments sa2
-            WHERE sa2.student_id = s.id AND sa2.jenis = :jenis
-            ORDER BY ' . $latestExpr2 . ' DESC, sa2.id DESC
-            LIMIT 1
-        )
-        ORDER BY s.kelas ASC, s.rombel ASC, s.nama_siswa ASC, s.id ASC
-        LIMIT 1000';
+            p.name AS package_name,
+            p.code AS package_code,
+            sa.judul AS assignment_title';
+    if ($hasScoreColumn) {
+        $select .= ', sa.score';
+    } else {
+        $select .= ', NULL AS score';
+    }
+    $select .= ', ' . $latestExpr . ' AS latest_at';
+    $select .= '
+        FROM student_assignments sa
+        JOIN students s ON s.id = sa.student_id
+        JOIN packages p ON p.id = sa.package_id
+        WHERE sa.jenis = :jenis AND sa.status = "done"';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':jenis' => $jenis]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-};
+    $params = [':jenis' => $tab];
 
-$rowsUjian = [];
-$rowsTugas = [];
-try {
-    $rowsUjian = $fetchRecap('ujian');
-    $rowsTugas = $fetchRecap('tugas');
+    if ($qNama !== '') {
+        $select .= ' AND s.nama_siswa LIKE :qNama';
+        $params[':qNama'] = '%' . $qNama . '%';
+    }
+
+    if ($qKelasRombel !== '') {
+        $norm = strtoupper(str_replace(' ', '', $qKelasRombel));
+        $select .= ' AND UPPER(CONCAT(TRIM(s.kelas), TRIM(s.rombel))) LIKE :qKr';
+        $params[':qKr'] = '%' . $norm . '%';
+    }
+
+    if ($qPaket !== '') {
+        $select .= ' AND (' . $titleExpr . ' LIKE :qPaket OR p.code LIKE :qPaket2 OR p.name LIKE :qPaket3)';
+        $params[':qPaket'] = '%' . $qPaket . '%';
+        $params[':qPaket2'] = '%' . $qPaket . '%';
+        $params[':qPaket3'] = '%' . $qPaket . '%';
+    }
+
+    $select .= '
+        ORDER BY latest_at DESC, sa.id DESC
+        LIMIT 1500';
+
+    $stmt = $pdo->prepare($select);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-    $rowsUjian = [];
-    $rowsTugas = [];
-    $errors[] = 'Gagal memuat hasil. Pastikan tabel student_assignments dan packages sudah ada.';
+    $rows = [];
+    $errors[] = 'Gagal memuat hasil. Pastikan tabel student_assignments, students, dan packages sudah ada.';
 }
 
 $scoreBadgeClass = function ($scoreVal): string {
@@ -151,7 +110,7 @@ include __DIR__ . '/../../includes/header.php';
     <div class="admin-page-header">
         <div>
             <h4 class="admin-page-title">Hasil</h4>
-            <p class="admin-page-subtitle">Rekap hasil tugas/ujian per siswa. Aman untuk penugasan lebih dari 1 kali.</p>
+            <p class="admin-page-subtitle">Daftar hasil tugas/ujian per siswa dan paket.</p>
         </div>
         <div class="admin-page-actions">
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan</a>
@@ -179,101 +138,80 @@ include __DIR__ . '/../../includes/header.php';
                 </li>
             </ul>
 
-            <?php $activeRows = ($tab === 'tugas') ? $rowsTugas : $rowsUjian; ?>
+            <form method="get" class="row g-2 align-items-end mb-3">
+                <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
+                <div class="col-md-4">
+                    <label class="form-label">Nama</label>
+                    <input type="text" class="form-control" name="nama" value="<?php echo htmlspecialchars($qNama); ?>" placeholder="Cari nama siswa">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kelas/Rombel</label>
+                    <input type="text" class="form-control" name="kelas" value="<?php echo htmlspecialchars($qKelasRombel); ?>" placeholder="Contoh: XA">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Paket Soal</label>
+                    <input type="text" class="form-control" name="paket" value="<?php echo htmlspecialchars($qPaket); ?>" placeholder="Judul / nama / kode">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Cari</button>
+                    <a class="btn btn-outline-secondary" href="results.php?tab=<?php echo urlencode($tab); ?>">Reset</a>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-striped table-hover table-compact align-middle">
                     <thead>
                         <tr>
-                            <th>Siswa</th>
-                            <th style="width:120px">Total</th>
-                            <th style="width:120px">Selesai</th>
-                            <th style="width:130px">Belum</th>
-                            <th style="width:140px">Nilai Terakhir</th>
-                            <th style="width:140px">Rata-rata</th>
-                            <th><?php echo $tab === 'tugas' ? 'Tugas Terakhir' : 'Ujian Terakhir'; ?></th>
-                            <th style="width:170px">Terakhir Mulai</th>
-                            <th style="width:170px">Terakhir Selesai</th>
+                            <th>Nama</th>
+                            <th>Judul Paket</th>
+                            <th style="width:120px">Kelas</th>
+                            <th style="width:120px">Nilai</th>
                             <th style="width:110px"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!$activeRows): ?>
-                            <tr><td colspan="10" class="text-center text-muted">Belum ada hasil.</td></tr>
+                        <?php if (!$rows): ?>
+                            <tr><td colspan="5" class="text-center text-muted">Belum ada hasil.</td></tr>
                         <?php endif; ?>
-                        <?php foreach ($activeRows as $r): ?>
+                        <?php foreach ($rows as $r): ?>
                             <?php
-                                $total = (int)($r['total_all'] ?? 0);
-                                $done = (int)($r['total_done'] ?? 0);
-                                $pending = (int)($r['total_pending'] ?? 0);
-
-                                $lastScore = $r['last_score'] ?? null;
-                                $avgScore = $r['avg_score'] ?? null;
-
-                                $lastPkg = trim((string)($r['last_package_name'] ?? ''));
-                                $lastCode = trim((string)($r['last_package_code'] ?? ''));
-                                $lastTitle = trim((string)($r['last_title'] ?? ''));
-                                $lastStatus = (string)($r['last_status'] ?? '');
-                                $lastStarted = trim((string)($r['last_started_at'] ?? ''));
-                                $lastDoneAt = trim((string)($r['last_done_at'] ?? ''));
                                 $studentId = (int)($r['student_id'] ?? 0);
+                                $assignmentId = (int)($r['assignment_id'] ?? 0);
+
+                                $kelas = trim((string)($r['kelas'] ?? ''));
+                                $rombel = trim((string)($r['rombel'] ?? ''));
+                                $kelasRombel = strtoupper($kelas . $rombel);
+
+                                $judul = trim((string)($r['assignment_title'] ?? ''));
+                                $pkgName = trim((string)($r['package_name'] ?? ''));
+                                $title = $judul !== '' ? $judul : $pkgName;
+
+                                $score = $r['score'] ?? null;
                             ?>
                             <tr>
                                 <td>
-                                    <div class="fw-semibold"><?php echo htmlspecialchars((string)$r['nama_siswa']); ?></div>
-                                    <div class="small text-muted"><?php echo htmlspecialchars((string)$r['kelas']); ?> <?php echo htmlspecialchars((string)$r['rombel']); ?></div>
-                                </td>
-                                <td><span class="badge text-bg-dark"><?php echo (int)$total; ?></span></td>
-                                <td><span class="badge text-bg-success"><?php echo (int)$done; ?></span></td>
-                                <td><span class="badge text-bg-secondary"><?php echo (int)$pending; ?></span></td>
-                                <td>
-                                    <?php if ($hasScoreColumn && $lastScore !== null && $lastScore !== ''): ?>
-                                        <span class="badge <?php echo htmlspecialchars($scoreBadgeClass($lastScore)); ?>"><?php echo htmlspecialchars((string)$lastScore); ?></span>
-                                    <?php else: ?>
-                                        <span class="small text-muted">-</span>
-                                    <?php endif; ?>
+                                    <div class="fw-semibold"><?php echo htmlspecialchars((string)($r['nama_siswa'] ?? '')); ?></div>
                                 </td>
                                 <td>
-                                    <?php if ($hasScoreColumn && $avgScore !== null && $avgScore !== ''): ?>
-                                        <span class="small"><?php echo htmlspecialchars(number_format((float)$avgScore, 2, '.', '')); ?></span>
-                                    <?php else: ?>
-                                        <span class="small text-muted">-</span>
-                                    <?php endif; ?>
+                                    <div class="fw-semibold"><?php echo htmlspecialchars($title); ?></div>
+                                    <div class="small text-muted">
+                                        <?php echo htmlspecialchars((string)($r['package_code'] ?? '')); ?>
+                                    </div>
                                 </td>
+                                <td><span class="badge text-bg-secondary"><?php echo htmlspecialchars($kelasRombel !== '' ? $kelasRombel : '-'); ?></span></td>
                                 <td>
-                                    <?php if ($lastPkg !== '' || $lastTitle !== ''): ?>
-                                        <div class="fw-semibold"><?php echo htmlspecialchars($lastTitle !== '' ? $lastTitle : $lastPkg); ?></div>
-                                        <div class="small text-muted">
-                                            <?php if ($lastPkg !== '' && $lastTitle !== '' && $lastPkg !== $lastTitle): ?><?php echo htmlspecialchars($lastPkg); ?> • <?php endif; ?>
-                                            <?php if ($lastCode !== ''): ?>Code: <?php echo htmlspecialchars($lastCode); ?><?php endif; ?>
-                                            <?php if ($lastStatus !== ''): ?>
-                                                <?php if ($lastStatus === 'done'): ?>
-                                                    <span class="badge text-bg-success ms-1">DONE</span>
-                                                <?php else: ?>
-                                                    <span class="badge text-bg-secondary ms-1">ASSIGNED</span>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="small text-muted">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($lastStarted !== ''): ?>
-                                        <span class="small"><?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($lastStarted) : $lastStarted); ?></span>
-                                    <?php else: ?>
-                                        <span class="small text-muted">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($lastDoneAt !== ''): ?>
-                                        <span class="small"><?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($lastDoneAt) : $lastDoneAt); ?></span>
+                                    <?php if ($hasScoreColumn && $score !== null && $score !== ''): ?>
+                                        <span class="badge <?php echo htmlspecialchars($scoreBadgeClass($score)); ?>"><?php echo htmlspecialchars((string)$score); ?></span>
                                     <?php else: ?>
                                         <span class="small text-muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end">
-                                    <?php if ($studentId > 0): ?>
-                                        <a class="btn btn-outline-primary btn-sm" href="results_student.php?student_id=<?php echo (int)$studentId; ?>&jenis=<?php echo urlencode($tab); ?>">Detail</a>
+                                    <?php if ($studentId > 0 && $assignmentId > 0): ?>
+                                        <div class="d-inline-flex gap-1">
+                                            <a class="btn btn-outline-secondary btn-sm" href="results_student.php?student_id=<?php echo (int)$studentId; ?>&jenis=<?php echo urlencode($tab); ?>">Riwayat</a>
+                                            <a class="btn btn-outline-primary btn-sm" href="result_view.php?student_id=<?php echo (int)$studentId; ?>&assignment_id=<?php echo (int)$assignmentId; ?>">Detail</a>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                             </tr>

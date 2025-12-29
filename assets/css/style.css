@@ -55,6 +55,26 @@ pre {
     padding-bottom: 0.35rem;
 }
 
+/* Global table polish (applies to all Bootstrap tables across the project) */
+.table {
+    /* Prevent huge vertical gaps when a table is the last element in a card */
+    margin-bottom: 0;
+}
+
+.table thead th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table td,
+.table th {
+    vertical-align: middle;
+}
+
+.table .btn {
+    white-space: nowrap;
+}
+
 /* Packages list (admin): responsive table tuning */
 .packages-table {
     /* Override .table-fit's fixed layout for this table.
@@ -740,8 +760,17 @@ body.student-area .md-nav-btn {
 }
 
 /* Student sidebar label */
-body.student-area .app-sidebar .small {
+body.student-layout #studentSidebar .student-sidebar-title {
     letter-spacing: .04em;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-top: .35rem;
+}
+
+/* Push student sidebar content down a bit (so the list isn't too close to the top) */
+body.student-layout #studentSidebar .app-sidebar-inner {
+    padding-top: 2.25rem;
 }
 
 /* Distinct student sidebar look (do not affect admin sidebar) */
