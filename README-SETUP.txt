@@ -34,6 +34,34 @@ Jika setelah update kamu menemukan error import (kolom belum ada / schema belum 
 jalankan migrasi skema via CLI (lebih aman daripada DDL saat request web):
 - php scripts/migrate_db.php
 
+Update di hosting tanpa hapus data (migrasi skema)
+-----------------------------------------------
+Jika aplikasi sudah terlanjur terpasang di hosting dan sudah ada data di database, jangan reinstall.
+Yang benar: lakukan migrasi skema (tambah kolom/tabel/index) tanpa menghapus data lama.
+
+Prinsip skema (aman untuk data lama):
+- Perubahan skema dibuat *additive* (CREATE TABLE IF NOT EXISTS, ALTER TABLE ADD COLUMN jika belum ada).
+- Hindari drop/rename kolom langsung. Jika perlu rename, tambahkan kolom baru, copy data, lalu biarkan kolom lama.
+
+Langkah aman (disarankan):
+1) Backup database terlebih dulu (phpMyAdmin Export / mysqldump).
+2) Upload/update file project ke hosting.
+3) Jalankan migrasi skema.
+
+Opsi A (punya SSH/CLI di hosting):
+- Jalankan:
+  - php scripts/migrate_db.php
+  - php scripts/migrate_db.php --indexes
+
+Opsi B (tanpa SSH/CLI):
+- Sementara set di config/config.php:
+  - APP_ENABLE_RUNTIME_MIGRATIONS = true
+- Login admin, lalu buka:
+  - /admin/db_migrate.php
+- Klik "Jalankan Migrasi" (opsional centang index).
+- Setelah sukses, kembalikan:
+  - APP_ENABLE_RUNTIME_MIGRATIONS = false
+
 Migrasi CLI di atas juga akan memastikan kolom berikut ada (untuk fitur sidebar konten terkait):
 - contents.materi
 - contents.submateri

@@ -65,6 +65,18 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
         </div>
+
+        <?php if (function_exists('app_runtime_migrations_enabled') && app_runtime_migrations_enabled()): ?>
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="admin-tile h-100">
+                    <div class="admin-tile-body">
+                        <h5 class="admin-tile-title">Migrasi DB</h5>
+                        <p class="admin-tile-text">Update kolom/tabel/index tanpa menghapus data lama (jalankan hanya saat update).</p>
+                        <a href="admin/db_migrate.php" class="btn btn-outline-primary btn-sm">Buka</a>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>
