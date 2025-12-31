@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/security.php';
 require_once __DIR__ . '/../includes/logger.php';
 require_role('admin');
 
@@ -208,6 +209,7 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_valid();
     $action = $_POST['action'] ?? '';
 
     if ($action === 'update_question_numbers') {
@@ -386,6 +388,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } catch (PDOException $e) {
             $errors[] = 'Gagal membersihkan soal draft dari paket.';
+        }
+    } elseif ($action === 'set_status_soal') {
+        $questionId = (int)($_POST['question_id'] ?? 0);
+        $statusSoal = trim((string)($_POST['status_soal'] ?? ''));
+
+        if ($questionId <= 0) {
+            $errors[] = 'Butir soal tidak valid.';
+        } elseif (!in_array($statusSoal, ['draft', 'published'], true)) {
+            $errors[] = 'Status soal tidak valid.';
+        } else {
+            try {
+                // Safety: only allow toggling questions that are in this package.
+                $stmt = $pdo->prepare('SELECT 1 FROM package_questions WHERE package_id = :pid AND question_id = :qid');
+                $stmt->execute([':pid' => $packageId, ':qid' => $questionId]);
+                if (!$stmt->fetchColumn()) {
+                    $errors[] = 'Butir soal tidak ditemukan dalam paket ini.';
+                } else {
+                    $stmt = $pdo->prepare('UPDATE questions SET status_soal = :st WHERE id = :id');
+                    $stmt->execute([':st' => $statusSoal, ':id' => $questionId]);
+                    header('Location: ' . $returnUrl);
+                    exit;
+                }
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal mengubah status soal.';
+            }
         }
     } elseif ($action === 'add_question') {
         $questionId = (int)($_POST['question_id'] ?? 0);
@@ -978,6 +1005,36 @@ include __DIR__ . '/../includes/header.php';
                                         </svg>
                                         <span class="visually-hidden">Lihat</span>
                                     </a>
+
+                                    <?php
+                                        $isPublished = ($st === 'published');
+                                        $targetStatus = $isPublished ? 'draft' : 'published';
+                                        $publishTitle = $isPublished ? 'Batalkan Terbit' : 'Terbitkan';
+                                        $publishConfirmTitle = $isPublished ? 'Batalkan Terbit Soal?' : 'Terbitkan Soal?';
+                                        $publishConfirmText = $isPublished
+                                            ? 'Ubah status soal menjadi draft? Soal bisa ikut terhapus oleh fitur Bersihkan Draft, dan tidak tampil saat memilih soal published.'
+                                            : 'Ubah status soal menjadi published?';
+                                    ?>
+                                    <form method="post" class="m-0" data-swal-confirm data-swal-title="<?php echo htmlspecialchars($publishConfirmTitle); ?>" data-swal-text="<?php echo htmlspecialchars($publishConfirmText); ?>" data-swal-confirm-text="Simpan" data-swal-cancel-text="Batal">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                        <input type="hidden" name="action" value="set_status_soal">
+                                        <input type="hidden" name="question_id" value="<?php echo (int)$it['id']; ?>">
+                                        <input type="hidden" name="status_soal" value="<?php echo htmlspecialchars($targetStatus); ?>">
+                                        <button type="submit" class="btn btn-sm px-2 d-inline-flex align-items-center justify-content-center <?php echo $isPublished ? 'btn-outline-secondary' : 'btn-outline-success'; ?>" title="<?php echo htmlspecialchars($publishTitle); ?>" aria-label="<?php echo htmlspecialchars($publishTitle); ?>">
+                                            <?php if ($isPublished): ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <path d="M8 12h8" />
+                                                </svg>
+                                            <?php else: ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                                    <polyline points="22 4 12 14.01 9 11.01" />
+                                                </svg>
+                                            <?php endif; ?>
+                                            <span class="visually-hidden"><?php echo htmlspecialchars($publishTitle); ?></span>
+                                        </button>
+                                    </form>
                                     <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode($selfUrl); ?>" title="Edit" aria-label="Edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M12 20h9" />
