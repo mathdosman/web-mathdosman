@@ -383,7 +383,7 @@ try {
                     $webSectionExpanded = $webSectionActive;
                 ?>
                 <a class="nav-link sidebar-link<?php echo $webSectionExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#adminSidebarWeb" role="button" aria-expanded="<?php echo $webSectionExpanded ? 'true' : 'false'; ?>" aria-controls="adminSidebarWeb">
-                    <span class="small text-white-50">Web</span>
+                    <span class="sidebar-section-emphasis">Web</span>
                 </a>
 
                 <div class="collapse<?php echo $webSectionExpanded ? ' show' : ''; ?>" id="adminSidebarWeb">
@@ -491,7 +491,7 @@ try {
                     $ujianSectionExpanded = $ujianSectionActive;
                 ?>
                 <a class="nav-link sidebar-link<?php echo $ujianSectionExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#adminSidebarUjian" role="button" aria-expanded="<?php echo $ujianSectionExpanded ? 'true' : 'false'; ?>" aria-controls="adminSidebarUjian">
-                    <span class="small text-white-50">Ujian</span>
+                    <span class="sidebar-section-emphasis">Ujian</span>
                 </a>
 
                 <div class="collapse<?php echo $ujianSectionExpanded ? ' show' : ''; ?>" id="adminSidebarUjian">

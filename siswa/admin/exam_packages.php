@@ -17,49 +17,6 @@ try {
 
 $errors = [];
 
-// Global counts for questions (published vs draft) to show under the title.
-$questionCounts = [
-    'published' => null,
-    'draft' => null,
-];
-try {
-    $hasQuestionsTable = (bool)$pdo->query("SHOW TABLES LIKE 'questions'")->fetchColumn();
-    if ($hasQuestionsTable) {
-        $hasStatusSoal = false;
-        $hasLegacyStatus = false;
-        try {
-            $stmt = $pdo->prepare('SHOW COLUMNS FROM questions LIKE :c');
-            $stmt->execute([':c' => 'status_soal']);
-            $hasStatusSoal = (bool)$stmt->fetch();
-        } catch (Throwable $e) {
-            $hasStatusSoal = false;
-        }
-
-        if (!$hasStatusSoal) {
-            try {
-                $stmt = $pdo->prepare('SHOW COLUMNS FROM questions LIKE :c');
-                $stmt->execute([':c' => 'status']);
-                $hasLegacyStatus = (bool)$stmt->fetch();
-            } catch (Throwable $e) {
-                $hasLegacyStatus = false;
-            }
-        }
-
-        $statusCol = $hasStatusSoal ? 'status_soal' : ($hasLegacyStatus ? 'status' : '');
-        if ($statusCol !== '') {
-            $sql = 'SELECT
-                    SUM(CASE WHEN ' . $statusCol . ' = "published" THEN 1 ELSE 0 END) AS published_count,
-                    SUM(CASE WHEN ' . $statusCol . ' IS NULL OR ' . $statusCol . ' <> "published" THEN 1 ELSE 0 END) AS draft_count
-                FROM questions';
-            $row = $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
-            $questionCounts['published'] = isset($row['published_count']) ? (int)$row['published_count'] : 0;
-            $questionCounts['draft'] = isset($row['draft_count']) ? (int)$row['draft_count'] : 0;
-        }
-    }
-} catch (Throwable $e) {
-    $questionCounts = ['published' => null, 'draft' => null];
-}
-
 $availablePackages = [];
 $selectedPackages = [];
 
@@ -231,12 +188,6 @@ include __DIR__ . '/../../includes/header.php';
     <div class="admin-page-header">
         <div>
             <h4 class="admin-page-title">Paket</h4>
-            <?php if ($questionCounts['published'] !== null && $questionCounts['draft'] !== null): ?>
-                <div class="d-flex flex-wrap gap-2 mb-1">
-                    <span class="badge text-bg-success">Butir Soal Publish: <?php echo (int)$questionCounts['published']; ?></span>
-                    <span class="badge text-bg-warning">Butir Soal Draft: <?php echo (int)$questionCounts['draft']; ?></span>
-                </div>
-            <?php endif; ?>
         </div>
         <div class="admin-page-actions">
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan Siswa</a>

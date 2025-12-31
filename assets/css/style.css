@@ -418,6 +418,22 @@ body.admin-layout.sidebar-collapsed .app-container {
     opacity: 1;
 }
 
+/* Sidebar section heading emphasis (e.g., Web / Ujian) */
+.app-sidebar .sidebar-section-emphasis {
+    color: var(--bs-danger) !important;
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: .03em;
+    -webkit-text-stroke: .45px rgba(var(--bs-black-rgb), .55);
+    text-shadow:
+        -1px 0 rgba(var(--bs-black-rgb), .55),
+        1px 0 rgba(var(--bs-black-rgb), .55),
+        0 -1px rgba(var(--bs-black-rgb), .55),
+        0 1px rgba(var(--bs-black-rgb), .55),
+        0 1px 0 rgba(var(--bs-white-rgb), .90),
+        0 0 10px rgba(var(--bs-white-rgb), .35);
+}
+
 /* Make important checkboxes more visible */
 .form-check-input.form-check-input-lg {
     width: 1.35em;
