@@ -11,6 +11,12 @@ $page_title = 'Migrasi Database';
 $messages = [];
 $errors = [];
 
+$configSource = defined('APP_CONFIG_SOURCE') ? (string)APP_CONFIG_SOURCE : 'unknown';
+$runtimeFlagState = 'not defined';
+if (defined('APP_ENABLE_RUNTIME_MIGRATIONS')) {
+    $runtimeFlagState = APP_ENABLE_RUNTIME_MIGRATIONS ? 'true' : 'false';
+}
+
 $withIndexes = ((string)($_POST['with_indexes'] ?? '')) === '1';
 
 $runSqlFile = static function (PDO $pdo, string $filePath): void {
@@ -65,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf_valid();
 
     if (!app_runtime_migrations_enabled()) {
-        $errors[] = 'Runtime migrations sedang OFF. Set APP_ENABLE_RUNTIME_MIGRATIONS=true sementara, jalankan migrasi, lalu matikan lagi.';
+        $errors[] = 'Runtime migrations sedang OFF. Set APP_ENABLE_RUNTIME_MIGRATIONS=true di config/config.php (bukan config.example.php) sementara, jalankan migrasi, lalu matikan lagi.';
     } else {
         $lockFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'schema_migrate.lock';
         $fp = @fopen($lockFile, 'c');
@@ -139,6 +145,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="alert alert-warning small">
             Runtime migrations sedang <strong>OFF</strong>.
             <div class="mt-1">Set <code>APP_ENABLE_RUNTIME_MIGRATIONS</code> = <code>true</code> di config/config.php sementara, jalankan migrasi, lalu kembalikan ke <code>false</code>.</div>
+            <div class="mt-2 text-muted">Diagnostik: config source = <code><?php echo htmlspecialchars($configSource); ?></code>, APP_ENABLE_RUNTIME_MIGRATIONS = <code><?php echo htmlspecialchars($runtimeFlagState); ?></code></div>
         </div>
     <?php endif; ?>
 

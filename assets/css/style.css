@@ -636,7 +636,8 @@ body.student-area.assignment-view {
 
 body.student-area.assignment-view .md-assignment-card,
 body.student-area.assignment-view .md-assignment-card .card-body {
-    overflow-x: hidden;
+    /* Do not clip long math/table content; let inner elements manage overflow */
+    overflow-x: visible;
 }
 
 /* Minimal dark header for assignment view */
@@ -731,12 +732,44 @@ body.student-area.assignment-view .md-assignment-header-right {
     body.student-area.assignment-view .md-assignment-header-title {
         grid-area: title;
         justify-self: center;
+        /* Override Bootstrap .text-truncate on narrow screens */
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
     }
 
     body.student-area.assignment-view .md-assignment-header-right {
         grid-area: right;
         justify-self: stretch;
     }
+}
+
+/* === Student pages: keep question/review content readable on mobile === */
+body.student-area .richtext-content {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+body.student-area .richtext-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.student-area .richtext-content iframe,
+body.student-area .richtext-content embed,
+body.student-area .richtext-content object,
+body.student-area .richtext-content video {
+    max-width: 100%;
+}
+
+/* Math blocks can be wider than the viewport; allow horizontal scroll inside formula */
+body.student-area mjx-container[display="true"],
+body.student-area .katex-display {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 /* Long words/URLs in questions should wrap instead of widening the page */

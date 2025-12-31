@@ -237,7 +237,6 @@ include __DIR__ . '/../../includes/header.php';
                     <span class="badge text-bg-warning">Butir Soal Draft: <?php echo (int)$questionCounts['draft']; ?></span>
                 </div>
             <?php endif; ?>
-            <p class="admin-page-subtitle">Pilih paket <b>draft</b> yang ditandai khusus (paket ini tidak tampil di halaman web publik).</p>
         </div>
         <div class="admin-page-actions">
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan Siswa</a>
