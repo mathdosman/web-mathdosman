@@ -72,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'name' => $user['name'],
                         'role' => $user['role'],
                     ];
+                    // Untuk timeout session: catat waktu login admin.
+                    $_SESSION['admin_login_at'] = time();
                     throttle_clear($throttleKey);
                     header('Location: dashboard.php');
                     exit;

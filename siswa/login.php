@@ -54,6 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'foto' => (string)($student['foto'] ?? ''),
                     'username' => (string)$student['username'],
                 ];
+                // Untuk timeout session: catat waktu login.
+                $_SESSION['student_login_at'] = time();
                 throttle_clear($throttleKey);
                 siswa_redirect_to('siswa/dashboard.php?flash=login_success');
             } else {

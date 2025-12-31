@@ -3,6 +3,7 @@ require_once __DIR__ . '/auth.php';
 
 // Clear student session only.
 unset($_SESSION['student']);
+unset($_SESSION['student_login_at']);
 
 // Best-effort: regenerate id.
 try {
