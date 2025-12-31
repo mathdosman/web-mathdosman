@@ -329,6 +329,14 @@ include __DIR__ . '/../../includes/header.php';
         </div>
     <?php endif; ?>
 
+    <?php if (!$errors && (!$hasShuffleQuestionsColumn || !$hasShuffleOptionsColumn)): ?>
+        <div class="alert alert-warning">
+            Fitur <strong>Acak Soal/Opsi</strong> belum aktif karena kolom
+            <code>student_assignments.shuffle_questions</code> / <code>student_assignments.shuffle_options</code>
+            belum ada. Jalankan <code>php scripts/migrate_db.php</code> atau tambahkan kolom via phpMyAdmin.
+        </div>
+    <?php endif; ?>
+
     <?php if ($successMsg !== ''): ?>
         <div class="alert alert-success">
             <?php echo htmlspecialchars($successMsg); ?>

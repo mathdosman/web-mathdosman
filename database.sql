@@ -174,6 +174,10 @@ CREATE TABLE IF NOT EXISTS student_assignments (
     started_at TIMESTAMP NULL DEFAULT NULL,
     -- Jika tidak NULL: ujian terkunci (siswa pernah keluar), perlu reset admin.
     exam_revoked_at TIMESTAMP NULL DEFAULT NULL,
+    -- Jika 1: acak urutan soal untuk UJIAN.
+    shuffle_questions TINYINT(1) NOT NULL DEFAULT 0,
+    -- Jika 1: acak urutan opsi pilihan ganda untuk UJIAN.
+    shuffle_options TINYINT(1) NOT NULL DEFAULT 0,
     due_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT NULL,

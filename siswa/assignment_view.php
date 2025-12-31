@@ -1055,6 +1055,11 @@ include __DIR__ . '/../includes/header.php';
                             data-swal-text="Akhiri <?php echo $jenisLabel === 'ujian' ? 'ujian' : 'tugas'; ?> sekarang? Setelah selesai, jawaban akan terkunci."
                             data-swal-confirm-text="Selesai"
                             data-swal-cancel-text="Batal"
+                            <?php if ($jenisLabel === 'ujian'): ?>
+                                data-swal-require-check="1"
+                                data-swal-check-text="Saya yakin ingin mengakhiri ujian ini."
+                                data-swal-check-error="Centang dulu sebelum mengakhiri ujian."
+                            <?php endif; ?>
                         >Selesai</button>
                     </div>
                 </div>
