@@ -95,6 +95,26 @@ $returnUrl = build_butir_soal_return_url([
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $action = (string)($_POST['action'] ?? '');
 
+    if ($action === 'set_status_soal') {
+        $id = (int)($_POST['id'] ?? 0);
+        $newStatus = strtolower(trim((string)($_POST['status_soal'] ?? '')));
+
+        if ($id <= 0) {
+            $errors[] = 'Butir soal tidak valid.';
+        } elseif (!in_array($newStatus, ['draft', 'published'], true)) {
+            $errors[] = 'Status soal tidak valid.';
+        } else {
+            try {
+                $stmt = $pdo->prepare('UPDATE questions SET status_soal = :st WHERE id = :id');
+                $stmt->execute([':st' => $newStatus, ':id' => $id]);
+                header('Location: ' . $returnUrl);
+                exit;
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal mengubah status butir soal.';
+            }
+        }
+    }
+
     if ($action === 'delete_question') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) {
@@ -360,6 +380,36 @@ include __DIR__ . '/../includes/header.php';
                                             </svg>
                                             <span class="visually-hidden">Lihat</span>
                                         </a>
+
+                                        <?php
+                                            $isPublished = ($status === 'published');
+                                            $targetStatus = $isPublished ? 'draft' : 'published';
+                                            $publishTitle = $isPublished ? 'Batalkan Terbit' : 'Terbitkan';
+                                            $publishConfirmTitle = $isPublished ? 'Batalkan Terbit Soal?' : 'Terbitkan Soal?';
+                                            $publishConfirmText = $isPublished
+                                                ? 'Ubah status soal menjadi draft? Soal tidak akan muncul di paket yang membutuhkan status published.'
+                                                : 'Ubah status soal menjadi published?';
+                                        ?>
+                                        <form method="post" class="m-0" data-swal-confirm data-swal-title="<?php echo htmlspecialchars($publishConfirmTitle); ?>" data-swal-text="<?php echo htmlspecialchars($publishConfirmText); ?>" data-swal-confirm-text="Simpan" data-swal-cancel-text="Batal">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                            <input type="hidden" name="action" value="set_status_soal">
+                                            <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                                            <input type="hidden" name="status_soal" value="<?php echo htmlspecialchars($targetStatus); ?>">
+                                            <button type="submit" class="btn btn-sm px-2 d-inline-flex align-items-center justify-content-center <?php echo $isPublished ? 'btn-outline-secondary' : 'btn-outline-success'; ?>" title="<?php echo htmlspecialchars($publishTitle); ?>" aria-label="<?php echo htmlspecialchars($publishTitle); ?>">
+                                                <?php if ($isPublished): ?>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <path d="M8 12h8" />
+                                                    </svg>
+                                                <?php else: ?>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                                        <polyline points="22 4 12 14.01 9 11.01" />
+                                                    </svg>
+                                                <?php endif; ?>
+                                                <span class="visually-hidden"><?php echo htmlspecialchars($publishTitle); ?></span>
+                                            </button>
+                                        </form>
 
                                         <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$r['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Edit Soal" aria-label="Edit Soal">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
