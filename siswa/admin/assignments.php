@@ -470,11 +470,11 @@ include __DIR__ . '/../../includes/header.php';
                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="action" value="toggle_shuffle_questions">
                                                 <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                                <button type="submit" class="btn btn-sm <?php echo $sqBtnClass; ?>" title="Acak Soal: <?php echo $sqMixed ? 'MIX' : ($sqOn ? 'ON' : 'OFF'); ?>" aria-label="Acak Soal" <?php echo !$hasShuffleQuestionsColumn ? 'disabled' : ''; ?>>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                                                        <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H2a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1-.708.708L1.793 4H.5a.5.5 0 0 1-.5-.5Zm0 9a.5.5 0 0 1 .5-.5h1.293l1.353-1.354a.5.5 0 1 1 .708.708l-1.5 1.5A.5.5 0 0 1 2 13H.5a.5.5 0 0 1-.5-.5Zm10.646-9.354a.5.5 0 0 1 .708 0L13 4.793V4.5A.5.5 0 0 1 13.5 4h2a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0v-.293l-1.646-1.646a.5.5 0 0 1 0-.708ZM13.5 12a.5.5 0 0 1 .5.5v.707l1.646-1.646a.5.5 0 0 1 .708.708L14 14.707V15.5a.5.5 0 0 1-1 0V14h-1.5a.5.5 0 0 1 0-1H13v-.5a.5.5 0 0 1 .5-.5ZM5.5 5a.5.5 0 0 1 0-1h1.793l1.853 1.854a.5.5 0 1 1-.708.708L7.086 5H5.5Zm0 8a.5.5 0 0 1 0-1h1.586l1.852-1.852a.5.5 0 0 1 .708.708L7.293 13H5.5Zm3.646-2.146a.5.5 0 0 1 0-.708L11.293 8 9.146 5.854a.5.5 0 1 1 .708-.708l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708 0Z"/>
-                                                    </svg>
-                                                    <span class="visually-hidden">Acak Soal</span>
+                                                <button type="submit" class="btn btn-sm <?php echo $sqBtnClass; ?>" title="Acak Soal: <?php echo $sqMixed ? 'MIX' : ($sqOn ? 'ON' : 'OFF'); ?>" <?php echo !$hasShuffleQuestionsColumn ? 'disabled' : ''; ?>>
+                                                    <span class="fw-semibold">Acak Soal</span>
+                                                    <span class="ms-1 badge text-bg-<?php echo $sqMixed ? 'warning' : ($sqOn ? 'success' : 'secondary'); ?>">
+                                                        <?php echo $sqMixed ? 'MIX' : ($sqOn ? 'ON' : 'OFF'); ?>
+                                                    </span>
                                                 </button>
                                             </form>
 
@@ -482,12 +482,11 @@ include __DIR__ . '/../../includes/header.php';
                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="action" value="toggle_shuffle_options">
                                                 <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                                <button type="submit" class="btn btn-sm <?php echo $soBtnClass; ?>" title="Acak Opsi: <?php echo $soMixed ? 'MIX' : ($soOn ? 'ON' : 'OFF'); ?>" aria-label="Acak Opsi" <?php echo !$hasShuffleOptionsColumn ? 'disabled' : ''; ?>>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                                                        <path d="M2 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm0-3a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5Zm0-3A.5.5 0 0 1 2.5 3h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5Z"/>
-                                                        <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H2a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1-.708.708L1.793 4H.5a.5.5 0 0 1-.5-.5Zm0 9a.5.5 0 0 1 .5-.5h1.293l1.353-1.354a.5.5 0 1 1 .708.708l-1.5 1.5A.5.5 0 0 1 2 13H.5a.5.5 0 0 1-.5-.5Zm10.646-9.354a.5.5 0 0 1 .708 0L13 4.793V4.5A.5.5 0 0 1 13.5 4h2a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0v-.293l-1.646-1.646a.5.5 0 0 1 0-.708ZM13.5 12a.5.5 0 0 1 .5.5v.707l1.646-1.646a.5.5 0 0 1 .708.708L14 14.707V15.5a.5.5 0 0 1-1 0V14h-1.5a.5.5 0 0 1 0-1H13v-.5a.5.5 0 0 1 .5-.5ZM5.5 5a.5.5 0 0 1 0-1h1.793l1.853 1.854a.5.5 0 1 1-.708.708L7.086 5H5.5Zm0 8a.5.5 0 0 1 0-1h1.586l1.852-1.852a.5.5 0 0 1 .708.708L7.293 13H5.5Zm3.646-2.146a.5.5 0 0 1 0-.708L11.293 8 9.146 5.854a.5.5 0 1 1 .708-.708l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708 0Z"/>
-                                                    </svg>
-                                                    <span class="visually-hidden">Acak Opsi</span>
+                                                <button type="submit" class="btn btn-sm <?php echo $soBtnClass; ?>" title="Acak Opsi: <?php echo $soMixed ? 'MIX' : ($soOn ? 'ON' : 'OFF'); ?>" <?php echo !$hasShuffleOptionsColumn ? 'disabled' : ''; ?>>
+                                                    <span class="fw-semibold">Acak Opsi</span>
+                                                    <span class="ms-1 badge text-bg-<?php echo $soMixed ? 'warning' : ($soOn ? 'success' : 'secondary'); ?>">
+                                                        <?php echo $soMixed ? 'MIX' : ($soOn ? 'ON' : 'OFF'); ?>
+                                                    </span>
                                                 </button>
                                             </form>
                                         <?php endif; ?>
