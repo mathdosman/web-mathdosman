@@ -207,7 +207,7 @@ include __DIR__ . '/../../includes/header.php';
 
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Jenis</label>
+                        <label class="form-label mb-2">Jenis</label>
                         <select class="form-select" name="jenis">
                             <option value="tugas" <?php echo $values['jenis'] === 'tugas' ? 'selected' : ''; ?>>Tugas</option>
                             <option value="ujian" <?php echo $values['jenis'] === 'ujian' ? 'selected' : ''; ?>>Ujian</option>
@@ -215,32 +215,34 @@ include __DIR__ . '/../../includes/header.php';
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Durasi (menit)</label>
+                        <label class="form-label mb-2">Durasi (menit)</label>
                         <input type="number" min="1" step="1" name="duration_minutes" class="form-control" value="<?php echo htmlspecialchars($values['duration_minutes']); ?>" placeholder="Opsional" <?php echo !$hasDurationMinutesColumn ? 'disabled' : ''; ?>>
                         <div class="form-text">Untuk mode ujian (jika diisi).</div>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Batas Waktu (opsional)</label>
+                        <label class="form-label mb-2">Batas Waktu (opsional)</label>
                         <input type="datetime-local" name="due_at" class="form-control" value="<?php echo htmlspecialchars($values['due_at']); ?>" <?php echo !$hasDueAtColumn ? 'disabled' : ''; ?>>
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label">Judul (opsional)</label>
+                        <label class="form-label mb-2">Judul (opsional)</label>
                         <input type="text" name="judul" class="form-control" value="<?php echo htmlspecialchars($values['judul']); ?>" placeholder="Jika kosong, judul paket akan dipakai" <?php echo !$hasJudulColumn ? 'disabled' : ''; ?>>
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label">Catatan (opsional)</label>
+                        <label class="form-label mb-2">Catatan (opsional)</label>
                         <textarea name="catatan" class="form-control" rows="3" <?php echo !$hasCatatanColumn ? 'disabled' : ''; ?>><?php echo htmlspecialchars($values['catatan']); ?></textarea>
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
-                            <label class="form-check-label" for="allow_review_details">
-                                Izinkan siswa melihat detail jawaban & kunci setelah selesai
-                            </label>
+                        <div class="p-3 rounded border border-warning bg-warning-subtle">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input form-check-input-lg" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
+                                <label class="form-check-label fw-semibold" for="allow_review_details">
+                                    Izinkan siswa melihat detail jawaban & kunci setelah selesai
+                                </label>
+                            </div>
                         </div>
                         <?php if (!$hasReviewDetailsColumn): ?>
                             <div class="form-text text-warning">

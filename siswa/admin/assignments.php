@@ -50,6 +50,8 @@ if (app_runtime_migrations_enabled()) {
 
         $ensureCol('duration_minutes', 'duration_minutes INT NULL');
         $ensureCol('started_at', 'started_at TIMESTAMP NULL DEFAULT NULL');
+        $ensureCol('shuffle_questions', 'shuffle_questions TINYINT(1) NOT NULL DEFAULT 0');
+        $ensureCol('shuffle_options', 'shuffle_options TINYINT(1) NOT NULL DEFAULT 0');
     } catch (Throwable $e) {
     }
 }
@@ -75,6 +77,8 @@ $hasDurationMinutesColumn = !empty($cols['duration_minutes']);
 $hasDueAtColumn = !empty($cols['due_at']);
 $hasCatatanColumn = !empty($cols['catatan']);
 $hasJudulColumn = !empty($cols['judul']);
+$hasShuffleQuestionsColumn = !empty($cols['shuffle_questions']);
+$hasShuffleOptionsColumn = !empty($cols['shuffle_options']);
 
 $successMsg = '';
 if (!empty($_GET['success'])) {
@@ -100,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($hasDurationMinutesColumn) $select .= ', duration_minutes';
             if ($hasReviewDetailsColumn) $select .= ', allow_review_details';
             if ($hasTokenColumn) $select .= ', token_code';
+            if ($hasShuffleQuestionsColumn) $select .= ', shuffle_questions';
+            if ($hasShuffleOptionsColumn) $select .= ', shuffle_options';
             $select .= ' FROM student_assignments WHERE id = :id LIMIT 1';
             $stmt = $pdo->prepare($select);
             $stmt->execute([':id' => $seedId]);
@@ -138,6 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($hasReviewDetailsColumn) {
             $whereSql .= ' AND allow_review_details <=> :rev';
             $whereParams[':rev'] = ($seed['allow_review_details'] ?? null);
+        }
+
+        if ($hasShuffleQuestionsColumn) {
+            $whereSql .= ' AND shuffle_questions <=> :sq';
+            $whereParams[':sq'] = ($seed['shuffle_questions'] ?? 0);
+        }
+        if ($hasShuffleOptionsColumn) {
+            $whereSql .= ' AND shuffle_options <=> :so';
+            $whereParams[':so'] = ($seed['shuffle_options'] ?? 0);
         }
     }
 
@@ -191,6 +206,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
+    if (!$errors && ($action === 'toggle_shuffle_questions' || $action === 'toggle_shuffle_options')) {
+        if ($seed && strtolower((string)($seed['jenis'] ?? '')) !== 'ujian') {
+            $errors[] = 'Fitur acak hanya berlaku untuk UJIAN.';
+        }
+
+        if ($action === 'toggle_shuffle_questions' && !$hasShuffleQuestionsColumn) {
+            $errors[] = 'Fitur acak soal butuh kolom student_assignments.shuffle_questions. Jalankan php scripts/migrate_db.php.';
+        }
+        if ($action === 'toggle_shuffle_options' && !$hasShuffleOptionsColumn) {
+            $errors[] = 'Fitur acak opsi butuh kolom student_assignments.shuffle_options. Jalankan php scripts/migrate_db.php.';
+        }
+
+        if (!$errors) {
+            try {
+                $colName = ($action === 'toggle_shuffle_questions') ? 'shuffle_questions' : 'shuffle_options';
+                $cur = (int)($seed[$colName] ?? 0);
+                $newVal = ($cur === 1) ? 0 : 1;
+                $stmt = $pdo->prepare('UPDATE student_assignments SET ' . $colName . ' = :v, updated_at = NOW() WHERE ' . $whereSql);
+                $stmt->execute(array_merge([':v' => $newVal], $whereParams));
+                header('Location: assignments.php?success=1');
+                exit;
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal menyimpan pengaturan acak.';
+            }
+        }
+    }
 }
 
 $rows = [];
@@ -217,6 +259,17 @@ try {
         $select .= ', 0 AS token_distinct, NULL AS token_max';
     }
 
+    if ($hasShuffleQuestionsColumn) {
+        $select .= ', COUNT(DISTINCT sa.shuffle_questions) AS sq_distinct, MAX(sa.shuffle_questions) AS sq_max';
+    } else {
+        $select .= ', 0 AS sq_distinct, 0 AS sq_max';
+    }
+    if ($hasShuffleOptionsColumn) {
+        $select .= ', COUNT(DISTINCT sa.shuffle_options) AS so_distinct, MAX(sa.shuffle_options) AS so_max';
+    } else {
+        $select .= ', 0 AS so_distinct, 0 AS so_max';
+    }
+
     $select .= '
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
@@ -238,6 +291,8 @@ try {
     if ($hasDueAtColumn) $groupBy[] = 'sa.due_at';
     if ($hasDurationMinutesColumn) $groupBy[] = 'sa.duration_minutes';
     if ($hasReviewDetailsColumn) $groupBy[] = 'sa.allow_review_details';
+    if ($hasShuffleQuestionsColumn) $groupBy[] = 'sa.shuffle_questions';
+    if ($hasShuffleOptionsColumn) $groupBy[] = 'sa.shuffle_options';
 
     $sql = $select . '
         GROUP BY ' . implode(', ', $groupBy) . '
@@ -291,7 +346,7 @@ include __DIR__ . '/../../includes/header.php';
                             <th style="width:110px">Jenis</th>
                             <th style="width:120px">Status</th>
                             <th style="width:140px">Token</th>
-                            <th style="width:190px">Aksi</th>
+                            <th style="width:220px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -324,6 +379,23 @@ include __DIR__ . '/../../includes/header.php';
                                     } else {
                                         $tokenLabel = 'MIX';
                                     }
+                                }
+
+                                $sqOn = ((int)($r['sq_max'] ?? 0) === 1);
+                                $soOn = ((int)($r['so_max'] ?? 0) === 1);
+                                $sqDistinct = (int)($r['sq_distinct'] ?? 0);
+                                $soDistinct = (int)($r['so_distinct'] ?? 0);
+
+                                $sqMixed = ($hasShuffleQuestionsColumn && $sqDistinct > 1);
+                                $soMixed = ($hasShuffleOptionsColumn && $soDistinct > 1);
+
+                                $sqBtnClass = 'btn-outline-secondary';
+                                $soBtnClass = 'btn-outline-secondary';
+                                if ($hasShuffleQuestionsColumn) {
+                                    $sqBtnClass = $sqMixed ? 'btn-outline-warning' : ($sqOn ? 'btn-outline-success' : 'btn-outline-secondary');
+                                }
+                                if ($hasShuffleOptionsColumn) {
+                                    $soBtnClass = $soMixed ? 'btn-outline-warning' : ($soOn ? 'btn-outline-success' : 'btn-outline-secondary');
                                 }
                             ?>
                             <tr>
@@ -370,19 +442,70 @@ include __DIR__ . '/../../includes/header.php';
                                 <td><span class="fw-semibold"><?php echo htmlspecialchars($tokenLabel); ?></span></td>
                                 <td>
                                     <div class="d-flex gap-1 flex-wrap">
-                                        <a class="btn btn-outline-secondary btn-sm" href="assignment_students.php?id=<?php echo (int)$r['id']; ?>">Detail Siswa</a>
-                                        <a class="btn btn-outline-primary btn-sm" href="assignment_batch_edit.php?id=<?php echo (int)$r['id']; ?>">Edit</a>
+                                        <a class="btn btn-outline-secondary btn-sm" href="assignment_students.php?id=<?php echo (int)$r['id']; ?>" title="Detail Siswa" aria-label="Detail Siswa">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                                <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                                                <path d="M11 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm.5 1c-1.837 0-3.5.43-3.5 1.5 0 .451.19.833.512 1.126.73-.375 1.68-.626 2.988-.626 1.11 0 2.014.182 2.71.47.179-.275.29-.597.29-.97 0-1.07-1.663-1.5-3.5-1.5Z"/>
+                                            </svg>
+                                            <span class="visually-hidden">Detail Siswa</span>
+                                        </a>
+
+                                        <a class="btn btn-outline-primary btn-sm" href="assignment_batch_edit.php?id=<?php echo (int)$r['id']; ?>" title="Edit" aria-label="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10ZM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5ZM12.793 5.5 10.5 3.207 4 9.707V10h.293l6.5-6.5ZM3.5 10.5v.793l-.146.353-.854 2.134 2.134-.854.353-.146h.793v-.293l-2.28-2.28Z"/>
+                                            </svg>
+                                            <span class="visually-hidden">Edit</span>
+                                        </a>
+
+                                        <?php if ($jenis === 'ujian'): ?>
+                                            <form method="post" class="d-inline" data-swal-confirm data-swal-title="Ubah Acak Soal?" data-swal-text="Aktif/nonaktifkan acak urutan soal untuk semua siswa di penugasan ini?" data-swal-confirm-text="Simpan" data-swal-cancel-text="Batal">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="action" value="toggle_shuffle_questions">
+                                                <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                                                <button type="submit" class="btn btn-sm <?php echo $sqBtnClass; ?>" title="Acak Soal: <?php echo $sqMixed ? 'MIX' : ($sqOn ? 'ON' : 'OFF'); ?>" aria-label="Acak Soal" <?php echo !$hasShuffleQuestionsColumn ? 'disabled' : ''; ?>>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                                        <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H2a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1-.708.708L1.793 4H.5a.5.5 0 0 1-.5-.5Zm0 9a.5.5 0 0 1 .5-.5h1.293l1.353-1.354a.5.5 0 1 1 .708.708l-1.5 1.5A.5.5 0 0 1 2 13H.5a.5.5 0 0 1-.5-.5Zm10.646-9.354a.5.5 0 0 1 .708 0L13 4.793V4.5A.5.5 0 0 1 13.5 4h2a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0v-.293l-1.646-1.646a.5.5 0 0 1 0-.708ZM13.5 12a.5.5 0 0 1 .5.5v.707l1.646-1.646a.5.5 0 0 1 .708.708L14 14.707V15.5a.5.5 0 0 1-1 0V14h-1.5a.5.5 0 0 1 0-1H13v-.5a.5.5 0 0 1 .5-.5ZM5.5 5a.5.5 0 0 1 0-1h1.793l1.853 1.854a.5.5 0 1 1-.708.708L7.086 5H5.5Zm0 8a.5.5 0 0 1 0-1h1.586l1.852-1.852a.5.5 0 0 1 .708.708L7.293 13H5.5Zm3.646-2.146a.5.5 0 0 1 0-.708L11.293 8 9.146 5.854a.5.5 0 1 1 .708-.708l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708 0Z"/>
+                                                    </svg>
+                                                    <span class="visually-hidden">Acak Soal</span>
+                                                </button>
+                                            </form>
+
+                                            <form method="post" class="d-inline" data-swal-confirm data-swal-title="Ubah Acak Opsi?" data-swal-text="Aktif/nonaktifkan acak urutan opsi pilihan ganda untuk semua siswa di penugasan ini?" data-swal-confirm-text="Simpan" data-swal-cancel-text="Batal">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="action" value="toggle_shuffle_options">
+                                                <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                                                <button type="submit" class="btn btn-sm <?php echo $soBtnClass; ?>" title="Acak Opsi: <?php echo $soMixed ? 'MIX' : ($soOn ? 'ON' : 'OFF'); ?>" aria-label="Acak Opsi" <?php echo !$hasShuffleOptionsColumn ? 'disabled' : ''; ?>>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                                        <path d="M2 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm0-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm0-3a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5Zm0-3A.5.5 0 0 1 2.5 3h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5Z"/>
+                                                        <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H2a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1-.708.708L1.793 4H.5a.5.5 0 0 1-.5-.5Zm0 9a.5.5 0 0 1 .5-.5h1.293l1.353-1.354a.5.5 0 1 1 .708.708l-1.5 1.5A.5.5 0 0 1 2 13H.5a.5.5 0 0 1-.5-.5Zm10.646-9.354a.5.5 0 0 1 .708 0L13 4.793V4.5A.5.5 0 0 1 13.5 4h2a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0v-.293l-1.646-1.646a.5.5 0 0 1 0-.708ZM13.5 12a.5.5 0 0 1 .5.5v.707l1.646-1.646a.5.5 0 0 1 .708.708L14 14.707V15.5a.5.5 0 0 1-1 0V14h-1.5a.5.5 0 0 1 0-1H13v-.5a.5.5 0 0 1 .5-.5ZM5.5 5a.5.5 0 0 1 0-1h1.793l1.853 1.854a.5.5 0 1 1-.708.708L7.086 5H5.5Zm0 8a.5.5 0 0 1 0-1h1.586l1.852-1.852a.5.5 0 0 1 .708.708L7.293 13H5.5Zm3.646-2.146a.5.5 0 0 1 0-.708L11.293 8 9.146 5.854a.5.5 0 1 1 .708-.708l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 0 1-.708 0Z"/>
+                                                    </svg>
+                                                    <span class="visually-hidden">Acak Opsi</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+
                                         <form method="post" class="d-inline" data-swal-confirm data-swal-title="Hapus Penugasan?" data-swal-text="Hapus semua penugasan untuk paket ini?" data-swal-confirm-text="Hapus" data-swal-cancel-text="Batal">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                             <input type="hidden" name="action" value="delete_group">
                                             <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Hapus" aria-label="Hapus">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5.5a.5.5 0 0 1 1 0v7a.5.5 0 0 1-1 0V6Zm3 .5a.5.5 0 0 0-1 0v7a.5.5 0 0 0 1 0V6Z"/>
+                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                                                </svg>
+                                                <span class="visually-hidden">Hapus</span>
+                                            </button>
                                         </form>
                                         <form method="post" class="d-inline" data-swal-confirm data-swal-title="Generate Token?" data-swal-text="Generate token 6 digit untuk semua siswa di penugasan ini?" data-swal-confirm-text="Generate" data-swal-cancel-text="Batal">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                             <input type="hidden" name="action" value="generate_token">
                                             <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                            <button type="submit" class="btn btn-outline-dark btn-sm">Generate Token</button>
+                                            <button type="submit" class="btn btn-outline-dark btn-sm" title="Generate Token" aria-label="Generate Token">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                                    <path d="M3.5 8a2.5 2.5 0 1 1 4.999.001A2.5 2.5 0 0 1 3.5 8Zm2.5-3.5a3.5 3.5 0 1 0 2.77 5.663l.73.73a.5.5 0 0 0 .354.147H11v1a.5.5 0 0 0 .5.5h1v1a.5.5 0 0 0 .5.5H15a1 1 0 0 0 1-1v-1.5a.5.5 0 0 0-.146-.354l-3.5-3.5A3.5 3.5 0 0 0 6 4.5Z"/>
+                                                </svg>
+                                                <span class="visually-hidden">Generate Token</span>
+                                            </button>
                                         </form>
                                     </div>
                                 </td>

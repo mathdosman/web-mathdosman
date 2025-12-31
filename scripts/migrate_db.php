@@ -56,6 +56,16 @@ if (!function_exists('app_ensure_student_assignments_exam_revoked_schema')) {
     exit(1);
 }
 
+if (!function_exists('app_ensure_student_assignments_shuffle_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_student_assignments_shuffle_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_kelas_rombels_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_kelas_rombels_schema).\n");
+    exit(1);
+}
+
 $argv = $_SERVER['argv'] ?? [];
 if (!is_array($argv)) {
     $argv = [];
@@ -100,10 +110,19 @@ $runSqlFile = static function (PDO $pdo, string $filePath): void {
             continue;
         }
 
-        // Some statements may be SELECTs for informational output.
-        if (preg_match('/^SELECT\b/i', $stmt)) {
+        // Some statements may return result sets (including EXECUTE of prepared SELECT).
+        // Fully consume/close the cursor so MySQL doesn't complain about
+        // "unbuffered queries are active" when running subsequent statements.
+        if (preg_match('/^(SELECT|SHOW|DESCRIBE|EXPLAIN|EXECUTE|CALL)\b/i', $stmt)) {
             try {
-                $pdo->query($stmt);
+                $q = $pdo->query($stmt);
+                if ($q instanceof PDOStatement) {
+                    $q->fetchAll();
+                    while ($q->nextRowset()) {
+                        $q->fetchAll();
+                    }
+                    $q->closeCursor();
+                }
             } catch (PDOException $e) {
                 // Ignore SELECT failures (non-critical).
             }
@@ -147,6 +166,12 @@ try {
 
     echo "Menjalankan migrasi skema (Siswa/lock ujian saat keluar)...\n";
     app_ensure_student_assignments_exam_revoked_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/acak soal & opsi)...\n";
+    app_ensure_student_assignments_shuffle_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Master kelas/rombel)...\n";
+    app_ensure_kelas_rombels_schema($pdo);
 
     if ($withIndexes) {
         echo "Menjalankan patch index...\n";

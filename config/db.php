@@ -492,6 +492,58 @@ try {
         }
     }
 
+    if (!function_exists('app_ensure_student_assignments_shuffle_schema')) {
+        function app_ensure_student_assignments_shuffle_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'student_assignments'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('shuffle_questions'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN shuffle_questions TINYINT(1) NOT NULL DEFAULT 0');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('shuffle_options'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN shuffle_options TINYINT(1) NOT NULL DEFAULT 0');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_kelas_rombels_schema')) {
+        function app_ensure_kelas_rombels_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS kelas_rombels (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    kelas VARCHAR(30) NOT NULL,
+                    rombel VARCHAR(30) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NULL DEFAULT NULL,
+                    UNIQUE KEY uniq_kelas_rombels (kelas, rombel),
+                    KEY idx_kelas_rombels_kelas (kelas),
+                    KEY idx_kelas_rombels_rombel (rombel)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
     // Runtime migrations are allowed only when explicitly enabled AND only on CLI.
     // This avoids web requests hanging due to metadata locks.
     if (app_runtime_migrations_enabled() && PHP_SAPI === 'cli') {
@@ -506,6 +558,8 @@ try {
                     app_ensure_students_parent_phone_schema($pdo);
                     app_ensure_student_assignments_token_schema($pdo);
                     app_ensure_student_assignments_exam_revoked_schema($pdo);
+                    app_ensure_student_assignments_shuffle_schema($pdo);
+                    app_ensure_kelas_rombels_schema($pdo);
                 }
             } catch (Throwable $e) {
                 // ignore

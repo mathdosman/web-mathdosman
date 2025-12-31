@@ -41,11 +41,13 @@ $isAdminArea = (strpos($scriptName, '/admin/') !== false)
 $useAdminSidebar = $isAdmin && $isAdminArea;
 
 $isStudentArea = (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+$isSiswaAdminArea = (strpos($scriptName, '/siswa/admin/') !== false);
 $disable_student_sidebar = !empty($disable_student_sidebar);
 $useStudentSidebar = $isStudent && $isStudentArea && !$disable_student_sidebar;
 
 $studentAreaBodyClass = $isStudentArea ? ' student-area' : '';
 $studentLayoutBodyClass = $useStudentSidebar ? ' student-layout' : '';
+$siswaAdminBodyClass = $isSiswaAdminArea ? ' siswa-admin' : '';
 
 $useSidebar = $useAdminSidebar || $useStudentSidebar;
 
@@ -243,7 +245,7 @@ try {
         <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <?php endif; ?>
 </head>
-<body class="bg-light<?php echo $useSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
+<body class="bg-light<?php echo $useSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $siswaAdminBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
 <?php if (!$disable_navbar): ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 app-navbar">
     <div class="<?php echo $useSidebar ? 'container-fluid' : 'container'; ?>">
@@ -366,7 +368,25 @@ try {
                 </a>
 
                 <hr class="my-2 opacity-25">
-                <div class="small text-white-50 mt-2 mb-2">Web</div>
+                <?php
+                    $webSectionPages = [
+                        'packages.php', 'package_add.php', 'package_edit.php', 'package_items.php', 'package_question_add.php',
+                        'butir_soal.php', 'question_edit.php', 'question_view.php', 'question_duplicate.php',
+                        'questions.php', 'questions_import.php', 'questions_export.php',
+                        'contents.php', 'content_add.php', 'content_edit.php', 'content_view.php',
+                        'posts.php', 'post_add.php',
+                        'home_carousel.php',
+                        'mapel.php',
+                    ];
+                    $webSectionActive = in_array($currentPage, $webSectionPages, true);
+                    // Default collapsed, auto-expand when a child is active.
+                    $webSectionExpanded = $webSectionActive;
+                ?>
+                <a class="nav-link sidebar-link<?php echo $webSectionExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#adminSidebarWeb" role="button" aria-expanded="<?php echo $webSectionExpanded ? 'true' : 'false'; ?>" aria-controls="adminSidebarWeb">
+                    <span class="small text-white-50">Web</span>
+                </a>
+
+                <div class="collapse<?php echo $webSectionExpanded ? ' show' : ''; ?>" id="adminSidebarWeb">
 
                 <?php
                     $isActive = in_array($currentPage, ['packages.php', 'package_add.php', 'package_edit.php', 'package_items.php', 'package_question_add.php'], true);
@@ -409,7 +429,7 @@ try {
                 </a>
 
                 <?php
-                    $isActive = in_array($currentPage, ['contents.php', 'content_add.php', 'content_edit.php'], true);
+                    $isActive = in_array($currentPage, ['contents.php', 'content_add.php', 'content_edit.php', 'content_view.php'], true);
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/contents.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -453,8 +473,28 @@ try {
                     <span>Kategori</span>
                 </a>
 
+                </div>
+
                 <hr class="my-2 opacity-25">
-                <div class="small text-white-50 mt-2 mb-2">Ujian</div>
+                <?php
+                    $ujianSectionPages = [
+                        'exam_packages.php',
+                        'assignments.php', 'assignment_add.php', 'assignment_edit.php', 'assignment_students.php', 'assignment_batch_edit.php',
+                        'results.php', 'results_student.php', 'result_view.php',
+                        'monitoring_ujian.php',
+                        'students.php', 'student_add.php', 'student_edit.php', 'student_view.php',
+                        'students_import.php',
+                        'rombels.php',
+                    ];
+                    $ujianSectionActive = (strpos($scriptName, '/siswa/admin/') !== false) && in_array($currentPage, $ujianSectionPages, true);
+                    // Default collapsed, auto-expand when a child is active.
+                    $ujianSectionExpanded = $ujianSectionActive;
+                ?>
+                <a class="nav-link sidebar-link<?php echo $ujianSectionExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#adminSidebarUjian" role="button" aria-expanded="<?php echo $ujianSectionExpanded ? 'true' : 'false'; ?>" aria-controls="adminSidebarUjian">
+                    <span class="small text-white-50">Ujian</span>
+                </a>
+
+                <div class="collapse<?php echo $ujianSectionExpanded ? ' show' : ''; ?>" id="adminSidebarUjian">
 
                 <?php
                     $isActive = ($currentPage === 'exam_packages.php') && (strpos($scriptName, '/siswa/admin/') !== false);
@@ -468,7 +508,7 @@ try {
                 </a>
 
                 <?php
-                    $isActive = in_array($currentPage, ['assignments.php', 'assignment_add.php', 'assignment_edit.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                    $isActive = in_array($currentPage, ['assignments.php', 'assignment_add.php', 'assignment_edit.php', 'assignment_students.php', 'assignment_batch_edit.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/assignments.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -479,7 +519,7 @@ try {
                 </a>
 
                 <?php
-                    $isActive = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                    $isActive = in_array($currentPage, ['results.php', 'results_student.php', 'result_view.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/results.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -504,7 +544,7 @@ try {
                 </a>
 
                 <?php
-                    $isActive = in_array($currentPage, ['students.php', 'student_add.php', 'student_edit.php', 'student_view.php', 'seed_dummy_students.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                    $isActive = in_array($currentPage, ['students.php', 'student_add.php', 'student_edit.php', 'student_view.php', 'students_import.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/students.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -513,6 +553,21 @@ try {
                     </svg>
                     <span>Data Siswa</span>
                 </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['rombels.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/rombels.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 16V8"/>
+                        <path d="M17 12H3"/>
+                        <path d="M21 8H3"/>
+                        <path d="M7 16h14"/>
+                    </svg>
+                    <span>Rombel</span>
+                </a>
+
+                </div>
 
                 <hr class="my-2">
                 <?php $isActive = ($currentPage === 'change_password.php'); ?>

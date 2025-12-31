@@ -30,6 +30,18 @@ CREATE TABLE IF NOT EXISTS students (
     KEY idx_students_rombel (rombel)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Master kelas/rombel (untuk dropdown & validasi data siswa)
+CREATE TABLE IF NOT EXISTS kelas_rombels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kelas VARCHAR(30) NOT NULL,
+    rombel VARCHAR(30) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE KEY uniq_kelas_rombels (kelas, rombel),
+    KEY idx_kelas_rombels_kelas (kelas),
+    KEY idx_kelas_rombels_rombel (rombel)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Tabel paket soal
 CREATE TABLE IF NOT EXISTS packages (
     id INT AUTO_INCREMENT PRIMARY KEY,

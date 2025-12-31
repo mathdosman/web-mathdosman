@@ -9,6 +9,7 @@ $isInstalled = is_file($lockFile);
 $force = ((string)($_GET['force'] ?? '')) === '1';
 $reset = ((string)($_GET['reset'] ?? '')) === '1';
 $seed = ((string)($_GET['seed'] ?? '')) === '1';
+$seedSnapshot = ((string)($_GET['snapshot'] ?? '')) === '1';
 $remoteAddr = (string)($_SERVER['REMOTE_ADDR'] ?? '');
 $isLocalRequest = in_array($remoteAddr, ['127.0.0.1', '::1'], true);
 $allowForce = $force && $isLocalRequest;
@@ -235,6 +236,69 @@ function dropAllTables(PDO $pdo, string $dbName): void
 
     try {
         $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+    } catch (Throwable $e) {
+        // ignore
+    }
+}
+
+/**
+ * Fetch existing admin accounts so a reinstall can keep them.
+ */
+function fetchExistingAdminUsers(PDO $pdo, string $dbName): array
+{
+    try {
+        $pdo->exec('USE `'.$dbName.'`');
+    } catch (Throwable $e) {
+        return [];
+    }
+
+    try {
+        $stmt = $pdo->query("SELECT username, password_hash, name, role, created_at FROM users WHERE role = 'admin'");
+        $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        return is_array($rows) ? $rows : [];
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/**
+ * Restore admin accounts after schema import.
+ */
+function restoreAdminUsers(PDO $pdo, string $dbName, array $admins): void
+{
+    if (!$admins) {
+        return;
+    }
+
+    try {
+        $pdo->exec('USE `'.$dbName.'`');
+    } catch (Throwable $e) {
+        return;
+    }
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO users (username, password_hash, name, role, created_at)
+            VALUES (:u, :ph, :n, 'admin', :ca)
+            ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), name = VALUES(name), role = VALUES(role)");
+
+        foreach ($admins as $a) {
+            $u = trim((string)($a['username'] ?? ''));
+            $ph = (string)($a['password_hash'] ?? '');
+            $n = (string)($a['name'] ?? 'Administrator');
+            $ca = (string)($a['created_at'] ?? '');
+            if ($u === '' || $ph === '') {
+                continue;
+            }
+            if ($ca === '') {
+                $ca = date('Y-m-d H:i:s');
+            }
+            $stmt->execute([
+                ':u' => $u,
+                ':ph' => $ph,
+                ':n' => ($n !== '' ? $n : 'Administrator'),
+                ':ca' => $ca,
+            ]);
+        }
     } catch (Throwable $e) {
         // ignore
     }
@@ -562,12 +626,20 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $appUser = 'mathdosman';
     $appPass = 'admin 007007';
 
+    $useSnapshot = $seedSnapshot;
+    if (isset($_POST['seed_snapshot'])) {
+        $useSnapshot = true;
+    }
+
+    // Default: do NOT seed anything (empty DB) unless explicitly requested.
     $seedDummy = $seed;
     if (isset($_POST['seed_dummy'])) {
         $seedDummy = true;
-    } elseif (!$seed && $isLocalRequest) {
-        // Default: seed dummy data on localhost to make the app usable immediately.
-        $seedDummy = true;
+    }
+
+    // Snapshot seed and dummy seed are mutually exclusive.
+    if ($useSnapshot) {
+        $seedDummy = false;
     }
 
     try {
@@ -595,13 +667,26 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Optional: full reset for reinstall (drop ALL tables), local-only.
         // Use: /install/?force=1&reset=1 (then submit the form)
+        $existingAdmins = [];
         if ($allowForce && $reset) {
+            // Keep existing admin account(s) across reinstall.
+            $existingAdmins = fetchExistingAdminUsers($pdo, $dbName);
+            // Minimal: only keep username "admin".
+            $existingAdmins = array_values(array_filter($existingAdmins, static function ($row): bool {
+                $u = strtolower(trim((string)($row['username'] ?? '')));
+                return $u === 'admin';
+            }));
             dropAllTables($pdo, $dbName);
         }
 
         // Import database schema only (no seed data)
         $schemaFile = __DIR__ . '/../database.sql';
         importSqlFile($pdo, $dbName, $schemaFile);
+
+        // Restore admin users (if reinstall reset happened)
+        if (!empty($existingAdmins)) {
+            restoreAdminUsers($pdo, $dbName, $existingAdmins);
+        }
 
         // Pastikan ada akun admin minimal jika tabel users kosong (jaga-jaga jika import schema saja)
         // Default: admin / 123456
@@ -620,6 +705,13 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (Throwable $e) {
             // ignore
+        }
+
+        // Optional: seed DB from snapshot (real content/data).
+        // Intended for deployments where you want the app to ship with pre-filled data.
+        if ($useSnapshot) {
+            $snapshotFile = __DIR__ . '/../database_snapshot.sql';
+            importSqlFile($pdo, $dbName, $snapshotFile);
         }
 
         // Optional: seed dummy packages/questions + dummy student accounts.
@@ -726,7 +818,7 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="form-check mb-3">
                     <?php
-                        $seedChecked = $isLocalRequest;
+                        $seedChecked = false;
                         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $seedChecked = !empty($_POST['seed_dummy']);
                         } elseif ($seed) {
@@ -738,6 +830,27 @@ if (!$installerLocked && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         Install dengan data dummy (4 paket × 5 soal PG + 3 siswa)
                     </label>
                     <div class="form-text">Akun siswa: siswa1/siswa2/siswa3 (password: 123456), kelas X rombel A.</div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <?php
+                        $snapshotChecked = false;
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            $snapshotChecked = !empty($_POST['seed_snapshot']);
+                        } elseif ($seedSnapshot) {
+                            $snapshotChecked = true;
+                        }
+
+                        // If snapshot is checked, force dummy unchecked in the UI (mutually exclusive).
+                        if ($snapshotChecked) {
+                            $seedChecked = false;
+                        }
+                    ?>
+                    <input class="form-check-input" type="checkbox" id="seed_snapshot" name="seed_snapshot" value="1"<?php echo $snapshotChecked ? ' checked' : ''; ?> onchange="if (this.checked) { var d=document.getElementById('seed_dummy'); if (d) d.checked=false; }">
+                    <label class="form-check-label" for="seed_snapshot">
+                        Install dengan data snapshot (database_snapshot.sql)
+                    </label>
+                    <div class="form-text">Mengimpor semua data dari file <code>database_snapshot.sql</code>. Disarankan hanya untuk database baru/kosong.</div>
                 </div>
                 <button type="submit" class="btn btn-primary">Jalankan Instalasi</button>
             </form>

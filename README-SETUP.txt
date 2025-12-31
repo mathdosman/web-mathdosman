@@ -9,6 +9,17 @@ Langkah cepat menjalankan MATHDOSMAN + Admin
   - Buka tab "SQL" dan jalankan isi file database.sql dari folder proyek:
     c:/xampp/htdocs/web-mathdosman/database.sql
 
+Install dengan data snapshot (opsional)
+--------------------------------------
+Jika Anda ingin deployment/hosting otomatis berisi data (konten, paket, soal, user, dll), Anda bisa memakai file snapshot:
+- Export dari DB lokal Anda:
+  - php scripts/export_db_snapshot.php
+  Ini akan menimpa file `database_snapshot.sql` di root project.
+
+- Saat install (browser): centang opsi "Install dengan data snapshot (database_snapshot.sql)".
+
+Catatan keamanan: snapshot bisa mengandung data sensitif (akun siswa, no HP, dll). Pastikan hanya dipakai di environment yang tepat.
+
 Ini akan membuat:
 - Database: web-mathdosman
 - Tabel: users, subjects, questions, packages, package_questions

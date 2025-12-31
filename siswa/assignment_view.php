@@ -30,8 +30,27 @@ try {
     $hasExamRevokedColumn = false;
 }
 
+$hasShuffleQuestionsColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'shuffle_questions']);
+    $hasShuffleQuestionsColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasShuffleQuestionsColumn = false;
+}
+
+$hasShuffleOptionsColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'shuffle_options']);
+    $hasShuffleOptionsColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasShuffleOptionsColumn = false;
+}
+
 $tokenSelect = $hasTokenColumn ? ', sa.token_code' : '';
 $revokedSelect = $hasExamRevokedColumn ? ', sa.exam_revoked_at' : '';
+$shuffleSelect = ($hasShuffleQuestionsColumn ? ', sa.shuffle_questions' : '') . ($hasShuffleOptionsColumn ? ', sa.shuffle_options' : '');
 
 $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at,
         p.id AS package_id, p.code, p.name, p.description
@@ -44,7 +63,7 @@ try {
     // Newer schema (exam mode)
     $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at' . $tokenSelect . $revokedSelect . ', sa.duration_minutes, sa.started_at,
             sa.correct_count, sa.total_count, sa.score, sa.graded_at,
-            p.id AS package_id, p.code, p.name, p.description
+            p.id AS package_id, p.code, p.name, p.description' . $shuffleSelect . '
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
         WHERE sa.id = :id AND sa.student_id = :sid
@@ -54,7 +73,7 @@ try {
 } catch (Throwable $e) {
     // Backward compatible: older schema without duration_minutes/started_at.
     $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at' . $tokenSelect . $revokedSelect . ',
-            p.id AS package_id, p.code, p.name, p.description
+            p.id AS package_id, p.code, p.name, p.description' . $shuffleSelect . '
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
         WHERE sa.id = :id AND sa.student_id = :sid
@@ -63,6 +82,28 @@ try {
     $assignment = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+$shuffleQuestions = ($assignment && $hasShuffleQuestionsColumn && (int)($assignment['shuffle_questions'] ?? 0) === 1);
+$shuffleOptions = ($assignment && $hasShuffleOptionsColumn && (int)($assignment['shuffle_options'] ?? 0) === 1);
+
+$stableShuffle = static function (array $rows, string $salt, callable $idFn): array {
+    // Important: don't depend on the original DB order.
+    // Sort by a stable hash derived from (salt + item identity).
+    $decorated = [];
+    foreach ($rows as $row) {
+        $idPart = (string)$idFn($row);
+        $key = hash('sha256', $salt . '|' . $idPart);
+        $decorated[] = ['k' => $key, 'id' => $idPart, 'v' => $row];
+    }
+
+    usort($decorated, static function ($a, $b) {
+        $cmp = strcmp($a['k'], $b['k']);
+        if ($cmp !== 0) return $cmp;
+        return strcmp((string)$a['id'], (string)$b['id']);
+    });
+
+    return array_map(static fn($x) => $x['v'], $decorated);
+};
+
 // If already completed, do not allow reopening/viewing the assignment content.
 if ($assignment && (string)($assignment['status'] ?? '') === 'done') {
     siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=already_done');
@@ -70,6 +111,12 @@ if ($assignment && (string)($assignment['status'] ?? '') === 'done') {
 
 $jenisAssignment = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
 $isExamAssignment = ($jenisAssignment === 'ujian');
+
+// Aturan: fitur acak hanya untuk UJIAN, tidak berlaku untuk TUGAS.
+if (!$isExamAssignment) {
+    $shuffleQuestions = false;
+    $shuffleOptions = false;
+}
 
 $tokenCode = trim((string)($assignment['token_code'] ?? ''));
 $tokenAvailable = ($tokenCode !== '');
@@ -672,6 +719,11 @@ try {
     $items = [];
 }
 
+// Apply deterministic per-student shuffle (if enabled).
+if ($items && $shuffleQuestions) {
+    $items = $stableShuffle($items, 'shuffle_questions|' . (string)$id . '|' . (string)$studentId, static fn($q) => (string)((int)($q['id'] ?? 0)));
+}
+
 $renderHtml = function (?string $html): string {
     return sanitize_rich_text((string)$html);
 };
@@ -866,10 +918,8 @@ include __DIR__ . '/../includes/header.php';
 
                 <?php foreach ($items as $idx => $q): ?>
                     <?php
-                        $no = (int)($q['question_number'] ?? 0);
-                        if ($no <= 0) {
-                            $no = $idx + 1;
-                        }
+                        $no = $shuffleQuestions ? ($idx + 1) : (int)($q['question_number'] ?? 0);
+                        if ($no <= 0) $no = $idx + 1;
                         $qid = (int)($q['id'] ?? 0);
                         $tipeRaw = strtolower(trim((string)($q['tipe_soal'] ?? '')));
                         $isPg = ($tipeRaw === '' || $tipeRaw === 'pg' || $tipeRaw === 'pilihan_ganda' || $tipeRaw === 'pilihan ganda');
@@ -907,11 +957,22 @@ include __DIR__ . '/../includes/header.php';
                                 if ($isPgKompleks) {
                                     $selectedMulti = array_values(array_filter(array_map('trim', explode(',', $saved)), fn($x) => $x !== ''));
                                 }
+
+                                $optOrder = array_keys($opts);
+                                if ($shuffleOptions) {
+                                    // Only shuffle visible options (non-empty HTML).
+                                    $optOrder = array_values(array_filter($optOrder, static function ($label) use ($opts) {
+                                        $optHtml = (string)($opts[$label] ?? '');
+                                        return trim(strip_tags($optHtml)) !== '';
+                                    }));
+                                    $optOrder = $stableShuffle($optOrder, 'shuffle_options|' . (string)$id . '|' . (string)$studentId . '|' . (string)$qid, static fn($label) => (string)$label);
+                                }
                             ?>
                             <?php if ($hasAny): ?>
                                 <div class="mt-2">
                                     <div class="small text-muted mb-2">Jawaban:</div>
-                                    <?php foreach ($opts as $label => $optHtml): ?>
+                                    <?php foreach (($shuffleOptions ? $optOrder : array_keys($opts)) as $label): ?>
+                                        <?php $optHtml = (string)($opts[$label] ?? ''); ?>
                                         <?php if (trim(strip_tags($optHtml)) === '') continue; ?>
                                         <?php
                                             $optIdx = ['A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5][$label] ?? null;
@@ -1010,7 +1071,7 @@ include __DIR__ . '/../includes/header.php';
                             <div class="md-soal-grid" id="mdSoalList">
                                 <?php foreach ($items as $idx => $q): ?>
                                     <?php
-                                        $no = (int)($q['question_number'] ?? 0);
+                                        $no = $shuffleQuestions ? ($idx + 1) : (int)($q['question_number'] ?? 0);
                                         if ($no <= 0) $no = $idx + 1;
                                     ?>
                                     <button type="button" class="btn btn-outline-secondary md-soal-num-btn" data-md-go="<?php echo (int)$idx; ?>" data-bs-dismiss="modal">

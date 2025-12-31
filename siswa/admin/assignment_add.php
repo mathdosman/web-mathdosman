@@ -10,8 +10,8 @@ $errors = [];
 $students = [];
 $packages = [];
 $kelasOptions = [];
-$rombelOptions = [];
 $kelasRombelMap = [];
+$kelasRombelOptions = [];
 
 $hasIsExamColumn = false;
 try {
@@ -68,6 +68,11 @@ $hasCorrectCountColumn = !empty($saCols['correct_count']);
 $hasTotalCountColumn = !empty($saCols['total_count']);
 $hasUpdatedAtColumn = !empty($saCols['updated_at']);
 
+$hasShuffleQuestionsColumn = !empty($saCols['shuffle_questions']);
+$hasShuffleOptionsColumn = !empty($saCols['shuffle_options']);
+$defaultShuffleQuestions = 0;
+$defaultShuffleOptions = 0;
+
 $hasAnswersTable = false;
 try {
     $stmt = $pdo->query("SHOW TABLES LIKE 'student_assignment_answers'");
@@ -76,34 +81,57 @@ try {
     $hasAnswersTable = false;
 }
 
+// Kelas/Rombel master: prefer kelas_rombels.
+$hasKelasRombelsTable = false;
 try {
-    $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+    $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
 } catch (Throwable $e) {
-    $kelasOptions = [];
+    $hasKelasRombelsTable = false;
 }
 
 try {
-    $rombelOptions = $pdo->query('SELECT DISTINCT rombel FROM students WHERE rombel IS NOT NULL AND TRIM(rombel) <> "" ORDER BY rombel ASC')->fetchAll(PDO::FETCH_COLUMN);
-} catch (Throwable $e) {
-    $rombelOptions = [];
-}
+    $rowsKr = [];
 
-try {
-    $rows = $pdo->query('SELECT DISTINCT kelas, rombel
-        FROM students
-        WHERE kelas IS NOT NULL AND TRIM(kelas) <> ""
-          AND rombel IS NOT NULL AND TRIM(rombel) <> ""
-        ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+    if ($hasKelasRombelsTable) {
+        $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($rows as $row) {
+        // If master exists but empty, seed from existing students once.
+        if (!$rowsKr) {
+            try {
+                $seedRows = $pdo->query('SELECT DISTINCT kelas, rombel
+                    FROM students
+                    WHERE kelas IS NOT NULL AND TRIM(kelas) <> ""
+                      AND rombel IS NOT NULL AND TRIM(rombel) <> ""
+                    ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+                $stmtIns = $pdo->prepare('INSERT IGNORE INTO kelas_rombels (kelas, rombel) VALUES (:k, :r)');
+                foreach ((array)$seedRows as $sr) {
+                    $k = trim((string)($sr['kelas'] ?? ''));
+                    $r = trim((string)($sr['rombel'] ?? ''));
+                    if ($k === '' || $r === '') continue;
+                    $stmtIns->execute([':k' => $k, ':r' => $r]);
+                }
+            } catch (Throwable $e) {
+                // ignore seeding errors
+            }
+
+            $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+        }
+    }
+
+    // Fallback: legacy behavior if master table doesn't exist.
+    if (!$rowsKr) {
+        $rowsKr = $pdo->query('SELECT DISTINCT kelas, rombel
+            FROM students
+            WHERE kelas IS NOT NULL AND TRIM(kelas) <> ""
+              AND rombel IS NOT NULL AND TRIM(rombel) <> ""
+            ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    foreach ((array)$rowsKr as $row) {
         $k = trim((string)($row['kelas'] ?? ''));
         $r = trim((string)($row['rombel'] ?? ''));
-        if ($k === '' || $r === '') {
-            continue;
-        }
-        if (!isset($kelasRombelMap[$k])) {
-            $kelasRombelMap[$k] = [];
-        }
+        if ($k === '' || $r === '') continue;
+        if (!isset($kelasRombelMap[$k])) $kelasRombelMap[$k] = [];
         $kelasRombelMap[$k][$r] = true;
     }
 
@@ -112,8 +140,25 @@ try {
         sort($list, SORT_NATURAL);
         $kelasRombelMap[$k] = $list;
     }
+
+    $kelasOptions = array_keys($kelasRombelMap);
+    sort($kelasOptions, SORT_NATURAL);
+
+    // Build display list like: XA, XIA, XIB1 (Kelas+Rombel)
+    foreach ($kelasRombelMap as $k => $rombels) {
+        $k = trim((string)$k);
+        foreach ((array)$rombels as $r) {
+            $r = trim((string)$r);
+            if ($k === '' || $r === '') continue;
+            $kelasRombelOptions[] = strtoupper($k . $r);
+        }
+    }
+    $kelasRombelOptions = array_values(array_unique($kelasRombelOptions));
+    sort($kelasRombelOptions, SORT_NATURAL);
 } catch (Throwable $e) {
+    $kelasOptions = [];
     $kelasRombelMap = [];
+    $kelasRombelOptions = [];
 }
 
 try {
@@ -133,10 +178,10 @@ try {
 }
 
 $values = [
-    'target_scope' => 'student',
-    'student_id' => 0,
-    'kelas' => '',
-    'rombel' => '',
+    'target_scope' => 'rombel',
+    'student_kelas' => '',
+    'student_ids' => [],
+    'rombels' => [],
     'package_id' => 0,
     'jenis' => 'tugas',
     'duration_minutes' => '',
@@ -149,10 +194,10 @@ $values = [
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	require_csrf_valid();
 
-    $values['target_scope'] = (string)($_POST['target_scope'] ?? 'student');
-    $values['student_id'] = (int)($_POST['student_id'] ?? 0);
-    $values['kelas'] = trim((string)($_POST['kelas'] ?? ''));
-    $values['rombel'] = trim((string)($_POST['rombel'] ?? ''));
+    $values['target_scope'] = (string)($_POST['target_scope'] ?? 'rombel');
+    $values['student_kelas'] = trim((string)($_POST['student_kelas'] ?? ''));
+    $values['student_ids'] = array_values(array_unique(array_map('intval', (array)($_POST['student_ids'] ?? []))));
+    $values['rombels'] = array_values(array_unique(array_map('strval', (array)($_POST['rombels'] ?? []))));
     $values['package_id'] = (int)($_POST['package_id'] ?? 0);
     $values['jenis'] = (string)($_POST['jenis'] ?? 'tugas');
     $values['duration_minutes'] = trim((string)($_POST['duration_minutes'] ?? ''));
@@ -164,18 +209,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($values['package_id'] <= 0) $errors[] = 'Paket wajib dipilih.';
     if (!in_array($values['jenis'], ['tugas', 'ujian'], true)) $errors[] = 'Jenis tidak valid.';
 
-    if (!in_array($values['target_scope'], ['student', 'kelas', 'kelas_rombel', 'all'], true)) {
+    // Aturan: fitur acak hanya untuk UJIAN. Default UJIAN: soal+opsi diacak.
+    $defaultShuffleQuestions = ($values['jenis'] === 'ujian') ? 1 : 0;
+    $defaultShuffleOptions = ($values['jenis'] === 'ujian') ? 1 : 0;
+
+    if (!in_array($values['target_scope'], ['rombel', 'student'], true)) {
         $errors[] = 'Target penugasan tidak valid.';
     }
 
     if (!$errors) {
         if ($values['target_scope'] === 'student') {
-            if ($values['student_id'] <= 0) $errors[] = 'Siswa wajib dipilih.';
-        } elseif ($values['target_scope'] === 'kelas') {
-            if ($values['kelas'] === '') $errors[] = 'Kelas wajib dipilih.';
-        } elseif ($values['target_scope'] === 'kelas_rombel') {
-            if ($values['kelas'] === '') $errors[] = 'Kelas wajib dipilih.';
-            if ($values['rombel'] === '') $errors[] = 'Rombel wajib dipilih.';
+            if ($values['student_kelas'] === '') $errors[] = 'Kelas wajib dipilih.';
+            if (!$values['student_ids']) $errors[] = 'Minimal 1 siswa wajib dipilih.';
+        } else {
+            if (!$values['rombels']) $errors[] = 'Minimal 1 rombel wajib dipilih.';
         }
     }
 
@@ -224,17 +271,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $studentIds = [];
         try {
             if ($values['target_scope'] === 'student') {
-                $studentIds = [$values['student_id']];
-            } elseif ($values['target_scope'] === 'kelas') {
-                $stmt = $pdo->prepare('SELECT id FROM students WHERE kelas = :k ORDER BY id ASC');
-                $stmt->execute([':k' => $values['kelas']]);
-                $studentIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-            } elseif ($values['target_scope'] === 'kelas_rombel') {
-                $stmt = $pdo->prepare('SELECT id FROM students WHERE kelas = :k AND rombel = :r ORDER BY id ASC');
-                $stmt->execute([':k' => $values['kelas'], ':r' => $values['rombel']]);
-                $studentIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+                $picked = array_values(array_unique(array_filter($values['student_ids'], static fn($v) => (int)$v > 0)));
+                if ($picked && $values['student_kelas'] !== '') {
+                    $placeholders = implode(',', array_fill(0, count($picked), '?'));
+                    $stmt = $pdo->prepare('SELECT id FROM students WHERE kelas = ? AND id IN (' . $placeholders . ') ORDER BY id ASC');
+                    $stmt->execute(array_merge([$values['student_kelas']], $picked));
+                    $studentIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+                } else {
+                    $studentIds = $picked;
+                }
             } else {
-                $studentIds = array_map('intval', $pdo->query('SELECT id FROM students ORDER BY id ASC')->fetchAll(PDO::FETCH_COLUMN));
+                // Here, "rombels" means combined Kelas+Rombel (e.g., XA, XIB1)
+                $kelasRombel = array_values(array_unique(array_filter($values['rombels'], static fn($v) => trim((string)$v) !== '')));
+                if ($kelasRombel) {
+                    $placeholders = implode(',', array_fill(0, count($kelasRombel), '?'));
+                    $sql = 'SELECT id FROM students WHERE UPPER(CONCAT(TRIM(kelas), TRIM(rombel))) IN (' . $placeholders . ') ORDER BY id ASC';
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute(array_map(static fn($v) => strtoupper(str_replace(' ', '', (string)$v)), $kelasRombel));
+                    $studentIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+                }
             }
         } catch (Throwable $e) {
             $studentIds = [];
@@ -319,6 +374,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ];
                             if ($hasDurationMinutesColumn) $setParts[] = 'duration_minutes = :dur';
                             if ($hasReviewDetailsColumn) $setParts[] = 'allow_review_details = :rev';
+                            if ($hasShuffleQuestionsColumn) $setParts[] = 'shuffle_questions = :sq';
+                            if ($hasShuffleOptionsColumn) $setParts[] = 'shuffle_options = :so';
                             if ($hasStartedAtColumn) $setParts[] = 'started_at = NULL';
                             if ($hasExamRevokedAtColumn) $setParts[] = 'exam_revoked_at = NULL';
                             if ($hasGradedAtColumn) $setParts[] = 'graded_at = NULL';
@@ -342,6 +399,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ];
                         if ($hasDurationMinutesColumn) $paramsUp[':dur'] = $durSql;
                         if ($hasReviewDetailsColumn) $paramsUp[':rev'] = $allowReviewSql;
+                        if ($hasShuffleQuestionsColumn) $paramsUp[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsUp[':so'] = $defaultShuffleOptions;
                         $stmtUpdateExisting->execute($paramsUp);
                         $updated++;
                         continue;
@@ -349,10 +408,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($hasDurationMinutesColumn && $hasReviewDetailsColumn) {
                         if ($stmtNew === null) {
-                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_review_details, status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c, :rev, "assigned", :due)');
+                            $extraCols = '';
+                            $extraVals = '';
+                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_review_details' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :dur, :t, :c, :rev' . $extraVals . ', "assigned", :due)');
                         }
-                        $stmtNew->execute([
+                        $paramsIns = [
                             ':sid' => (int)$sid,
                             ':pid' => (int)$values['package_id'],
                             ':j' => (string)$values['jenis'],
@@ -361,17 +425,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
                             ':rev' => $allowReviewSql,
                             ':due' => $dueSql,
-                        ]);
+                        ];
+                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                        $stmtNew->execute($paramsIns);
                         $created++;
                         continue;
                     }
 
                     if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn) {
                         if ($stmtDurOnly === null) {
-                            $stmtDurOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c, "assigned", :due)');
+                            $extraCols = '';
+                            $extraVals = '';
+                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                            $stmtDurOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :dur, :t, :c' . $extraVals . ', "assigned", :due)');
                         }
-                        $stmtDurOnly->execute([
+                        $paramsIns = [
                             ':sid' => (int)$sid,
                             ':pid' => (int)$values['package_id'],
                             ':j' => (string)$values['jenis'],
@@ -379,17 +451,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':t' => $values['judul'] !== '' ? $values['judul'] : null,
                             ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
                             ':due' => $dueSql,
-                        ]);
+                        ];
+                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                        $stmtDurOnly->execute($paramsIns);
                         $created++;
                         continue;
                     }
 
                     if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn) {
                         if ($stmtReviewOnly === null) {
-                            $stmtReviewOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_review_details, status, due_at)
-                                VALUES (:sid, :pid, :j, :t, :c, :rev, "assigned", :due)');
+                            $extraCols = '';
+                            $extraVals = '';
+                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                            $stmtReviewOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_review_details' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :t, :c, :rev' . $extraVals . ', "assigned", :due)');
                         }
-                        $stmtReviewOnly->execute([
+                        $paramsIns = [
                             ':sid' => (int)$sid,
                             ':pid' => (int)$values['package_id'],
                             ':j' => (string)$values['jenis'],
@@ -397,24 +477,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
                             ':rev' => $allowReviewSql,
                             ':due' => $dueSql,
-                        ]);
+                        ];
+                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                        $stmtReviewOnly->execute($paramsIns);
                         $created++;
                         continue;
                     }
 
                     // Backward compatible: older schema.
                     if ($stmtOld === null) {
-                        $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, status, due_at)
-                            VALUES (:sid, :pid, :j, :t, :c, "assigned", :due)');
+                        $extraCols = '';
+                        $extraVals = '';
+                        if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                        if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                        $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan' . $extraCols . ', status, due_at)
+                            VALUES (:sid, :pid, :j, :t, :c' . $extraVals . ', "assigned", :due)');
                     }
-                    $stmtOld->execute([
+                    $paramsIns = [
                         ':sid' => (int)$sid,
                         ':pid' => (int)$values['package_id'],
                         ':j' => (string)$values['jenis'],
                         ':t' => $values['judul'] !== '' ? $values['judul'] : null,
                         ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
                         ':due' => $dueSql,
-                    ]);
+                    ];
+                    if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                    if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                    $stmtOld->execute($paramsIns);
                     $created++;
                 }
 
@@ -435,6 +526,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Tambah Penugasan';
+$body_class = trim((isset($body_class) ? (string)$body_class : '') . ' no-auto-field-boxes');
 include __DIR__ . '/../../includes/header.php';
 ?>
 <div class="admin-page">
@@ -465,113 +557,196 @@ include __DIR__ . '/../../includes/header.php';
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Target Penugasan</label>
-                        <select class="form-select" name="target_scope" id="target_scope">
-                            <option value="student" <?php echo $values['target_scope'] === 'student' ? 'selected' : ''; ?>>Per Siswa</option>
-                            <option value="kelas" <?php echo $values['target_scope'] === 'kelas' ? 'selected' : ''; ?>>Per Kelas</option>
-                            <option value="kelas_rombel" <?php echo $values['target_scope'] === 'kelas_rombel' ? 'selected' : ''; ?>>Kelas + Rombel</option>
-                            <option value="all" <?php echo $values['target_scope'] === 'all' ? 'selected' : ''; ?>>Semua Siswa</option>
-                        </select>
-                        <div class="form-text">Sistem akan membuat penugasan per siswa sesuai target.</div>
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Target Penugasan</label>
+                            </div>
+                            <select class="form-select" name="target_scope" id="target_scope">
+                                <option value="rombel" <?php echo $values['target_scope'] === 'rombel' ? 'selected' : ''; ?>>Rombel (default)</option>
+                                <option value="student" <?php echo $values['target_scope'] === 'student' ? 'selected' : ''; ?>>Per Siswa</option>
+                            </select>
+                            <div class="form-text">Pilih salah satu target. Sistem akan membuat penugasan per siswa sesuai pilihan.</div>
+                        </div>
                     </div>
 
                     <div class="col-md-6" id="field_student">
-                        <label class="form-label">Siswa</label>
-                        <select class="form-select" name="student_id">
-                            <option value="0">-- pilih siswa --</option>
-                            <?php foreach ($students as $s): ?>
-                                <?php $sid = (int)$s['id']; ?>
-                                <option value="<?php echo $sid; ?>" <?php echo ($values['student_id'] === $sid) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars((string)$s['nama_siswa']); ?> (<?php echo htmlspecialchars((string)$s['kelas']); ?> <?php echo htmlspecialchars((string)$s['rombel']); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="border rounded p-3 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Kelas</label>
+                            </div>
+                            <select class="form-select" name="student_kelas" id="student_kelas">
+                                <option value="">-- pilih kelas --</option>
+                                <?php foreach ($kelasOptions as $k): $k = (string)$k; ?>
+                                    <option value="<?php echo htmlspecialchars($k); ?>"<?php echo $values['student_kelas'] === $k ? ' selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($k); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="border rounded p-3 mt-3 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Siswa</label>
+                            </div>
+                            <div class="dropdown" id="student_picker">
+                                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" id="student_picker_btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Pilih siswa...
+                                </button>
+                                <div class="dropdown-menu w-100 p-2" aria-labelledby="student_picker_btn" style="max-height: 320px; overflow:auto;">
+                                    <div class="small text-muted mb-2">Centang siswa satu per satu.</div>
+                                    <?php foreach ($students as $s): ?>
+                                        <?php
+                                            $sid = (int)($s['id'] ?? 0);
+                                            $sk = trim((string)($s['kelas'] ?? ''));
+                                            $sr = trim((string)($s['rombel'] ?? ''));
+                                            $kr = strtoupper($sk . $sr);
+                                            $isChecked = in_array($sid, $values['student_ids'], true);
+                                        ?>
+                                        <div class="form-check">
+                                            <input
+                                                class="form-check-input student-item"
+                                                type="checkbox"
+                                                name="student_ids[]"
+                                                value="<?php echo $sid; ?>"
+                                                id="student_cb_<?php echo $sid; ?>"
+                                                data-kelas="<?php echo htmlspecialchars($sk); ?>"
+                                                <?php echo $isChecked ? 'checked' : ''; ?>
+                                            >
+                                            <label class="form-check-label" for="student_cb_<?php echo $sid; ?>">
+                                                <?php echo htmlspecialchars((string)($s['nama_siswa'] ?? '')); ?>
+                                                <span class="text-muted small"><?php echo htmlspecialchars($kr !== '' ? '(' . $kr . ')' : '(-)'); ?></span>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="form-text">Wajib pilih kelas dulu. Setelah itu dropdown siswa akan muncul sesuai kelas.</div>
+                        </div>
                     </div>
 
-                    <div class="col-md-3" id="field_kelas">
-                        <label class="form-label">Kelas</label>
-                        <select class="form-select" name="kelas" id="kelas_select">
-                            <option value="">-- pilih kelas --</option>
-                            <?php foreach ($kelasOptions as $k): ?>
-                                <option value="<?php echo htmlspecialchars((string)$k); ?>" <?php echo ($values['kelas'] === (string)$k) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars((string)$k); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3" id="field_rombel">
-                        <label class="form-label">Rombel</label>
-                        <select class="form-select" name="rombel" id="rombel_select">
-                            <option value="">-- pilih rombel --</option>
-                            <?php foreach ($rombelOptions as $r): ?>
-                                <option value="<?php echo htmlspecialchars((string)$r); ?>" <?php echo ($values['rombel'] === (string)$r) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars((string)$r); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="col-md-6" id="field_rombel">
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Rombel</label>
+                            </div>
+                            <div class="dropdown" id="rombel_picker">
+                                <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" id="rombel_picker_btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Pilih rombel...
+                                </button>
+                                <div class="dropdown-menu w-100 p-2" aria-labelledby="rombel_picker_btn" style="max-height: 280px; overflow:auto;">
+                                    <div class="small text-muted mb-2">Centang rombel satu per satu.</div>
+                                    <?php foreach ($kelasRombelOptions as $r): $r = (string)$r; ?>
+                                        <div class="form-check">
+                                            <input
+                                                class="form-check-input rombel-item"
+                                                type="checkbox"
+                                                name="rombels[]"
+                                                value="<?php echo htmlspecialchars($r); ?>"
+                                                id="rombel_cb_<?php echo htmlspecialchars(preg_replace('/[^a-zA-Z0-9_\-]/', '_', $r)); ?>"
+                                                <?php echo in_array($r, $values['rombels'], true) ? 'checked' : ''; ?>
+                                            >
+                                            <label class="form-check-label" for="rombel_cb_<?php echo htmlspecialchars(preg_replace('/[^a-zA-Z0-9_\-]/', '_', $r)); ?>">
+                                                <?php echo htmlspecialchars($r); ?>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="form-text">Rombel = gabungan Kelas+Rombel (contoh: XA, XIA, XIB1).</div>
+                        </div>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Paket Soal</label>
-                        <select class="form-select" name="package_id" required>
-                            <option value="0">-- pilih paket --</option>
-                            <?php foreach ($packages as $p): ?>
-                                <?php $pid = (int)$p['id']; ?>
-                                <?php $isExamOpt = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false; ?>
-                                <option value="<?php echo $pid; ?>" data-is-exam="<?php echo $isExamOpt ? '1' : '0'; ?>" <?php echo ($values['package_id'] === $pid) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars((string)$p['name']); ?> (<?php echo htmlspecialchars((string)$p['code']); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="form-text">
-                            Paket yang bisa dipilih hanya paket dari menu <b>Ujian → Paket Ujian</b>.
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Paket Soal</label>
+                            </div>
+                            <select class="form-select" name="package_id" required>
+                                <option value="0">-- pilih paket --</option>
+                                <?php foreach ($packages as $p): ?>
+                                    <?php $pid = (int)$p['id']; ?>
+                                    <?php $isExamOpt = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false; ?>
+                                    <option value="<?php echo $pid; ?>" data-is-exam="<?php echo $isExamOpt ? '1' : '0'; ?>" <?php echo ($values['package_id'] === $pid) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars((string)$p['name']); ?> (<?php echo htmlspecialchars((string)$p['code']); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text">
+                                Paket yang bisa dipilih hanya paket dari menu <b>Ujian → Paket Ujian</b>.
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Jenis</label>
-                        <select class="form-select" name="jenis">
-                            <option value="tugas" <?php echo $values['jenis'] === 'tugas' ? 'selected' : ''; ?>>Tugas</option>
-                            <option value="ujian" <?php echo $values['jenis'] === 'ujian' ? 'selected' : ''; ?>>Ujian</option>
-                        </select>
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Jenis</label>
+                            </div>
+                            <select class="form-select" name="jenis">
+                                <option value="tugas" <?php echo $values['jenis'] === 'tugas' ? 'selected' : ''; ?>>Tugas</option>
+                                <option value="ujian" <?php echo $values['jenis'] === 'ujian' ? 'selected' : ''; ?>>Ujian</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Durasi (menit)</label>
-                        <input type="number" min="1" step="1" name="duration_minutes" class="form-control" value="<?php echo htmlspecialchars($values['duration_minutes']); ?>" placeholder="Opsional">
-                        <div class="form-text">Untuk mode ujian (jika diisi). Deadline akhir = min(due_at, started_at + durasi).</div>
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Durasi (menit)</label>
+                            </div>
+                            <input type="number" min="1" step="1" name="duration_minutes" class="form-control" value="<?php echo htmlspecialchars($values['duration_minutes']); ?>" placeholder="Opsional">
+                            <div class="form-text">Untuk mode ujian (jika diisi). Deadline akhir = min(due_at, started_at + durasi).</div>
+                        </div>
                     </div>
 
                     <div class="col-md-5">
-                        <label class="form-label">Judul (opsional)</label>
-                        <input type="text" name="judul" class="form-control" value="<?php echo htmlspecialchars($values['judul']); ?>" placeholder="Kosongkan untuk pakai nama paket">
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Judul (opsional)</label>
+                            </div>
+                            <input type="text" name="judul" class="form-control" value="<?php echo htmlspecialchars($values['judul']); ?>" placeholder="Kosongkan untuk pakai nama paket">
+                        </div>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Batas Waktu (opsional)</label>
-                        <input type="datetime-local" name="due_at" class="form-control" value="<?php echo htmlspecialchars($values['due_at']); ?>">
-                    </div>
-
-                    <div class="col-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
-                            <label class="form-check-label" for="allow_review_details">
-                                Izinkan siswa melihat detail jawaban & kunci setelah selesai
-                            </label>
-                        </div>
-                        <?php if (!$hasReviewDetailsColumn): ?>
-                            <div class="form-text text-warning">
-                                Fitur ini butuh kolom <code>student_assignments.allow_review_details</code>. Jalankan <code>php scripts/migrate_db.php</code> terlebih dahulu.
+                        <div class="border rounded p-3 h-100 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Batas Waktu (opsional)</label>
                             </div>
-                        <?php else: ?>
-                            <div class="form-text">Default: disembunyikan (nilai/rekap saja).</div>
-                        <?php endif; ?>
+                            <input type="datetime-local" name="due_at" class="form-control" value="<?php echo htmlspecialchars($values['due_at']); ?>">
+                        </div>
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label">Catatan (opsional)</label>
-                        <textarea name="catatan" class="form-control" rows="3"><?php echo htmlspecialchars($values['catatan']); ?></textarea>
+                        <div class="border rounded p-3 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <span class="fw-semibold text-body">Pengaturan Hasil</span>
+                            </div>
+                            <div class="p-3 rounded border border-warning bg-warning-subtle">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input form-check-input-lg" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
+                                    <label class="form-check-label fw-semibold" for="allow_review_details">
+                                        Izinkan siswa melihat detail jawaban & kunci setelah selesai
+                                    </label>
+                                </div>
+                            </div>
+                            <?php if (!$hasReviewDetailsColumn): ?>
+                                <div class="form-text text-warning">
+                                    Fitur ini butuh kolom <code>student_assignments.allow_review_details</code>. Jalankan <code>php scripts/migrate_db.php</code> terlebih dahulu.
+                                </div>
+                            <?php else: ?>
+                                <div class="form-text">Default: disembunyikan (nilai/rekap saja).</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="border rounded p-3 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <label class="form-label mb-0 fw-semibold text-body">Catatan (opsional)</label>
+                            </div>
+                            <textarea name="catatan" class="form-control" rows="3"><?php echo htmlspecialchars($values['catatan']); ?></textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -585,65 +760,59 @@ include __DIR__ . '/../../includes/header.php';
 </div>
 <script>
 (() => {
-    const kelasRombelMap = <?php echo json_encode($kelasRombelMap, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-    const allRombels = <?php echo json_encode(array_values(array_map('strval', $rombelOptions)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-
     const scopeSelect = document.getElementById('target_scope');
     const fieldStudent = document.getElementById('field_student');
-    const fieldKelas = document.getElementById('field_kelas');
     const fieldRombel = document.getElementById('field_rombel');
 
-    const kelasSelect = document.getElementById('kelas_select');
-    const rombelSelect = document.getElementById('rombel_select');
+    const studentKelasSelect = document.getElementById('student_kelas');
+    const studentPickerBtn = document.getElementById('student_picker_btn');
+    const studentItems = Array.from(document.querySelectorAll('.student-item'));
+
+    const rombelPickerBtn = document.getElementById('rombel_picker_btn');
+    const rombelItems = Array.from(document.querySelectorAll('.rombel-item'));
 
     const jenisSelect = document.querySelector('select[name="jenis"]');
     const paketSelect = document.querySelector('select[name="package_id"]');
     const form = document.querySelector('form[method="post"]');
 
-    const setRombelOptions = (list) => {
-        if (!rombelSelect) return;
-        const current = rombelSelect.value;
-        rombelSelect.innerHTML = '';
-
-        const opt0 = document.createElement('option');
-        opt0.value = '';
-        opt0.textContent = '-- pilih rombel --';
-        rombelSelect.appendChild(opt0);
-
-        (list || []).forEach((r) => {
-            const opt = document.createElement('option');
-            opt.value = r;
-            opt.textContent = r;
-            rombelSelect.appendChild(opt);
-        });
-
-        // restore selection if still valid
-        if (current && Array.from(rombelSelect.options).some(o => o.value === current)) {
-            rombelSelect.value = current;
-        } else {
-            rombelSelect.value = '';
-        }
+    const updateStudentPickerLabel = () => {
+        if (!studentPickerBtn) return;
+        const checked = studentItems.filter((el) => el.checked);
+        studentPickerBtn.textContent = checked.length ? `Dipilih: ${checked.length} siswa` : 'Pilih siswa...';
     };
 
-    const applyRombelFilter = () => {
-        if (!kelasSelect || !rombelSelect) return;
-        const kelas = (kelasSelect.value || '').trim();
-        const list = (kelas && Array.isArray(kelasRombelMap[kelas])) ? kelasRombelMap[kelas] : allRombels;
-        setRombelOptions(list);
+    const updateRombelPickerLabel = () => {
+        if (!rombelPickerBtn) return;
+        const checked = rombelItems.filter((el) => el.checked);
+        rombelPickerBtn.textContent = checked.length ? `Dipilih: ${checked.length} rombel` : 'Pilih rombel...';
+    };
+
+    const applyStudentFilter = () => {
+        if (!studentKelasSelect) return;
+        const kelas = String(studentKelasSelect.value || '').trim();
+        const hasKelas = kelas !== '';
+
+        if (studentPickerBtn) {
+            studentPickerBtn.disabled = !hasKelas;
+        }
+
+        studentItems.forEach((cb) => {
+            const wrapper = cb.closest('.form-check');
+            const itemKelas = String(cb.getAttribute('data-kelas') || '').trim();
+
+            const visible = hasKelas && itemKelas === kelas;
+            if (wrapper) wrapper.style.display = visible ? '' : 'none';
+            if (!visible) cb.checked = false;
+        });
+
+        updateStudentPickerLabel();
     };
 
     const applyScope = () => {
-        const scope = scopeSelect ? scopeSelect.value : 'student';
+        const scope = scopeSelect ? String(scopeSelect.value || 'rombel') : 'rombel';
         if (fieldStudent) fieldStudent.style.display = (scope === 'student') ? '' : 'none';
-        if (fieldKelas) fieldKelas.style.display = (scope === 'kelas' || scope === 'kelas_rombel') ? '' : 'none';
-        if (fieldRombel) fieldRombel.style.display = (scope === 'kelas_rombel') ? '' : 'none';
-
-        if (rombelSelect) {
-            rombelSelect.disabled = (scope !== 'kelas_rombel');
-        }
-
-        // When switching to kelas_rombel, ensure rombel list matches selected kelas
-        applyRombelFilter();
+        if (fieldRombel) fieldRombel.style.display = (scope === 'rombel') ? '' : 'none';
+        if (scope === 'student') applyStudentFilter();
     };
 
     // Paket sudah dibatasi dari server (is_exam=1), jadi tidak perlu filter paket berdasarkan jenis.
@@ -661,8 +830,13 @@ include __DIR__ . '/../../includes/header.php';
         }, true);
     }
     if (scopeSelect) scopeSelect.addEventListener('change', applyScope);
-    if (kelasSelect) kelasSelect.addEventListener('change', applyRombelFilter);
+    if (studentKelasSelect) studentKelasSelect.addEventListener('change', applyStudentFilter);
+    studentItems.forEach((el) => el.addEventListener('change', updateStudentPickerLabel));
+    rombelItems.forEach((el) => el.addEventListener('change', updateRombelPickerLabel));
     applyScope();
+    applyStudentFilter();
+    updateStudentPickerLabel();
+    updateRombelPickerLabel();
 })();
 </script>
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

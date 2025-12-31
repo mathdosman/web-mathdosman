@@ -5,6 +5,19 @@ require_role('admin');
 
 $errors = [];
 
+$sanitizeReturn = static function ($url, string $fallback): string {
+    $url = trim((string)$url);
+    if ($url === '') return $fallback;
+    if (str_contains($url, "\n") || str_contains($url, "\r")) return $fallback;
+    if (str_starts_with($url, '//')) return $fallback;
+    $p = @parse_url($url);
+    if (is_array($p) && (isset($p['scheme']) || isset($p['host']))) return $fallback;
+    if (!preg_match('~^[A-Za-z0-9_./?&=%\-]+$~', $url)) return $fallback;
+    return $url;
+};
+
+$returnUrl = $sanitizeReturn($_GET['return'] ?? '', 'packages.php');
+
 $hasIsExamColumn = false;
 try {
     $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
@@ -53,7 +66,7 @@ if (app_runtime_migrations_enabled()) {
 
 $packageId = (int)($_GET['id'] ?? 0);
 if ($packageId <= 0) {
-    header('Location: packages.php');
+    header('Location: ' . $returnUrl);
     exit;
 }
 
@@ -75,23 +88,11 @@ try {
 }
 
 if (!$package) {
-    header('Location: packages.php');
+    header('Location: ' . $returnUrl);
     exit;
 }
 
-// Block direct access for exam packages (managed in Ujian 0 Paket Ujian)
-if ($hasIsExamColumn) {
-    try {
-        $stmt = $pdo->prepare('SELECT COALESCE(is_exam, 0) FROM packages WHERE id = :id');
-        $stmt->execute([':id' => $packageId]);
-        $isExam = (int)$stmt->fetchColumn();
-        if ($isExam === 1) {
-            header('Location: ../siswa/admin/exam_packages.php');
-            exit;
-        }
-    } catch (Throwable $e) {
-    }
-}
+// Exam packages are also editable here; the exam package list lives in siswa/admin/exam_packages.php.
 
 $subjects = [];
 try {
@@ -279,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                 }
 
-                header('Location: packages.php');
+                header('Location: ' . $returnUrl);
                 exit;
             } catch (PDOException $e) {
                 $errors[] = 'Gagal menyimpan perubahan paket.';
@@ -300,7 +301,7 @@ include __DIR__ . '/../includes/header.php';
             <p class="admin-page-subtitle">Ubah identitas paket soal dan pengelompokan Mapel/Materi/Submateri.</p>
         </div>
         <div class="admin-page-actions">
-            <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+            <a href="<?php echo htmlspecialchars($returnUrl); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
         </div>
     </div>
 
@@ -416,7 +417,7 @@ include __DIR__ . '/../includes/header.php';
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
-                        <a href="packages.php" class="btn btn-link btn-sm">Batal</a>
+                        <a href="<?php echo htmlspecialchars($returnUrl); ?>" class="btn btn-link btn-sm">Batal</a>
                     </div>
                 </form>
                 </div>

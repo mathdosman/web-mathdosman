@@ -418,6 +418,13 @@ body.admin-layout.sidebar-collapsed .app-container {
     opacity: 1;
 }
 
+/* Make important checkboxes more visible */
+.form-check-input.form-check-input-lg {
+    width: 1.35em;
+    height: 1.35em;
+    margin-top: .2em;
+}
+
 /* ====== Login ====== */
 
 .card-login {
@@ -432,6 +439,42 @@ body.admin-layout.sidebar-collapsed .app-container {
 }
 
 /* ====== Backend / Admin (ringan & simple) ====== */
+
+/* ====== Siswa Admin: boxed form fields (tampilan saja) ====== */
+/*
+   Applies to pages under /siswa/admin/ via body.siswa-admin.
+   Opt-out per page by adding body class: no-auto-field-boxes.
+   Keeps input/select/textarea backgrounds following Bootstrap theme.
+*/
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form .row.g-3 > [class*="col-"],
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form .row.g-2 > [class*="col-"],
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form.row.g-3 > [class*="col-"],
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form.row.g-2 > [class*="col-"] {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: 1rem;
+    background-color: var(--bs-secondary-bg);
+}
+
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form .row.g-3 > [class*="col-"] > .form-label,
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form .row.g-2 > [class*="col-"] > .form-label,
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form.row.g-3 > [class*="col-"] > .form-label,
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form.row.g-2 > [class*="col-"] > .form-label {
+    display: block;
+    margin-bottom: .5rem;
+    padding: .25rem .5rem;
+    border-radius: .375rem;
+    background-color: var(--bs-secondary-bg);
+    font-weight: 600;
+}
+
+/* Keep help text spacing consistent inside boxed fields */
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form .row.g-3 > [class*="col-"] > .form-text,
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form .row.g-2 > [class*="col-"] > .form-text,
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form.row.g-3 > [class*="col-"] > .form-text,
+body.siswa-admin:not(.no-auto-field-boxes) .admin-page form.row.g-2 > [class*="col-"] > .form-text {
+    margin-top: .5rem;
+}
 
 /* ====== Student area (lebih menarik, khusus /siswa/) ====== */
 

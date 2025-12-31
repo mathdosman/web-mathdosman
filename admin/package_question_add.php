@@ -7,6 +7,17 @@ require_role('admin');
 
 $errors = [];
 
+$sanitizeReturn = static function ($url, string $fallback): string {
+    $url = trim((string)$url);
+    if ($url === '') return $fallback;
+    if (str_contains($url, "\n") || str_contains($url, "\r")) return $fallback;
+    if (str_starts_with($url, '//')) return $fallback;
+    $p = @parse_url($url);
+    if (is_array($p) && (isset($p['scheme']) || isset($p['host']))) return $fallback;
+    if (!preg_match('~^[A-Za-z0-9_./?&=%\-]+$~', $url)) return $fallback;
+    return $url;
+};
+
 $hasIsExamColumn = false;
 try {
     $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
@@ -21,6 +32,8 @@ if ($packageId <= 0) {
     header('Location: packages.php');
     exit;
 }
+
+$returnUrl = $sanitizeReturn($_GET['return'] ?? '', 'package_items.php?package_id=' . $packageId);
 
 $package = null;
 try {
@@ -41,19 +54,7 @@ if (!$package) {
     exit;
 }
 
-// Block direct access for exam packages (managed in Ujian 0 Paket Ujian)
-if ($hasIsExamColumn) {
-    try {
-        $stmt = $pdo->prepare('SELECT COALESCE(is_exam, 0) FROM packages WHERE id = :id');
-        $stmt->execute([':id' => $packageId]);
-        $isExam = (int)$stmt->fetchColumn();
-        if ($isExam === 1) {
-            header('Location: ../siswa/admin/exam_packages.php');
-            exit;
-        }
-    } catch (Throwable $e) {
-    }
-}
+// Exam packages are also editable here; the exam package list lives in siswa/admin/exam_packages.php.
 
 // Editing is allowed even when the package is published.
 $isLocked = false;
@@ -421,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([':pid' => $packageId, ':qid' => $questionId, ':no' => $nomerSoal]);
 
                 $pdo->commit();
-                header('Location: package_items.php?package_id=' . $packageId);
+                header('Location: ' . $returnUrl);
                 exit;
             } catch (Throwable $e) {
                 if ($pdo->inTransaction()) {
@@ -502,7 +503,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="admin-page-subtitle">Paket: <strong><?php echo htmlspecialchars($package['code']); ?></strong> — <?php echo htmlspecialchars($package['name']); ?></p>
         </div>
         <div class="admin-page-actions">
-            <a href="package_items.php?package_id=<?php echo (int)$packageId; ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
+            <a href="<?php echo htmlspecialchars($returnUrl); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
         </div>
     </div>
 
@@ -717,7 +718,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="d-flex gap-2 flex-wrap mt-3">
                         <button type="submit" name="save_mode" value="published" class="btn btn-primary btn-sm" onclick="document.getElementById('form_action').value='save'" <?php echo $isLocked ? 'disabled' : ''; ?>>Simpan</button>
                         <button type="submit" name="save_mode" value="draft" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('form_action').value='save'" <?php echo $isLocked ? 'disabled' : ''; ?>>Draft</button>
-                        <a href="package_items.php?package_id=<?php echo (int)$packageId; ?>" class="btn btn-outline-danger btn-sm">Batal</a>
+                        <a href="<?php echo htmlspecialchars($returnUrl); ?>" class="btn btn-outline-danger btn-sm">Batal</a>
                     </div>
                 </form>
 

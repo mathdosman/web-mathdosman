@@ -219,35 +219,37 @@ include __DIR__ . '/../../includes/header.php';
 
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Jenis</label>
+                        <label class="form-label mb-2">Jenis</label>
                         <select class="form-select" name="jenis">
                             <option value="tugas" <?php echo $values['jenis'] === 'tugas' ? 'selected' : ''; ?>>Tugas</option>
                             <option value="ujian" <?php echo $values['jenis'] === 'ujian' ? 'selected' : ''; ?>>Ujian</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Durasi (menit)</label>
+                        <label class="form-label mb-2">Durasi (menit)</label>
                         <input type="number" min="1" step="1" name="duration_minutes" class="form-control" value="<?php echo htmlspecialchars($values['duration_minutes']); ?>" placeholder="Opsional">
                         <div class="form-text">Untuk mode ujian (jika diisi).</div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Status</label>
+                        <label class="form-label mb-2">Status</label>
                         <select class="form-select" name="status">
                             <option value="assigned" <?php echo $values['status'] === 'assigned' ? 'selected' : ''; ?>>Assigned</option>
                             <option value="done" <?php echo $values['status'] === 'done' ? 'selected' : ''; ?>>Done</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Batas Waktu (opsional)</label>
+                        <label class="form-label mb-2">Batas Waktu (opsional)</label>
                         <input type="datetime-local" name="due_at" class="form-control" value="<?php echo htmlspecialchars($values['due_at']); ?>">
                     </div>
 
                     <div class="col-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
-                            <label class="form-check-label" for="allow_review_details">
-                                Izinkan siswa melihat detail jawaban & kunci setelah selesai
-                            </label>
+                        <div class="p-3 rounded border border-warning bg-warning-subtle">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input form-check-input-lg" type="checkbox" id="allow_review_details" name="allow_review_details" value="1" <?php echo $values['allow_review_details'] === '1' ? 'checked' : ''; ?> <?php echo !$hasReviewDetailsColumn ? 'disabled' : ''; ?>>
+                                <label class="form-check-label fw-semibold" for="allow_review_details">
+                                    Izinkan siswa melihat detail jawaban & kunci setelah selesai
+                                </label>
+                            </div>
                         </div>
                         <?php if (!$hasReviewDetailsColumn): ?>
                             <div class="form-text text-warning">

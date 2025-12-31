@@ -6,6 +6,10 @@ require_once __DIR__ . '/../lib.php';
 
 require_role('admin');
 
+// Feature disabled: redirect to student management.
+header('Location: students.php');
+exit;
+
 $errors = [];
 $created = [];
 $skipped = [];

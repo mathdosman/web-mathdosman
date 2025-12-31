@@ -31,6 +31,34 @@ $values = [
     'foto' => '',
 ];
 
+$hasKelasRombelsTable = false;
+$kelasOptions = [];
+$kelasRombelMap = [];
+try {
+    $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
+    if ($hasKelasRombelsTable) {
+        $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+        foreach ((array)$rowsKr as $r) {
+            $k = siswa_clean_string((string)($r['kelas'] ?? ''));
+            $rb = siswa_clean_string((string)($r['rombel'] ?? ''));
+            if ($k === '' || $rb === '') continue;
+            if (!isset($kelasRombelMap[$k])) $kelasRombelMap[$k] = [];
+            $kelasRombelMap[$k][$rb] = true;
+        }
+        foreach ($kelasRombelMap as $k => $set) {
+            $list = array_keys($set);
+            sort($list, SORT_NATURAL);
+            $kelasRombelMap[$k] = $list;
+        }
+        $kelasOptions = array_keys($kelasRombelMap);
+        sort($kelasOptions, SORT_NATURAL);
+    }
+} catch (Throwable $e) {
+    $hasKelasRombelsTable = false;
+    $kelasOptions = [];
+    $kelasRombelMap = [];
+}
+
 $passwordHash = '';
 
 try {
@@ -65,6 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 
     if ($newNama === '' || $newKelas === '' || $newRombel === '') {
         $error = 'Nama, kelas, dan rombel wajib diisi.';
+    }
+
+    if ($error === '' && $hasKelasRombelsTable && $kelasRombelMap) {
+        $ok = isset($kelasRombelMap[$newKelas]) && in_array($newRombel, (array)$kelasRombelMap[$newKelas], true);
+        if (!$ok) {
+            $error = 'Kelas/Rombel tidak terdaftar. Hubungi admin.';
+        }
     }
 
     $currentPassword = (string)($_POST['current_password'] ?? '');
@@ -215,11 +250,33 @@ include __DIR__ . '/../includes/header.php';
             </div>
             <div class="col-md-3">
                 <label class="form-label">Kelas</label>
-                <input type="text" name="kelas" class="form-control" value="<?php echo htmlspecialchars($values['kelas']); ?>" required>
+                <?php if ($kelasOptions): ?>
+                    <select class="form-select" name="kelas" id="kelas_select" required>
+                        <option value="">-- pilih kelas --</option>
+                        <?php foreach ($kelasOptions as $k): $k = (string)$k; ?>
+                            <option value="<?php echo htmlspecialchars($k); ?>"<?php echo $values['kelas'] === $k ? ' selected' : ''; ?>><?php echo htmlspecialchars($k); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <input type="text" name="kelas" class="form-control" value="<?php echo htmlspecialchars($values['kelas']); ?>" required>
+                <?php endif; ?>
             </div>
             <div class="col-md-3">
                 <label class="form-label">Rombel</label>
-                <input type="text" name="rombel" class="form-control" value="<?php echo htmlspecialchars($values['rombel']); ?>" required>
+                <?php if ($kelasOptions): ?>
+                    <select class="form-select" name="rombel" id="rombel_select" required>
+                        <option value="">-- pilih rombel --</option>
+                        <?php
+                            $kSel = (string)$values['kelas'];
+                            $rList = ($kSel !== '' && isset($kelasRombelMap[$kSel])) ? (array)$kelasRombelMap[$kSel] : [];
+                        ?>
+                        <?php foreach ($rList as $rb): $rb = (string)$rb; ?>
+                            <option value="<?php echo htmlspecialchars($rb); ?>"<?php echo $values['rombel'] === $rb ? ' selected' : ''; ?>><?php echo htmlspecialchars($rb); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <input type="text" name="rombel" class="form-control" value="<?php echo htmlspecialchars($values['rombel']); ?>" required>
+                <?php endif; ?>
             </div>
 
             <div class="col-md-6">
@@ -272,4 +329,40 @@ include __DIR__ . '/../includes/header.php';
         </form>
     </div>
 </div>
+
+<?php if ($kelasOptions): ?>
+<script>
+(() => {
+    const map = <?php echo json_encode($kelasRombelMap, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+    const kelasSel = document.getElementById('kelas_select');
+    const rombelSel = document.getElementById('rombel_select');
+    if (!kelasSel || !rombelSel) return;
+
+    const rebuild = () => {
+        const k = String(kelasSel.value || '');
+        const list = Array.isArray(map[k]) ? map[k] : [];
+        const prev = String(rombelSel.value || '');
+        rombelSel.innerHTML = '';
+        const opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = '-- pilih rombel --';
+        rombelSel.appendChild(opt0);
+        list.forEach((rb) => {
+            const opt = document.createElement('option');
+            opt.value = rb;
+            opt.textContent = rb;
+            rombelSel.appendChild(opt);
+        });
+        if (prev && list.includes(prev)) {
+            rombelSel.value = prev;
+        } else {
+            rombelSel.value = '';
+        }
+    };
+
+    kelasSel.addEventListener('change', rebuild);
+    rebuild();
+})();
+</script>
+<?php endif; ?>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

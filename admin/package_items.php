@@ -59,7 +59,7 @@ if (app_runtime_migrations_enabled()) {
 }
 
 function build_package_items_return_url(int $packageId, array $get): string {
-    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri'];
+    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri', 'return'];
     $parts = ['package_id=' . rawurlencode((string)$packageId)];
     foreach ($allowed as $k) {
         if (!isset($get[$k])) {
@@ -74,11 +74,25 @@ function build_package_items_return_url(int $packageId, array $get): string {
     return 'package_items.php?' . implode('&', $parts);
 }
 
+$sanitizeReturn = static function ($url, string $fallback): string {
+    $url = trim((string)$url);
+    if ($url === '') return $fallback;
+    if (str_contains($url, "\n") || str_contains($url, "\r")) return $fallback;
+    if (str_starts_with($url, '//')) return $fallback;
+    $p = @parse_url($url);
+    if (is_array($p) && (isset($p['scheme']) || isset($p['host']))) return $fallback;
+    if (!preg_match('~^[A-Za-z0-9_./?&=%\-]+$~', $url)) return $fallback;
+    return $url;
+};
+
 $packageId = (int)($_GET['package_id'] ?? 0);
 if ($packageId <= 0) {
     header('Location: packages.php');
     exit;
 }
+
+$backUrl = $sanitizeReturn($_GET['return'] ?? '', 'packages.php');
+$selfUrl = build_package_items_return_url((int)$packageId, $_GET);
 
 $package = null;
 try {
@@ -107,19 +121,7 @@ if (!$package) {
     exit;
 }
 
-// Block direct access for exam packages (managed in Ujian 0 Paket Ujian)
-if ($hasIsExamColumn) {
-    try {
-        $stmt = $pdo->prepare('SELECT COALESCE(is_exam, 0) FROM packages WHERE id = :id');
-        $stmt->execute([':id' => $packageId]);
-        $isExam = (int)$stmt->fetchColumn();
-        if ($isExam === 1) {
-            header('Location: ../siswa/admin/exam_packages.php');
-            exit;
-        }
-    } catch (Throwable $e) {
-    }
-}
+// Exam packages are also editable here; the exam package list lives in siswa/admin/exam_packages.php.
 
 $isLocked = false;
 
@@ -554,15 +556,52 @@ try {
 
 $items = [];
 try {
-    $stmt = $pdo->prepare('SELECT q.id, q.pertanyaan, q.tipe_soal, q.status_soal,
-            q.jawaban_benar, q.penyelesaian,
-            pq.question_number, pq.added_at
-        FROM package_questions pq
-        JOIN questions q ON q.id = pq.question_id
-        WHERE pq.package_id = :pid
-        ORDER BY (pq.question_number IS NULL) ASC, pq.question_number ASC, pq.added_at DESC');
-    $stmt->execute([':pid' => $packageId]);
-    $items = $stmt->fetchAll();
+    $buildItemsSql = static function (bool $withStatus, bool $withJawaban, bool $withPeny): string {
+        $cols = [
+            'q.id',
+            'q.pertanyaan',
+            'q.tipe_soal',
+        ];
+        if ($withStatus) {
+            $cols[] = 'q.status_soal';
+        }
+        if ($withJawaban) {
+            $cols[] = 'q.jawaban_benar';
+        }
+        if ($withPeny) {
+            $cols[] = 'q.penyelesaian';
+        }
+        $cols[] = 'pq.question_number';
+        $cols[] = 'pq.added_at';
+
+        return 'SELECT ' . implode(', ', $cols) . '
+            FROM package_questions pq
+            JOIN questions q ON q.id = pq.question_id
+            WHERE pq.package_id = :pid
+            ORDER BY (pq.question_number IS NULL) ASC, pq.question_number ASC, pq.added_at DESC';
+    };
+
+    $attempts = [
+        // Newer schema
+        [true, true, true],
+        [true, true, false],
+        [true, false, false],
+        // Older schema: no status_soal
+        [false, true, true],
+        [false, true, false],
+        [false, false, false],
+    ];
+
+    foreach ($attempts as [$withStatus, $withJawaban, $withPeny]) {
+        try {
+            $stmt = $pdo->prepare($buildItemsSql($withStatus, $withJawaban, $withPeny));
+            $stmt->execute([':pid' => $packageId]);
+            $items = $stmt->fetchAll();
+            break;
+        } catch (PDOException $e) {
+            $items = [];
+        }
+    }
 } catch (PDOException $e) {
     $items = [];
 }
@@ -618,8 +657,8 @@ include __DIR__ . '/../includes/header.php';
                     <button type="submit" class="btn btn-outline-warning btn-sm">Bersihkan Draft (<?php echo (int)$draftItemsCount; ?>)</button>
                 </form>
             <?php endif; ?>
-            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>" class="btn btn-primary btn-sm">Tambah Butir Soal</a>
-            <a href="packages.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
+            <a href="package_question_add.php?package_id=<?php echo (int)$packageId; ?>&nomer_baru=<?php echo (int)$nextNoCreate; ?>&return=<?php echo urlencode($selfUrl); ?>" class="btn btn-primary btn-sm">Tambah Butir Soal</a>
+            <a href="<?php echo htmlspecialchars($backUrl); ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
         </div>
     </div>
 
@@ -652,7 +691,7 @@ include __DIR__ . '/../includes/header.php';
                                     $introStatus = (string)($introContent['status'] ?? '');
                                     $introType = (string)($introContent['type'] ?? '');
                                     $adminEditUrl = 'content_edit.php?id=' . (int)($introContent['id'] ?? 0)
-                                        . '&return=' . urlencode('package_items.php?package_id=' . (int)$packageId);
+                                        . '&return=' . urlencode($selfUrl);
                                     $publicUrl = '../post.php?slug=' . rawurlencode($introSlug);
                                 ?>
                                 <span class="badge text-bg-light border"><?php echo htmlspecialchars($introType); ?></span>
@@ -932,14 +971,14 @@ include __DIR__ . '/../includes/header.php';
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap justify-content-end">
-                                    <a class="btn btn-outline-secondary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>" title="Lihat" aria-label="Lihat">
+                                    <a class="btn btn-outline-secondary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_view.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode($selfUrl); ?>" title="Lihat" aria-label="Lihat">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M1.5 12s4-7.5 10.5-7.5S22.5 12 22.5 12s-4 7.5-10.5 7.5S1.5 12 1.5 12z" />
                                             <circle cx="12" cy="12" r="3" />
                                         </svg>
                                         <span class="visually-hidden">Lihat</span>
                                     </a>
-                                    <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode('package_items.php?package_id=' . $packageId); ?>" title="Edit" aria-label="Edit">
+                                    <a class="btn btn-outline-primary btn-sm px-2 d-inline-flex align-items-center justify-content-center" href="question_edit.php?id=<?php echo (int)$it['id']; ?>&package_id=<?php echo (int)$packageId; ?>&return=<?php echo urlencode($selfUrl); ?>" title="Edit" aria-label="Edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M12 20h9" />
                                             <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />

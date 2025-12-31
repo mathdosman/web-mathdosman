@@ -342,7 +342,35 @@ try {
 // Candidates for modal add.
 $kelasOptions = [];
 try {
-    $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+    $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
+    if ($hasKelasRombelsTable) {
+        $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+
+        // If empty, seed from existing students once.
+        if (!$rowsKr) {
+            try {
+                $seedRows = $pdo->query('SELECT DISTINCT kelas, rombel
+                    FROM students
+                    WHERE kelas IS NOT NULL AND TRIM(kelas) <> ""
+                      AND rombel IS NOT NULL AND TRIM(rombel) <> ""
+                    ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+                $stmtIns = $pdo->prepare('INSERT IGNORE INTO kelas_rombels (kelas, rombel) VALUES (:k, :r)');
+                foreach ((array)$seedRows as $sr) {
+                    $k = trim((string)($sr['kelas'] ?? ''));
+                    $r = trim((string)($sr['rombel'] ?? ''));
+                    if ($k === '' || $r === '') continue;
+                    $stmtIns->execute([':k' => $k, ':r' => $r]);
+                }
+            } catch (Throwable $e) {
+                // ignore seeding errors
+            }
+        }
+
+        $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM kelas_rombels WHERE TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+    } else {
+        $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     if (!is_array($kelasOptions)) $kelasOptions = [];
 } catch (Throwable $e) {
     $kelasOptions = [];

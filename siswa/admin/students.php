@@ -100,10 +100,13 @@ include __DIR__ . '/../../includes/header.php';
         </div>
         <div class="admin-page-actions">
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan</a>
-            <a class="btn btn-outline-secondary" href="seed_dummy_students.php">Buat Akun Dummy</a>
+            <a class="btn btn-outline-secondary" href="students_import.php">Import XLS</a>
+            <a class="btn btn-outline-secondary" href="students_export.php">Download XLS</a>
+            <a class="btn btn-outline-secondary" href="rombels.php">Rombel</a>
             <a class="btn btn-primary" href="student_add.php">Tambah Siswa</a>
         </div>
     </div>
+
 
     <?php if ($errors): ?>
         <div class="alert alert-danger">

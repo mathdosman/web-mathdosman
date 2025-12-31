@@ -593,12 +593,11 @@ include __DIR__ . '/../includes/header.php';
                                     <?php else: ?>
                                         <span class="badge text-bg-secondary">Draft</span>
                                     <?php endif; ?>
-                                    <?php if ((int)($p['published_count'] ?? 0) > 0): ?>
-                                        <span class="badge text-bg-success ms-1">Soal Terbit: <?php echo (int)$p['published_count']; ?></span>
-                                    <?php endif; ?>
-                                    <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
-                                        <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>
-                                    <?php endif; ?>
+
+                                    <div class="mt-1">
+                                        <span class="badge text-bg-success" title="Soal terbit" aria-label="Soal terbit"><?php echo (int)($p['published_count'] ?? 0); ?></span>
+                                        <span class="badge text-bg-secondary ms-1" title="Soal draft" aria-label="Soal draft"><?php echo (int)($p['draft_count'] ?? 0); ?></span>
+                                    </div>
                                 </div>
 
                                 <div class="text-muted small md-cell-clamp">
@@ -625,12 +624,11 @@ include __DIR__ . '/../includes/header.php';
                                 <?php else: ?>
                                     <span class="badge text-bg-secondary">Draft</span>
                                 <?php endif; ?>
-                                <?php if ((int)($p['published_count'] ?? 0) > 0): ?>
-                                    <span class="badge text-bg-success ms-1">Soal Terbit: <?php echo (int)$p['published_count']; ?></span>
-                                <?php endif; ?>
-                                <?php if ((int)($p['draft_count'] ?? 0) > 0): ?>
-                                    <span class="badge text-bg-warning ms-1">Soal Draft: <?php echo (int)$p['draft_count']; ?></span>
-                                <?php endif; ?>
+
+                                <div class="mt-1">
+                                    <span class="badge text-bg-success" title="Soal terbit" aria-label="Soal terbit"><?php echo (int)($p['published_count'] ?? 0); ?></span>
+                                    <span class="badge text-bg-secondary ms-1" title="Soal draft" aria-label="Soal draft"><?php echo (int)($p['draft_count'] ?? 0); ?></span>
+                                </div>
                             </td>
                             <td class="text-end d-none d-sm-table-cell"><span class="text-muted"><?php echo (int)($p['views'] ?? 0); ?></span></td>
                             <td class="d-none d-md-table-cell text-center"><span class="text-muted text-nowrap"><?php echo htmlspecialchars(format_id_date((string)($p['created_at'] ?? ''))); ?></span></td>
