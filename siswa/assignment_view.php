@@ -3,7 +3,6 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/security.php';
 require_once __DIR__ . '/../includes/richtext.php';
-require_once __DIR__ . '/../includes/wa.php';
 
 siswa_require_login();
 
@@ -607,7 +606,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
 
             if ($finalize) {
-                wa_send_exam_result_notification($pdo, $studentId, $id, false);
             }
         } catch (Throwable $e) {
             try { $pdo->rollBack(); } catch (Throwable $e2) {}
