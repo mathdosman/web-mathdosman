@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/security.php';
+require_once __DIR__ . '/../../includes/wa.php';
 
 require_role('admin');
 
@@ -224,6 +225,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute($params);
 
                 $pdo->commit();
+
+                wa_send_exam_result_notification($pdo, $studentId, $assignmentId, true);
                 header('Location: monitoring_ujian.php?success=1');
                 exit;
             } catch (Throwable $e) {
