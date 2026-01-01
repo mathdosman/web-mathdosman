@@ -1017,6 +1017,21 @@ body.mini-game-public.mini-game-running .card.shadow-sm .card-body > *:not(#gm-h
     text-align: right;
 }
 
+.mini-game-sidebar-highscore .mini-sidebar-trophy {
+    width: 1.1rem;
+    height: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: .15rem;
+    flex-shrink: 0;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-trophy::before {
+    content: '\1F3C6'; /* trophy symbol */
+    font-size: .85rem;
+}
+
 .mini-game-sidebar-highscore .mini-sidebar-rank-badge {
     display: inline-flex;
     align-items: center;
@@ -1058,6 +1073,22 @@ body.mini-game-public.mini-game-running .card.shadow-sm .card-body > *:not(#gm-h
 
 .mini-game-sidebar-highscore .mini-sidebar-rank-other {
     opacity: 0.9;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-1 .mini-sidebar-trophy {
+    color: #facc15; /* gold */
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-2 .mini-sidebar-trophy {
+    color: #e5e7eb; /* silver */
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-3 .mini-sidebar-trophy {
+    color: #f97316; /* bronze */
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-other .mini-sidebar-trophy {
+    color: #9ca3af; /* grey for ranks 4+ */
 }
 
 /* Konsistensi warna nama untuk pemain yang sama (digunakan di sidebar & tabel highscore) */

@@ -13,18 +13,19 @@ if (isset($_GET['mode']) && $_GET['mode'] === 'muldiv') {
     $mode = 'muldiv';
 }
 
-// Nama tamu acak dari nama bunga, disimpan di session agar konsisten selama sesi.
+// Nama tamu acak dari istilah matematika umum, disimpan di session agar konsisten selama sesi.
 if (!function_exists('mini_game_guest_name')) {
     function mini_game_guest_name(): string
     {
         $key = 'mini_game_guest_name';
         if (!isset($_SESSION[$key]) || !is_string($_SESSION[$key]) || $_SESSION[$key] === '') {
-            $flowers = [
-                'Mawar', 'Melati', 'Anggrek', 'Kenanga', 'Kamboja',
-                'Tulip', 'Lily', 'Dahlia', 'Krisan', 'Sakura',
-                'Teratai', 'Bougenville', 'Sepatu', 'Kertas', 'Cemara'
+            $terms = [
+                'Aljabar', 'Geometri', 'Trigonometri', 'Kalkulus', 'Integral',
+                'Turunan', 'Limit', 'Peluang', 'Statistika', 'Vektor',
+                'Matriks', 'Fungsi', 'Gradien', 'Persamaan', 'Lingkaran',
+                'Segitiga', 'Logaritma', 'Eksponen', 'Deret', 'Barisan'
             ];
-            $base = $flowers[array_rand($flowers)];
+            $base = $terms[array_rand($terms)];
             $suffix = random_int(1, 99);
             $_SESSION[$key] = $base . ' ' . $suffix;
         }

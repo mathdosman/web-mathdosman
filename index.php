@@ -588,7 +588,7 @@ function render_home_sidebar_widgets(
                         FROM math_game_scores
                         WHERE mode = :mode
                         ORDER BY score DESC, created_at ASC
-                        LIMIT 7');
+                        LIMIT 10');
 
                     $stmt->execute([':mode' => 'addsub']);
                     $miniGameAddSub = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -599,7 +599,7 @@ function render_home_sidebar_widgets(
                     $stmt = $pdo->query('SELECT student_name, kelas, rombel, score, created_at
                         FROM math_game_scores
                         ORDER BY score DESC, created_at ASC
-                        LIMIT 7');
+                        LIMIT 10');
                     $miniGameAddSub = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
                     $miniGameMulDiv = [];
                 }
@@ -741,83 +741,83 @@ function render_home_sidebar_widgets(
         </div>
         <div class="card-body small mini-game-sidebar-highscore">
             <a href="game_math_public.php" class="btn btn-primary btn-sm w-100 mb-2">Ikut Bermain</a>
-            <div class="text-muted small mb-3">Tidak perlu login, nama pemain akan dibuat acak dari nama bunga.</div>
-            <div class="mini-game-sidebar-columns">
-                <div class="mini-game-sidebar-col">
-                    <div class="fw-semibold small text-muted mb-1">Tambah / Kurang</div>
-                    <?php if (!$miniGameAddSub): ?>
-                        <div class="text-muted small">Belum ada data.</div>
-                    <?php else: ?>
-                        <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
-                            <?php foreach ($miniGameAddSub as $idx => $row): ?>
-                                <?php
-                                    $rank = $idx + 1;
-                                    $name = trim((string)($row['student_name'] ?? ''));
-                                    $score = (int)($row['score'] ?? 0);
+            <div class="text-muted small mb-3">Tidak perlu login, nama pemain akan dibuat acak dari istilah matematika.</div>
+            <div class="mb-3">
+                <div class="fw-semibold small text-muted mb-1">Tambah / Kurang</div>
+                <?php if (!$miniGameAddSub): ?>
+                    <div class="text-muted small">Belum ada data.</div>
+                <?php else: ?>
+                    <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
+                        <?php foreach ($miniGameAddSub as $idx => $row): ?>
+                            <?php
+                                $rank = $idx + 1;
+                                $name = trim((string)($row['student_name'] ?? ''));
+                                $score = (int)($row['score'] ?? 0);
                                 $hash = (int)crc32(strtolower($name));
                                 if ($hash < 0) {
                                     $hash = -$hash;
                                 }
                                 $colorIndex = ($hash % 5) + 1;
                                 $nameColorClass = 'mini-name-color-' . $colorIndex;
-                                    $rankClass = 'mini-sidebar-rank-other';
-                                    if ($rank === 1) {
-                                        $rankClass = 'mini-sidebar-rank-1';
-                                    } elseif ($rank === 2) {
-                                        $rankClass = 'mini-sidebar-rank-2';
-                                    } elseif ($rank === 3) {
-                                        $rankClass = 'mini-sidebar-rank-3';
-                                    }
-                                ?>
-                                <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
-                                    <div class="mini-sidebar-main">
-                                        <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
-                                        <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
-                                    </div>
-                                    <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ol>
-                    <?php endif; ?>
-                </div>
+                                $rankClass = 'mini-sidebar-rank-other';
+                                if ($rank === 1) {
+                                    $rankClass = 'mini-sidebar-rank-1';
+                                } elseif ($rank === 2) {
+                                    $rankClass = 'mini-sidebar-rank-2';
+                                } elseif ($rank === 3) {
+                                    $rankClass = 'mini-sidebar-rank-3';
+                                }
+                            ?>
+                            <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
+                                <div class="mini-sidebar-main">
+                                    <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
+                                    <span class="mini-sidebar-trophy"></span>
+                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
+                                </div>
+                                <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                <?php endif; ?>
+            </div>
 
-                <div class="mini-game-sidebar-col">
-                    <div class="fw-semibold small text-muted mb-1">Kali / Bagi</div>
-                    <?php if (!$miniGameMulDiv): ?>
-                        <div class="text-muted small">Belum ada data.</div>
-                    <?php else: ?>
-                        <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
-                            <?php foreach ($miniGameMulDiv as $idx => $row): ?>
-                                <?php
-                                    $rank = $idx + 1;
-                                    $name = trim((string)($row['student_name'] ?? ''));
-                                    $score = (int)($row['score'] ?? 0);
+            <div>
+                <div class="fw-semibold small text-muted mb-1">Kali / Bagi</div>
+                <?php if (!$miniGameMulDiv): ?>
+                    <div class="text-muted small">Belum ada data.</div>
+                <?php else: ?>
+                    <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
+                        <?php foreach ($miniGameMulDiv as $idx => $row): ?>
+                            <?php
+                                $rank = $idx + 1;
+                                $name = trim((string)($row['student_name'] ?? ''));
+                                $score = (int)($row['score'] ?? 0);
                                 $hash = (int)crc32(strtolower($name));
                                 if ($hash < 0) {
                                     $hash = -$hash;
                                 }
                                 $colorIndex = ($hash % 5) + 1;
                                 $nameColorClass = 'mini-name-color-' . $colorIndex;
-                                    $rankClass = 'mini-sidebar-rank-other';
-                                    if ($rank === 1) {
-                                        $rankClass = 'mini-sidebar-rank-1';
-                                    } elseif ($rank === 2) {
-                                        $rankClass = 'mini-sidebar-rank-2';
-                                    } elseif ($rank === 3) {
-                                        $rankClass = 'mini-sidebar-rank-3';
-                                    }
-                                ?>
-                                <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
-                                    <div class="mini-sidebar-main">
-                                        <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
-                                        <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
-                                    </div>
-                                    <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ol>
-                    <?php endif; ?>
-                </div>
+                                $rankClass = 'mini-sidebar-rank-other';
+                                if ($rank === 1) {
+                                    $rankClass = 'mini-sidebar-rank-1';
+                                } elseif ($rank === 2) {
+                                    $rankClass = 'mini-sidebar-rank-2';
+                                } elseif ($rank === 3) {
+                                    $rankClass = 'mini-sidebar-rank-3';
+                                }
+                            ?>
+                            <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
+                                <div class="mini-sidebar-main">
+                                    <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
+                                    <span class="mini-sidebar-trophy"></span>
+                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
+                                </div>
+                                <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                <?php endif; ?>
             </div>
         </div>
     </div>
