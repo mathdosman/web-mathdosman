@@ -88,8 +88,11 @@ let qr;
 let soket;
 
 async function connectToWhatsApp() {
+    console.log("[WA] Initializing WhatsApp connection...");
 	const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info')
-	let { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log("[WA] Auth state loaded.");
+    let { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log("[WA] Using WA version", version, "isLatest=", isLatest);
     sock = makeWASocket({
         printQRInTerminal: true,
 		auth: state,
@@ -104,10 +107,12 @@ async function connectToWhatsApp() {
         const { connection, lastDisconnect, qr: qrCode } = update;
 
         if (qrCode) {
+            console.log("[WA] QR code received from Baileys");
             qr = qrCode;
             updateQR("qr");
         }
 		if(connection === 'close') {
+            console.log("[WA] Connection closed, determining reason...");
             let reason = new Boom(lastDisconnect.error).output.statusCode;
 			if (reason === DisconnectReason.badSession) {
 				console.log(`Bad Session File, Please Delete ${session} and Scan Again`);
@@ -134,7 +139,7 @@ async function connectToWhatsApp() {
 				sock.end(`Unknown DisconnectReason: ${reason}|${lastDisconnect.error}`);
 			}
         }else if(connection === 'open') {
-			console.log('opened connection');
+            console.log('[WA] Opened connection to WhatsApp');
             updateQR("connected");
 			let getGroups = await sock.groupFetchAllParticipating();
 			let groups = Object.entries(getGroups).slice(0).map(entry => entry[1]);
@@ -170,12 +175,16 @@ async function connectToWhatsApp() {
 
 io.on("connection", async (socket) => {
     soket = socket;
+    console.log("[WA] New Socket.IO client connected");
     // console.log(sock)
 	if (isConnected()) {
+        console.log("[WA] Socket.IO client: WA already connected, sending 'connected' status");
         updateQR("connected");
     } else if (qr) {
+        console.log("[WA] Socket.IO client: existing QR available, sending QR");
         updateQR("qr");   
 	} else {
+        console.log("[WA] Socket.IO client: no QR yet, sending 'loading'");
 		updateQR("loading");
     }
 });
