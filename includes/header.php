@@ -244,6 +244,13 @@ try {
         </script>
         <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <?php endif; ?>
+    <?php
+        $use_recaptcha = !empty($use_recaptcha);
+        $recaptcha_site_key = defined('RECAPTCHA_SITE_KEY') ? (string)RECAPTCHA_SITE_KEY : '';
+        if ($use_recaptcha && $recaptcha_site_key !== ''):
+    ?>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <?php endif; ?>
 </head>
 <body class="bg-light<?php echo $useSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $siswaAdminBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
 <?php if (!$disable_navbar): ?>
@@ -313,12 +320,12 @@ try {
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?php echo $base_url; ?>/siswa/dashboard.php">Dashboard Siswa</a></li>
-                                <!-- Logout siswa hanya lewat sidebar -->
+                                <li><a class="dropdown-item" href="<?php echo $base_url; ?>/siswa/logout.php">Logout</a></li>
                             </ul>
                         </li>
                     <?php else: ?>
                         <li class="nav-item me-2">
-                            <a class="btn btn-outline-light" href="<?php echo $base_url; ?>/siswa/login.php">Login Siswa</a>
+                            <a class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill" href="<?php echo $base_url; ?>/siswa/login.php">Login Siswa</a>
                         </li>
                     <?php endif; ?>
                 <?php endif; ?>

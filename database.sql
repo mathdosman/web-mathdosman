@@ -221,3 +221,21 @@ CREATE TABLE IF NOT EXISTS page_views (
     KEY idx_page_views_views (views),
     KEY idx_page_views_last_viewed (last_viewed_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabel skor mini game matematika (publik + siswa)
+CREATE TABLE IF NOT EXISTS math_game_scores (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    student_id INT UNSIGNED NOT NULL,
+    student_name VARCHAR(255) NOT NULL,
+    kelas VARCHAR(50) DEFAULT NULL,
+    rombel VARCHAR(50) DEFAULT NULL,
+    mode VARCHAR(20) NOT NULL DEFAULT 'addsub',
+    score INT NOT NULL,
+    questions_answered INT NOT NULL,
+    max_level INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_student_id (student_id),
+    KEY idx_score (score),
+    KEY idx_created_at (created_at),
+    KEY idx_mode (mode)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

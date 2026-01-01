@@ -23,5 +23,15 @@ if (!defined('DISQUS_SHORTNAME')) {
 	define('DISQUS_SHORTNAME', 'mathdosman');
 }
 
+// Google reCAPTCHA (opsional)
+// Dapatkan site key & secret key dari https://www.google.com/recaptcha/admin
+// dan isi di config.php (bukan di file example ini) saat deploy.
+if (!defined('RECAPTCHA_SITE_KEY')) {
+	define('RECAPTCHA_SITE_KEY', '');
+}
+if (!defined('RECAPTCHA_SECRET_KEY')) {
+	define('RECAPTCHA_SECRET_KEY', '');
+}
+
 // Zona waktu default
 date_default_timezone_set('Asia/Jakarta');

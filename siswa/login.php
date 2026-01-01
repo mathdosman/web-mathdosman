@@ -7,6 +7,21 @@ if (!empty($_SESSION['student'])) {
 }
 
 $error = '';
+$captcha_question = '';
+
+$recaptcha_site_key = defined('RECAPTCHA_SITE_KEY') ? (string)RECAPTCHA_SITE_KEY : '';
+$recaptcha_secret_key = defined('RECAPTCHA_SECRET_KEY') ? (string)RECAPTCHA_SECRET_KEY : '';
+$recaptcha_enabled = ($recaptcha_site_key !== '' && $recaptcha_secret_key !== '');
+
+if (!$recaptcha_enabled && !function_exists('generate_student_login_captcha')) {
+    function generate_student_login_captcha(): string
+    {
+        $a = random_int(1, 9);
+        $b = random_int(1, 9);
+        $_SESSION['student_login_captcha_answer'] = (string)($a + $b);
+        return $a . ' + ' . $b . ' = ?';
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim((string)($_POST['username'] ?? ''));
@@ -24,6 +39,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($error === '' && ($username === '' || $password === '')) {
         $error = 'Username dan password wajib diisi.';
+    }
+
+    if ($error === '') {
+        if ($recaptcha_enabled) {
+            $recaptcha_response = trim((string)($_POST['g-recaptcha-response'] ?? ''));
+            if ($recaptcha_response === '') {
+                $error = 'Silakan selesaikan verifikasi reCAPTCHA.';
+            } else {
+                try {
+                    $verifyData = http_build_query([
+                        'secret' => $recaptcha_secret_key,
+                        'response' => $recaptcha_response,
+                        'remoteip' => $ip,
+                    ]);
+                    $context = stream_context_create([
+                        'http' => [
+                            'method' => 'POST',
+                            'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                            'content' => $verifyData,
+                            'timeout' => 5,
+                        ],
+                    ]);
+                    $result = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+                    if ($result === false) {
+                        $error = 'Verifikasi reCAPTCHA gagal. Silakan coba lagi.';
+                    } else {
+                        $json = json_decode($result, true);
+                        if (!is_array($json) || empty($json['success'])) {
+                            $error = 'Verifikasi reCAPTCHA tidak valid. Silakan coba lagi.';
+                        }
+                    }
+                } catch (Throwable $e) {
+                    $error = 'Verifikasi reCAPTCHA gagal. Silakan coba lagi.';
+                }
+            }
+        } else {
+            $captcha_input = trim((string)($_POST['captcha'] ?? ''));
+            $expected_captcha = (string)($_SESSION['student_login_captcha_answer'] ?? '');
+
+            if ($expected_captcha === '' || $captcha_input === '') {
+                $error = 'Jawaban verifikasi wajib diisi.';
+            } elseif (!hash_equals($expected_captcha, $captcha_input)) {
+                $error = 'Jawaban verifikasi salah. Silakan coba lagi.';
+            }
+        }
     }
 
     if ($error === '') {
@@ -80,6 +140,9 @@ $use_mathjax = false;
 $disable_public_footer = true;
 $body_class = 'student-login-page';
 $extra_stylesheets = ['assets/css/student-login.css'];
+if ($recaptcha_enabled) {
+    $use_recaptcha = true;
+}
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="login-container">
@@ -125,7 +188,22 @@ include __DIR__ . '/../includes/header.php';
                     </button>
                 </div>
             </div>
-            <button type="submit" class="btn-login">Masuk ke Dashboard</button>
+            <?php if ($recaptcha_enabled): ?>
+                <div class="input-group">
+                    <label>Verifikasi</label>
+                    <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars($recaptcha_site_key); ?>"></div>
+                </div>
+            <?php else: ?>
+                <div class="input-group">
+                    <label for="captcha">Verifikasi</label>
+                    <div class="captcha-box">
+                        Berapa hasil: <?php echo htmlspecialchars($captcha_question); ?>
+                    </div>
+                    <input type="text" id="captcha" name="captcha" placeholder="Jawab" required inputmode="numeric" pattern="[0-9]*">
+                </div>
+            <?php endif; ?>
+            <button type="submit" class="btn-login">Login Siswa</button>
+            <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/index.php'); ?>" class="btn btn-outline-secondary w-100 mt-2">Kembali ke Halaman Utama</a>
         </form>
 
         <footer>

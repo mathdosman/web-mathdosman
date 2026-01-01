@@ -170,6 +170,27 @@ body.student-login-page .btn-login:hover {
     background: #1d4ed8;
 }
 
+/* Captcha Styles */
+body.student-login-page .captcha-box {
+    display: block;
+    margin-bottom: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #eef2ff;
+    border: 2px dashed #6366f1;
+    color: #1e3a8a;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    letter-spacing: 0.03em;
+}
+
+body.student-login-page #captcha {
+    max-width: 160px;
+    text-align: center;
+    font-weight: 600;
+}
+
 /* Footer Styles */
 body.student-login-page .login-card footer {
     margin-top: 25px;
