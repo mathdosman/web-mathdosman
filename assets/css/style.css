@@ -890,6 +890,250 @@ body.student-layout #studentSidebar .sidebar-link[aria-current="page"] {
     border-color: rgba(var(--bs-primary-rgb), 0.38);
 }
 
+/* Indent sedikit anak menu di dalam grup Mini Game (sidebar siswa) */
+body.student-layout #studentSidebar #studentSidebarMiniGame .sidebar-link {
+    margin-left: .75rem;
+}
+
+/* ====== Mini Game (siswa/game_math.php) ====== */
+body.student-area #gm-question-box {
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 0.75rem 1.75rem rgba(15, 23, 42, 0.25);
+    border-radius: 1.25rem;
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    background: radial-gradient(circle at top left, rgba(var(--bs-primary-rgb), 0.08), transparent 60%),
+                radial-gradient(circle at bottom right, rgba(var(--bs-info-rgb), 0.10), transparent 60%),
+                var(--bs-body-bg);
+}
+
+body.student-area #gm-question {
+    text-align: center;
+    width: 100%;
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    letter-spacing: .03em;
+}
+
+body.student-area #gm-form {
+    justify-content: center;
+}
+
+body.student-area #gm-answer,
+body.mini-game-public #gm-answer {
+    font-size: 1.35rem;
+    text-align: center;
+    padding-top: .45rem;
+    padding-bottom: .45rem;
+}
+
+body.student-area #gm-time,
+body.student-area #gm-score,
+body.student-area #gm-level,
+body.mini-game-public #gm-time,
+body.mini-game-public #gm-score,
+body.mini-game-public #gm-level {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Saat mini game berjalan: fokuskan tampilan hanya ke HUD & soal */
+body.student-area.mini-game-running .app-navbar,
+body.student-area.mini-game-running #studentSidebar,
+body.mini-game-public.mini-game-running .app-navbar {
+    display: none !important;
+}
+
+body.student-area.mini-game-running .app-container,
+body.mini-game-public.mini-game-running .app-container {
+    padding-top: 1.25rem;
+}
+
+body.student-area.mini-game-running .content-card,
+body.mini-game-public.mini-game-running .content-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+body.student-area.mini-game-running .card.shadow-sm,
+body.mini-game-public.mini-game-running .card.shadow-sm {
+    background: transparent;
+    border: none;
+    box-shadow: none !important;
+}
+
+body.student-area.mini-game-running .card.shadow-sm .card-body > *:not(#gm-hud):not(#gm-status):not(#gm-question-box),
+body.mini-game-public.mini-game-running .card.shadow-sm .card-body > *:not(#gm-hud):not(#gm-status):not(#gm-question-box) {
+    display: none !important;
+}
+
+/* ====== Mini Game: Highscore Sidebar (index.php) ====== */
+.mini-game-sidebar-highscore {
+    --mini-sidebar-gold: #facc15;
+    --mini-sidebar-silver: #e5e7eb;
+    --mini-sidebar-bronze: #f97316;
+}
+
+.mini-game-sidebar-highscore .mini-game-sidebar-list {
+    margin-bottom: 0;
+}
+
+.mini-game-sidebar-highscore .mini-game-sidebar-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: .75rem;
+}
+
+.mini-game-sidebar-highscore .mini-game-sidebar-col {
+    min-width: 0;
+}
+
+.mini-game-sidebar-highscore .mini-game-sidebar-col > .fw-semibold {
+    text-align: center;
+    display: block;
+}
+
+.mini-game-sidebar-highscore .mini-game-sidebar-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto; /* nama (wrap) | skor */
+    column-gap: .35rem;
+    padding: .25rem 0;
+    font-size: .8rem;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-main {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-name {
+    overflow-wrap: anywhere;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-score {
+    font-variant-numeric: tabular-nums;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 700;
+    margin-right: .35rem;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.06);
+    color: #4b5563;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-1 .mini-sidebar-rank-badge {
+    background: radial-gradient(circle at 30% 20%, #fef9c3, #facc15);
+    color: #78350f;
+    box-shadow: 0 0 0 1px rgba(252, 211, 77, 0.7);
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-2 .mini-sidebar-rank-badge {
+    background: radial-gradient(circle at 30% 20%, #f9fafb, #e5e7eb);
+    color: #374151;
+    box-shadow: 0 0 0 1px rgba(209, 213, 219, 0.8);
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-3 .mini-sidebar-rank-badge {
+    background: radial-gradient(circle at 30% 20%, #ffedd5, #f97316);
+    color: #7c2d12;
+    box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.8);
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-1 .mini-sidebar-name,
+.mini-game-sidebar-highscore .mini-sidebar-rank-2 .mini-sidebar-name,
+.mini-game-sidebar-highscore .mini-sidebar-rank-3 .mini-sidebar-name {
+    font-weight: 700;
+}
+
+.mini-game-sidebar-highscore .mini-sidebar-rank-other {
+    opacity: 0.9;
+}
+
+/* Konsistensi warna nama untuk pemain yang sama (digunakan di sidebar & tabel highscore) */
+.mini-name-color-1 {
+    color: #2563eb; /* biru */
+}
+
+.mini-name-color-2 {
+    color: #16a34a; /* hijau */
+}
+
+.mini-name-color-3 {
+    color: #ea580c; /* oranye */
+}
+
+.mini-name-color-4 {
+    color: #7c3aed; /* ungu */
+}
+
+.mini-name-color-5 {
+    color: #db2777; /* magenta */
+}
+
+/* ====== Mini Game: Highscore Tabel (siswa/game_math_scores.php) ====== */
+body.student-area .mini-game-highscore-table {
+    --mini-rank-gold: #facc15;
+    --mini-rank-silver: #e5e7eb;
+    --mini-rank-bronze: #f97316;
+}
+
+body.student-area .mini-game-highscore-table .mini-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: .15rem .45rem;
+    border-radius: 999px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    font-variant-numeric: tabular-nums;
+    background: rgba(15, 23, 42, 0.85);
+    color: #f9fafb;
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-1 .mini-rank-badge {
+    background: linear-gradient(135deg, #f97316, var(--mini-rank-gold));
+    color: #111827;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, .3);
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-2 .mini-rank-badge {
+    background: linear-gradient(135deg, #e5e7eb, #9ca3af);
+    color: #111827;
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-3 .mini-rank-badge {
+    background: linear-gradient(135deg, #fed7aa, var(--mini-rank-bronze));
+    color: #111827;
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-1 {
+    background: linear-gradient(90deg, rgba(250, 204, 21, .12), transparent);
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-2 {
+    background: linear-gradient(90deg, rgba(148, 163, 184, .12), transparent);
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-3 {
+    background: linear-gradient(90deg, rgba(248, 113, 113, .10), transparent);
+}
+
+body.student-area .mini-game-highscore-table tr.mini-rank-others:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
 /* Constrain admin pages for nicer readability */
 body.admin-layout .admin-page {
     max-width: 1240px;

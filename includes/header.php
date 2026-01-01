@@ -629,6 +629,54 @@ try {
                     <span>Hasil</span>
                 </a>
 
+                <?php
+                    $miniGamePages = ['game_math.php', 'game_math_scores.php'];
+                    $miniGameActive = in_array($currentPage, $miniGamePages, true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+                    $miniGameExpanded = $miniGameActive;
+                    $requestUri = (string)($_SERVER['REQUEST_URI'] ?? '');
+                    $isMulDivMode = (strpos($requestUri, 'mode=muldiv') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $miniGameExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#studentSidebarMiniGame" role="button" aria-expanded="<?php echo $miniGameExpanded ? 'true' : 'false'; ?>" aria-controls="studentSidebarMiniGame">
+                    <span class="sidebar-section-emphasis">Mini Game</span>
+                </a>
+
+                <div class="collapse<?php echo $miniGameExpanded ? ' show' : ''; ?>" id="studentSidebarMiniGame">
+                    <?php
+                        $isActive = ($currentPage === 'game_math.php') && !$isMulDivMode && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+                    ?>
+                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/game_math.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 5v14"/>
+                            <path d="M5 12h14"/>
+                            <circle cx="12" cy="12" r="9"/>
+                        </svg>
+                        <span>Tambah / Kurang</span>
+                    </a>
+
+                    <?php
+                        $isActive = ($currentPage === 'game_math.php') && $isMulDivMode && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+                    ?>
+                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/game_math.php?mode=muldiv"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M7 7l10 10"/>
+                            <path d="M7 17L17 7"/>
+                            <circle cx="12" cy="12" r="9"/>
+                        </svg>
+                        <span>Kali / Bagi</span>
+                    </a>
+
+                    <?php
+                        $isActive = ($currentPage === 'game_math_scores.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+                    ?>
+                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/game_math_scores.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 3v18h18"/>
+                            <path d="M7 14l3-3 3 2 5-6"/>
+                        </svg>
+                        <span>Highscore</span>
+                    </a>
+                </div>
+
                 <hr class="my-2">
                 <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/siswa/logout.php">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

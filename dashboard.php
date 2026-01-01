@@ -65,6 +65,16 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
         </div>
+
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="admin-tile h-100">
+                <div class="admin-tile-body">
+                    <h5 class="admin-tile-title">Highscore Mini Game</h5>
+                    <p class="admin-tile-text">Lihat perolehan skor tertinggi permainan hitung cepat (+ / -).</p>
+                    <a href="siswa/admin/math_game_scores.php" class="btn btn-outline-primary btn-sm">Lihat Highscore</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -246,6 +246,56 @@
 })();
 </script>
 
+<?php
+	$publicGameScore = null;
+	$publicGameMode = null;
+	if (isset($_GET['game_score'])) {
+		$publicGameScore = (int)$_GET['game_score'];
+		if ($publicGameScore < 0) {
+			$publicGameScore = 0;
+		}
+		$modeRaw = isset($_GET['game_mode']) ? (string)$_GET['game_mode'] : '';
+		$publicGameMode = ($modeRaw === 'muldiv') ? 'muldiv' : 'addsub';
+	}
+?>
+<?php if ($publicGameScore !== null): ?>
+<script>
+(() => {
+	if (typeof Swal === 'undefined') return;
+	const score = <?php echo (int)$publicGameScore; ?>;
+	const mode = <?php echo json_encode($publicGameMode); ?>;
+	if (!Number.isFinite(score) || score < 0) return;
+	let modeLabel = 'Tambah / Kurang';
+	if (mode === 'muldiv') modeLabel = 'Kali / Bagi';
+
+	Swal.fire({
+		icon: 'success',
+		title: 'Game selesai',
+		html: 'Skor kamu: <strong>' + score + '</strong><br>Mode: ' + modeLabel,
+		showCancelButton: true,
+		confirmButtonText: 'Ulangi bermain',
+		cancelButtonText: 'Tutup',
+	}).then((res) => {
+		if (res.isConfirmed) {
+			let url = 'game_math_public.php';
+			if (mode === 'muldiv') url += '?mode=muldiv';
+			window.location.href = url;
+		}
+	});
+
+	// Hapus parameter game_score dan game_mode dari URL supaya tidak muncul lagi saat refresh.
+	try {
+		const url = new URL(window.location.href);
+		url.searchParams.delete('game_score');
+		url.searchParams.delete('game_mode');
+		const qs = url.searchParams.toString();
+		const nextUrl = url.pathname + (qs ? ('?' + qs) : '') + (url.hash || '');
+		window.history.replaceState({}, '', nextUrl);
+	} catch (e) {}
+})();
+</script>
+<?php endif; ?>
+
 <?php if (!empty($useAdminSidebar)): ?>
 <script>
 (() => {

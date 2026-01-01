@@ -113,6 +113,15 @@ include __DIR__ . '/../../includes/header.php';
             <p class="admin-page-subtitle">Daftar hasil tugas/ujian per siswa dan paket.</p>
         </div>
         <div class="admin-page-actions">
+            <?php
+                $exportQuery = http_build_query([
+                    'tab' => $tab,
+                    'nama' => $qNama,
+                    'kelas' => $qKelasRombel,
+                    'paket' => $qPaket,
+                ]);
+            ?>
+            <a class="btn btn-outline-primary" href="results_export.php?<?php echo htmlspecialchars($exportQuery); ?>">Download XLS</a>
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan</a>
         </div>
     </div>
