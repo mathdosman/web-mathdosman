@@ -56,8 +56,14 @@ $disable_navbar = !empty($disable_navbar);
 $use_print_soal_css = !empty($use_print_soal_css);
 $body_class = isset($body_class) && is_string($body_class) ? trim($body_class) : '';
 
-// Ads (default: enabled on public pages only). Set $disable_adsense = true before including header.php to opt out.
-$disable_adsense = !empty($disable_adsense);
+// Penanda halaman ujian / fokus siswa (Adsense dimatikan di sini).
+$isStudentExamPage = $isStudentArea && in_array($currentPage, ['assignment_view.php', 'game_math.php'], true);
+
+// Ads:
+// - Aktif di halaman publik dan area siswa (dashboard, hasil, dsb.)
+// - Nonaktif di area admin dan halaman ujian siswa.
+// - Bisa dimatikan per-halaman dengan set $disable_adsense = true sebelum include header.php.
+$disable_adsense = !empty($disable_adsense) || $isAdminArea || $isSiswaAdminArea || $isStudentExamPage;
 
 // MathJax (LaTeX rendering)
 // Default: aktif di hampir semua halaman yang menampilkan konten.
@@ -192,7 +198,7 @@ try {
         <meta property="og:image" content="<?php echo htmlspecialchars($meta_og_image); ?>">
     <?php endif; ?>
 
-    <?php if (!$useSidebar && !$disable_adsense): ?>
+    <?php if (!$disable_adsense): ?>
         <meta name="google-adsense-account" content="ca-pub-4649430696681971">
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4649430696681971" crossorigin="anonymous"></script>
     <?php endif; ?>
