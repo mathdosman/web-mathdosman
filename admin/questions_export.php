@@ -105,15 +105,15 @@ function parse_pg_answer_to_field(string $v): string
     return '';
 }
 
-// Generate XLS
+// Generate XLSX
 if (!class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
     header('Content-Type: text/plain; charset=utf-8');
     echo "PhpSpreadsheet tidak tersedia. Jalankan composer install.\n";
     exit;
 }
 
-header('Content-Type: application/vnd.ms-excel; charset=utf-8');
-header('Content-Disposition: attachment; filename="questions_export_' . date('Ymd_His') . '.xls"');
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment; filename="questions_export_' . date('Ymd_His') . '.xlsx"');
 
 $hasPenyelesaian = false;
 try {
@@ -224,6 +224,6 @@ if ($stmt) {
     }
 }
 
-$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $writer->save('php://output');
 exit;

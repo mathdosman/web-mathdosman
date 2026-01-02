@@ -288,7 +288,6 @@ include __DIR__ . '/../../includes/header.php';
                         <table class="table table-sm align-middle">
                             <thead>
                                 <tr>
-                                    <th style="width:60px">ID</th>
                                     <th style="width:120px">Kelas</th>
                                     <th style="width:120px">Rombel</th>
                                     <th>Kelas+Rombel</th>
@@ -298,11 +297,10 @@ include __DIR__ . '/../../includes/header.php';
                             </thead>
                             <tbody>
                                 <?php if (!$rows): ?>
-                                    <tr><td colspan="6" class="text-center text-muted">Belum ada data rombel.</td></tr>
+                                    <tr><td colspan="5" class="text-center text-muted">Belum ada data rombel.</td></tr>
                                 <?php else: ?>
                                     <?php foreach ($rows as $r): ?>
                                         <tr>
-                                            <td><?php echo (int)($r['id'] ?? 0); ?></td>
                                             <td><?php echo htmlspecialchars((string)($r['kelas'] ?? '')); ?></td>
                                             <td><?php echo htmlspecialchars((string)($r['rombel'] ?? '')); ?></td>
                                             <td><span class="badge text-bg-secondary"><?php echo htmlspecialchars((string)($r['kelas_rombel'] ?? '')); ?></span></td>

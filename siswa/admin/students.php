@@ -39,6 +39,48 @@ try {
 
 $errors = [];
 
+// Filter query (GET)
+$filterNama = trim((string)($_GET['nama'] ?? ''));
+$filterKelas = trim((string)($_GET['kelas'] ?? ''));
+$filterUsername = trim((string)($_GET['username'] ?? ''));
+
+// Options dropdown kelas
+$kelasOptions = [];
+try {
+    $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
+    if ($hasKelasRombelsTable) {
+        $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+
+        // Jika kosong, seed dari data students satu kali.
+        if (!$rowsKr) {
+            try {
+                $seedRows = $pdo->query('SELECT DISTINCT kelas, rombel
+                    FROM students
+                    WHERE kelas IS NOT NULL AND TRIM(kelas) <> ""
+                      AND rombel IS NOT NULL AND TRIM(rombel) <> ""
+                    ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+                $stmtIns = $pdo->prepare('INSERT IGNORE INTO kelas_rombels (kelas, rombel) VALUES (:k, :r)');
+                foreach ((array)$seedRows as $sr) {
+                    $k = trim((string)($sr['kelas'] ?? ''));
+                    $r = trim((string)($sr['rombel'] ?? ''));
+                    if ($k === '' || $r === '') continue;
+                    $stmtIns->execute([':k' => $k, ':r' => $r]);
+                }
+            } catch (Throwable $e) {
+                // abaikan error seeding
+            }
+        }
+
+        $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM kelas_rombels WHERE TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+    } else {
+        $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    if (!is_array($kelasOptions)) $kelasOptions = [];
+} catch (Throwable $e) {
+    $kelasOptions = [];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf_valid();
     $action = (string)($_POST['action'] ?? '');
@@ -84,7 +126,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $rows = [];
 try {
-    $rows = $pdo->query('SELECT id, nama_siswa, kelas, rombel, no_hp' . ($hasParentPhoneColumn ? ', no_hp_ortu' : '') . ', foto, username, created_at FROM students ORDER BY id DESC')->fetchAll(PDO::FETCH_ASSOC);
+    $sql = 'SELECT id, nama_siswa, kelas, rombel, no_hp' . ($hasParentPhoneColumn ? ', no_hp_ortu' : '') . ', foto, username, created_at FROM students WHERE 1=1';
+    $paramsList = [];
+
+    if ($filterNama !== '') {
+        $sql .= ' AND nama_siswa LIKE :fn';
+        $paramsList[':fn'] = '%' . $filterNama . '%';
+    }
+    if ($filterKelas !== '') {
+        $sql .= ' AND kelas = :fk';
+        $paramsList[':fk'] = $filterKelas;
+    }
+    if ($filterUsername !== '') {
+        $sql .= ' AND username LIKE :fu';
+        $paramsList[':fu'] = '%' . $filterUsername . '%';
+    }
+
+    $sql .= ' ORDER BY id DESC';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($paramsList);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     $errors[] = 'Tabel students belum ada. Jalankan installer / import database.sql.';
 }
@@ -130,11 +192,33 @@ include __DIR__ . '/../../includes/header.php';
 
     <div class="card shadow-sm">
         <div class="card-body">
+            <form method="get" class="row g-2 align-items-end mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nama</label>
+                    <input type="text" class="form-control" name="nama" value="<?php echo htmlspecialchars($filterNama); ?>" placeholder="Cari nama siswa">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kelas</label>
+                    <select class="form-select" name="kelas">
+                        <option value="">-- semua kelas --</option>
+                        <?php foreach ($kelasOptions as $k): $k = (string)$k; ?>
+                            <option value="<?php echo htmlspecialchars($k); ?>"<?php echo $filterKelas === $k ? ' selected' : ''; ?>><?php echo htmlspecialchars($k); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" name="username" value="<?php echo htmlspecialchars($filterUsername); ?>" placeholder="Cari username">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    <a class="btn btn-outline-secondary" href="students.php">Reset</a>
+                </div>
+            </form>
             <div class="table-responsive">
                 <table class="table table-striped table-hover table-compact align-middle">
                     <thead>
                         <tr>
-                            <th style="width:72px">ID</th>
                             <th style="width:80px">Foto</th>
                             <th>Nama</th>
                             <th style="width:180px">Kelas / Rombel</th>
@@ -148,7 +232,7 @@ include __DIR__ . '/../../includes/header.php';
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="<?php echo $hasParentPhoneColumn ? '8' : '7'; ?>" class="text-center text-muted">Belum ada data siswa.</td></tr>
+                            <tr><td colspan="<?php echo $hasParentPhoneColumn ? '7' : '6'; ?>" class="text-center text-muted">Belum ada data siswa.</td></tr>
                         <?php endif; ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
@@ -160,7 +244,6 @@ include __DIR__ . '/../../includes/header.php';
                                 $noPhotoUrl = rtrim((string)$base_url, '/') . '/assets/img/no-photo.png';
                             ?>
                             <tr>
-                                <td><?php echo (int)$r['id']; ?></td>
                                 <td>
                                     <button
                                         type="button"

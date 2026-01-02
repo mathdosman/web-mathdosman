@@ -64,8 +64,8 @@ if ($mode === 'addsub') {
     $modeLabel = 'Kali/Bagi';
 }
 
-header('Content-Type: application/vnd.ms-excel; charset=utf-8');
-header('Content-Disposition: attachment; filename="mini_game_scores_' . ($mode !== '' ? $mode : 'all') . '_' . date('Ymd_His') . '.xls"');
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment; filename="mini_game_scores_' . ($mode !== '' ? $mode : 'all') . '_' . date('Ymd_His') . '.xlsx"');
 
 $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
@@ -104,6 +104,6 @@ foreach ($rows as $r) {
     $rowIndex++;
 }
 
-$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $writer->save('php://output');
 exit;

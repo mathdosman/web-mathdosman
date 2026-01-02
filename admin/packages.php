@@ -500,7 +500,7 @@ include __DIR__ . '/../includes/header.php';
                                     <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
                                     <button type="submit" class="btn btn-outline-primary">Upload</button>
                                 </div>
-                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xls" download>Contoh File XLS</a>
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xlsx" download>Contoh File XLSX</a>
                             </div>
                         </form>
                     </div>

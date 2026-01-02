@@ -157,8 +157,8 @@ foreach (range(1, count($headers)) as $col) {
     $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
 }
 
-$out = $root . '/assets/contoh-import-paket-soal.xls';
-$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
+$out = $root . '/assets/contoh-import-paket-soal.xlsx';
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $writer->save($out);
 
 echo "Generated: {$out}\n";
