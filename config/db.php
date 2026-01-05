@@ -93,6 +93,28 @@ try {
 
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $pdoOptions);
 
+    // Samakan timezone MySQL dengan timezone PHP (mis. Asia/Jakarta)
+    // supaya fungsi-fungsi seperti NOW(), YEARWEEK(NOW(), ...) selaras
+    // dengan waktu yang dipakai aplikasi.
+    try {
+        $phpTz = @date_default_timezone_get();
+        if (is_string($phpTz) && $phpTz !== '') {
+            $tzObj = new DateTimeZone($phpTz);
+            $now = new DateTime('now', $tzObj);
+            $offsetSeconds = $now->getOffset();
+            $sign = $offsetSeconds >= 0 ? '+' : '-';
+            $offsetSeconds = abs($offsetSeconds);
+            $hours = (int)floor($offsetSeconds / 3600);
+            $minutes = (int)floor(($offsetSeconds % 3600) / 60);
+            $offset = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
+
+            $pdo->exec('SET time_zone = ' . $pdo->quote($offset));
+        }
+    } catch (Throwable $e) {
+        // Abaikan jika SET time_zone gagal; aplikasi tetap bisa berjalan,
+        // hanya saja fungsi NOW() akan mengikuti timezone default server DB.
+    }
+
     // Migrasi ringan: sesuaikan skema DB agar cocok dengan import Excel.
     // Catatan: DDL (ALTER/CREATE) kadang bisa menunggu lock lama dan membuat halaman "muter".
     // Maka, runtime migrations dibuat OPT-IN via APP_ENABLE_RUNTIME_MIGRATIONS.
