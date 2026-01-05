@@ -77,144 +77,185 @@ $successMsg = '';
 
 if (!empty($_GET['success'])) {
     $successMsg = 'Jadwal absen berhasil dibuat.';
+} elseif (!empty($_GET['updated'])) {
+    $successMsg = 'Jadwal absen berhasil diperbarui.';
 }
 
-// Handle create window + assign students.
+// Handle create window, assign students, dan hapus jadwal.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf_valid();
 
-    $name = trim((string)($_POST['name'] ?? ''));
-    $startDate = trim((string)($_POST['start_date'] ?? ''));
-    $startTime = trim((string)($_POST['start_time'] ?? ''));
-    $endDate = trim((string)($_POST['end_date'] ?? ''));
-    $endTime = trim((string)($_POST['end_time'] ?? ''));
-    $targetMode = (string)($_POST['target_mode'] ?? 'all');
-    $selectedRombels = array_values(array_unique(array_map('strval', (array)($_POST['rombels'] ?? []))));
+    $action = (string)($_POST['action'] ?? '');
 
-    if ($name === '' && $startDate !== '') {
-        try {
-            $dtName = new DateTime($startDate . ' 00:00:00');
-            if (function_exists('format_id_date')) {
-                $name = 'Absen ' . format_id_date($dtName->format('Y-m-d'));
-            } else {
-                $name = 'Absen ' . $startDate;
+    if ($action === 'delete_window') {
+        $winId = isset($_POST['window_id']) ? (int)$_POST['window_id'] : 0;
+        if ($winId <= 0) {
+            $errors[] = 'ID jadwal tidak valid.';
+        }
+
+        if (!$errors) {
+            try {
+                $pdo->beginTransaction();
+
+                // Hapus semua pengajuan perubahan status terkait jadwal ini.
+                try {
+                    $stmt = $pdo->prepare('DELETE FROM student_attendance_change_requests WHERE window_id = :wid');
+                    $stmt->execute([':wid' => $winId]);
+                } catch (Throwable $e) {
+                    // lanjut, jika tabel belum ada atau gagal, rollback di bawah akan menangani.
+                }
+
+                // Hapus relasi siswa pada jadwal ini.
+                $stmt = $pdo->prepare('DELETE FROM student_attendance_window_students WHERE window_id = :wid');
+                $stmt->execute([':wid' => $winId]);
+
+                // Terakhir, hapus jadwal utamanya.
+                $stmt = $pdo->prepare('DELETE FROM student_attendance_windows WHERE id = :wid');
+                $stmt->execute([':wid' => $winId]);
+
+                $pdo->commit();
+                $successMsg = 'Jadwal absen berhasil dihapus.';
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errors[] = 'Gagal menghapus jadwal absen. Silakan coba lagi.';
             }
-        } catch (Throwable $e) {
+        }
+    } else {
+        $name = trim((string)($_POST['name'] ?? ''));
+        $startDate = trim((string)($_POST['start_date'] ?? ''));
+        $startTime = trim((string)($_POST['start_time'] ?? ''));
+        $endDate = trim((string)($_POST['end_date'] ?? ''));
+        $endTime = trim((string)($_POST['end_time'] ?? ''));
+        $targetMode = (string)($_POST['target_mode'] ?? 'all');
+        $selectedRombels = array_values(array_unique(array_map('strval', (array)($_POST['rombels'] ?? []))));
+
+        if ($name === '' && $startDate !== '') {
+            try {
+                $dtName = new DateTime($startDate . ' 00:00:00');
+                if (function_exists('format_id_date')) {
+                    $name = 'Absen ' . format_id_date($dtName->format('Y-m-d'));
+                } else {
+                    $name = 'Absen ' . $startDate;
+                }
+            } catch (Throwable $e) {
+                $name = 'Jadwal Absen';
+            }
+        } elseif ($name === '') {
             $name = 'Jadwal Absen';
         }
-    } elseif ($name === '') {
-        $name = 'Jadwal Absen';
-    }
 
-    if ($startDate === '' || $startTime === '') {
-        $errors[] = 'Tanggal dan jam mulai harus diisi.';
-    }
-    if ($endDate === '' || $endTime === '') {
-        $errors[] = 'Tanggal dan jam selesai harus diisi.';
-    }
-
-    $startAt = null;
-    $endAt = null;
-
-    if (!$errors) {
-        try {
-            $startAt = new DateTime($startDate . ' ' . $startTime . ':00');
-        } catch (Throwable $e) {
-            $errors[] = 'Format tanggal/jam mulai tidak valid.';
+        if ($startDate === '' || $startTime === '') {
+            $errors[] = 'Tanggal dan jam mulai harus diisi.';
         }
-        try {
-            $endAt = new DateTime($endDate . ' ' . $endTime . ':00');
-        } catch (Throwable $e) {
-            $errors[] = 'Format tanggal/jam selesai tidak valid.';
+        if ($endDate === '' || $endTime === '') {
+            $errors[] = 'Tanggal dan jam selesai harus diisi.';
         }
-    }
 
-    if ($startAt && $endAt && $startAt >= $endAt) {
-        $errors[] = 'Waktu selesai harus lebih besar dari waktu mulai.';
-    }
+        $startAt = null;
+        $endAt = null;
 
-    if ($targetMode !== 'filter') {
-        $targetMode = 'all';
-    }
-
-    $rombelsForSql = [];
-    if ($targetMode === 'filter') {
-        $rombelsForSql = array_values(array_unique(array_filter($selectedRombels, static function ($v) {
-            return trim((string)$v) !== '';
-        })));
-        if (!$rombelsForSql) {
-            $errors[] = 'Minimal 1 rombel wajib dipilih.';
+        if (!$errors) {
+            try {
+                $startAt = new DateTime($startDate . ' ' . $startTime . ':00');
+            } catch (Throwable $e) {
+                $errors[] = 'Format tanggal/jam mulai tidak valid.';
+            }
+            try {
+                $endAt = new DateTime($endDate . ' ' . $endTime . ':00');
+            } catch (Throwable $e) {
+                $errors[] = 'Format tanggal/jam selesai tidak valid.';
+            }
         }
-    }
 
-    if (!$errors && $startAt && $endAt) {
-        try {
-            $pdo->beginTransaction();
+        if ($startAt && $endAt && $startAt >= $endAt) {
+            $errors[] = 'Waktu selesai harus lebih besar dari waktu mulai.';
+        }
 
-            $rombelFilterLabel = null;
-            if ($targetMode === 'filter' && $rombelsForSql) {
-                $rombelFilterLabel = implode(', ', $rombelsForSql);
+        if ($targetMode !== 'filter') {
+            $targetMode = 'all';
+        }
+
+        $rombelsForSql = [];
+        if ($targetMode === 'filter') {
+            $rombelsForSql = array_values(array_unique(array_filter($selectedRombels, static function ($v) {
+                return trim((string)$v) !== '';
+            })));
+            if (!$rombelsForSql) {
+                $errors[] = 'Minimal 1 rombel wajib dipilih.';
             }
+        }
 
-            $sqlWin = 'INSERT INTO student_attendance_windows (name, start_at, end_at, kelas_filter, rombel_filter, created_at, updated_at)
-                        VALUES (:name, :start_at, :end_at, :kelas, :rombel, NOW(), NOW())';
-            $stmt = $pdo->prepare($sqlWin);
-            $stmt->execute([
-                ':name' => $name,
-                ':start_at' => $startAt->format('Y-m-d H:i:s'),
-                ':end_at' => $endAt->format('Y-m-d H:i:s'),
-                ':kelas' => null,
-                ':rombel' => $rombelFilterLabel,
-            ]);
+        if (!$errors && $startAt && $endAt) {
+            try {
+                $pdo->beginTransaction();
 
-            $windowId = (int)$pdo->lastInsertId();
-            if ($windowId <= 0) {
-                throw new RuntimeException('Gagal membuat jadwal absen.');
-            }
-
-            // Ambil siswa yang menjadi target.
-            $sqlStu = 'SELECT id FROM students WHERE 1=1';
-            $paramsStu = [];
-            if ($targetMode === 'filter' && $rombelsForSql) {
-                $placeholders = implode(',', array_fill(0, count($rombelsForSql), '?'));
-                $sqlStu .= ' AND UPPER(CONCAT(TRIM(kelas), TRIM(rombel))) IN (' . $placeholders . ')';
-                $paramsStu = array_map(static function ($v) {
-                    return strtoupper(str_replace(' ', '', (string)$v));
-                }, $rombelsForSql);
-            }
-
-            $stmtStu = $pdo->prepare($sqlStu);
-            $stmtStu->execute($paramsStu);
-            $students = $stmtStu->fetchAll(PDO::FETCH_COLUMN);
-
-            if (!$students) {
-                throw new RuntimeException('Tidak ada siswa yang cocok dengan filter yang dipilih.');
-            }
-
-            $sqlAssign = 'INSERT INTO student_attendance_window_students (window_id, student_id, status, created_at, updated_at)
-                          VALUES (:wid, :sid, :status, NOW(), NOW())';
-            $stmtAssign = $pdo->prepare($sqlAssign);
-            foreach ($students as $sid) {
-                $sid = (int)$sid;
-                if ($sid <= 0) {
-                    continue;
+                $rombelFilterLabel = null;
+                if ($targetMode === 'filter' && $rombelsForSql) {
+                    $rombelFilterLabel = implode(', ', $rombelsForSql);
                 }
-                $stmtAssign->execute([
-                    ':wid' => $windowId,
-                    ':sid' => $sid,
-                    ':status' => 'pending',
+
+                $sqlWin = 'INSERT INTO student_attendance_windows (name, start_at, end_at, kelas_filter, rombel_filter, created_at, updated_at)
+                            VALUES (:name, :start_at, :end_at, :kelas, :rombel, NOW(), NOW())';
+                $stmt = $pdo->prepare($sqlWin);
+                $stmt->execute([
+                    ':name' => $name,
+                    ':start_at' => $startAt->format('Y-m-d H:i:s'),
+                    ':end_at' => $endAt->format('Y-m-d H:i:s'),
+                    ':kelas' => null,
+                    ':rombel' => $rombelFilterLabel,
                 ]);
-            }
 
-            $pdo->commit();
+                $windowId = (int)$pdo->lastInsertId();
+                if ($windowId <= 0) {
+                    throw new RuntimeException('Gagal membuat jadwal absen.');
+                }
 
-            header('Location: attendance_windows.php?success=1');
-            exit;
-        } catch (Throwable $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+                // Ambil siswa yang menjadi target.
+                $sqlStu = 'SELECT id FROM students WHERE 1=1';
+                $paramsStu = [];
+                if ($targetMode === 'filter' && $rombelsForSql) {
+                    $placeholders = implode(',', array_fill(0, count($rombelsForSql), '?'));
+                    $sqlStu .= ' AND UPPER(CONCAT(TRIM(kelas), TRIM(rombel))) IN (' . $placeholders . ')';
+                    $paramsStu = array_map(static function ($v) {
+                        return strtoupper(str_replace(' ', '', (string)$v));
+                    }, $rombelsForSql);
+                }
+
+                $stmtStu = $pdo->prepare($sqlStu);
+                $stmtStu->execute($paramsStu);
+                $students = $stmtStu->fetchAll(PDO::FETCH_COLUMN);
+
+                if (!$students) {
+                    throw new RuntimeException('Tidak ada siswa yang cocok dengan filter yang dipilih.');
+                }
+
+                $sqlAssign = 'INSERT INTO student_attendance_window_students (window_id, student_id, status, created_at, updated_at)
+                              VALUES (:wid, :sid, :status, NOW(), NOW())';
+                $stmtAssign = $pdo->prepare($sqlAssign);
+                foreach ($students as $sid) {
+                    $sid = (int)$sid;
+                    if ($sid <= 0) {
+                        continue;
+                    }
+                    $stmtAssign->execute([
+                        ':wid' => $windowId,
+                        ':sid' => $sid,
+                        ':status' => 'pending',
+                    ]);
+                }
+
+                $pdo->commit();
+
+                header('Location: attendance_windows.php?success=1');
+                exit;
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $errors[] = 'Gagal membuat jadwal absen: ' . $e->getMessage();
             }
-            $errors[] = 'Gagal membuat jadwal absen: ' . $e->getMessage();
         }
     }
 }
@@ -378,7 +419,7 @@ include __DIR__ . '/../../includes/header.php';
                             <th style="width:150px">Target Siswa</th>
                             <th style="width:150px">Hadir</th>
                             <th style="width:150px">Alpha (A)</th>
-                            <th style="width:80px">Detail</th>
+                            <th style="width:200px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -396,6 +437,12 @@ include __DIR__ . '/../../includes/header.php';
                                     $ended = $endObj < $now;
                                 } catch (Throwable $e) {
                                     $ended = false;
+                                }
+
+                                if ($ended) {
+                                    $deleteConfirmMsg = 'Jadwal ini sudah berakhir. Menghapusnya akan menghapus juga semua data relasi siswa dan pengajuan status terkait jadwal ini. Lanjutkan?';
+                                } else {
+                                    $deleteConfirmMsg = 'Jadwal ini masih aktif / akan datang. Menghapusnya dapat mempengaruhi proses absen siswa. Yakin ingin menghapus jadwal absen ini dan seluruh data terkait?';
                                 }
                             ?>
                             <tr>
@@ -434,7 +481,16 @@ include __DIR__ . '/../../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo $base_url; ?>/siswa/admin/attendance_window_view.php?id=<?php echo (int)($w['id'] ?? 0); ?>">Lihat</a>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a class="btn btn-outline-primary btn-sm" href="<?php echo $base_url; ?>/siswa/admin/attendance_window_view.php?id=<?php echo (int)($w['id'] ?? 0); ?>">Lihat</a>
+                                        <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/siswa/admin/attendance_window_edit.php?id=<?php echo (int)($w['id'] ?? 0); ?>">Edit</a>
+                                        <form method="post" class="d-inline" onsubmit="return confirm('<?php echo htmlspecialchars($deleteConfirmMsg, ENT_QUOTES); ?>');">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                            <input type="hidden" name="action" value="delete_window">
+                                            <input type="hidden" name="window_id" value="<?php echo (int)($w['id'] ?? 0); ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
