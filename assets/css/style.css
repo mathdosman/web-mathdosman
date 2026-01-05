@@ -610,6 +610,25 @@ body.student-area .text-muted.small {
     letter-spacing: .01em;
 }
 
+/* Student area: slightly friendlier typography and tables on mobile */
+@media (max-width: 575.98px) {
+    body.student-area .card-body {
+        padding: .9rem .85rem;
+    }
+
+    body.student-area h5 {
+        font-size: 1.05rem;
+    }
+
+    body.student-area .table thead th {
+        font-size: .7rem;
+    }
+
+    body.student-area .table td {
+        font-size: .85rem;
+    }
+}
+
 /* Tables: slightly cleaner headers and spacing */
 body.student-area .table {
     --bs-table-bg: transparent;
@@ -629,6 +648,12 @@ body.student-area .table-sm > :not(caption) > * > * {
 
 body.student-area .table tbody tr:hover {
     background-color: var(--bs-tertiary-bg);
+}
+
+body.student-area .table-responsive {
+    border-radius: var(--bs-border-radius-lg);
+    border: 1px solid var(--bs-border-color-translucent);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.98);
 }
 
 /* Buttons: slightly rounder to match cards */
@@ -836,6 +861,21 @@ body.student-area.assignment-view .modal {
 
 body.student-area.assignment-view .modal-backdrop {
     z-index: 1990;
+}
+
+/* Attendance requests: keep modal fully interactive above any overlays */
+body.student-area.attendance-requests-page .modal {
+    z-index: 2050;
+}
+
+body.student-area.attendance-requests-page .modal-backdrop {
+    z-index: 2000;
+    pointer-events: none; /* visual dim only, jangan blokir klik */
+}
+
+/* Jangan gelapkan layar di halaman Ajuan Status; cukup tampilkan modal biasa */
+body.student-area.attendance-requests-page .modal-backdrop.show {
+    opacity: 0;
 }
 
 /* Daftar Soal modal: grid 5 kolom + ukuran seragam */

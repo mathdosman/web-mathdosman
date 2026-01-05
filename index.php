@@ -676,7 +676,7 @@ function render_home_sidebar_widgets(
             <div class="fw-semibold">Search</div>
         </div>
         <div class="card-body">
-            <form method="get" class="m-0">
+            <form method="get" class="mb-0">
                 <?php if ($filterMateri !== ''): ?>
                     <input type="hidden" name="materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
                 <?php endif; ?>
@@ -688,57 +688,6 @@ function render_home_sidebar_widgets(
                     <button class="btn btn-outline-secondary" type="submit">Cari</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div class="card mb-3 sidebar-widget">
-        <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Kunjungan per Minggu</div>
-        </div>
-        <div class="card-body">
-            <?php if (!$weeklyVisits): ?>
-                <div class="text-muted small">Belum ada data.</div>
-            <?php else: ?>
-                <?php
-                    $weekStart = (new DateTime('today'))->modify('monday this week')->format('Y-m-d');
-                    $weekVisits = null;
-                    foreach ($weeklyVisits as $r) {
-                        $d = (string)($r['week_start'] ?? '');
-                        if ($d === $weekStart) {
-                            $weekVisits = (int)($r['visits'] ?? 0);
-                            break;
-                        }
-                    }
-                ?>
-
-                <div class="d-flex align-items-baseline justify-content-between mb-2">
-                    <div class="text-muted small">Minggu ini</div>
-                    <div class="fw-bold daily-visits-today-count"><?php echo htmlspecialchars(number_format((int)($weekVisits ?? 0), 0, ',', '.')); ?></div>
-                </div>
-
-                <div class="daily-visits-list">
-                    <?php foreach ($weeklyVisits as $r): ?>
-                        <?php
-                            $d = (string)($r['week_start'] ?? '');
-                            $v = (int)($r['visits'] ?? 0);
-                            $isToday = ($d === $weekStart);
-                            $range = '';
-                            try {
-                                $dtStart = new DateTime($d);
-                                $dtEnd = (clone $dtStart)->modify('+6 days');
-                                $range = format_id_date($dtStart->format('Y-m-d')) . ' – ' . format_id_date($dtEnd->format('Y-m-d'));
-                            } catch (Throwable $e) {
-                                $range = $d;
-                            }
-                        ?>
-                        <div class="daily-visits-row<?php echo $isToday ? ' is-today' : ''; ?>">
-                            <div class="daily-visits-date"><?php echo htmlspecialchars($range); ?></div>
-                            <div class="daily-visits-count"><?php echo htmlspecialchars(number_format($v, 0, ',', '.')); ?></div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <div class="text-muted small mt-2">Catatan: dihitung unique per <code>REMOTE_ADDR</code> per minggu (IP disimpan sebagai hash).</div>
-            <?php endif; ?>
         </div>
     </div>
 

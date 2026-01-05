@@ -280,3 +280,80 @@ CREATE TABLE IF NOT EXISTS math_game_scores (
     KEY idx_created_at (created_at),
     KEY idx_mode (mode)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Absen siswa: pengaturan titik lokasi & radius
+CREATE TABLE IF NOT EXISTS student_attendance_settings (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    center_lat DECIMAL(10,7) NOT NULL,
+    center_lng DECIMAL(10,7) NOT NULL,
+    radius_m INT UNSIGNED NOT NULL DEFAULT 100,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_attendance_settings_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Absen siswa: log kehadiran per siswa
+CREATE TABLE IF NOT EXISTS student_attendance_records (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    student_id INT UNSIGNED NOT NULL,
+    setting_id INT UNSIGNED NULL,
+    taken_at DATETIME NOT NULL,
+    lat DECIMAL(10,7) NOT NULL,
+    lng DECIMAL(10,7) NOT NULL,
+    distance_m INT UNSIGNED NULL,
+    status ENUM('accepted','rejected') NOT NULL DEFAULT 'accepted',
+    photo_path VARCHAR(255) NULL,
+    user_agent VARCHAR(255) NULL,
+    ip_address VARBINARY(16) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_attendance_records_student_time (student_id, taken_at),
+    KEY idx_attendance_records_setting_time (setting_id, taken_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Absen siswa: jadwal manual per rentang waktu
+CREATE TABLE IF NOT EXISTS student_attendance_windows (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_at DATETIME NOT NULL,
+    end_at DATETIME NOT NULL,
+    kelas_filter VARCHAR(50) NULL,
+    rombel_filter VARCHAR(50) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_attendance_windows_time (start_at, end_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Absen siswa: assignment siswa per jadwal (pending/hadir/A)
+CREATE TABLE IF NOT EXISTS student_attendance_window_students (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    window_id INT UNSIGNED NOT NULL,
+    student_id INT UNSIGNED NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    attendance_record_id BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_attendance_win_students_window (window_id),
+    KEY idx_attendance_win_students_student (student_id),
+    KEY idx_attendance_win_students_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Pengajuan perubahan status absen (A -> I/S/D) oleh siswa.
+CREATE TABLE IF NOT EXISTS student_attendance_change_requests (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    window_student_id BIGINT UNSIGNED NOT NULL,
+    window_id INT UNSIGNED NOT NULL,
+    student_id INT UNSIGNED NOT NULL,
+    requested_status VARCHAR(20) NOT NULL,
+    reason TEXT NULL,
+    evidence_path VARCHAR(255) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    admin_id INT UNSIGNED NULL,
+    admin_note TEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    decided_at TIMESTAMP NULL DEFAULT NULL,
+    KEY idx_att_change_window_student (window_student_id),
+    KEY idx_att_change_student (student_id),
+    KEY idx_att_change_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

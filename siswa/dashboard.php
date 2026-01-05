@@ -70,6 +70,32 @@ try {
     $assignments = [];
 }
 
+// Deteksi jadwal absen aktif untuk siswa ini:
+// - Window sedang berjalan (NOW di antara start_at dan end_at)
+// - Siswa sudah terdaftar di jadwal tsb
+// - Belum ada catatan absen "accepted" pada rentang waktu window itu
+$activeAttendance = null;
+try {
+        $sqlAtt = 'SELECT w.id, w.name, w.start_at, w.end_at
+                             FROM student_attendance_windows w
+                             JOIN student_attendance_window_students sws ON sws.window_id = w.id
+                             WHERE sws.student_id = :sid
+                                 AND NOW() BETWEEN w.start_at AND w.end_at
+                                 AND NOT EXISTS (
+                                         SELECT 1 FROM student_attendance_records r
+                                         WHERE r.student_id = sws.student_id
+                                             AND r.status = "accepted"
+                                             AND r.taken_at BETWEEN w.start_at AND w.end_at
+                                 )
+                             ORDER BY w.start_at ASC
+                             LIMIT 1';
+        $stmtAtt = $pdo->prepare($sqlAtt);
+        $stmtAtt->execute([':sid' => (int)($student['id'] ?? 0)]);
+        $activeAttendance = $stmtAtt->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (Throwable $eAtt) {
+        $activeAttendance = null;
+}
+
 $page_title = 'Dashboard Siswa';
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -78,7 +104,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
             <div>
                 <h5 class="mb-1">Dashboard Siswa</h5>
-                <div class="text-muted small">Halaman ini akan menampilkan tugas/ujian untuk siswa (nanti).</div>
+                <div class="text-muted small">Ringkasan profil, jadwal absen, serta tugas dan ujian yang diberikan guru.</div>
             </div>
             <div>
                 <!-- Logout tersedia di sidebar siswa -->
@@ -122,13 +148,46 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
             <div class="col-md-8">
-                <div class="border rounded-3 p-3 h-100">
-                    <div class="fw-semibold mb-2">Tugas / Ujian</div>
-                    <?php if (!$assignments): ?>
-                        <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang ditugaskan.</div>
-                    <?php else: ?>
-                        <div class="vstack gap-2">
-                            <?php foreach ($assignments as $idx => $a): ?>
+                <div class="vstack gap-3 h-100">
+                    <div class="border rounded-3 p-3">
+                        <div class="fw-semibold mb-2">Absen</div>
+                        <?php if (!$activeAttendance): ?>
+                            <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada absen yang dijadwalkan saat ini.</div>
+                            <div class="d-flex flex-wrap gap-2 small">
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php">Lihat Rekap Absen</a>
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_requests.php">Ajuan Status Absen</a>
+                            </div>
+                        <?php else: ?>
+                            <?php
+                                $attName = trim((string)($activeAttendance['name'] ?? 'Jadwal Absen'));
+                                $attStart = (string)($activeAttendance['start_at'] ?? '');
+                                $attEnd = (string)($activeAttendance['end_at'] ?? '');
+                            ?>
+                            <div class="mb-2">
+                                <div class="small text-muted">Jadwal absen aktif untuk Anda:</div>
+                                <div class="small fw-semibold"><?php echo htmlspecialchars($attName); ?></div>
+                                <div class="small text-muted">
+                                    <?php
+                                        $startLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($attStart) : $attStart;
+                                        $endLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($attEnd) : $attEnd;
+                                        echo htmlspecialchars($startLabel); ?> s/d <?php echo htmlspecialchars($endLabel);
+                                    ?>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <a class="btn btn-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen.php?step=lokasi">Absen Sekarang</a>
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php">Lihat Rekap Absen</a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="border rounded-3 p-3 flex-grow-1">
+                        <div class="fw-semibold mb-2">Tugas / Ujian</div>
+                        <?php if (!$assignments): ?>
+                            <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang ditugaskan.</div>
+                        <?php else: ?>
+                            <div class="vstack gap-2">
+                                <?php foreach ($assignments as $idx => $a): ?>
                                 <?php
                                     $no = (int)$idx + 1;
                                     $judul = trim((string)($a['judul'] ?? ''));
@@ -239,8 +298,9 @@ include __DIR__ . '/../includes/header.php';
                                     </div>
                                 </div>
                             <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>

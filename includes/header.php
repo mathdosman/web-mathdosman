@@ -118,6 +118,49 @@ if (!function_exists('format_id_date')) {
     }
 }
 
+if (!function_exists('format_id_datetime_short')) {
+    function format_id_datetime_short(?string $value): string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+
+        try {
+            $dt = new DateTime($value);
+        } catch (Throwable $e) {
+            return $value;
+        }
+
+        if (function_exists('format_id_date')) {
+            $datePart = format_id_date($dt->format('Y-m-d'));
+        } else {
+            $datePart = $dt->format('Y-m-d');
+        }
+
+        $timePart = $dt->format('H:i');
+        return trim($datePart . ' ' . $timePart);
+    }
+}
+
+if (!function_exists('format_id_time_short')) {
+    function format_id_time_short(?string $value): string
+    {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+
+        try {
+            $dt = new DateTime($value);
+        } catch (Throwable $e) {
+            return $value;
+        }
+
+        return $dt->format('H:i');
+    }
+}
+
 $brandLogoPath = null;
 $faviconPath = null;
 try {
@@ -583,7 +626,7 @@ try {
                 </a>
 
                 <?php
-                    $isActive = in_array($currentPage, ['rombels.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                    $isActive = ($currentPage === 'rombels.php') && (strpos($scriptName, '/siswa/admin/') !== false);
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/rombels.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -593,6 +636,83 @@ try {
                         <path d="M7 16h14"/>
                     </svg>
                     <span>Rombel</span>
+                </a>
+
+                </div>
+
+                <hr class="my-2 opacity-25">
+
+                <?php
+                    $absenSectionPages = [
+                        'attendance_settings.php', 'attendance_windows.php', 'attendance_window_view.php',
+                        'attendance_reports.php', 'attendance_requests.php',
+                    ];
+                    $absenSectionActive = (strpos($scriptName, '/siswa/admin/') !== false) && in_array($currentPage, $absenSectionPages, true);
+                    $absenSectionExpanded = $absenSectionActive;
+                ?>
+                <a class="nav-link sidebar-link<?php echo $absenSectionExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#adminSidebarAbsen" role="button" aria-expanded="<?php echo $absenSectionExpanded ? 'true' : 'false'; ?>" aria-controls="adminSidebarAbsen">
+                    <span class="sidebar-section-emphasis">Absen</span>
+                </a>
+
+                <div class="collapse<?php echo $absenSectionExpanded ? ' show' : ''; ?>" id="adminSidebarAbsen">
+
+                <?php
+                    $isActive = ($currentPage === 'attendance_settings.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/attendance_settings.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path d="M16 2v4"/>
+                        <path d="M8 2v4"/>
+                        <path d="M3 10h18"/>
+                        <path d="M9 16l2 2 4-4"/>
+                    </svg>
+                    <span>Pengaturan Titik</span>
+                </a>
+
+                <?php
+                    $isActive = in_array($currentPage, ['attendance_windows.php', 'attendance_window_view.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/attendance_windows.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path d="M16 2v4"/>
+                        <path d="M8 2v4"/>
+                        <path d="M3 10h18"/>
+                        <path d="M8 14h4"/>
+                        <path d="M8 18h7"/>
+                    </svg>
+                    <span>Jadwal Absen</span>
+                </a>
+
+                <?php
+                    $isActive = ($currentPage === 'attendance_reports.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/attendance_reports.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path d="M16 2v4"/>
+                        <path d="M8 2v4"/>
+                        <path d="M3 10h18"/>
+                        <path d="M9 16h6"/>
+                        <path d="M9 20h4"/>
+                    </svg>
+                    <span>Laporan Absen</span>
+                </a>
+
+                <?php
+                    $isActive = ($currentPage === 'attendance_requests.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/attendance_requests.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path d="M16 2v4"/>
+                        <path d="M8 2v4"/>
+                        <path d="M3 10h18"/>
+                        <path d="M9 16h6"/>
+                        <path d="M9 20h6"/>
+                    </svg>
+                    <span>Ajuan Status Absen</span>
                 </a>
 
                 </div>
@@ -639,13 +759,26 @@ try {
                     <span>Dashboard</span>
                 </a>
 
-                <?php $isActive = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
-                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/profile_edit.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                <?php $isActive = ($currentPage === 'attendance_history.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/attendance_history.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    <span>Edit Profil</span>
+                    <span>Rekap Absen</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'attendance_requests.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/attendance_requests.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path d="M16 2v4"/>
+                        <path d="M8 2v4"/>
+                        <path d="M3 10h18"/>
+                        <path d="M9 16h6"/>
+                        <path d="M9 20h6"/>
+                    </svg>
+                    <span>Ajuan Status</span>
                 </a>
 
                 <?php $isActive = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
@@ -655,6 +788,15 @@ try {
                         <path d="M7 14l3-3 3 2 5-6"/>
                     </svg>
                     <span>Hasil</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/profile_edit.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Edit Profil</span>
                 </a>
 
                 <?php

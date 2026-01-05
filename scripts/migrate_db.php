@@ -218,6 +218,9 @@ try {
     echo "Menjalankan migrasi skema (Siswa/acak soal & opsi)...\n";
     app_ensure_student_assignments_shuffle_schema($pdo);
 
+    echo "Menjalankan migrasi skema (Siswa/absen berbasis lokasi)...\n";
+    app_ensure_student_attendance_schema($pdo);
+
     echo "Menjalankan migrasi skema (Master kelas/rombel)...\n";
     app_ensure_kelas_rombels_schema($pdo);
 

@@ -97,6 +97,165 @@ function siswa_upload_photo(array $file, ?string $oldStoredPath = null): array
     return [$storedPath, ''];
 }
 
+function siswa_upload_attendance_photo(array $file, ?string $oldStoredPath = null): array
+{
+    // Upload khusus foto absen ke folder terpisah: siswa/absen_uploads.
+    if (empty($file) || !isset($file['error'])) {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    if ((int)$file['error'] === UPLOAD_ERR_NO_FILE) {
+        return [null, ''];
+    }
+
+    if ((int)$file['error'] !== UPLOAD_ERR_OK) {
+        return [null, 'Upload foto gagal.'];
+    }
+
+    $tmp = (string)($file['tmp_name'] ?? '');
+    if ($tmp === '' || !is_uploaded_file($tmp)) {
+        return [null, 'Upload foto tidak valid.'];
+    }
+
+    $maxBytes = 1 * 1024 * 1024;
+    $size = (int)($file['size'] ?? 0);
+    if ($size <= 0 || $size > $maxBytes) {
+        return [null, 'Ukuran foto maksimal 1MB.'];
+    }
+
+    $ext = '';
+    $mime = '';
+    try {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = (string)$finfo->file($tmp);
+    } catch (Throwable $e) {
+        $mime = '';
+    }
+
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+    ];
+
+    if (!isset($allowed[$mime])) {
+        return [null, 'Format foto harus JPG/PNG/WEBP.'];
+    }
+
+    $ext = $allowed[$mime];
+
+    try {
+        $rand = bin2hex(random_bytes(10));
+    } catch (Throwable $e) {
+        $rand = sha1((string)microtime(true) . ':' . (string)mt_rand());
+    }
+
+    $fileName = 'absen-' . date('Ymd-His') . '-' . substr($rand, 0, 16) . '.' . $ext;
+
+    $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'absen_uploads';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0775, true);
+    }
+
+    $targetFs = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+    if (!@move_uploaded_file($tmp, $targetFs)) {
+        return [null, 'Gagal menyimpan foto.'];
+    }
+
+    // Path disimpan relatif terhadap web root.
+    $storedPath = 'siswa/absen_uploads/' . $fileName;
+
+    // Best-effort hapus foto lama jika masih di dalam folder absen_uploads.
+    if ($oldStoredPath) {
+        $normalized = str_replace('\\', '/', trim($oldStoredPath));
+        if ($normalized !== '' && str_starts_with($normalized, 'siswa/absen_uploads/')) {
+            $fs = __DIR__ . '/..' . '/' . $normalized;
+            $fs = str_replace('/', DIRECTORY_SEPARATOR, $fs);
+            try {
+                if (is_file($fs)) {
+                    @unlink($fs);
+                }
+            } catch (Throwable $e) {
+            }
+        }
+    }
+
+    return [$storedPath, ''];
+}
+
+function siswa_upload_attendance_evidence(array $file): array
+{
+    // Upload bukti perubahan status absen (foto atau PDF) ke folder terpisah.
+    // Returns: [storedPath|null, errorMessage]
+    if (empty($file) || !isset($file['error'])) {
+        return [null, 'File bukti tidak valid.'];
+    }
+
+    if ((int)$file['error'] === UPLOAD_ERR_NO_FILE) {
+        return [null, ''];
+    }
+
+    if ((int)$file['error'] !== UPLOAD_ERR_OK) {
+        return [null, 'Upload bukti gagal.'];
+    }
+
+    $tmp = (string)($file['tmp_name'] ?? '');
+    if ($tmp === '' || !is_uploaded_file($tmp)) {
+        return [null, 'Upload bukti tidak valid.'];
+    }
+
+    $maxBytes = 2 * 1024 * 1024; // 2MB
+    $size = (int)($file['size'] ?? 0);
+    if ($size <= 0 || $size > $maxBytes) {
+        return [null, 'Ukuran bukti maksimal 2MB.'];
+    }
+
+    $ext = '';
+    $mime = '';
+    try {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = (string)$finfo->file($tmp);
+    } catch (Throwable $e) {
+        $mime = '';
+    }
+
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'application/pdf' => 'pdf',
+    ];
+
+    if (!isset($allowed[$mime])) {
+        return [null, 'Format bukti harus JPG/PNG/WEBP atau PDF.'];
+    }
+
+    $ext = $allowed[$mime];
+
+    try {
+        $rand = bin2hex(random_bytes(10));
+    } catch (Throwable $e) {
+        $rand = sha1((string)microtime(true) . ':' . (string)mt_rand());
+    }
+
+    $fileName = 'bukti-absen-' . date('Ymd-His') . '-' . substr($rand, 0, 16) . '.' . $ext;
+
+    $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'absen_docs';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0775, true);
+    }
+
+    $targetFs = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+    if (!@move_uploaded_file($tmp, $targetFs)) {
+        return [null, 'Gagal menyimpan bukti.'];
+    }
+
+    // Path disimpan relatif terhadap web root.
+    $storedPath = 'siswa/absen_docs/' . $fileName;
+
+    return [$storedPath, ''];
+}
+
 function siswa_delete_photo(string $storedPath): void
 {
     $storedPath = trim($storedPath);
