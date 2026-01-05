@@ -50,16 +50,48 @@ function siswa_upload_photo(array $file, ?string $oldStoredPath = null): array
     $ext = '';
     $mime = '';
     try {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = (string)$finfo->file($tmp);
+        if (class_exists('finfo')) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $detected = $finfo->file($tmp);
+            if (is_string($detected)) {
+                $mime = strtolower(trim($detected));
+            }
+        }
     } catch (Throwable $e) {
         $mime = '';
     }
 
+    if ($mime === '' && function_exists('exif_imagetype')) {
+        $imgType = @exif_imagetype($tmp);
+        if ($imgType === IMAGETYPE_JPEG) {
+            $mime = 'image/jpeg';
+        } elseif ($imgType === IMAGETYPE_PNG) {
+            $mime = 'image/png';
+        } elseif ($imgType === IMAGETYPE_WEBP) {
+            $mime = 'image/webp';
+        } elseif ($imgType === IMAGETYPE_GIF) {
+            $mime = 'image/gif';
+        } elseif ($imgType === IMAGETYPE_BMP) {
+            $mime = 'image/bmp';
+        }
+    }
+
+    if ($mime === '' && isset($file['type'])) {
+        $mime = strtolower(trim((string)$file['type']));
+    }
+
     $allowed = [
         'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/pjpeg' => 'jpg',
         'image/png' => 'png',
+        'image/x-png' => 'png',
         'image/webp' => 'webp',
+        'image/gif' => 'gif',
+        'image/bmp' => 'bmp',
+        'image/x-ms-bmp' => 'bmp',
+        'image/heic' => 'heic',
+        'image/heif' => 'heif',
     ];
 
     if (!isset($allowed[$mime])) {
@@ -126,16 +158,48 @@ function siswa_upload_attendance_photo(array $file, ?string $oldStoredPath = nul
     $ext = '';
     $mime = '';
     try {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = (string)$finfo->file($tmp);
+        if (class_exists('finfo')) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $detected = $finfo->file($tmp);
+            if (is_string($detected)) {
+                $mime = strtolower(trim($detected));
+            }
+        }
     } catch (Throwable $e) {
         $mime = '';
     }
 
+    if ($mime === '' && function_exists('exif_imagetype')) {
+        $imgType = @exif_imagetype($tmp);
+        if ($imgType === IMAGETYPE_JPEG) {
+            $mime = 'image/jpeg';
+        } elseif ($imgType === IMAGETYPE_PNG) {
+            $mime = 'image/png';
+        } elseif ($imgType === IMAGETYPE_WEBP) {
+            $mime = 'image/webp';
+        } elseif ($imgType === IMAGETYPE_GIF) {
+            $mime = 'image/gif';
+        } elseif ($imgType === IMAGETYPE_BMP) {
+            $mime = 'image/bmp';
+        }
+    }
+
+    if ($mime === '' && isset($file['type'])) {
+        $mime = strtolower(trim((string)$file['type']));
+    }
+
     $allowed = [
         'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/pjpeg' => 'jpg',
         'image/png' => 'png',
+        'image/x-png' => 'png',
         'image/webp' => 'webp',
+        'image/gif' => 'gif',
+        'image/bmp' => 'bmp',
+        'image/x-ms-bmp' => 'bmp',
+        'image/heic' => 'heic',
+        'image/heif' => 'heif',
     ];
 
     if (!isset($allowed[$mime])) {
@@ -213,17 +277,49 @@ function siswa_upload_attendance_evidence(array $file): array
     $ext = '';
     $mime = '';
     try {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime = (string)$finfo->file($tmp);
+        if (class_exists('finfo')) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $detected = $finfo->file($tmp);
+            if (is_string($detected)) {
+                $mime = strtolower(trim($detected));
+            }
+        }
     } catch (Throwable $e) {
         $mime = '';
     }
 
+    if ($mime === '' && function_exists('exif_imagetype')) {
+        $imgType = @exif_imagetype($tmp);
+        if ($imgType === IMAGETYPE_JPEG) {
+            $mime = 'image/jpeg';
+        } elseif ($imgType === IMAGETYPE_PNG) {
+            $mime = 'image/png';
+        } elseif ($imgType === IMAGETYPE_WEBP) {
+            $mime = 'image/webp';
+        } elseif ($imgType === IMAGETYPE_GIF) {
+            $mime = 'image/gif';
+        } elseif ($imgType === IMAGETYPE_BMP) {
+            $mime = 'image/bmp';
+        }
+    }
+
+    if ($mime === '' && isset($file['type'])) {
+        $mime = strtolower(trim((string)$file['type']));
+    }
+
     $allowed = [
         'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/pjpeg' => 'jpg',
         'image/png' => 'png',
+        'image/x-png' => 'png',
         'image/webp' => 'webp',
         'application/pdf' => 'pdf',
+        'image/gif' => 'gif',
+        'image/bmp' => 'bmp',
+        'image/x-ms-bmp' => 'bmp',
+        'image/heic' => 'heic',
+        'image/heif' => 'heif',
     ];
 
     if (!isset($allowed[$mime])) {
