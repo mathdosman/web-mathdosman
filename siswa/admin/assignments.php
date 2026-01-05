@@ -50,6 +50,7 @@ if (app_runtime_migrations_enabled()) {
 
         $ensureCol('duration_minutes', 'duration_minutes INT NULL');
         $ensureCol('started_at', 'started_at TIMESTAMP NULL DEFAULT NULL');
+        $ensureCol('allow_calculator', 'allow_calculator TINYINT(1) NOT NULL DEFAULT 0');
         $ensureCol('shuffle_questions', 'shuffle_questions TINYINT(1) NOT NULL DEFAULT 0');
         $ensureCol('shuffle_options', 'shuffle_options TINYINT(1) NOT NULL DEFAULT 0');
     } catch (Throwable $e) {
@@ -73,6 +74,7 @@ try {
 
 $hasTokenColumn = !empty($cols['token_code']);
 $hasReviewDetailsColumn = !empty($cols['allow_review_details']);
+$hasAllowCalculatorColumn = !empty($cols['allow_calculator']);
 $hasDurationMinutesColumn = !empty($cols['duration_minutes']);
 $hasDueAtColumn = !empty($cols['due_at']);
 $hasCatatanColumn = !empty($cols['catatan']);

@@ -22,6 +22,17 @@ pre {
     overflow: auto;
 }
 
+/* Display math (MathJax/KaTeX) can be wider than the viewport; keep scroll inside formula */
+.richtext-content mjx-container[display="true"],
+.richtext-content .MathJax_Display,
+.richtext-content .katex-display {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Richtext tables (public pages) */
 .richtext-content table {
     width: 100%;

@@ -48,9 +48,19 @@ try {
     $hasShuffleOptionsColumn = false;
 }
 
+$hasAllowCalculatorColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'allow_calculator']);
+    $hasAllowCalculatorColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasAllowCalculatorColumn = false;
+}
+
 $tokenSelect = $hasTokenColumn ? ', sa.token_code' : '';
 $revokedSelect = $hasExamRevokedColumn ? ', sa.exam_revoked_at' : '';
 $shuffleSelect = ($hasShuffleQuestionsColumn ? ', sa.shuffle_questions' : '') . ($hasShuffleOptionsColumn ? ', sa.shuffle_options' : '');
+$calculatorSelect = $hasAllowCalculatorColumn ? ', sa.allow_calculator' : '';
 
 $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at,
         p.id AS package_id, p.code, p.name, p.description
@@ -63,7 +73,7 @@ try {
     // Newer schema (exam mode)
     $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at' . $tokenSelect . $revokedSelect . ', sa.duration_minutes, sa.started_at,
             sa.correct_count, sa.total_count, sa.score, sa.graded_at,
-            p.id AS package_id, p.code, p.name, p.description' . $shuffleSelect . '
+            p.id AS package_id, p.code, p.name, p.description' . $shuffleSelect . $calculatorSelect . '
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
         WHERE sa.id = :id AND sa.student_id = :sid
@@ -73,7 +83,7 @@ try {
 } catch (Throwable $e) {
     // Backward compatible: older schema without duration_minutes/started_at.
     $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at' . $tokenSelect . $revokedSelect . ',
-            p.id AS package_id, p.code, p.name, p.description' . $shuffleSelect . '
+            p.id AS package_id, p.code, p.name, p.description' . $shuffleSelect . $calculatorSelect . '
         FROM student_assignments sa
         JOIN packages p ON p.id = sa.package_id
         WHERE sa.id = :id AND sa.student_id = :sid
@@ -111,6 +121,7 @@ if ($assignment && (string)($assignment['status'] ?? '') === 'done') {
 
 $jenisAssignment = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
 $isExamAssignment = ($jenisAssignment === 'ujian');
+$showCalculator = ($assignment && $isExamAssignment && $hasAllowCalculatorColumn && (int)($assignment['allow_calculator'] ?? 0) === 1);
 
 // Aturan: fitur acak hanya untuk UJIAN, tidak berlaku untuk TUGAS.
 if (!$isExamAssignment) {
@@ -1037,7 +1048,12 @@ include __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div class="md-nav-center d-flex align-items-center justify-content-center">
-                        <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal">Daftar Soal</button>
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal">Daftar Soal</button>
+                            <?php if ($showCalculator): ?>
+                                <button type="button" id="mdCalcBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdCalcModal" aria-controls="mdCalcModal">Kalkulator</button>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <div class="md-nav-right d-flex align-items-center justify-content-end gap-2">
@@ -1092,6 +1108,49 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
+            <?php if ($showCalculator): ?>
+            <div class="modal fade" id="mdCalcModal" tabindex="-1" aria-labelledby="mdCalcModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="mdCalcModalLabel">Kalkulator</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" class="form-control mb-3 text-end" id="mdCalcDisplay" value="" readonly>
+
+                            <div class="row g-2">
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="C">C</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="BS">⌫</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="/">/</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="*">*</button></div>
+
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="7">7</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="8">8</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="9">9</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="-">-</button></div>
+
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="4">4</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="5">5</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="6">6</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="+">+</button></div>
+
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="1">1</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="2">2</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="3">3</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-primary w-100" data-calc="=">=</button></div>
+
+                                <div class="col-6"><button type="button" class="btn btn-outline-secondary w-100" data-calc="0">0</button></div>
+                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc=".">.</button></div>
+                                <div class="col-3"></div>
+                            </div>
+                            <div class="form-text mt-2">Gunakan tombol untuk menghitung. Kalkulator tidak menyimpan riwayat.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <script>
                 (function () {
                     function ready(fn) {
@@ -1109,6 +1168,11 @@ include __DIR__ . '/../includes/header.php';
                             document.body.appendChild(soalModalEl);
                         }
 
+                        var calcModalEl = document.getElementById('mdCalcModal');
+                        if (calcModalEl && calcModalEl.parentElement !== document.body) {
+                            document.body.appendChild(calcModalEl);
+                        }
+
                         var prevBtn = document.getElementById('mdPrevBtn');
                         var nextBtn = document.getElementById('mdNextBtn');
                         var startBtn = document.getElementById('mdStartBtn');
@@ -1119,6 +1183,73 @@ include __DIR__ . '/../includes/header.php';
                         var introWrap = document.getElementById('mdIntroWrap');
                         var introBox = document.getElementById('mdIntroBox');
                         var navBar = document.getElementById('mdNavBar');
+
+                        // Kalkulator (opsional)
+                        (function initCalculator() {
+                            var display = document.getElementById('mdCalcDisplay');
+                            var modal = document.getElementById('mdCalcModal');
+                            if (!display || !modal) return;
+
+                            function getExpr() {
+                                return String(display.value || '');
+                            }
+
+                            function setExpr(v) {
+                                display.value = String(v || '');
+                            }
+
+                            function append(ch) {
+                                setExpr(getExpr() + String(ch));
+                            }
+
+                            function backspace() {
+                                var v = getExpr();
+                                setExpr(v.slice(0, Math.max(0, v.length - 1)));
+                            }
+
+                            function clearAll() {
+                                setExpr('');
+                            }
+
+                            function safeEval(expr) {
+                                var clean = String(expr || '').replace(/\s+/g, '');
+                                if (!clean) return '';
+                                // allow only digits, operators, dot, parentheses
+                                if (!/^[0-9+\-*/().]+$/.test(clean)) return 'Err';
+                                try {
+                                    // eslint-disable-next-line no-new-func
+                                    var result = Function('"use strict";return (' + clean + ')')();
+                                    if (typeof result !== 'number' || !isFinite(result)) return 'Err';
+                                    // trim floating noise
+                                    var s = String(result);
+                                    return s;
+                                } catch (e) {
+                                    return 'Err';
+                                }
+                            }
+
+                            modal.addEventListener('click', function (ev) {
+                                var btn = ev.target && ev.target.closest ? ev.target.closest('[data-calc]') : null;
+                                if (!btn) return;
+                                var key = String(btn.getAttribute('data-calc') || '');
+                                if (!key) return;
+
+                                if (key === 'C') {
+                                    clearAll();
+                                    return;
+                                }
+                                if (key === 'BS') {
+                                    backspace();
+                                    return;
+                                }
+                                if (key === '=') {
+                                    setExpr(safeEval(getExpr()));
+                                    return;
+                                }
+
+                                append(key);
+                            });
+                        })();
 
                         var currentIndex = 0;
 

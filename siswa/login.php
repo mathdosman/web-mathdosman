@@ -9,11 +9,18 @@ if (!empty($_SESSION['student'])) {
 $error = '';
 $captcha_question = '';
 
+$captcha_disabled = defined('APP_DISABLE_STUDENT_CAPTCHA') && (bool)APP_DISABLE_STUDENT_CAPTCHA;
+
 $recaptcha_site_key = defined('RECAPTCHA_SITE_KEY') ? (string)RECAPTCHA_SITE_KEY : '';
 $recaptcha_secret_key = defined('RECAPTCHA_SECRET_KEY') ? (string)RECAPTCHA_SECRET_KEY : '';
 $recaptcha_enabled = ($recaptcha_site_key !== '' && $recaptcha_secret_key !== '');
 
-if (!$recaptcha_enabled && !function_exists('generate_student_login_captcha')) {
+if ($captcha_disabled) {
+    // Force-disable captcha in local/dev.
+    $recaptcha_enabled = false;
+}
+
+if (!$captcha_disabled && !$recaptcha_enabled && !function_exists('generate_student_login_captcha')) {
     function generate_student_login_captcha(): string
     {
         $a = random_int(1, 9);
@@ -21,6 +28,10 @@ if (!$recaptcha_enabled && !function_exists('generate_student_login_captcha')) {
         $_SESSION['student_login_captcha_answer'] = (string)($a + $b);
         return $a . ' + ' . $b . ' = ?';
     }
+}
+
+if (!$captcha_disabled && !$recaptcha_enabled && function_exists('generate_student_login_captcha')) {
+    $captcha_question = generate_student_login_captcha();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -41,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Username dan password wajib diisi.';
     }
 
-    if ($error === '') {
+    if ($error === '' && !$captcha_disabled) {
         if ($recaptcha_enabled) {
             $recaptcha_response = trim((string)($_POST['g-recaptcha-response'] ?? ''));
             if ($recaptcha_response === '') {
@@ -104,6 +115,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($student && password_verify($password, (string)$student['password_hash'])) {
                 session_regenerate_id(true);
+
+                // Single-session: token terbaru disimpan di DB, sehingga login di device lain akan menendang session lama.
+                $studentSessionToken = '';
+                try {
+                    $hasTokenCol = false;
+                    try {
+                        $stmtCol = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+                        $stmtCol->execute([':c' => 'session_token']);
+                        $hasTokenCol = (bool)$stmtCol->fetch();
+                    } catch (Throwable $eCol) {
+                        $hasTokenCol = false;
+                    }
+
+                    if ($hasTokenCol) {
+                        $studentSessionToken = bin2hex(random_bytes(32));
+                        $studentSessionToken = substr($studentSessionToken, 0, 80);
+                        $stmtTok = $pdo->prepare('UPDATE students SET session_token = :t, session_token_updated_at = NOW() WHERE id = :id');
+                        $stmtTok->execute([':t' => $studentSessionToken, ':id' => (int)$student['id']]);
+                    }
+                } catch (Throwable $eTok) {
+                    $studentSessionToken = '';
+                }
+
                 $_SESSION['student'] = [
                     'id' => (int)$student['id'],
                     'nama_siswa' => (string)$student['nama_siswa'],
@@ -114,6 +148,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'foto' => (string)($student['foto'] ?? ''),
                     'username' => (string)$student['username'],
                 ];
+
+                if ($studentSessionToken !== '') {
+                    $_SESSION['student_session_token'] = $studentSessionToken;
+                } else {
+                    unset($_SESSION['student_session_token']);
+                }
+
                 // Untuk timeout session: catat waktu login.
                 $_SESSION['student_login_at'] = time();
                 throttle_clear($throttleKey);
@@ -140,7 +181,7 @@ $use_mathjax = false;
 $disable_public_footer = true;
 $body_class = 'student-login-page';
 $extra_stylesheets = ['assets/css/student-login.css'];
-if ($recaptcha_enabled) {
+if ($recaptcha_enabled && !$captcha_disabled) {
     $use_recaptcha = true;
 }
 include __DIR__ . '/../includes/header.php';
@@ -188,12 +229,12 @@ include __DIR__ . '/../includes/header.php';
                     </button>
                 </div>
             </div>
-            <?php if ($recaptcha_enabled): ?>
+            <?php if (!$captcha_disabled && $recaptcha_enabled): ?>
                 <div class="input-group">
                     <label>Verifikasi</label>
                     <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars($recaptcha_site_key); ?>"></div>
                 </div>
-            <?php else: ?>
+            <?php elseif (!$captcha_disabled): ?>
                 <div class="input-group">
                     <label for="captcha">Verifikasi</label>
                     <div class="captcha-box">

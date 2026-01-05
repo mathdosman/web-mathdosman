@@ -382,6 +382,76 @@ try {
         }
     }
 
+    if (!function_exists('app_ensure_site_daily_visits_schema')) {
+        function app_ensure_site_daily_visits_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS site_daily_visits (
+                    visit_date DATE NOT NULL,
+                    visits BIGINT UNSIGNED NOT NULL DEFAULT 0,
+                    updated_at TIMESTAMP NULL DEFAULT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (visit_date),
+                    KEY idx_site_daily_visits_visits (visits)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_site_daily_visit_ips_schema')) {
+        function app_ensure_site_daily_visit_ips_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS site_daily_visit_ips (
+                    visit_date DATE NOT NULL,
+                    ip_hash CHAR(64) NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (visit_date, ip_hash),
+                    KEY idx_site_daily_visit_ips_date (visit_date)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_site_weekly_visits_schema')) {
+        function app_ensure_site_weekly_visits_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS site_weekly_visits (
+                    week_start DATE NOT NULL,
+                    visits BIGINT UNSIGNED NOT NULL DEFAULT 0,
+                    updated_at TIMESTAMP NULL DEFAULT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (week_start),
+                    KEY idx_site_weekly_visits_visits (visits)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_site_weekly_visit_ips_schema')) {
+        function app_ensure_site_weekly_visit_ips_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS site_weekly_visit_ips (
+                    week_start DATE NOT NULL,
+                    ip_hash CHAR(64) NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (week_start, ip_hash),
+                    KEY idx_site_weekly_visit_ips_week (week_start)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
     if (!function_exists('app_ensure_student_assignments_review_schema')) {
         function app_ensure_student_assignments_review_schema(PDO $pdo): void
         {
@@ -405,6 +475,29 @@ try {
         }
     }
 
+    if (!function_exists('app_ensure_student_assignments_calculator_schema')) {
+        function app_ensure_student_assignments_calculator_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'student_assignments'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('allow_calculator'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN allow_calculator TINYINT(1) NOT NULL DEFAULT 0');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
     if (!function_exists('app_ensure_students_parent_phone_schema')) {
         function app_ensure_students_parent_phone_schema(PDO $pdo): void
         {
@@ -421,6 +514,38 @@ try {
                 $col = $pdo->query("SHOW COLUMNS FROM students LIKE " . $pdo->quote('no_hp_ortu'))->fetch();
                 if (!$col) {
                     $pdo->exec('ALTER TABLE students ADD COLUMN no_hp_ortu VARCHAR(30) NULL');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
+    if (!function_exists('app_ensure_students_single_session_schema')) {
+        function app_ensure_students_single_session_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'students'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM students LIKE " . $pdo->quote('session_token'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE students ADD COLUMN session_token VARCHAR(80) NULL');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM students LIKE " . $pdo->quote('session_token_updated_at'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE students ADD COLUMN session_token_updated_at TIMESTAMP NULL DEFAULT NULL');
                 }
             } catch (Throwable $e) {
                 // ignore
@@ -555,7 +680,9 @@ try {
                 if (@flock($fp, LOCK_EX | LOCK_NB)) {
                     app_ensure_excel_schema($pdo);
                     app_ensure_student_assignments_review_schema($pdo);
+                    app_ensure_student_assignments_calculator_schema($pdo);
                     app_ensure_students_parent_phone_schema($pdo);
+                    app_ensure_students_single_session_schema($pdo);
                     app_ensure_student_assignments_token_schema($pdo);
                     app_ensure_student_assignments_exam_revoked_schema($pdo);
                     app_ensure_student_assignments_shuffle_schema($pdo);

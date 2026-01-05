@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS students (
     foto VARCHAR(255) NULL,
     username VARCHAR(60) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    session_token VARCHAR(80) NULL,
+    session_token_updated_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT NULL,
     KEY idx_students_kelas (kelas),
@@ -163,6 +165,8 @@ CREATE TABLE IF NOT EXISTS student_assignments (
     -- Jika 1: siswa boleh melihat detail jawaban + kunci setelah status DONE.
     -- Default 0 untuk menjaga kerahasiaan kunci.
     allow_review_details TINYINT(1) NOT NULL DEFAULT 0,
+    -- Jika 1: tampilkan tombol kalkulator pada halaman ujian siswa.
+    allow_calculator TINYINT(1) NOT NULL DEFAULT 0,
     -- Token 6 digit (opsional) untuk akses/validasi ujian dari sisi admin.
     token_code CHAR(6) NULL,
     status ENUM('assigned','done') NOT NULL DEFAULT 'assigned',
@@ -220,6 +224,43 @@ CREATE TABLE IF NOT EXISTS page_views (
     PRIMARY KEY (kind, item_id),
     KEY idx_page_views_views (views),
     KEY idx_page_views_last_viewed (last_viewed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Analitik beranda: jumlah kunjungan per hari (berbasis session)
+CREATE TABLE IF NOT EXISTS site_daily_visits (
+    visit_date DATE NOT NULL,
+    visits BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (visit_date),
+    KEY idx_site_daily_visits_visits (visits)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Analitik beranda: unique visitor per IP per hari (disimpan sebagai hash, bukan IP mentah)
+CREATE TABLE IF NOT EXISTS site_daily_visit_ips (
+    visit_date DATE NOT NULL,
+    ip_hash CHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (visit_date, ip_hash),
+    KEY idx_site_daily_visit_ips_date (visit_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Analitik beranda: jumlah kunjungan per minggu (unique per IP per minggu; IP disimpan sebagai hash)
+CREATE TABLE IF NOT EXISTS site_weekly_visits (
+    week_start DATE NOT NULL,
+    visits BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (week_start),
+    KEY idx_site_weekly_visits_visits (visits)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS site_weekly_visit_ips (
+    week_start DATE NOT NULL,
+    ip_hash CHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (week_start, ip_hash),
+    KEY idx_site_weekly_visit_ips_week (week_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabel skor mini game matematika (publik + siswa)

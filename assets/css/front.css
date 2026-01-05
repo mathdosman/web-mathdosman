@@ -96,6 +96,41 @@
         transform: translateY(-1px);
     }
 
+    /* Sidebar: daily visits (minimal) */
+    body.front-page .daily-visits-today-count {
+        font-size: 1.2rem;
+        letter-spacing: .01em;
+    }
+
+    body.front-page .daily-visits-list {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    body.front-page .daily-visits-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: .75rem;
+        padding-bottom: .35rem;
+        border-bottom: 1px dashed var(--bs-border-color);
+    }
+
+    body.front-page .daily-visits-row.is-today {
+        font-weight: 700;
+    }
+
+    body.front-page .daily-visits-date {
+        color: var(--bs-secondary-color);
+        font-size: .875rem;
+        min-width: 0;
+    }
+
+    body.front-page .daily-visits-count {
+        font-variant-numeric: tabular-nums;
+    }
+
     /* Navigation buttons (Prev/Home/Next) */
     body.front-page .nav-action-btn {
         display: inline-flex;

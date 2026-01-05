@@ -13,6 +13,15 @@ try {
     $hasIsExamColumn = false;
 }
 
+$hasPublishedAtColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM packages LIKE :c');
+    $stmt->execute([':c' => 'published_at']);
+    $hasPublishedAtColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasPublishedAtColumn = false;
+}
+
 if (app_runtime_migrations_enabled()) {
     // Ensure tables/columns exist for older installs (opt-in).
     try {
@@ -89,13 +98,16 @@ function generate_unique_package_code(PDO $pdo): string
 }
 
 function build_packages_return_url(array $get): string {
-    $allowed = ['filter_subject_id', 'filter_materi', 'filter_submateri', 'page', 'per_page'];
+    $allowed = ['status', 'filter_subject_id', 'filter_materi', 'filter_submateri', 'page', 'per_page'];
     $parts = [];
     foreach ($allowed as $k) {
         if (!isset($get[$k])) {
             continue;
         }
         $v = (string)$get[$k];
+        if ($k === 'status' && $v === 'draft') {
+            continue;
+        }
         if ($v === '' || $v === '0') {
             continue;
         }
@@ -107,6 +119,8 @@ function build_packages_return_url(array $get): string {
 $returnUrl = build_packages_return_url($_GET);
 
 // Filter params
+$statusView = (string)($_GET['status'] ?? '');
+$statusView = ($statusView === 'published') ? 'published' : 'draft';
 $filterSubjectId = (int)($_GET['filter_subject_id'] ?? 0);
 $filterMateri = trim((string)($_GET['filter_materi'] ?? ''));
 $filterSubmateri = trim((string)($_GET['filter_submateri'] ?? ''));
@@ -208,8 +222,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($next !== null) {
                     if ($next === 'published') {
-                        $stmt = $pdo->prepare('UPDATE packages SET status = :st, published_at = COALESCE(published_at, NOW()) WHERE id = :id');
-                        $stmt->execute([':st' => $next, ':id' => $id]);
+                        if ($hasPublishedAtColumn) {
+                            // Default publish time when publishing via icon.
+                            // Also handles legacy zero datetime values.
+                            $stmt = $pdo->prepare('UPDATE packages
+                                SET status = :st,
+                                    published_at = COALESCE(NULLIF(published_at, "0000-00-00 00:00:00"), NOW())
+                                WHERE id = :id');
+                            $stmt->execute([':st' => $next, ':id' => $id]);
+                        } else {
+                            $stmt = $pdo->prepare('UPDATE packages SET status = :st WHERE id = :id');
+                            $stmt->execute([':st' => $next, ':id' => $id]);
+                        }
                     } else {
                         // Keep original published_at so re-publish keeps the first publish time.
                         $stmt = $pdo->prepare('UPDATE packages SET status = :st WHERE id = :id');
@@ -307,6 +331,10 @@ try {
     $params = [];
     $where = ' WHERE 1=1';
 
+    // Default: only show draft packages. Use ?status=published to see published packages.
+    $where .= ' AND p.status = :pstatus';
+    $params[':pstatus'] = $statusView;
+
     if ($hasIsExamColumn) {
         $where .= ' AND COALESCE(p.is_exam, 0) = 0';
     }
@@ -347,11 +375,13 @@ try {
 
     // Prefer analytics views; fallback gracefully if page_views doesn't exist.
     try {
+        $publishedAtSelect = $hasPublishedAtColumn ? ', p.published_at' : '';
         $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
             COALESCE(d.cnt, 0) AS draft_count,
             COALESCE(pub.cnt, 0) AS published_count,
             s.name AS subject_name,
             COALESCE(pv.views, 0) AS views
+            ' . $publishedAtSelect . '
             FROM packages p
             LEFT JOIN subjects s ON s.id = p.subject_id
             LEFT JOIN page_views pv ON pv.kind = "package" AND pv.item_id = p.id
@@ -377,11 +407,13 @@ try {
         $stmt->execute($params);
         $packages = $stmt->fetchAll();
     } catch (Throwable $e2) {
+        $publishedAtSelect = $hasPublishedAtColumn ? ', p.published_at' : '';
         $sql = 'SELECT p.id, p.code, p.name, p.status, p.created_at, p.subject_id, p.materi, p.submateri, p.show_answers_public,
             COALESCE(d.cnt, 0) AS draft_count,
             COALESCE(pub.cnt, 0) AS published_count,
             s.name AS subject_name,
             0 AS views
+            ' . $publishedAtSelect . '
             FROM packages p
             LEFT JOIN subjects s ON s.id = p.subject_id
             LEFT JOIN (
@@ -416,8 +448,12 @@ include __DIR__ . '/../includes/header.php';
 <div class="admin-page">
     <div class="admin-page-header">
         <div>
-            <h4 class="admin-page-title">Paket Soal</h4>
-            <p class="admin-page-subtitle">Buat paket soal dan tambahkan butir soal ke dalam paket.</p>
+            <h4 class="admin-page-title"><?php echo $statusView === 'published' ? 'Postingan' : 'Paket Soal'; ?></h4>
+            <p class="admin-page-subtitle">
+                <?php echo $statusView === 'published'
+                    ? 'Daftar paket soal yang telah terbit/publish.'
+                    : 'Daftar paket soal yang masih draft. Buat paket soal lalu tambahkan butir soal ke dalam paket.'; ?>
+            </p>
         </div>
         <div class="admin-page-actions">
             <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel">
@@ -437,6 +473,9 @@ include __DIR__ . '/../includes/header.php';
             <div class="collapse <?php echo $hasFilter ? 'show' : ''; ?>" id="filterPanel">
                 <div class="border rounded p-2 mb-2">
                     <form method="get" class="m-0">
+                        <?php if ($statusView === 'published'): ?>
+                            <input type="hidden" name="status" value="published">
+                        <?php endif; ?>
                         <div class="row g-2 align-items-end">
                             <div class="col-12 col-md-4">
                                 <label class="form-label small mb-1">Mata Pelajaran</label>
@@ -476,7 +515,7 @@ include __DIR__ . '/../includes/header.php';
                         <?php if ($hasFilter): ?>
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <div class="text-muted small">Filter aktif.</div>
-                                <a href="packages.php" class="btn btn-link btn-sm">Reset</a>
+                                <a href="packages.php<?php echo $statusView === 'published' ? '?status=published' : ''; ?>" class="btn btn-link btn-sm">Reset</a>
                             </div>
                         <?php endif; ?>
                     </form>
@@ -519,9 +558,10 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <?php
-            $buildHref = function (int $p) use ($filterSubjectId, $filterMateri, $filterSubmateri, $perPage): string {
+            $buildHref = function (int $p) use ($statusView, $filterSubjectId, $filterMateri, $filterSubmateri, $perPage): string {
                 $p = max(1, $p);
                 $qs = http_build_query([
+                    'status' => $statusView === 'published' ? 'published' : null,
                     'filter_subject_id' => $filterSubjectId > 0 ? $filterSubjectId : null,
                     'filter_materi' => $filterMateri !== '' ? $filterMateri : null,
                     'filter_submateri' => $filterSubmateri !== '' ? $filterSubmateri : null,
@@ -552,6 +592,9 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
             </div>
             <form method="get" class="m-0 d-flex align-items-center gap-2">
+                <?php if ($statusView === 'published'): ?>
+                    <input type="hidden" name="status" value="published">
+                <?php endif; ?>
                 <input type="hidden" name="filter_subject_id" value="<?php echo (int)$filterSubjectId; ?>">
                 <input type="hidden" name="filter_materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
                 <input type="hidden" name="filter_submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
@@ -573,13 +616,17 @@ include __DIR__ . '/../includes/header.php';
                         <th class="packages-col-paket">Paket</th>
                         <th class="text-center packages-col-status d-none d-sm-table-cell">Status</th>
                         <th class="text-end d-none d-sm-table-cell" style="width: 90px;">Views</th>
+                        <?php if ($hasPublishedAtColumn): ?>
+                            <th class="d-none d-md-table-cell text-center" style="width: 150px;">Publish</th>
+                        <?php endif; ?>
                         <th class="d-none d-md-table-cell text-center" style="width: 150px;">Dibuat</th>
                         <th class="text-end packages-col-actions">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (!$packages): ?>
-                    <tr><td colspan="6" class="text-center">Belum ada paket soal.</td></tr>
+                    <?php $colspan = $hasPublishedAtColumn ? 7 : 6; ?>
+                    <tr><td colspan="<?php echo (int)$colspan; ?>" class="text-center">Belum ada paket soal.</td></tr>
                 <?php else: ?>
                     <?php foreach ($packages as $i => $p): ?>
                         <tr>
@@ -631,17 +678,29 @@ include __DIR__ . '/../includes/header.php';
                                 </div>
                             </td>
                             <td class="text-end d-none d-sm-table-cell"><span class="text-muted"><?php echo (int)($p['views'] ?? 0); ?></span></td>
+                            <?php if ($hasPublishedAtColumn): ?>
+                                <?php
+                                    $pubText = '';
+                                    try {
+                                        $pubText = format_id_date((string)($p['published_at'] ?? ''));
+                                    } catch (Throwable $eFmt) {
+                                        $pubText = '';
+                                    }
+                                    $pubText = trim((string)$pubText);
+                                ?>
+                                <td class="d-none d-md-table-cell text-center"><span class="text-muted text-nowrap"><?php echo htmlspecialchars($pubText !== '' ? $pubText : '-'); ?></span></td>
+                            <?php endif; ?>
                             <td class="d-none d-md-table-cell text-center"><span class="text-muted text-nowrap"><?php echo htmlspecialchars(format_id_date((string)($p['created_at'] ?? ''))); ?></span></td>
                             <td class="text-end packages-col-actions">
                                 <div class="packages-actions">
-                                    <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_edit.php?id=<?php echo (int)$p['id']; ?>" title="Edit Paket" aria-label="Edit Paket">
+                                    <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_edit.php?id=<?php echo (int)$p['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Edit Paket" aria-label="Edit Paket">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M12 20h9"/>
                                             <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
                                         </svg>
                                         <span class="visually-hidden">Edit</span>
                                     </a>
-                                    <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_items.php?package_id=<?php echo (int)$p['id']; ?>" title="Lihat Butir Soal" aria-label="Lihat Butir Soal">
+                                    <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="package_items.php?package_id=<?php echo (int)$p['id']; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat Butir Soal" aria-label="Lihat Butir Soal">
                                         <svg class="<?php echo ($p['status'] === 'published') ? 'text-success' : 'text-secondary'; ?>" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                             <path d="M8 6h13"/>
                                             <path d="M8 12h13"/>

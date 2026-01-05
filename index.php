@@ -32,6 +32,51 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+// Catat kunjungan mingguan beranda (unique per REMOTE_ADDR per minggu; IP disimpan sebagai hash).
+$getClientIp = static function (): string {
+    return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+};
+
+if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
+    try {
+        $stmt1 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visits'");
+        $hasVisits = $stmt1 && $stmt1->fetch(PDO::FETCH_NUM);
+        $stmt2 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visit_ips'");
+        $hasIps = $stmt2 && $stmt2->fetch(PDO::FETCH_NUM);
+
+        if ($hasVisits && $hasIps) {
+            $ip = $getClientIp();
+            if ($ip !== '') {
+                $ipHash = hash('sha256', $ip);
+
+                // Mulai minggu dari Senin.
+                $weekStartSql = 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
+
+                $pdo->beginTransaction();
+
+                $stmt = $pdo->prepare('INSERT IGNORE INTO site_weekly_visit_ips (week_start, ip_hash) VALUES (' . $weekStartSql . ', :h)');
+                $stmt->execute([':h' => $ipHash]);
+                $isNew = ($stmt->rowCount() > 0);
+
+                if ($isNew) {
+                    $pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
+                }
+
+                $pdo->commit();
+            }
+        }
+    } catch (Throwable $e) {
+        try {
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+        } catch (Throwable $e2) {
+            // ignore
+        }
+        // ignore
+    }
+}
+
 $page_title = 'Beranda';
 
 // SEO/Share
@@ -564,6 +609,21 @@ function render_home_sidebar_widgets(
 {
     global $pdo;
 
+    // Kunjungan per minggu (ambil 8 minggu terakhir).
+    $weeklyVisits = [];
+    try {
+        if ($pdo instanceof PDO) {
+            $stmtTable = $pdo->query("SHOW TABLES LIKE 'site_weekly_visits'");
+            $hasTable = $stmtTable && $stmtTable->fetch(PDO::FETCH_NUM);
+            if ($hasTable) {
+                $stmt = $pdo->query('SELECT week_start, visits FROM site_weekly_visits ORDER BY week_start DESC LIMIT 8');
+                $weeklyVisits = $stmt ? ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+            }
+        }
+    } catch (Throwable $e) {
+        $weeklyVisits = [];
+    }
+
     // Siapkan data highscore mini game (masing-masing 7 nilai tertinggi per mode).
     $miniGameAddSub = [];
     $miniGameMulDiv = [];
@@ -628,6 +688,57 @@ function render_home_sidebar_widgets(
                     <button class="btn btn-outline-secondary" type="submit">Cari</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="card mb-3 sidebar-widget">
+        <div class="card-header bg-body-secondary">
+            <div class="fw-semibold">Kunjungan per Minggu</div>
+        </div>
+        <div class="card-body">
+            <?php if (!$weeklyVisits): ?>
+                <div class="text-muted small">Belum ada data.</div>
+            <?php else: ?>
+                <?php
+                    $weekStart = (new DateTime('today'))->modify('monday this week')->format('Y-m-d');
+                    $weekVisits = null;
+                    foreach ($weeklyVisits as $r) {
+                        $d = (string)($r['week_start'] ?? '');
+                        if ($d === $weekStart) {
+                            $weekVisits = (int)($r['visits'] ?? 0);
+                            break;
+                        }
+                    }
+                ?>
+
+                <div class="d-flex align-items-baseline justify-content-between mb-2">
+                    <div class="text-muted small">Minggu ini</div>
+                    <div class="fw-bold daily-visits-today-count"><?php echo htmlspecialchars(number_format((int)($weekVisits ?? 0), 0, ',', '.')); ?></div>
+                </div>
+
+                <div class="daily-visits-list">
+                    <?php foreach ($weeklyVisits as $r): ?>
+                        <?php
+                            $d = (string)($r['week_start'] ?? '');
+                            $v = (int)($r['visits'] ?? 0);
+                            $isToday = ($d === $weekStart);
+                            $range = '';
+                            try {
+                                $dtStart = new DateTime($d);
+                                $dtEnd = (clone $dtStart)->modify('+6 days');
+                                $range = format_id_date($dtStart->format('Y-m-d')) . ' – ' . format_id_date($dtEnd->format('Y-m-d'));
+                            } catch (Throwable $e) {
+                                $range = $d;
+                            }
+                        ?>
+                        <div class="daily-visits-row<?php echo $isToday ? ' is-today' : ''; ?>">
+                            <div class="daily-visits-date"><?php echo htmlspecialchars($range); ?></div>
+                            <div class="daily-visits-count"><?php echo htmlspecialchars(number_format($v, 0, ',', '.')); ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="text-muted small mt-2">Catatan: dihitung unique per <code>REMOTE_ADDR</code> per minggu (IP disimpan sebagai hash).</div>
+            <?php endif; ?>
         </div>
     </div>
 

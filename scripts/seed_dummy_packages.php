@@ -1,8 +1,9 @@
 <?php
 
-// Seed 4 dummy packages (each 5 PG questions) into the configured database.
+// Seed dummy packages (default 4; each 5 PG questions) into the configured database.
 // Usage (Windows/XAMPP):
 //   php scripts/seed_dummy_packages.php
+//   php scripts/seed_dummy_packages.php --count=3
 //   php scripts/seed_dummy_packages.php --publish
 
 if (PHP_SAPI !== 'cli') {
@@ -25,6 +26,19 @@ if (!is_array($argv)) {
 }
 
 $publish = in_array('--publish', $argv, true) || in_array('--published', $argv, true);
+
+$count = 4;
+for ($i = 0; $i < count($argv); $i++) {
+    $a = (string)$argv[$i];
+    if (preg_match('/^--count=(\d+)$/', $a, $m)) {
+        $count = (int)$m[1];
+        break;
+    }
+    if ($a === '--count' && isset($argv[$i + 1])) {
+        $count = (int)$argv[$i + 1];
+        break;
+    }
+}
 
 $ensureTable = static function (PDO $pdo, string $table): bool {
     try {
@@ -82,6 +96,16 @@ $packages = [
         'submateri' => 'Sudut Istimewa',
     ],
 ];
+
+$maxCount = count($packages);
+if ($count < 1) {
+    $count = 1;
+}
+if ($count > $maxCount) {
+    $count = $maxCount;
+}
+
+$packagesToSeed = array_slice($packages, 0, $count);
 
 $questionsByCode = [
     'dummy-math-01' => [
@@ -148,7 +172,7 @@ try {
     $createdQuestions = 0;
     $publishedPackages = 0;
 
-    foreach ($packages as $p) {
+    foreach ($packagesToSeed as $p) {
         $stmtFindPkg->execute([':c' => $p['code']]);
         $existingPkgId = (int)$stmtFindPkg->fetchColumn();
         if ($existingPkgId > 0) {
@@ -209,7 +233,11 @@ try {
     } else {
         echo "Catatan: status paket & soal = draft.\n";
     }
-    echo "Codes: dummy-math-01..dummy-math-04\n";
+    if ($count === 1) {
+        echo "Codes: dummy-math-01\n";
+    } else {
+        echo "Codes: dummy-math-01..dummy-math-" . str_pad((string)$count, 2, '0', STR_PAD_LEFT) . "\n";
+    }
 } catch (Throwable $e) {
     $pdo->rollBack();
     fwrite(STDERR, "Gagal seed: " . $e->getMessage() . "\n");

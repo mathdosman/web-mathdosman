@@ -31,6 +31,26 @@ if (!function_exists('app_ensure_analytics_schema')) {
     exit(1);
 }
 
+if (!function_exists('app_ensure_site_daily_visits_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_site_daily_visits_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_site_daily_visit_ips_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_site_daily_visit_ips_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_site_weekly_visits_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_site_weekly_visits_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_site_weekly_visit_ips_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_site_weekly_visit_ips_schema).\n");
+    exit(1);
+}
+
 if (!function_exists('app_ensure_contents_taxonomy_schema')) {
     fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_contents_taxonomy_schema).\n");
     exit(1);
@@ -41,8 +61,18 @@ if (!function_exists('app_ensure_student_assignments_review_schema')) {
     exit(1);
 }
 
+if (!function_exists('app_ensure_student_assignments_calculator_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_student_assignments_calculator_schema).\n");
+    exit(1);
+}
+
 if (!function_exists('app_ensure_students_parent_phone_schema')) {
     fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_students_parent_phone_schema).\n");
+    exit(1);
+}
+
+if (!function_exists('app_ensure_students_single_session_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_students_single_session_schema).\n");
     exit(1);
 }
 
@@ -155,11 +185,29 @@ try {
     echo "Menjalankan migrasi skema (Analytics/page_views)...\n";
     app_ensure_analytics_schema($pdo);
 
+    echo "Menjalankan migrasi skema (Analytics/site_daily_visits)...\n";
+    app_ensure_site_daily_visits_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Analytics/site_daily_visit_ips)...\n";
+    app_ensure_site_daily_visit_ips_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Analytics/site_weekly_visits)...\n";
+    app_ensure_site_weekly_visits_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Analytics/site_weekly_visit_ips)...\n";
+    app_ensure_site_weekly_visit_ips_schema($pdo);
+
     echo "Menjalankan migrasi skema (Siswa/review detail jawaban)...\n";
     app_ensure_student_assignments_review_schema($pdo);
 
+    echo "Menjalankan migrasi skema (Siswa/kalkulator ujian)...\n";
+    app_ensure_student_assignments_calculator_schema($pdo);
+
     echo "Menjalankan migrasi skema (Siswa/no HP orang tua)...\n";
     app_ensure_students_parent_phone_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/single session login)...\n";
+    app_ensure_students_single_session_schema($pdo);
 
     echo "Menjalankan migrasi skema (Siswa/token penugasan)...\n";
     app_ensure_student_assignments_token_schema($pdo);

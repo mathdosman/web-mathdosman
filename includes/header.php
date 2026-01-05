@@ -389,6 +389,7 @@ try {
                         'contents.php', 'content_add.php', 'content_edit.php', 'content_view.php',
                         'posts.php', 'post_add.php',
                         'home_carousel.php',
+                        'visits.php',
                         'mapel.php',
                     ];
                     $webSectionActive = in_array($currentPage, $webSectionPages, true);
@@ -402,7 +403,8 @@ try {
                 <div class="collapse<?php echo $webSectionExpanded ? ' show' : ''; ?>" id="adminSidebarWeb">
 
                 <?php
-                    $isActive = in_array($currentPage, ['packages.php', 'package_add.php', 'package_edit.php', 'package_items.php', 'package_question_add.php'], true);
+                    $isPublishedPackagesList = ($currentPage === 'packages.php') && ((string)($_GET['status'] ?? '') === 'published');
+                    $isActive = in_array($currentPage, ['packages.php', 'package_add.php', 'package_edit.php', 'package_items.php', 'package_question_add.php'], true) && !$isPublishedPackagesList;
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/packages.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -455,16 +457,29 @@ try {
                 </a>
 
                 <?php
-                    $isActive = in_array($currentPage, ['posts.php', 'post_add.php'], true);
+                    $isActive = $isPublishedPackagesList;
                 ?>
-                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/posts.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/packages.php?status=published"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <path d="M14 2v6h6"/>
                         <path d="M8 13h8"/>
                         <path d="M8 17h6"/>
                     </svg>
-                    <span>Posting</span>
+                    <span>Postingan</span>
+                </a>
+
+                <?php $isActive = ($currentPage === 'visits.php'); ?>
+                <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/visits.php"<?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v18h18"/>
+                        <path d="M7 14l3-3 3 2 5-6"/>
+                        <path d="M7 14v4"/>
+                        <path d="M10 11v7"/>
+                        <path d="M13 13v5"/>
+                        <path d="M18 7v11"/>
+                    </svg>
+                    <span>Kunjungan</span>
                 </a>
 
                 <?php $isActive = ($currentPage === 'home_carousel.php'); ?>

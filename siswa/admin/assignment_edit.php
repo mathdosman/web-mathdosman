@@ -43,6 +43,15 @@ try {
     $hasDurationMinutesColumn = false;
 }
 
+$hasAllowCalculatorColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'allow_calculator']);
+    $hasAllowCalculatorColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasAllowCalculatorColumn = false;
+}
+
 $values = [
     'jenis' => (string)($row['jenis'] ?? 'tugas'),
     'duration_minutes' => isset($row['duration_minutes']) ? (string)($row['duration_minutes'] ?? '') : '',
@@ -51,6 +60,7 @@ $values = [
     'status' => (string)($row['status'] ?? 'assigned'),
     'due_at' => '',
     'allow_review_details' => ($hasReviewDetailsColumn && isset($row['allow_review_details']) && (int)$row['allow_review_details'] === 1) ? '1' : '0',
+    'allow_calculator' => ($hasAllowCalculatorColumn && isset($row['allow_calculator']) && (int)$row['allow_calculator'] === 1) ? '1' : '0',
 ];
 
 if (!empty($row['due_at'])) {
@@ -68,9 +78,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values['status'] = (string)($_POST['status'] ?? $values['status']);
     $values['due_at'] = trim((string)($_POST['due_at'] ?? ''));
     $values['allow_review_details'] = (!empty($_POST['allow_review_details']) && $hasReviewDetailsColumn) ? '1' : '0';
+    $values['allow_calculator'] = (!empty($_POST['allow_calculator']) && $hasAllowCalculatorColumn) ? '1' : '0';
 
     if (!in_array($values['jenis'], ['tugas', 'ujian'], true)) $errors[] = 'Jenis tidak valid.';
     if (!in_array($values['status'], ['assigned', 'done'], true)) $errors[] = 'Status tidak valid.';
+
+    // Kalkulator hanya untuk ujian.
+    if ($values['jenis'] !== 'ujian') {
+        $values['allow_calculator'] = '0';
+    }
 
     $durSql = null;
     if ($values['duration_minutes'] !== '') {
@@ -98,85 +114,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
-            $allowReviewSql = ($hasReviewDetailsColumn ? ((int)$values['allow_review_details'] === 1 ? 1 : 0) : null);
+            $set = [
+                'jenis = :j',
+                'judul = :t',
+                'catatan = :c',
+                'status = :st',
+                'due_at = :due',
+                'updated_at = NOW()',
+            ];
 
-            if ($hasDurationMinutesColumn && $hasReviewDetailsColumn) {
-                $stmt = $pdo->prepare('UPDATE student_assignments
-                    SET jenis = :j,
-                        duration_minutes = :dur,
-                        judul = :t,
-                        catatan = :c,
-                        allow_review_details = :rev,
-                        status = :st,
-                        due_at = :due,
-                        updated_at = NOW()
-                    WHERE id = :id');
-                $stmt->execute([
-                    ':j' => $values['jenis'],
-                    ':dur' => $durSql,
-                    ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                    ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                    ':rev' => $allowReviewSql,
-                    ':st' => $values['status'],
-                    ':due' => $dueSql,
-                    ':id' => $id,
-                ]);
-            } elseif ($hasDurationMinutesColumn && !$hasReviewDetailsColumn) {
-                $stmt = $pdo->prepare('UPDATE student_assignments
-                    SET jenis = :j,
-                        duration_minutes = :dur,
-                        judul = :t,
-                        catatan = :c,
-                        status = :st,
-                        due_at = :due,
-                        updated_at = NOW()
-                    WHERE id = :id');
-                $stmt->execute([
-                    ':j' => $values['jenis'],
-                    ':dur' => $durSql,
-                    ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                    ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                    ':st' => $values['status'],
-                    ':due' => $dueSql,
-                    ':id' => $id,
-                ]);
-            } elseif (!$hasDurationMinutesColumn && $hasReviewDetailsColumn) {
-                $stmt = $pdo->prepare('UPDATE student_assignments
-                    SET jenis = :j,
-                        judul = :t,
-                        catatan = :c,
-                        allow_review_details = :rev,
-                        status = :st,
-                        due_at = :due,
-                        updated_at = NOW()
-                    WHERE id = :id');
-                $stmt->execute([
-                    ':j' => $values['jenis'],
-                    ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                    ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                    ':rev' => $allowReviewSql,
-                    ':st' => $values['status'],
-                    ':due' => $dueSql,
-                    ':id' => $id,
-                ]);
-            } else {
-                $stmt = $pdo->prepare('UPDATE student_assignments
-                    SET jenis = :j,
-                        judul = :t,
-                        catatan = :c,
-                        status = :st,
-                        due_at = :due,
-                        updated_at = NOW()
-                    WHERE id = :id');
-                $stmt->execute([
-                    ':j' => $values['jenis'],
-                    ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                    ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                    ':st' => $values['status'],
-                    ':due' => $dueSql,
-                    ':id' => $id,
-                ]);
+            $params = [
+                ':j' => $values['jenis'],
+                ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                ':st' => $values['status'],
+                ':due' => $dueSql,
+                ':id' => $id,
+            ];
+
+            if ($hasDurationMinutesColumn) {
+                $set[] = 'duration_minutes = :dur';
+                $params[':dur'] = $durSql;
             }
+            if ($hasReviewDetailsColumn) {
+                $set[] = 'allow_review_details = :rev';
+                $params[':rev'] = ((int)$values['allow_review_details'] === 1 ? 1 : 0);
+            }
+            if ($hasAllowCalculatorColumn) {
+                $set[] = 'allow_calculator = :calc';
+                $params[':calc'] = ((int)$values['allow_calculator'] === 1 ? 1 : 0);
+            }
+
+            $stmt = $pdo->prepare('UPDATE student_assignments SET ' . implode(', ', $set) . ' WHERE id = :id');
+            $stmt->execute($params);
+
             header('Location: assignments.php');
             exit;
         } catch (Throwable $e) {
@@ -259,6 +230,24 @@ include __DIR__ . '/../../includes/header.php';
                             <div class="form-text">Jika tidak dicentang, siswa hanya melihat nilai/rekap.</div>
                         <?php endif; ?>
                     </div>
+
+                    <div class="col-12">
+                        <div class="p-3 rounded border border-info bg-info-subtle">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input form-check-input-lg" type="checkbox" id="allow_calculator" name="allow_calculator" value="1" <?php echo $values['allow_calculator'] === '1' ? 'checked' : ''; ?> <?php echo !$hasAllowCalculatorColumn ? 'disabled' : ''; ?>>
+                                <label class="form-check-label fw-semibold" for="allow_calculator">
+                                    Izinkan kalkulator saat ujian
+                                </label>
+                            </div>
+                        </div>
+                        <?php if (!$hasAllowCalculatorColumn): ?>
+                            <div class="form-text text-warning">
+                                Fitur ini butuh kolom <code>student_assignments.allow_calculator</code>. Jalankan <code>php scripts/migrate_db.php</code>.
+                            </div>
+                        <?php else: ?>
+                            <div class="form-text">Efektif hanya jika <b>Jenis = Ujian</b>.</div>
+                        <?php endif; ?>
+                    </div>
                     <div class="col-12">
                         <?php $st = (string)($row['started_at'] ?? ''); ?>
                         <div class="small text-muted">Mulai (started_at): <?php echo htmlspecialchars($st !== '' ? (function_exists('format_id_date') ? format_id_date($st) : $st) : '-'); ?></div>
@@ -281,4 +270,11 @@ include __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+(() => {
+    // Perilaku seperti "allow_review_details": checkbox tetap bisa dicentang.
+    // Validasi server yang memastikan kalkulator hanya berlaku untuk Jenis=Ujian.
+})();
+</script>
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

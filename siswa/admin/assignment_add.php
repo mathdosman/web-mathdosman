@@ -31,6 +31,15 @@ try {
     $hasReviewDetailsColumn = false;
 }
 
+$hasAllowCalculatorColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'allow_calculator']);
+    $hasAllowCalculatorColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasAllowCalculatorColumn = false;
+}
+
 $hasDurationMinutesColumn = false;
 try {
     $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
@@ -189,6 +198,7 @@ $values = [
     'catatan' => '',
     'due_at' => '',
     'allow_review_details' => '0',
+    'allow_calculator' => '0',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -205,9 +215,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values['catatan'] = trim((string)($_POST['catatan'] ?? ''));
     $values['due_at'] = trim((string)($_POST['due_at'] ?? ''));
     $values['allow_review_details'] = !empty($_POST['allow_review_details']) ? '1' : '0';
+    $values['allow_calculator'] = !empty($_POST['allow_calculator']) ? '1' : '0';
 
     if ($values['package_id'] <= 0) $errors[] = 'Paket wajib dipilih.';
     if (!in_array($values['jenis'], ['tugas', 'ujian'], true)) $errors[] = 'Jenis tidak valid.';
+
+    // Kalkulator hanya untuk ujian.
+    if ($values['jenis'] !== 'ujian') {
+        $values['allow_calculator'] = '0';
+    }
 
     // Aturan: fitur acak hanya untuk UJIAN. Default UJIAN: soal+opsi diacak.
     $defaultShuffleQuestions = ($values['jenis'] === 'ujian') ? 1 : 0;
@@ -337,6 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				$stmtUpdateExisting = null;
 
                 $allowReviewSql = ($hasReviewDetailsColumn ? ((int)$values['allow_review_details'] === 1 ? 1 : 0) : null);
+                $allowCalcSql = ($hasAllowCalculatorColumn ? ((int)$values['allow_calculator'] === 1 ? 1 : 0) : null);
                 foreach ($studentIds as $sid) {
                     $existing = $existingMap[(int)$sid] ?? null;
                     if ($existing && !empty($existing['id'])) {
@@ -374,6 +391,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ];
                             if ($hasDurationMinutesColumn) $setParts[] = 'duration_minutes = :dur';
                             if ($hasReviewDetailsColumn) $setParts[] = 'allow_review_details = :rev';
+                            if ($hasAllowCalculatorColumn) $setParts[] = 'allow_calculator = :calc';
                             if ($hasShuffleQuestionsColumn) $setParts[] = 'shuffle_questions = :sq';
                             if ($hasShuffleOptionsColumn) $setParts[] = 'shuffle_options = :so';
                             if ($hasStartedAtColumn) $setParts[] = 'started_at = NULL';
@@ -399,6 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ];
                         if ($hasDurationMinutesColumn) $paramsUp[':dur'] = $durSql;
                         if ($hasReviewDetailsColumn) $paramsUp[':rev'] = $allowReviewSql;
+                        if ($hasAllowCalculatorColumn) $paramsUp[':calc'] = $allowCalcSql;
                         if ($hasShuffleQuestionsColumn) $paramsUp[':sq'] = $defaultShuffleQuestions;
                         if ($hasShuffleOptionsColumn) $paramsUp[':so'] = $defaultShuffleOptions;
                         $stmtUpdateExisting->execute($paramsUp);
@@ -406,7 +425,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         continue;
                     }
 
-                    if ($hasDurationMinutesColumn && $hasReviewDetailsColumn) {
+                    if ($hasDurationMinutesColumn && $hasReviewDetailsColumn && $hasAllowCalculatorColumn) {
+                        if ($stmtNew === null) {
+                            $extraCols = '';
+                            $extraVals = '';
+                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_review_details, allow_calculator' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :dur, :t, :c, :rev, :calc' . $extraVals . ', "assigned", :due)');
+                        }
+                        $paramsIns = [
+                            ':sid' => (int)$sid,
+                            ':pid' => (int)$values['package_id'],
+                            ':j' => (string)$values['jenis'],
+                            ':dur' => $durSql,
+                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                            ':rev' => $allowReviewSql,
+                            ':calc' => $allowCalcSql,
+                            ':due' => $dueSql,
+                        ];
+                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                        $stmtNew->execute($paramsIns);
+                        $created++;
+                        continue;
+                    }
+
+                    if ($hasDurationMinutesColumn && $hasReviewDetailsColumn && !$hasAllowCalculatorColumn) {
                         if ($stmtNew === null) {
                             $extraCols = '';
                             $extraVals = '';
@@ -433,7 +480,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         continue;
                     }
 
-                    if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn) {
+                    if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn && $hasAllowCalculatorColumn) {
+                        if ($stmtDurOnly === null) {
+                            $extraCols = '';
+                            $extraVals = '';
+                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                            $stmtDurOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_calculator' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :dur, :t, :c, :calc' . $extraVals . ', "assigned", :due)');
+                        }
+                        $paramsIns = [
+                            ':sid' => (int)$sid,
+                            ':pid' => (int)$values['package_id'],
+                            ':j' => (string)$values['jenis'],
+                            ':dur' => $durSql,
+                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                            ':calc' => $allowCalcSql,
+                            ':due' => $dueSql,
+                        ];
+                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                        $stmtDurOnly->execute($paramsIns);
+                        $created++;
+                        continue;
+                    }
+
+                    if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn && !$hasAllowCalculatorColumn) {
                         if ($stmtDurOnly === null) {
                             $extraCols = '';
                             $extraVals = '';
@@ -459,7 +533,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         continue;
                     }
 
-                    if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn) {
+                    if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn && $hasAllowCalculatorColumn) {
+                        if ($stmtReviewOnly === null) {
+                            $extraCols = '';
+                            $extraVals = '';
+                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
+                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
+
+                            $stmtReviewOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_review_details, allow_calculator' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :t, :c, :rev, :calc' . $extraVals . ', "assigned", :due)');
+                        }
+                        $paramsIns = [
+                            ':sid' => (int)$sid,
+                            ':pid' => (int)$values['package_id'],
+                            ':j' => (string)$values['jenis'],
+                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
+                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
+                            ':rev' => $allowReviewSql,
+                            ':calc' => $allowCalcSql,
+                            ':due' => $dueSql,
+                        ];
+                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
+                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
+                        $stmtReviewOnly->execute($paramsIns);
+                        $created++;
+                        continue;
+                    }
+
+                    if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn && !$hasAllowCalculatorColumn) {
                         if ($stmtReviewOnly === null) {
                             $extraCols = '';
                             $extraVals = '';
@@ -492,9 +593,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
                         if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
 
-                        $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan' . $extraCols . ', status, due_at)
-                            VALUES (:sid, :pid, :j, :t, :c' . $extraVals . ', "assigned", :due)');
+                        if ($hasAllowCalculatorColumn) {
+                            $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_calculator' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :t, :c, :calc' . $extraVals . ', "assigned", :due)');
+                        } else {
+                            $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan' . $extraCols . ', status, due_at)
+                                VALUES (:sid, :pid, :j, :t, :c' . $extraVals . ', "assigned", :due)');
+                        }
                     }
+
                     $paramsIns = [
                         ':sid' => (int)$sid,
                         ':pid' => (int)$values['package_id'],
@@ -503,6 +610,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
                         ':due' => $dueSql,
                     ];
+                    if ($hasAllowCalculatorColumn) $paramsIns[':calc'] = $allowCalcSql;
                     if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
                     if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
                     $stmtOld->execute($paramsIns);
@@ -743,6 +851,29 @@ include __DIR__ . '/../../includes/header.php';
                     <div class="col-12">
                         <div class="border rounded p-3 bg-body-secondary">
                             <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
+                                <span class="fw-semibold text-body">Pengaturan Ujian</span>
+                            </div>
+                            <div class="p-3 rounded border border-info bg-info-subtle">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input form-check-input-lg" type="checkbox" id="allow_calculator" name="allow_calculator" value="1" <?php echo $values['allow_calculator'] === '1' ? 'checked' : ''; ?> <?php echo !$hasAllowCalculatorColumn ? 'disabled' : ''; ?>>
+                                    <label class="form-check-label fw-semibold" for="allow_calculator">
+                                        Izinkan kalkulator saat ujian
+                                    </label>
+                                </div>
+                            </div>
+                            <?php if (!$hasAllowCalculatorColumn): ?>
+                                <div class="form-text text-warning">
+                                    Fitur ini butuh kolom <code>student_assignments.allow_calculator</code>. Jalankan <code>php scripts/migrate_db.php</code> terlebih dahulu.
+                                </div>
+                            <?php else: ?>
+                                <div class="form-text">Catatan: efektif hanya jika <b>Jenis = Ujian</b>.</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="border rounded p-3 bg-body-secondary">
+                            <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
                                 <label class="form-label mb-0 fw-semibold text-body">Catatan (opsional)</label>
                             </div>
                             <textarea name="catatan" class="form-control" rows="3"><?php echo htmlspecialchars($values['catatan']); ?></textarea>
@@ -764,6 +895,9 @@ include __DIR__ . '/../../includes/header.php';
     const fieldStudent = document.getElementById('field_student');
     const fieldRombel = document.getElementById('field_rombel');
 
+    const jenisSelect = document.querySelector('select[name="jenis"]');
+    const allowCalcCb = document.getElementById('allow_calculator');
+
     const studentKelasSelect = document.getElementById('student_kelas');
     const studentPickerBtn = document.getElementById('student_picker_btn');
     const studentItems = Array.from(document.querySelectorAll('.student-item'));
@@ -771,9 +905,13 @@ include __DIR__ . '/../../includes/header.php';
     const rombelPickerBtn = document.getElementById('rombel_picker_btn');
     const rombelItems = Array.from(document.querySelectorAll('.rombel-item'));
 
-    const jenisSelect = document.querySelector('select[name="jenis"]');
     const paketSelect = document.querySelector('select[name="package_id"]');
     const form = document.querySelector('form[method="post"]');
+
+    const applyJenisRules = () => {
+        // Perilaku seperti "allow_review_details": checkbox tetap bisa dicentang.
+        // Validasi server yang memastikan kalkulator hanya berlaku untuk Jenis=Ujian.
+    };
 
     const updateStudentPickerLabel = () => {
         if (!studentPickerBtn) return;
@@ -831,10 +969,12 @@ include __DIR__ . '/../../includes/header.php';
     }
     if (scopeSelect) scopeSelect.addEventListener('change', applyScope);
     if (studentKelasSelect) studentKelasSelect.addEventListener('change', applyStudentFilter);
+    if (jenisSelect) jenisSelect.addEventListener('change', applyJenisRules);
     studentItems.forEach((el) => el.addEventListener('change', updateStudentPickerLabel));
     rombelItems.forEach((el) => el.addEventListener('change', updateRombelPickerLabel));
     applyScope();
     applyStudentFilter();
+    applyJenisRules();
     updateStudentPickerLabel();
     updateRombelPickerLabel();
 })();

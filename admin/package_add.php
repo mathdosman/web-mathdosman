@@ -78,6 +78,7 @@ $subjectId = 0;
 $materi = '';
 $submateri = '';
 $introContentId = 0;
+$publishedAtInput = '';
 
 $materials = [];
 $submaterials = [];
@@ -87,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $materi = trim((string)($_POST['materi'] ?? ''));
     $submateri = trim((string)($_POST['submateri'] ?? ''));
     $introContentId = (int)($_POST['intro_content_id'] ?? 0);
+    $publishedAtInput = trim((string)($_POST['published_at'] ?? ''));
 
     if ($introContentId < 0) {
         $introContentId = 0;
@@ -140,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $status = $_POST['status'] ?? 'draft';
+    $publishedAtInput = trim((string)($_POST['published_at'] ?? $publishedAtInput));
 
     // Materi (konten)
     $introContentId = (int)($_POST['intro_content_id'] ?? $introContentId);
@@ -167,6 +170,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!in_array($status, ['draft', 'published'], true)) {
             $status = 'draft';
+        }
+
+        $publishedAtSql = null;
+        if ($publishedAtInput !== '') {
+            // datetime-local yields: YYYY-MM-DDTHH:MM
+            $normalized = str_replace('T', ' ', $publishedAtInput);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $normalized)) {
+                $errors[] = 'Format tanggal publish tidak valid.';
+            } else {
+                $publishedAtSql = $normalized . ':00';
+            }
         }
 
         if ($subjectId > 0 && $materi !== '') {
@@ -204,7 +218,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$errors) {
             try {
                 $code = generate_unique_package_code($pdo);
-                $publishedAt = ($status === 'published') ? date('Y-m-d H:i:s') : null;
+                // Jika status terbit dan tanggal publish kosong, default sekarang.
+                $publishedAt = $publishedAtSql;
+                if ($status === 'published' && ($publishedAt === null || $publishedAt === '')) {
+                    $publishedAt = date('Y-m-d H:i:s');
+                }
 
                 if ($introContentId > 0) {
                     $stmt = $pdo->prepare('SELECT 1 FROM contents WHERE id = :id LIMIT 1');
@@ -371,6 +389,12 @@ include __DIR__ . '/../includes/header.php';
                             <option value="draft" <?php echo (($_POST['status'] ?? 'draft') === 'draft') ? 'selected' : ''; ?>>Draft</option>
                             <option value="published" <?php echo (($_POST['status'] ?? 'draft') === 'published') ? 'selected' : ''; ?>>Terbit</option>
                         </select>
+                    </div>
+
+                    <div class="mb-3" style="max-width: 260px;">
+                        <label class="form-label small">Tanggal Publish (opsional)</label>
+                        <input type="datetime-local" name="published_at" class="form-control form-control-sm" value="<?php echo htmlspecialchars($publishedAtInput); ?>">
+                        <div class="form-text small">Jika status <strong>Terbit</strong> dan kolom ini kosong, sistem akan memakai waktu sekarang.</div>
                     </div>
 
                     <div class="d-flex gap-2">

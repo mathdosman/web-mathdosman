@@ -109,7 +109,18 @@ $name = (string)($package['name'] ?? '');
 $description = (string)($package['description'] ?? '');
 $status = (string)($package['status'] ?? 'draft');
 $currentPublishedAt = $package['published_at'] ?? null;
+$publishedAtInput = '';
 $introContentId = (int)($package['intro_content_id'] ?? 0);
+
+// Convert DB datetime to datetime-local (YYYY-MM-DDTHH:MM)
+if ($currentPublishedAt !== null && $currentPublishedAt !== '') {
+    $raw = (string)$currentPublishedAt;
+    $raw = str_replace('T', ' ', $raw);
+    if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/', $raw)) {
+        $publishedAtInput = substr($raw, 0, 16);
+        $publishedAtInput = str_replace(' ', 'T', $publishedAtInput);
+    }
+}
 
 $materials = [];
 $submaterials = [];
@@ -121,6 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim((string)($_POST['name'] ?? ''));
     $description = trim((string)($_POST['description'] ?? ''));
     $status = (string)($_POST['status'] ?? 'draft');
+    $publishedAtInput = trim((string)($_POST['published_at'] ?? $publishedAtInput));
     $introContentId = (int)($_POST['intro_content_id'] ?? 0);
 
     if ($introContentId < 0) {
@@ -191,6 +203,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status = 'draft';
         }
 
+        $publishedAtSql = null;
+        if ($publishedAtInput !== '') {
+            $normalized = str_replace('T', ' ', $publishedAtInput);
+            if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $normalized)) {
+                $errors[] = 'Format tanggal publish tidak valid.';
+            } else {
+                $publishedAtSql = $normalized . ':00';
+            }
+        }
+
         if ($subjectId > 0 && $materi !== '') {
             try {
                 $stmt = $pdo->prepare('SELECT 1 FROM materials WHERE subject_id = :sid AND name = :n LIMIT 1');
@@ -224,16 +246,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             try {
-                $nextPublishedAt = null;
-                if ($status === 'published') {
-                    // Preserve publish time on edits; only stamp on first publish.
-                    $nextPublishedAt = $currentPublishedAt;
-                    if ($nextPublishedAt === null || $nextPublishedAt === '') {
-                        $nextPublishedAt = date('Y-m-d H:i:s');
+                // Prioritas: input manual. Jika kosong:
+                // - status=published: pertahankan publish time lama, atau set sekarang jika belum ada
+                // - status=draft: null
+                $nextPublishedAt = $publishedAtSql;
+                if ($nextPublishedAt === null || $nextPublishedAt === '') {
+                    if ($status === 'published') {
+                        $nextPublishedAt = $currentPublishedAt;
+                        if ($nextPublishedAt === null || $nextPublishedAt === '') {
+                            $nextPublishedAt = date('Y-m-d H:i:s');
+                        }
+                    } else {
+                        $nextPublishedAt = null;
                     }
-                } else {
-                    // Keep original published_at so re-publish keeps the first publish time.
-                    $nextPublishedAt = $currentPublishedAt;
                 }
 
                 if ($introContentId > 0) {
@@ -413,6 +438,12 @@ include __DIR__ . '/../includes/header.php';
                             <option value="draft" <?php echo ($status === 'draft') ? 'selected' : ''; ?>>Draft</option>
                             <option value="published" <?php echo ($status === 'published') ? 'selected' : ''; ?>>Terbit</option>
                         </select>
+                    </div>
+
+                    <div class="mb-3" style="max-width: 260px;">
+                        <label class="form-label small">Tanggal Publish (opsional)</label>
+                        <input type="datetime-local" name="published_at" class="form-control form-control-sm" value="<?php echo htmlspecialchars($publishedAtInput); ?>">
+                        <div class="form-text small">Jika status <strong>Terbit</strong> dan kolom ini kosong, sistem akan mempertahankan publish time lama atau memakai waktu sekarang (jika belum pernah publish).</div>
                     </div>
 
                     <div class="d-flex gap-2">

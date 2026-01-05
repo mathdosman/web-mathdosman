@@ -739,6 +739,8 @@
 		login_success: { icon: 'success', title: 'Berhasil', text: 'Login berhasil.' },
 		logout_success: { icon: 'success', title: 'Berhasil', text: 'Logout berhasil.' },
 		login_required: { icon: 'info', title: 'Perlu Login', text: 'Silakan login dulu untuk melanjutkan.' },
+		session_expired: { icon: 'info', title: 'Sesi Habis', text: 'Sesi kamu sudah habis. Silakan login kembali.' },
+		session_replaced: { icon: 'info', title: 'Logout Otomatis', text: 'Akun ini login di perangkat lain, jadi kamu terlogout di perangkat ini.' },
 		profile_updated: { icon: 'success', title: 'Tersimpan', text: 'Profil berhasil diperbarui.' },
 
 		saved: { icon: 'success', title: 'Tersimpan', text: 'Jawaban berhasil disimpan.' },

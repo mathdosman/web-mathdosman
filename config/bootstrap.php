@@ -170,3 +170,22 @@ if (is_string($currentBaseUrl) && $currentBaseUrl !== '' && isset($base_url) && 
 if (isset($base_url) && is_string($base_url)) {
     $base_url = rtrim(trim($base_url), '/');
 }
+
+// Local environment helpers (Windows/XAMPP friendly)
+if (!defined('APP_IS_LOCAL')) {
+    $host = '';
+    if (PHP_SAPI !== 'cli') {
+        $host = app_request_host();
+    }
+    $isLocal = in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+    if (!$isLocal && $host !== '') {
+        // Common local dev hostnames.
+        $isLocal = (bool)preg_match('/\.(local|test)$/i', $host);
+    }
+    define('APP_IS_LOCAL', $isLocal);
+}
+
+// Default: disable student login captcha on local to speed up development.
+if (!defined('APP_DISABLE_STUDENT_CAPTCHA')) {
+    define('APP_DISABLE_STUDENT_CAPTCHA', defined('APP_IS_LOCAL') && APP_IS_LOCAL);
+}
