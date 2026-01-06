@@ -1,0 +1,18 @@
+User-agent: *
+
+# Izinkan pengindeksan halaman publik
+Allow: /
+
+# Blokir area privat & internal
+Disallow: /admin/
+Disallow: /siswa/
+Disallow: /install/
+Disallow: /logs/
+Disallow: /scripts/
+Disallow: /vendor/
+
+# File iklan
+# Google akan otomatis membaca ads.txt di akar domain
+
+# Lokasi sitemap (dinamis via sitemap.php)
+Sitemap: /sitemap.php

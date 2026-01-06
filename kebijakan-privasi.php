@@ -32,11 +32,16 @@ include __DIR__ . '/includes/header.php';
                     <li>Pemeliharaan dan perbaikan (misalnya analisis error untuk meningkatkan stabilitas).</li>
                 </ul>
 
+                <h2 class="h6">Iklan dan Google AdSense</h2>
+                <p class="text-muted">Halaman publik situs ini dapat menampilkan iklan dari jaringan pihak ketiga, termasuk Google AdSense. Penyedia iklan seperti Google menggunakan cookie dan/atau teknologi serupa untuk menayangkan iklan yang relevan, mengukur performa iklan, dan mencegah penyalahgunaan (misalnya klik tidak valid).</p>
+                <p class="text-muted">Google dapat menggunakan cookie iklan dan identifier lain untuk menayangkan iklan yang dipersonalisasi berdasarkan kunjungan Anda ke situs ini dan situs lain. Anda dapat mengatur preferensi iklan Google atau menonaktifkan iklan yang dipersonalisasi melalui halaman <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">Setelan Iklan Google</a> dan membaca kebijakan privasi Google di <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">policies.google.com/privacy</a>.</p>
+
                 <h2 class="h6">Komentar pihak ketiga (Disqus)</h2>
-                <p class="text-muted">Jika fitur komentar Disqus diaktifkan pada halaman tertentu, bagian komentar dimuat dari layanan pihak ketiga (Disqus). Disqus dapat memproses data sesuai kebijakan mereka (misalnya cookie serta informasi perangkat dan aktivitas interaksi komentar).</p>
+                <p class="text-muted">Jika fitur komentar Disqus diaktifkan pada halaman tertentu, bagian komentar dimuat dari layanan pihak ketiga (Disqus). Disqus dapat memproses data sesuai kebijakan mereka (misalnya cookie, alamat IP, jenis perangkat, dan aktivitas interaksi komentar). Silakan merujuk ke kebijakan privasi Disqus untuk detail lebih lanjut.</p>
 
                 <h2 class="h6">Cookie</h2>
-                <p class="text-muted">Situs ini menggunakan mekanisme sesi/cookie untuk fungsi tertentu (terutama login admin). Pihak ketiga seperti Disqus juga dapat menempatkan cookie sesuai kebijakannya. Anda dapat mengatur browser untuk menolak cookie, namun beberapa fitur mungkin tidak berfungsi.</p>
+                <p class="text-muted">Situs ini menggunakan cookie sesi untuk fungsi teknis (misalnya menjaga status login admin dan siswa, perlindungan CSRF, serta captcha lokal). Pihak ketiga seperti Google AdSense dan Disqus juga dapat menempatkan cookie atau teknologi pelacakan serupa untuk keperluan analitik dan penayangan iklan/komentar.</p>
+                <p class="text-muted">Anda dapat mengatur browser untuk menolak sebagian atau seluruh cookie. Namun, jika cookie tertentu dinonaktifkan, beberapa bagian situs (misalnya login, komentar, atau penayangan iklan yang relevan) mungkin tidak berfungsi secara optimal.</p>
 
                 <h2 class="h6">Penyimpanan & keamanan</h2>
                 <p class="text-muted">Kami menerapkan langkah keamanan yang wajar, termasuk penyimpanan password admin dalam bentuk hash serta pembatasan akses melalui autentikasi. Namun, tidak ada metode transmisi/penyimpanan data yang sepenuhnya bebas risiko.</p>

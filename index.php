@@ -967,6 +967,10 @@ function get_home_carousel_slides(): array
                                 <span class="badge text-bg-light border">Bank soal siap latihan</span>
                                 <span class="badge text-bg-light border">Preview &amp; cetak mudah</span>
                             </div>
+                            <div class="mt-3 d-flex flex-wrap gap-2">
+                                <a href="daftar-isi.php" class="btn btn-primary btn-sm">Jelajahi Daftar Isi</a>
+                                <a href="index.php#konten-paket" class="btn btn-outline-secondary btn-sm">Lihat Konten &amp; Paket Terbaru</a>
+                            </div>
                         </div>
 
                         <div class="col-12 col-lg-5">
@@ -985,7 +989,7 @@ function get_home_carousel_slides(): array
                 </div>
             <?php endif; ?>
 
-            <div class="d-flex align-items-end justify-content-between gap-2 mb-2 section-heading">
+            <div id="konten-paket" class="d-flex align-items-end justify-content-between gap-2 mb-2 section-heading">
                 <div>
                     <h2 class="h5 mb-1">Konten & Paket Soal</h2>
                     <div class="text-muted small">Urutan berdasarkan waktu publish (atau waktu dibuat jika belum ada publish).</div>
@@ -1035,7 +1039,6 @@ function get_home_carousel_slides(): array
                             $metaLeft = '';
                             $excerpt = '';
                             $needsEllipsis = false;
-                            $accentKey = '';
 
                             if ($kind === 'content') {
                                 $t = (string)($row['type'] ?? 'materi');
@@ -1048,7 +1051,6 @@ function get_home_carousel_slides(): array
                                 $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
                                 $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
                                 $needsEllipsis = mb_strlen($rawExcerpt) > 160;
-                                $accentKey = 'content-' . (string)($row['slug'] ?? $row['id'] ?? '');
                             } else {
                                 $titlePrefix = 'Paket Soal - ';
                                 $cardTitle = $titlePrefix . (string)($row['name'] ?? '');
@@ -1058,23 +1060,10 @@ function get_home_carousel_slides(): array
                                 $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
                                 $excerpt = (string)mb_substr($raw, 0, 160);
                                 $needsEllipsis = mb_strlen((string)$raw) > 160;
-                                $accentKey = (string)($row['code'] ?? $row['id'] ?? '');
                             }
-
-                            if ($accentKey === '') {
-                                $accentKey = (string)($item['id'] ?? '');
-                            }
-
-                            // Generate a stable "random" accent per package.
-                            // Tuned for contrast but still elegant on white background.
-                            $hue = abs((int)crc32($accentKey)) % 360;
-                            [$r, $g, $b] = hsl_to_rgb($hue, 72, 42);
-                            $accentHex = rgb_to_hex($r, $g, $b);
-                            $accentRgb = $r . ', ' . $g . ', ' . $b;
-                            $accentStyle = '--package-accent:' . $accentHex . ';--package-accent-rgb:' . $accentRgb . ';';
                         ?>
                         <div class="col">
-                            <div class="card h-100 post-card package-card" style="<?php echo htmlspecialchars($accentStyle); ?>">
+                            <div class="card h-100 post-card package-card">
                                 <div class="card-body">
                                     <div class="d-flex flex-column h-100">
                                         <div class="mb-2">

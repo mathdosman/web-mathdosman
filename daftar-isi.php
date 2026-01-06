@@ -477,7 +477,6 @@ include __DIR__ . '/includes/header.php';
                                 $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
                                 $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
                                 $needsEllipsis = mb_strlen((string)$rawExcerpt) > 160;
-                                $accentKey = 'content-' . (string)($row['slug'] ?? $row['id'] ?? '');
                             } else {
                                 $cardTitle = 'Paket Soal - ' . (string)($row['title'] ?? '');
                                 $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
@@ -486,21 +485,10 @@ include __DIR__ . '/includes/header.php';
                                 $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
                                 $excerpt = (string)mb_substr($raw, 0, 160);
                                 $needsEllipsis = mb_strlen((string)$raw) > 160;
-                                $accentKey = (string)($row['code'] ?? $row['id'] ?? '');
                             }
-
-                            if ($accentKey === '') {
-                                $accentKey = (string)($row['id'] ?? '');
-                            }
-
-                            $hue = abs((int)crc32($accentKey)) % 360;
-                            [$r, $g, $b] = hsl_to_rgb($hue, 72, 42);
-                            $accentHex = rgb_to_hex($r, $g, $b);
-                            $accentRgb = $r . ', ' . $g . ', ' . $b;
-                            $accentStyle = '--package-accent:' . $accentHex . ';--package-accent-rgb:' . $accentRgb . ';';
                         ?>
                         <div class="col-12 col-md-6 col-lg-3">
-                            <div class="card h-100 post-card package-card" style="<?php echo htmlspecialchars($accentStyle); ?>">
+                            <div class="card h-100 post-card package-card">
                                 <div class="card-body">
                                     <div class="d-flex flex-column h-100">
                                         <div class="mb-2">

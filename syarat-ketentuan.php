@@ -34,7 +34,11 @@ include __DIR__ . '/includes/header.php';
                 <p class="text-muted">Konten publik ditujukan untuk pembelajaran dan informasi. Jika Anda ingin menggunakan ulang konten (misalnya untuk publikasi/komersial), sebaiknya minta izin admin terlebih dahulu.</p>
 
                 <h2 class="h6">Komentar (jika tersedia)</h2>
-                <p class="text-muted">Jika fitur komentar pihak ketiga (misalnya Disqus) aktif pada halaman tertentu, pengguna bertanggung jawab atas isi komentar yang diposting. Admin berhak melakukan moderasi atau penghapusan komentar yang dianggap tidak pantas.</p>
+                <p class="text-muted">Jika fitur komentar pihak ketiga (misalnya Disqus) aktif pada halaman tertentu, pengguna bertanggung jawab penuh atas isi komentar yang diposting. Admin berhak melakukan moderasi, penyembunyian, atau penghapusan komentar yang dianggap melanggar hukum, tidak sopan, mengandung spam, atau bertentangan dengan tujuan pendidikan situs ini.</p>
+
+                <h2 class="h6">Iklan dan monetisasi</h2>
+                <p class="text-muted">Sebagian halaman publik dapat menampilkan iklan dari jaringan pihak ketiga (termasuk Google AdSense). Dengan menggunakan situs ini, Anda memahami bahwa unit iklan dapat muncul berdampingan dengan konten pembelajaran. Kami berupaya menempatkan iklan secara wajar agar tidak mengganggu proses belajar.</p>
+                <p class="text-muted">Konten iklan sepenuhnya menjadi tanggung jawab pengiklan dan jaringan iklan masing-masing. Jika Anda menemukan iklan yang tidak pantas, Anda dapat melaporkannya kepada admin agar dapat diteruskan ke pihak penyedia iklan bila diperlukan.</p>
 
                 <h2 class="h6">Akses admin</h2>
                 <p class="text-muted">Fitur admin hanya untuk pengguna berwenang. Jaga kerahasiaan kredensial login dan lakukan perubahan password bila diperlukan.</p>
