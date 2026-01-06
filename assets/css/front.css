@@ -570,4 +570,61 @@
         margin-bottom: 0;
     }
 
+    /* Highlight kunci jawaban hanya saat penyelesaian dibuka */
+    body.paket-preview .custom-card .soal-option-correct-soft {
+        /* default: belum ditonjolkan */
+    }
+
+    body.paket-preview .custom-card.show-answers-active .soal-option-correct-soft {
+        border-color: var(--bs-success);
+        background-color: var(--bs-success-bg-subtle);
+    }
+
+    body.paket-preview .custom-card .soal-pgk-badge-soft {
+        border-radius: .25rem;
+        padding: .15rem .4rem;
+        font-size: .8rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-secondary-color);
+    }
+
+    body.paket-preview .custom-card.show-answers-active .soal-pgk-benar-soft {
+        border-color: var(--bs-success);
+        background-color: var(--bs-success-bg-subtle);
+        color: var(--bs-success);
+    }
+
+    body.paket-preview .custom-card.show-answers-active .soal-pgk-salah-soft {
+        border-color: var(--bs-danger);
+        background-color: var(--bs-danger-bg-subtle);
+        color: var(--bs-danger);
+    }
+
+    body.paket-preview .custom-card .soal-tf-answer-soft {
+        /* neutral by default */
+    }
+
+    body.paket-preview .custom-card.show-answers-active .soal-tf-benar-soft {
+        border-color: var(--bs-success);
+        background-color: var(--bs-success-bg-subtle);
+        color: var(--bs-success);
+    }
+
+    body.paket-preview .custom-card.show-answers-active .soal-tf-salah-soft {
+        border-color: var(--bs-danger);
+        background-color: var(--bs-danger-bg-subtle);
+        color: var(--bs-danger);
+    }
+
+    body.paket-preview .custom-card .soal-uraian-answered-soft {
+        /* hanya disorot saat penyelesaian dibuka */
+    }
+
+    body.paket-preview .custom-card.show-answers-active .soal-uraian-answered-soft {
+        border-color: var(--bs-success);
+        background-color: var(--bs-success-bg-subtle);
+    }
+
 }

@@ -628,6 +628,16 @@ try {
                 // ignore
             }
 
+            // Counter berapa kali ujian di-reset admin.
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('exam_reset_count'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN exam_reset_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER exam_revoked_at');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
             try {
                 $idx = $pdo->query("SHOW INDEX FROM student_assignments WHERE Key_name = 'idx_sa_exam_revoked'")->fetch();
                 if (!$idx) {
@@ -740,10 +750,31 @@ try {
                     end_at DATETIME NOT NULL,
                     kelas_filter VARCHAR(50) NULL,
                     rombel_filter VARCHAR(50) NULL,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-                    KEY idx_attendance_windows_time (start_at, end_at)
+                    KEY idx_attendance_windows_time (start_at, end_at),
+                    KEY idx_attendance_windows_active (is_active)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            // Pastikan kolom baru untuk jadwal absen tersedia pada database lama.
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_attendance_windows LIKE 'is_active'")->fetch();
+                if (!$col) {
+                    $pdo->exec("ALTER TABLE student_attendance_windows ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER rombel_filter");
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            try {
+                $idx = $pdo->query("SHOW INDEX FROM student_attendance_windows WHERE Key_name = 'idx_attendance_windows_active'")->fetch();
+                if (!$idx) {
+                    $pdo->exec("ALTER TABLE student_attendance_windows ADD INDEX idx_attendance_windows_active (is_active)");
+                }
             } catch (Throwable $e) {
                 // ignore
             }

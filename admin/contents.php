@@ -6,6 +6,25 @@ require_role('admin');
 $errors = [];
 $success = null;
 
+function build_contents_return_url(array $get, string $successMsg = ''): string {
+    $allowed = ['type', 'status', 'q', 'page'];
+    $qp = [];
+    foreach ($allowed as $k) {
+        if (!isset($get[$k])) {
+            continue;
+        }
+        $v = (string)$get[$k];
+        if ($v === '') {
+            continue;
+        }
+        $qp[$k] = $v;
+    }
+    if ($successMsg !== '') {
+        $qp['success'] = $successMsg;
+    }
+    return 'contents.php' . ($qp ? ('?' . http_build_query($qp)) : '');
+}
+
 if (app_runtime_migrations_enabled()) {
     // Ensure table/columns exist for older installs (opt-in).
     try {
@@ -85,7 +104,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             if ($action === 'delete') {
                 $stmt = $pdo->prepare('DELETE FROM contents WHERE id = :id');
                 $stmt->execute([':id' => $id]);
-                header('Location: contents.php?success=' . rawurlencode('Konten dihapus.'));
+                header('Location: ' . build_contents_return_url($_GET, 'Konten dihapus.'));
                 exit;
             }
 
@@ -98,7 +117,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     // Keep original published_at so re-publish keeps the first publish time.
                     $stmt = $pdo->prepare('UPDATE contents SET status = "draft", updated_at = NOW() WHERE id = :id');
                     $stmt->execute([':id' => $id]);
-                    header('Location: contents.php?success=' . rawurlencode('Konten dijadikan draft.'));
+                    header('Location: ' . build_contents_return_url($_GET, 'Konten dijadikan draft.'));
                     exit;
                 }
 
@@ -108,7 +127,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                         updated_at = NOW()
                     WHERE id = :id');
                 $stmt->execute([':id' => $id]);
-                header('Location: contents.php?success=' . rawurlencode('Konten diterbitkan.'));
+                header('Location: ' . build_contents_return_url($_GET, 'Konten diterbitkan.'));
                 exit;
             }
 

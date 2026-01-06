@@ -56,11 +56,9 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
                 $stmt = $pdo->prepare('INSERT IGNORE INTO site_weekly_visit_ips (week_start, ip_hash) VALUES (' . $weekStartSql . ', :h)');
                 $stmt->execute([':h' => $ipHash]);
-                $isNew = ($stmt->rowCount() > 0);
 
-                if ($isNew) {
-                    $pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
-                }
+                // Hitung setiap kunjungan (page view) sebagai 1, tetap simpan IP unik terpisah.
+                $pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
 
                 $pdo->commit();
             }

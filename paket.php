@@ -855,18 +855,17 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                         <?php if (trim(strip_tags($val)) === '' && trim($val) === '') continue; ?>
                                         <?php
                                             $isCorrect = $showAnswers && in_array($label, $correctLabels, true);
-                                            $boxClass = 'border rounded p-2';
+                                            $boxClasses = ['border', 'rounded', 'p-2'];
                                             if ($isCorrect && !$isComplex) {
-                                                $boxClass = 'border border-success bg-success-subtle rounded p-2';
+                                                $boxClasses[] = 'soal-option-correct-soft';
                                             }
+                                            $boxClass = implode(' ', $boxClasses);
 
                                             $badgeLabel = '';
                                             $badgeClass = '';
                                             if ($showAnswers && $isComplex) {
                                                 $badgeLabel = $isCorrect ? 'Benar' : 'Salah';
-                                                $badgeClass = $isCorrect
-                                                    ? 'border border-success bg-success-subtle text-success rounded px-2 py-1 small fw-semibold'
-                                                    : 'border border-danger bg-danger-subtle text-danger rounded px-2 py-1 small fw-semibold';
+                                                $badgeClass = 'soal-pgk-badge-soft ' . ($isCorrect ? 'soal-pgk-benar-soft' : 'soal-pgk-salah-soft');
                                             }
                                         ?>
                                         <div class="col-12">
@@ -922,12 +921,13 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                                 $answerLabel = $normalizeTf((string)($tfAnswers[$sIdx] ?? ''));
                                             }
 
-                                            $answerBoxClass = 'border rounded px-2 py-1 small fw-semibold text-muted bg-body-tertiary';
+                                            $answerBoxClasses = ['border', 'rounded', 'px-2', 'py-1', 'small', 'fw-semibold', 'text-muted', 'bg-body-tertiary', 'soal-tf-answer-soft'];
                                             if ($answerLabel === 'Benar') {
-                                                $answerBoxClass = 'border border-success bg-success-subtle text-success rounded px-2 py-1 small fw-semibold';
+                                                $answerBoxClasses[] = 'soal-tf-benar-soft';
                                             } elseif ($answerLabel === 'Salah') {
-                                                $answerBoxClass = 'border border-danger bg-danger-subtle text-danger rounded px-2 py-1 small fw-semibold';
+                                                $answerBoxClasses[] = 'soal-tf-salah-soft';
                                             }
+                                            $answerBoxClass = implode(' ', $answerBoxClasses);
                                         ?>
                                         <div class="col-12">
                                             <div class="border rounded p-2">
@@ -1039,7 +1039,17 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                 <?php if ($tipe === 'Uraian'): ?>
                                     <div class="mt-3 pt-2 border-top">
                                         <div class="small text-muted">Jawaban</div>
-                                        <div class="mt-1 form-control <?php echo $jawabanHasContent ? 'border-success bg-success-subtle' : 'border-secondary bg-body-tertiary'; ?>" style="height:auto;">
+                                        <?php
+                                            $uraianClasses = ['mt-1', 'form-control'];
+                                            if ($jawabanHasContent) {
+                                                $uraianClasses[] = 'soal-uraian-answered-soft';
+                                            } else {
+                                                $uraianClasses[] = 'border-secondary';
+                                                $uraianClasses[] = 'bg-body-tertiary';
+                                            }
+                                            $uraianClassAttr = implode(' ', $uraianClasses);
+                                        ?>
+                                        <div class="<?php echo $uraianClassAttr; ?>" style="height:auto;">
                                             <?php if ($jawabanHasContent): ?>
                                                 <div class="richtext-content"><?php echo $jawabanRendered; ?></div>
                                             <?php else: ?>
@@ -1243,6 +1253,22 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
 
             sync();
         })();
+
+        // Toggle highlight kunci jawaban hanya saat penyelesaian dibuka
+        document.addEventListener('DOMContentLoaded', function () {
+            const collapses = document.querySelectorAll('[id^="collapsePenyelesaian_"]');
+            collapses.forEach(function (el) {
+                const card = el.closest('.custom-card');
+                if (!card) return;
+
+                el.addEventListener('show.bs.collapse', function () {
+                    card.classList.add('show-answers-active');
+                });
+                el.addEventListener('hide.bs.collapse', function () {
+                    card.classList.remove('show-answers-active');
+                });
+            });
+        });
         </script>
     </div>
 </div>

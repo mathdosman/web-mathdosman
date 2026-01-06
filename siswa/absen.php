@@ -122,7 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                   FROM student_attendance_window_students sws
                                   JOIN student_attendance_windows w ON w.id = sws.window_id
                                   WHERE sws.student_id = :sid
-                                    AND NOW() BETWEEN w.start_at AND w.end_at
+                                                                        AND w.is_active = 1
+                                                                        AND NOW() BETWEEN w.start_at AND w.end_at
                                   FOR UPDATE');
         $stmtWin->execute([':sid' => $studentId]);
         $activeWindows = $stmtWin->fetchAll(PDO::FETCH_ASSOC) ?: [];

@@ -178,6 +178,8 @@ CREATE TABLE IF NOT EXISTS student_assignments (
     started_at TIMESTAMP NULL DEFAULT NULL,
     -- Jika tidak NULL: ujian terkunci (siswa pernah keluar), perlu reset admin.
     exam_revoked_at TIMESTAMP NULL DEFAULT NULL,
+    -- Counter berapa kali ujian ini di-reset admin.
+    exam_reset_count INT UNSIGNED NOT NULL DEFAULT 0,
     -- Jika 1: acak urutan soal untuk UJIAN.
     shuffle_questions TINYINT(1) NOT NULL DEFAULT 0,
     -- Jika 1: acak urutan opsi pilihan ganda untuk UJIAN.
@@ -320,9 +322,11 @@ CREATE TABLE IF NOT EXISTS student_attendance_windows (
     end_at DATETIME NOT NULL,
     kelas_filter VARCHAR(50) NULL,
     rombel_filter VARCHAR(50) NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    KEY idx_attendance_windows_time (start_at, end_at)
+    KEY idx_attendance_windows_time (start_at, end_at),
+    KEY idx_attendance_windows_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Absen siswa: assignment siswa per jadwal (pending/hadir/A)
