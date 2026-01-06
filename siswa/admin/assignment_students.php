@@ -11,6 +11,26 @@ if ($id <= 0) {
     exit;
 }
 
+function build_assignment_students_return_url(array $get, int $id, bool $withSuccess = false): string
+{
+    $qp = ['id' => $id];
+    $allowed = ['nama', 'kelas', 'status', 'add', 'add_nama', 'add_kelas'];
+    foreach ($allowed as $k) {
+        if (!isset($get[$k])) {
+            continue;
+        }
+        $v = (string)$get[$k];
+        if ($v === '') {
+            continue;
+        }
+        $qp[$k] = $v;
+    }
+    if ($withSuccess) {
+        $qp['success'] = '1';
+    }
+    return 'assignment_students.php?' . http_build_query($qp);
+}
+
 $cols = [];
 try {
     $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
@@ -143,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare($sql);
             $stmt->execute(array_merge([':aid' => $assignmentId], $params));
 
-            header('Location: assignment_students.php?id=' . $id . '&success=1');
+            header('Location: ' . build_assignment_students_return_url($_GET, $id, true));
             exit;
         } catch (Throwable $e) {
             $errors[] = 'Gagal memaksa menyelesaikan penugasan.';
@@ -156,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare($sql);
             $stmt->execute(array_merge([':aid' => $assignmentId], $params));
 
-            header('Location: assignment_students.php?id=' . $id . '&success=1');
+            header('Location: ' . build_assignment_students_return_url($_GET, $id, true));
             exit;
         } catch (Throwable $e) {
             $errors[] = 'Gagal menghapus siswa dari penugasan.';
@@ -296,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $pdo->commit();
 
-                header('Location: assignment_students.php?id=' . $id . '&success=1');
+                header('Location: ' . build_assignment_students_return_url($_GET, $id, true));
                 exit;
             } catch (Throwable $e) {
                 try { if ($pdo->inTransaction()) $pdo->rollBack(); } catch (Throwable $e2) {}

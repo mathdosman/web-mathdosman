@@ -197,6 +197,10 @@ include __DIR__ . '/../includes/header.php';
         let running = false;
 
         function computeLevel() {
+            if (questions >= 60) return 8;
+            if (questions >= 50) return 7;
+            if (questions >= 40) return 6;
+            if (questions >= 30) return 5;
             if (questions >= 20) return 4;
             if (questions >= 10) return 3;
             if (questions >= 5) return 2;
@@ -222,7 +226,11 @@ include __DIR__ . '/../includes/header.php';
                     case 1: maxVal = 10; break;
                     case 2: maxVal = 25; break;
                     case 3: maxVal = 50; break;
-                    default: maxVal = 100; break;
+                    case 4: maxVal = 100; break;
+                    case 5: maxVal = 250; break;
+                    case 6: maxVal = 500; break;
+                    case 7: maxVal = 1000; break;
+                    default: maxVal = 2000; break;
                 }
 
                 let a = Math.floor(Math.random() * maxVal) + 1;
@@ -252,7 +260,11 @@ include __DIR__ . '/../includes/header.php';
                 case 1: factorMax = 9; break;
                 case 2: factorMax = 12; break;
                 case 3: factorMax = 15; break;
-                default: factorMax = 20; break;
+                case 4: factorMax = 20; break;
+                case 5: factorMax = 25; break;
+                case 6: factorMax = 30; break;
+                case 7: factorMax = 40; break;
+                default: factorMax = 50; break;
             }
 
             let x = Math.floor(Math.random() * factorMax) + 2;
@@ -291,7 +303,7 @@ include __DIR__ . '/../includes/header.php';
             statusEl.style.display = msg ? 'block' : 'none';
         }
 
-        function endGame() {
+        function endGame(messageOverride) {
             running = false;
             if (timerId) {
                 clearInterval(timerId);
@@ -300,7 +312,8 @@ include __DIR__ . '/../includes/header.php';
             // Kembalikan tampilan normal setelah game berakhir
             document.body.classList.remove('mini-game-running');
             answerEl.disabled = true;
-            setStatus('Waktu habis! Skor akhir: ' + score + '.', 'warning');
+            var finalMsg = messageOverride || ('Waktu habis! Skor akhir: ' + score + '.');
+            setStatus(finalMsg, 'warning');
             startBtn.disabled = false;
 
             if (score > 0 && csrfToken) {
@@ -398,16 +411,16 @@ include __DIR__ . '/../includes/header.php';
             if (val === currentAnswer) {
                 const level = computeLevel();
                 score += 10 * level;
-                timeLeft += 5; // bonus waktu untuk jawaban benar
-                feedbackEl.textContent = 'Benar! +10 poin, +5 detik.';
+                timeLeft += 3; // bonus waktu untuk jawaban benar
+                feedbackEl.textContent = 'Benar! +10 poin, +3 detik.';
                 feedbackEl.className = 'text-success small';
             } else {
                 // Penalti waktu untuk jawaban salah
-                timeLeft -= 3;
+                timeLeft -= 5;
                 if (timeLeft < 0) {
                     timeLeft = 0;
                 }
-                feedbackEl.textContent = 'Salah. -3 detik. Jawaban yang benar: ' + currentAnswer + '.';
+                feedbackEl.textContent = 'Salah. -5 detik. Jawaban yang benar: ' + currentAnswer + '.';
                 feedbackEl.className = 'text-danger small';
             }
             updateDisplay();

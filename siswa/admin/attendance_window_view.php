@@ -129,6 +129,7 @@ $ended = $endObj && $endObj < $now;
                     <?php
                         $kelas = trim((string)($window['kelas_filter'] ?? ''));
                         $rombel = trim((string)($window['rombel_filter'] ?? ''));
+                        $isActive = (int)($window['is_active'] ?? 1) === 1;
                     ?>
                     <?php if ($kelas === '' && $rombel === ''): ?>
                         <div><span class="text-muted">Target:</span> <span class="badge text-bg-secondary">Semua siswa</span></div>
@@ -140,7 +141,11 @@ $ended = $endObj && $endObj < $now;
                         <?php if ($ended): ?>
                             <span class="badge text-bg-danger">Jadwal berakhir</span>
                         <?php else: ?>
-                            <span class="badge text-bg-success">Jadwal aktif / akan datang</span>
+                            <?php if ($isActive): ?>
+                                <span class="badge text-bg-success">Jadwal aktif / akan datang</span>
+                            <?php else: ?>
+                                <span class="badge text-bg-secondary">Jadwal dinonaktifkan</span>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
