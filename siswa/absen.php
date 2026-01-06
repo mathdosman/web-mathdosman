@@ -93,46 +93,195 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    try {
-        $stmt = $pdo->prepare('INSERT INTO student_attendance_records
-            (student_id, setting_id, taken_at, lat, lng, distance_m, status, photo_path, user_agent, ip_address, created_at)
-            VALUES (:sid, :setting_id, NOW(), :lat, :lng, :distance_m, :status, :photo_path, :ua, :ip, NOW())');
-        $stmt->execute([
-            ':sid' => $studentId,
-            ':setting_id' => (int)($activeSetting['id'] ?? 0) ?: null,
-            ':lat' => $lat,
-            ':lng' => $lng,
-            ':distance_m' => $distance,
-            ':status' => $status,
-            ':photo_path' => $storedPath,
-            ':ua' => $userAgent,
-            ':ip' => $ipBin !== '' ? $ipBin : null,
-        ]);
+    $deleteUploadedPhoto = static function (?string $path): void {
+        $p = trim((string)$path);
+        if ($p === '') {
+            return;
+        }
 
-        // Jika absen diterima dan ada jadwal absen aktif untuk siswa ini,
-        // tandai assignment jadwal tersebut sebagai "present".
-        if ($status === 'accepted') {
-            $recordId = (int)$pdo->lastInsertId();
-            if ($recordId > 0) {
-                try {
-                    $sqlUpd = 'UPDATE student_attendance_window_students sws
-                               JOIN student_attendance_windows w ON w.id = sws.window_id
-                               SET sws.status = :st, sws.attendance_record_id = :rid, sws.updated_at = NOW()
-                               WHERE sws.student_id = :sid
-                                 AND sws.status = \"pending\"
-                                 AND NOW() BETWEEN w.start_at AND w.end_at';
-                    $stmtUpd = $pdo->prepare($sqlUpd);
+        $normalized = str_replace('\\', '/', $p);
+        if (!str_starts_with($normalized, 'siswa/absen_uploads/')) {
+            return;
+        }
+
+        $fs = __DIR__ . '/..' . '/' . $normalized;
+        $fs = str_replace('/', DIRECTORY_SEPARATOR, $fs);
+        try {
+            if (is_file($fs)) {
+                @unlink($fs);
+            }
+        } catch (Throwable $e) {
+        }
+    };
+
+    try {
+        $pdo->beginTransaction();
+
+        // Lock jadwal absen aktif untuk siswa ini.
+        $stmtWin = $pdo->prepare('SELECT sws.id, sws.window_id, sws.status, sws.attendance_record_id, w.start_at, w.end_at
+                                  FROM student_attendance_window_students sws
+                                  JOIN student_attendance_windows w ON w.id = sws.window_id
+                                  WHERE sws.student_id = :sid
+                                    AND NOW() BETWEEN w.start_at AND w.end_at
+                                  FOR UPDATE');
+        $stmtWin->execute([':sid' => $studentId]);
+        $activeWindows = $stmtWin->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $didWrite = false;
+
+        if ($activeWindows) {
+            foreach ($activeWindows as $wrow) {
+                $swsId = (int)($wrow['id'] ?? 0);
+                if ($swsId <= 0) {
+                    continue;
+                }
+
+                $swsStatus = (string)($wrow['status'] ?? 'pending');
+                if ($swsStatus === 'present' || in_array($swsStatus, ['izin', 'sakit', 'dispen'], true)) {
+                    // Sudah tercatat / status khusus, tidak boleh absen lagi untuk jadwal ini.
+                    continue;
+                }
+
+                $wStart = (string)($wrow['start_at'] ?? '');
+                $wEnd = (string)($wrow['end_at'] ?? '');
+
+                $recordId = (int)($wrow['attendance_record_id'] ?? 0);
+                $existingRecordStatus = '';
+
+                if ($recordId > 0) {
+                    $stmtR = $pdo->prepare('SELECT status FROM student_attendance_records WHERE id = :id AND student_id = :sid LIMIT 1');
+                    $stmtR->execute([':id' => $recordId, ':sid' => $studentId]);
+                    $existingRecordStatus = (string)($stmtR->fetchColumn() ?: '');
+                }
+
+                if ($recordId <= 0 || $existingRecordStatus === '') {
+                    // Fallback: cari record dalam rentang jadwal untuk siswa ini.
+                    $stmtFind = $pdo->prepare('SELECT id, status
+                                               FROM student_attendance_records
+                                               WHERE student_id = :sid
+                                                 AND taken_at >= :start_at
+                                                 AND taken_at <= :end_at
+                                               ORDER BY id DESC
+                                               LIMIT 1');
+                    $stmtFind->execute([
+                        ':sid' => $studentId,
+                        ':start_at' => $wStart,
+                        ':end_at' => $wEnd,
+                    ]);
+                    $found = $stmtFind->fetch(PDO::FETCH_ASSOC) ?: null;
+                    if ($found) {
+                        $recordId = (int)($found['id'] ?? 0);
+                        $existingRecordStatus = (string)($found['status'] ?? '');
+                    }
+                }
+
+                // Jika sudah accepted pada jadwal ini, jangan rekam lagi.
+                // Jika sudah accepted pada jadwal ini, jangan rekam lagi.
+                if ($existingRecordStatus === 'accepted') {
+                    if ($swsStatus === 'pending' && $recordId > 0) {
+                        $stmtSync = $pdo->prepare('UPDATE student_attendance_window_students
+                                                   SET status = :st, attendance_record_id = :rid, updated_at = NOW()
+                                                   WHERE id = :id');
+                        $stmtSync->execute([
+                            ':st' => 'present',
+                            ':rid' => $recordId,
+                            ':id' => $swsId,
+                        ]);
+                    }
+                    continue;
+                }
+
+                if ($recordId > 0) {
+                    // Update record yang sama (menghindari dobel jika tombol ditekan berkali-kali).
+                    $stmtUpd = $pdo->prepare('UPDATE student_attendance_records
+                                              SET setting_id = :setting_id,
+                                                  taken_at = NOW(),
+                                                  lat = :lat,
+                                                  lng = :lng,
+                                                  distance_m = :distance_m,
+                                                  status = :status,
+                                                  photo_path = :photo_path,
+                                                  user_agent = :ua,
+                                                  ip_address = :ip
+                                              WHERE id = :id AND student_id = :sid');
                     $stmtUpd->execute([
-                        ':st' => 'present',
-                        ':rid' => $recordId,
+                        ':setting_id' => (int)($activeSetting['id'] ?? 0) ?: null,
+                        ':lat' => $lat,
+                        ':lng' => $lng,
+                        ':distance_m' => $distance,
+                        ':status' => $status,
+                        ':photo_path' => $storedPath,
+                        ':ua' => $userAgent,
+                        ':ip' => $ipBin !== '' ? $ipBin : null,
+                        ':id' => $recordId,
                         ':sid' => $studentId,
                     ]);
-                } catch (Throwable $e2) {
-                    // ignore failure to sync window status
+                } else {
+                    // Belum ada record untuk jadwal ini: insert sekali.
+                    $stmtIns = $pdo->prepare('INSERT INTO student_attendance_records
+                        (student_id, setting_id, taken_at, lat, lng, distance_m, status, photo_path, user_agent, ip_address, created_at)
+                        VALUES (:sid, :setting_id, NOW(), :lat, :lng, :distance_m, :status, :photo_path, :ua, :ip, NOW())');
+                    $stmtIns->execute([
+                        ':sid' => $studentId,
+                        ':setting_id' => (int)($activeSetting['id'] ?? 0) ?: null,
+                        ':lat' => $lat,
+                        ':lng' => $lng,
+                        ':distance_m' => $distance,
+                        ':status' => $status,
+                        ':photo_path' => $storedPath,
+                        ':ua' => $userAgent,
+                        ':ip' => $ipBin !== '' ? $ipBin : null,
+                    ]);
+                    $recordId = (int)$pdo->lastInsertId();
                 }
+
+                // Sinkronkan assignment jadwal: set record_id selalu, dan set present jika accepted.
+                $newSwsStatus = ($status === 'accepted') ? 'present' : 'pending';
+                $stmtUpdSws = $pdo->prepare('UPDATE student_attendance_window_students
+                                             SET status = :st, attendance_record_id = :rid, updated_at = NOW()
+                                             WHERE id = :id');
+                $stmtUpdSws->execute([
+                    ':st' => $newSwsStatus,
+                    ':rid' => $recordId > 0 ? $recordId : null,
+                    ':id' => $swsId,
+                ]);
+
+                $didWrite = true;
             }
+
+            if (!$didWrite) {
+                // Tidak ada jadwal yang bisa diproses (sudah present/accepted atau status khusus).
+                $pdo->rollBack();
+                $deleteUploadedPhoto($storedPath);
+                echo json_encode(['ok' => false, 'error' => 'Anda sudah tercatat absen untuk jadwal ini.']);
+                exit;
+            }
+        } else {
+            // Tidak ada jadwal aktif: simpan sebagai log umum.
+            $stmtIns = $pdo->prepare('INSERT INTO student_attendance_records
+                (student_id, setting_id, taken_at, lat, lng, distance_m, status, photo_path, user_agent, ip_address, created_at)
+                VALUES (:sid, :setting_id, NOW(), :lat, :lng, :distance_m, :status, :photo_path, :ua, :ip, NOW())');
+            $stmtIns->execute([
+                ':sid' => $studentId,
+                ':setting_id' => (int)($activeSetting['id'] ?? 0) ?: null,
+                ':lat' => $lat,
+                ':lng' => $lng,
+                ':distance_m' => $distance,
+                ':status' => $status,
+                ':photo_path' => $storedPath,
+                ':ua' => $userAgent,
+                ':ip' => $ipBin !== '' ? $ipBin : null,
+            ]);
         }
+
+        $pdo->commit();
     } catch (Throwable $e) {
+        try {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+        } catch (Throwable $e2) {
+        }
         echo json_encode(['ok' => false, 'error' => 'Gagal menyimpan data absen.']);
         exit;
     }

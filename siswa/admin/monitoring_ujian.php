@@ -8,6 +8,8 @@ require_role('admin');
 $errors = [];
 $successMsg = '';
 
+$qNama = trim((string)($_GET['nama'] ?? ''));
+
 $cols = [];
 try {
     $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
@@ -63,6 +65,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     $assignmentId = (int)($_POST['assignment_id'] ?? 0);
     $studentId = (int)($_POST['student_id'] ?? 0);
+
+    if ($action === 'reset_exam_bulk') {
+        $idsRaw = $_POST['assignment_ids'] ?? [];
+        if (!is_array($idsRaw)) {
+            $idsRaw = [];
+        }
+
+        $ids = [];
+        foreach ($idsRaw as $v) {
+            $idv = (int)$v;
+            if ($idv > 0) {
+                $ids[] = $idv;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+
+        if (!$ids) {
+            $errors[] = 'Pilih minimal 1 akun/ujian untuk di-reset.';
+        } elseif (count($ids) > 500) {
+            $errors[] = 'Terlalu banyak data dipilih (maks 500).';
+        } else {
+            try {
+                $pdo->beginTransaction();
+
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $stmtSel = $pdo->prepare('SELECT id, student_id, jenis FROM student_assignments WHERE id IN (' . $placeholders . ')');
+                $stmtSel->execute($ids);
+                $targets = $stmtSel->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+                if (!$targets) {
+                    throw new RuntimeException('No targets');
+                }
+
+                $setParts = [
+                    'status = "assigned"',
+                    'updated_at = NOW()',
+                ];
+                if ($hasStartedAt) {
+                    $setParts[] = 'started_at = NULL';
+                }
+                if ($hasRevoked) {
+                    $setParts[] = 'exam_revoked_at = NULL';
+                }
+                if (!empty($cols['correct_count'])) $setParts[] = 'correct_count = NULL';
+                if (!empty($cols['total_count'])) $setParts[] = 'total_count = NULL';
+                if (!empty($cols['score'])) $setParts[] = 'score = NULL';
+                if (!empty($cols['graded_at'])) $setParts[] = 'graded_at = NULL';
+                $sqlUpd = 'UPDATE student_assignments SET ' . implode(', ', $setParts) . ' WHERE id = :id AND student_id = :sid';
+                $stmtUpd = $pdo->prepare($sqlUpd);
+
+                $stmtDelAns = null;
+                try {
+                    $stmtDelAns = $pdo->prepare('DELETE FROM student_assignment_answers WHERE assignment_id = :aid AND student_id = :sid');
+                } catch (Throwable $e) {
+                    $stmtDelAns = null;
+                }
+
+                $countDone = 0;
+                foreach ($targets as $t) {
+                    $aid = (int)($t['id'] ?? 0);
+                    $sid = (int)($t['student_id'] ?? 0);
+                    $jenis = strtolower(trim((string)($t['jenis'] ?? '')));
+                    if ($aid <= 0 || $sid <= 0) continue;
+                    if ($jenis !== 'ujian') continue;
+
+                    if ($stmtDelAns) {
+                        try {
+                            $stmtDelAns->execute([':aid' => $aid, ':sid' => $sid]);
+                        } catch (Throwable $e) {
+                            // ignore
+                        }
+                    }
+
+                    $stmtUpd->execute([':id' => $aid, ':sid' => $sid]);
+                    $countDone++;
+                }
+
+                $pdo->commit();
+
+                header('Location: monitoring_ujian.php?success=1');
+                exit;
+            } catch (Throwable $e) {
+                try { $pdo->rollBack(); } catch (Throwable $e2) {}
+                $errors[] = 'Gagal reset massal.';
+            }
+        }
+    }
 
     if ($action === 'force_finish_exam') {
         if ($assignmentId <= 0 || $studentId <= 0) {
@@ -299,6 +388,13 @@ try {
         JOIN packages p ON p.id = sa.package_id
         WHERE sa.jenis = "ujian" AND (sa.status IS NULL OR sa.status <> "done")';
 
+    $params = [];
+
+    if ($qNama !== '') {
+        $select .= ' AND s.nama_siswa LIKE :nama';
+        $params[':nama'] = '%' . $qNama . '%';
+    }
+
     // Only show students who are currently taking the exam.
     if ($hasStartedAt) {
         $select .= ' AND sa.started_at IS NOT NULL';
@@ -308,7 +404,9 @@ try {
         ORDER BY sa.started_at DESC, sa.id DESC
         LIMIT 500';
 
-    $rows = $pdo->query($select)->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare($select);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } catch (Throwable $e) {
     $rows = [];
     $errors[] = 'Gagal memuat data monitoring. Pastikan tabel student_assignments ada.';
@@ -344,10 +442,28 @@ include __DIR__ . '/../../includes/header.php';
 
     <div class="card shadow-sm">
         <div class="card-body">
+            <form method="get" class="row g-2 align-items-end mb-3">
+                <div class="col-12 col-md-8">
+                    <label class="form-label">Filter Nama Siswa</label>
+                    <input type="text" name="nama" class="form-control" value="<?php echo htmlspecialchars($qNama); ?>" placeholder="Ketik nama (contoh: Andi)">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">Cari</button>
+                </div>
+            </form>
+
+            <form id="bulkResetForm" method="post" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center mb-3" data-swal-confirm data-swal-title="Reset terpilih?" data-swal-text="Reset semua ujian yang dipilih? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                <input type="hidden" name="action" value="reset_exam_bulk">
+                <button type="submit" class="btn btn-outline-danger">Reset Terpilih</button>
+                <div class="form-text text-muted m-0">Centang beberapa siswa lalu klik Reset Terpilih.</div>
+            </form>
             <div class="table-responsive">
                 <table class="table table-striped table-hover table-compact align-middle">
                     <thead>
                         <tr>
+                            <th style="width:44px">Pilih</th>
                             <th style="width:64px">No</th>
                             <th>Nama Siswa</th>
                             <th>Judul Paket</th>
@@ -356,10 +472,13 @@ include __DIR__ . '/../../includes/header.php';
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="4" class="text-center text-muted">Belum ada ujian berjalan.</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted">Belum ada ujian berjalan.</td></tr>
                         <?php endif; ?>
                         <?php $no = 0; foreach ($rows as $r): $no++; ?>
                             <tr>
+                                <td>
+                                    <input class="form-check-input" type="checkbox" name="assignment_ids[]" value="<?php echo (int)$r['assignment_id']; ?>" form="bulkResetForm" aria-label="Pilih untuk reset massal">
+                                </td>
                                 <td class="text-muted"><?php echo $no; ?></td>
                                 <td>
                                     <?php echo htmlspecialchars((string)($r['nama_siswa'] ?? '')); ?>

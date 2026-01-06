@@ -30,13 +30,32 @@ if (!$window) {
 }
 
 try {
+    $wStartParam = (string)($window['start_at'] ?? '');
+    $wEndParam = (string)($window['end_at'] ?? '');
+
     $sql = 'SELECT sws.id, sws.status, sws.attendance_record_id, sws.created_at, sws.updated_at,
                    s.nama_siswa, s.kelas, s.rombel,
-                   r.taken_at, r.distance_m, r.status AS record_status,
+                   COALESCE(r.taken_at, wr.taken_at) AS taken_at,
+                   COALESCE(r.distance_m, wr.distance_m) AS distance_m,
+                   COALESCE(r.status, wr.status) AS record_status,
                    latest_cr.status AS cr_status, latest_cr.requested_status AS cr_requested_status
             FROM student_attendance_window_students sws
             JOIN students s ON s.id = sws.student_id
-            LEFT JOIN student_attendance_records r ON r.id = sws.attendance_record_id
+            LEFT JOIN student_attendance_records r
+                   ON r.id = sws.attendance_record_id
+                  AND r.taken_at >= :wstart
+                  AND r.taken_at <= :wend
+            LEFT JOIN (
+                SELECT r1.id, r1.student_id, r1.taken_at, r1.distance_m, r1.status
+                FROM student_attendance_records r1
+                JOIN (
+                    SELECT student_id, MAX(id) AS max_id
+                    FROM student_attendance_records
+                    WHERE taken_at >= :wstart
+                      AND taken_at <= :wend
+                    GROUP BY student_id
+                ) r2 ON r2.student_id = r1.student_id AND r2.max_id = r1.id
+            ) wr ON wr.student_id = sws.student_id
             LEFT JOIN (
                 SELECT r1.*
                 FROM student_attendance_change_requests r1
@@ -49,7 +68,11 @@ try {
             WHERE sws.window_id = :wid
             ORDER BY s.kelas, s.rombel, s.nama_siswa';
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':wid' => $windowId]);
+    $stmt->execute([
+        ':wid' => $windowId,
+        ':wstart' => $wStartParam,
+        ':wend' => $wEndParam,
+    ]);
     $students = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } catch (Throwable $e) {
     $students = [];
@@ -148,6 +171,8 @@ $ended = $endObj && $endObj < $now;
                                 $recordStatus = (string)($row['record_status'] ?? '');
                                 $takenAt = trim((string)($row['taken_at'] ?? ''));
                                 $distance = (int)($row['distance_m'] ?? 0);
+                                $hasRecord = ($takenAt !== '');
+                                $hasAccepted = ($recordStatus === 'accepted');
 
                                 // Hitung status efektif: present / I/S/D / Alpha / pending.
                                 $effectiveLabel = '';
@@ -165,7 +190,13 @@ $ended = $endObj && $endObj < $now;
                                         $effectiveLabel = 'Dispen (D)';
                                     }
                                     $badgeClass = 'text-bg-info';
-                                } elseif ($ended && $baseStatus === 'pending') {
+                                } elseif ($hasAccepted) {
+                                    $effectiveLabel = 'Hadir';
+                                    $badgeClass = 'text-bg-success';
+                                } elseif ($hasRecord && $recordStatus === 'rejected') {
+                                    $effectiveLabel = 'Ditolak';
+                                    $badgeClass = 'text-bg-warning text-dark';
+                                } elseif ($ended && $baseStatus === 'pending' && !$hasRecord) {
                                     $effectiveLabel = 'Alpha (A)';
                                     $badgeClass = 'text-bg-danger';
                                 } else {

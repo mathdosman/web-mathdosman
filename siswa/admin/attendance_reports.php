@@ -6,14 +6,36 @@ require_role('admin');
 
 $errors = [];
 
-// Siapkan filter sederhana: tanggal (YYYY-MM-DD), status, nama siswa.
+// Siapkan filter sederhana: tanggal (YYYY-MM-DD), status, rombel (kelas+rombel), nama siswa.
 $dateFrom = trim((string)($_GET['date_from'] ?? ''));
 $dateTo = trim((string)($_GET['date_to'] ?? ''));
 $status = trim((string)($_GET['status'] ?? ''));
+$qRombel = preg_replace('/\s+/', ' ', trim((string)($_GET['rombel'] ?? '')));
 $qNama = trim((string)($_GET['nama'] ?? ''));
 
 if ($status !== '' && !in_array($status, ['accepted', 'rejected'], true)) {
     $status = '';
+}
+
+$rombelOptions = [];
+try {
+    $stmtR = $pdo->query("SELECT DISTINCT TRIM(kelas) AS kelas, TRIM(rombel) AS rombel
+                          FROM students
+                          WHERE (kelas IS NOT NULL AND TRIM(kelas) <> '')
+                             OR (rombel IS NOT NULL AND TRIM(rombel) <> '')
+                          ORDER BY TRIM(kelas) ASC, TRIM(rombel) ASC");
+    $rombelRows = $stmtR ? ($stmtR->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+    foreach ($rombelRows as $rr) {
+        $k = trim((string)($rr['kelas'] ?? ''));
+        $r = trim((string)($rr['rombel'] ?? ''));
+        $label = trim($k . ' ' . $r);
+        if ($label !== '') {
+            $rombelOptions[] = $label;
+        }
+    }
+    $rombelOptions = array_values(array_unique($rombelOptions));
+} catch (Throwable $e) {
+    $rombelOptions = [];
 }
 
 $rows = [];
@@ -40,6 +62,11 @@ try {
     if ($status !== '') {
         $sql .= ' AND r.status = :status';
         $params[':status'] = $status;
+    }
+
+    if ($qRombel !== '') {
+        $sql .= ' AND CONCAT(TRIM(s.kelas), " ", TRIM(s.rombel)) = :kelas_rombel';
+        $params[':kelas_rombel'] = $qRombel;
     }
 
     if ($qNama !== '') {
@@ -83,28 +110,38 @@ include __DIR__ . '/../../includes/header.php';
     <div class="card shadow-sm">
         <div class="card-body">
             <form method="get" class="row g-2 align-items-end mb-3">
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <label class="form-label">Dari Tanggal</label>
                     <input type="date" name="date_from" class="form-control" value="<?php echo htmlspecialchars($dateFrom); ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <label class="form-label">Sampai Tanggal</label>
                     <input type="date" name="date_to" class="form-control" value="<?php echo htmlspecialchars($dateTo); ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
                         <option value="">Semua</option>
-                        <option value="accepted"<?php echo $status === 'accepted' ? ' selected' : ''; ?>>Diterima (dalam radius)</option>
+                        <option value="accepted"<?php echo $status === 'accepted' ? ' selected' : ''; ?>>Hadir (dalam radius)</option>
                         <option value="rejected"<?php echo $status === 'rejected' ? ' selected' : ''; ?>>Ditolak (di luar radius)</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label">Rombel (Kelas Rombel)</label>
+                    <select name="rombel" class="form-select">
+                        <option value="">Semua</option>
+                        <?php foreach ($rombelOptions as $opt): ?>
+                            <option value="<?php echo htmlspecialchars($opt); ?>"<?php echo $qRombel === $opt ? ' selected' : ''; ?>><?php echo htmlspecialchars($opt); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 col-md-9">
                     <label class="form-label">Nama Siswa</label>
-                    <div class="d-flex gap-2">
-                        <input type="text" name="nama" class="form-control" value="<?php echo htmlspecialchars($qNama); ?>" placeholder="Cari nama siswa">
-                        <button type="submit" class="btn btn-primary">Cari</button>
-                    </div>
+                    <input type="text" name="nama" class="form-control" value="<?php echo htmlspecialchars($qNama); ?>" placeholder="Cari nama siswa">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
             </form>
 
@@ -163,7 +200,7 @@ include __DIR__ . '/../../includes/header.php';
                                 </td>
                                 <td>
                                     <?php if ((string)($r['status'] ?? '') === 'accepted'): ?>
-                                        <span class="badge text-bg-success">Diterima</span>
+                                        <span class="badge text-bg-success">Hadir</span>
                                     <?php else: ?>
                                         <span class="badge text-bg-warning text-dark">Ditolak</span>
                                     <?php endif; ?>
