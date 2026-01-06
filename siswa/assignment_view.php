@@ -139,7 +139,9 @@ $tokenOk = false;
 if ($requiresToken) {
     $tok = $_SESSION['assignment_token_ok'] ?? null;
     $stored = (is_array($tok) && isset($tok[$id])) ? (string)$tok[$id] : '';
-    $tokenOk = ($stored !== '' && $tokenAvailable && $stored === $tokenCode);
+    // Keep previously verified tokens valid even if admin resets/rotates tokens,
+    // so ongoing sessions are not blocked.
+    $tokenOk = ($stored !== '');
 }
 
 // Allow forcing a token re-check (used by client-side focus/visibility logic).

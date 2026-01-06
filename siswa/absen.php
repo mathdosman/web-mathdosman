@@ -359,7 +359,7 @@ include __DIR__ . '/../includes/header.php';
                     <h6 class="card-title mb-3 text-center">Langkah 2: Ambil Foto Absen</h6>
                     <div class="small mb-2 text-muted" data-role="foto-location-status">Memeriksa lokasi Anda...</div>
                     <div class="ratio ratio-4x3 mb-3 bg-dark-subtle rounded overflow-hidden" style="max-width:400px; width:100%;">
-                        <video id="attendanceCamera" playsinline class="w-100 h-100" style="object-fit: cover;"></video>
+                        <video id="attendanceCamera" playsinline class="w-100 h-100" style="object-fit: cover; transform: scaleX(-1);"></video>
                         <canvas id="attendanceSnapshot" class="d-none"></canvas>
                     </div>
                     <div class="d-flex flex-wrap gap-2 mb-2 justify-content-center">
@@ -488,6 +488,8 @@ include __DIR__ . '/../includes/header.php';
         centerMarker = L.marker([cfg.lat, cfg.lng]).addTo(map).bindPopup('Titik absen');
     }
 
+    var geoTriedFallback = false;
+
     function initGeolocation() {
         if (!navigator.geolocation) {
             updateLocationStatusText('Browser tidak mendukung geolokasi.', 'text-danger');
@@ -496,7 +498,19 @@ include __DIR__ . '/../includes/header.php';
 
         updateLocationStatusText('Mengambil lokasi dari perangkat...', 'text-muted');
 
-        navigator.geolocation.getCurrentPosition(function (pos) {
+        var primaryOptions = {
+            enableHighAccuracy: true,
+            timeout: 30000, // beri waktu lebih lama untuk perangkat lama lock posisi
+            maximumAge: 60000 // izinkan cache lokasi terbaru (maks 60 detik)
+        };
+
+        var fallbackOptions = {
+            enableHighAccuracy: false,
+            timeout: 20000,
+            maximumAge: 120000
+        };
+
+        function onSuccess(pos) {
             var lat = pos.coords.latitude;
             var lng = pos.coords.longitude;
 
@@ -562,14 +576,26 @@ include __DIR__ . '/../includes/header.php';
             } else {
                 updateLocationStatusText('Konfigurasi titik absen tidak lengkap.', 'text-danger');
             }
-        }, function (err) {
+        }
+
+        function onError(err) {
             var msg = 'Gagal mengambil lokasi (' + err.code + '): ' + err.message;
+
+            // Coba sekali lagi dengan opsi lebih longgar (tanpa high accuracy) untuk perangkat lama.
+            if (!geoTriedFallback) {
+                geoTriedFallback = true;
+                updateLocationStatusText('Lokasi lambat, mencoba ulang dengan mode akurasi standar...', 'text-muted');
+                navigator.geolocation.getCurrentPosition(onSuccess, function (err2) {
+                    var msg2 = 'Gagal mengambil lokasi (' + err2.code + '): ' + err2.message;
+                    updateLocationStatusText(msg2, 'text-danger');
+                }, fallbackOptions);
+                return;
+            }
+
             updateLocationStatusText(msg, 'text-danger');
-        }, {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
-        });
+        }
+
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, primaryOptions);
     }
 
     function initCamera() {
@@ -630,15 +656,24 @@ include __DIR__ . '/../includes/header.php';
                 return;
             }
 
-            // Gunakan ukuran tetap yang lebih kecil agar file foto lebih ringan (4:3).
-            var width = 640;
-            var height = 480;
+            // Gunakan rasio asli kamera untuk menghindari distorsi; batasi lebar agar file tetap ringan.
+            var vw = video.videoWidth || 640;
+            var vh = video.videoHeight || 480;
+            var maxW = 720;
+            var scale = (vw > maxW) ? (maxW / vw) : 1;
+            var width = Math.max(1, Math.round(vw * scale));
+            var height = Math.max(1, Math.round(vh * scale));
             canvas.width = width;
             canvas.height = height;
 
             var ctx = canvas.getContext('2d');
             if (!ctx) return;
+            // Unmirror output so hasil foto tidak terbalik (kamera depan biasanya mirror).
+            ctx.save();
+            ctx.translate(width, 0);
+            ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, width, height);
+            ctx.restore();
 
             captureBtn.disabled = true;
             if (submitStatusEl) {
