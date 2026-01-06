@@ -17,6 +17,7 @@ $rows = [];
 $hasScoreColumn = false;
 $hasStartedAtColumn = false;
 $hasGradedAtColumn = false;
+$hasResetCountColumn = false;
 try {
     $cols = [];
     $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
@@ -28,6 +29,7 @@ try {
     $hasScoreColumn = !empty($cols['score']);
     $hasStartedAtColumn = !empty($cols['started_at']);
     $hasGradedAtColumn = !empty($cols['graded_at']);
+    $hasResetCountColumn = !empty($cols['exam_reset_count']);
 } catch (Throwable $e) {
     $hasScoreColumn = false;
     $hasStartedAtColumn = false;
@@ -58,7 +60,7 @@ if ($studentId <= 0) {
                 ? 'COALESCE(sa.graded_at, sa.updated_at, sa.assigned_at)'
                 : 'COALESCE(sa.updated_at, sa.assigned_at)';
 
-            $sql = 'SELECT
+                $sql = 'SELECT
                     sa.id,
                     sa.jenis,
                     sa.status,
@@ -68,6 +70,7 @@ if ($studentId <= 0) {
                     ' . ($hasStartedAtColumn ? 'sa.started_at,' : 'NULL AS started_at,') . '
                     ' . ($hasGradedAtColumn ? 'sa.graded_at,' : 'NULL AS graded_at,') . '
                     ' . ($hasScoreColumn ? 'sa.score,' : 'NULL AS score,') . '
+                    ' . ($hasResetCountColumn ? 'sa.exam_reset_count,' : 'NULL AS exam_reset_count,') . '
                     p.id AS package_id,
                     p.code AS package_code,
                     p.name AS package_name
@@ -133,12 +136,15 @@ include __DIR__ . '/../../includes/header.php';
                             <th style="width:170px">Ditugaskan</th>
                             <th style="width:170px">Mulai</th>
                             <th style="width:170px">Selesai</th>
+                            <?php if ($jenis === 'ujian' && $hasResetCountColumn): ?>
+                                <th style="width:90px">Reset</th>
+                            <?php endif; ?>
                             <th style="width:120px"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="7" class="text-center text-muted">Belum ada data.</td></tr>
+                            <tr><td colspan="<?php echo ($jenis === 'ujian' && $hasResetCountColumn) ? 8 : 7; ?>" class="text-center text-muted">Belum ada data.</td></tr>
                         <?php endif; ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
@@ -156,6 +162,7 @@ include __DIR__ . '/../../includes/header.php';
                                 }
 
                                 $scoreVal = $r['score'] ?? null;
+                                $resetCount = (int)($r['exam_reset_count'] ?? 0);
                                 $saId = (int)($r['id'] ?? 0);
                             ?>
                             <tr>
@@ -201,6 +208,11 @@ include __DIR__ . '/../../includes/header.php';
                                         <span class="small text-muted">-</span>
                                     <?php endif; ?>
                                 </td>
+                                <?php if ($jenis === 'ujian' && $hasResetCountColumn): ?>
+                                    <td>
+                                        <span class="badge text-bg-light border text-dark"><?php echo $resetCount; ?>x</span>
+                                    </td>
+                                <?php endif; ?>
                                 <td class="text-end">
                                     <?php if ($status === 'done' && $saId > 0): ?>
                                         <a class="btn btn-outline-success btn-sm" href="result_view.php?assignment_id=<?php echo (int)$saId; ?>&student_id=<?php echo (int)$studentId; ?>" target="_blank">Lihat</a>

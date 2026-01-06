@@ -122,6 +122,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Gagal menghapus jadwal absen. Silakan coba lagi.';
             }
         }
+    } elseif ($action === 'set_active') {
+        $winId = isset($_POST['window_id']) ? (int)$_POST['window_id'] : 0;
+        $isActive = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 0;
+
+        if ($winId <= 0) {
+            $errors[] = 'ID jadwal tidak valid.';
+        }
+
+        if (!$errors) {
+            try {
+                $stmt = $pdo->prepare('UPDATE student_attendance_windows SET is_active = :act, updated_at = NOW() WHERE id = :id');
+                $stmt->execute([
+                    ':act' => $isActive ? 1 : 0,
+                    ':id' => $winId,
+                ]);
+
+                $successMsg = $isActive ? 'Jadwal absen diaktifkan.' : 'Jadwal absen dinonaktifkan.';
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal mengubah status jadwal absen. Silakan coba lagi.';
+            }
+        }
     } else {
         $name = trim((string)($_POST['name'] ?? ''));
         $startDate = trim((string)($_POST['start_date'] ?? ''));
@@ -130,6 +151,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $endTime = trim((string)($_POST['end_time'] ?? ''));
         $targetMode = (string)($_POST['target_mode'] ?? 'all');
         $selectedRombels = array_values(array_unique(array_map('strval', (array)($_POST['rombels'] ?? []))));
+        $repeatWeeksRaw = trim((string)($_POST['repeat_weeks'] ?? '1'));
+
+        $repeatWeeks = (int)$repeatWeeksRaw;
+        if ($repeatWeeks <= 0) {
+            $repeatWeeks = 1;
+        }
+        if ($repeatWeeks > 52) {
+            $repeatWeeks = 52;
+        }
 
         if ($name === '' && $startDate !== '') {
             try {
@@ -196,23 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $rombelFilterLabel = implode(', ', $rombelsForSql);
                 }
 
-                $sqlWin = 'INSERT INTO student_attendance_windows (name, start_at, end_at, kelas_filter, rombel_filter, created_at, updated_at)
-                            VALUES (:name, :start_at, :end_at, :kelas, :rombel, NOW(), NOW())';
-                $stmt = $pdo->prepare($sqlWin);
-                $stmt->execute([
-                    ':name' => $name,
-                    ':start_at' => $startAt->format('Y-m-d H:i:s'),
-                    ':end_at' => $endAt->format('Y-m-d H:i:s'),
-                    ':kelas' => null,
-                    ':rombel' => $rombelFilterLabel,
-                ]);
-
-                $windowId = (int)$pdo->lastInsertId();
-                if ($windowId <= 0) {
-                    throw new RuntimeException('Gagal membuat jadwal absen.');
-                }
-
-                // Ambil siswa yang menjadi target.
+                // Ambil siswa yang menjadi target satu kali.
                 $sqlStu = 'SELECT id FROM students WHERE 1=1';
                 $paramsStu = [];
                 if ($targetMode === 'filter' && $rombelsForSql) {
@@ -231,19 +245,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new RuntimeException('Tidak ada siswa yang cocok dengan filter yang dipilih.');
                 }
 
+                $sqlWin = 'INSERT INTO student_attendance_windows (name, start_at, end_at, kelas_filter, rombel_filter, is_active, created_at, updated_at)
+                            VALUES (:name, :start_at, :end_at, :kelas, :rombel, :is_active, NOW(), NOW())';
+                $stmtWin = $pdo->prepare($sqlWin);
+
                 $sqlAssign = 'INSERT INTO student_attendance_window_students (window_id, student_id, status, created_at, updated_at)
                               VALUES (:wid, :sid, :status, NOW(), NOW())';
                 $stmtAssign = $pdo->prepare($sqlAssign);
-                foreach ($students as $sid) {
-                    $sid = (int)$sid;
-                    if ($sid <= 0) {
-                        continue;
+
+                $baseStartAt = clone $startAt;
+                $baseEndAt = clone $endAt;
+
+                for ($week = 0; $week < $repeatWeeks; $week++) {
+                    if ($week === 0) {
+                        $curStart = $baseStartAt;
+                        $curEnd = $baseEndAt;
+                    } else {
+                        $curStart = (clone $baseStartAt)->modify('+' . $week . ' week');
+                        $curEnd = (clone $baseEndAt)->modify('+' . $week . ' week');
                     }
-                    $stmtAssign->execute([
-                        ':wid' => $windowId,
-                        ':sid' => $sid,
-                        ':status' => 'pending',
+
+                    $stmtWin->execute([
+                        ':name' => $name,
+                        ':start_at' => $curStart->format('Y-m-d H:i:s'),
+                        ':end_at' => $curEnd->format('Y-m-d H:i:s'),
+                        ':kelas' => null,
+                        ':rombel' => $rombelFilterLabel,
+                        ':is_active' => 1,
                     ]);
+
+                    $windowId = (int)$pdo->lastInsertId();
+                    if ($windowId <= 0) {
+                        throw new RuntimeException('Gagal membuat jadwal absen.');
+                    }
+
+                    foreach ($students as $sid) {
+                        $sid = (int)$sid;
+                        if ($sid <= 0) {
+                            continue;
+                        }
+                        $stmtAssign->execute([
+                            ':wid' => $windowId,
+                            ':sid' => $sid,
+                            ':status' => 'pending',
+                        ]);
+                    }
                 }
 
                 $pdo->commit();
@@ -266,7 +312,7 @@ try {
     $sql = 'SELECT w.*, 
                    COUNT(sws.id) AS total_students,
                    SUM(CASE WHEN sws.status = "present" THEN 1 ELSE 0 END) AS present_count,
-                   SUM(CASE WHEN sws.status = "pending" AND NOW() > w.end_at THEN 1 ELSE 0 END) AS alpha_count
+                   SUM(CASE WHEN w.is_active = 1 AND sws.status = "pending" AND NOW() > w.end_at THEN 1 ELSE 0 END) AS alpha_count
             FROM student_attendance_windows w
             LEFT JOIN student_attendance_window_students sws ON sws.window_id = w.id
             GROUP BY w.id
@@ -344,7 +390,7 @@ include __DIR__ . '/../../includes/header.php';
                 <div class="col-md-6">
                     <div class="mb-2">
                         <label class="form-label d-block">Target siswa</label>
-                        <?php $mode = isset($_POST['target_mode']) ? (string)$_POST['target_mode'] : 'all'; ?>
+                        <?php $mode = isset($_POST['target_mode']) ? (string)$_POST['target_mode'] : 'filter'; ?>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="target_mode" id="targetAll" value="all"<?php echo $mode === 'all' ? ' checked' : ''; ?>>
                             <label class="form-check-label" for="targetAll">Semua siswa</label>
@@ -402,6 +448,24 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
             </div>
 
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <div class="mb-0">
+                        <label class="form-label" for="attRepeatWeeks">Pengulangan mingguan</label>
+                        <?php $repeatWeeksForm = isset($_POST['repeat_weeks']) ? (int)$_POST['repeat_weeks'] : 1; if ($repeatWeeksForm <= 0) { $repeatWeeksForm = 1; } ?>
+                        <input
+                            type="number"
+                            name="repeat_weeks"
+                            id="attRepeatWeeks"
+                            class="form-control"
+                            min="1"
+                            max="52"
+                            value="<?php echo (int)$repeatWeeksForm; ?>">
+                        <div class="form-text">Isi 1 jika hanya untuk minggu ini. Misalnya isi 4 untuk otomatis membuat jadwal yang sama selama 4 minggu berturut-turut.</div>
+                    </div>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary mt-3">Buat Jadwal Absen</button>
         </form>
 
@@ -428,6 +492,7 @@ include __DIR__ . '/../../includes/header.php';
                                 $total = (int)($w['total_students'] ?? 0);
                                 $present = (int)($w['present_count'] ?? 0);
                                 $alpha = (int)($w['alpha_count'] ?? 0);
+                                $isActive = (int)($w['is_active'] ?? 1) === 1;
                                 $kelas = trim((string)($w['kelas_filter'] ?? ''));
                                 $rombel = trim((string)($w['rombel_filter'] ?? ''));
                                 $now = new DateTimeImmutable('now');
@@ -448,6 +513,13 @@ include __DIR__ . '/../../includes/header.php';
                             <tr>
                                 <td>
                                     <div class="fw-semibold"><?php echo htmlspecialchars((string)($w['name'] ?? '')); ?></div>
+                                    <div class="small mt-1">
+                                        <?php if ($isActive): ?>
+                                            <span class="badge text-bg-success">Aktif</span>
+                                        <?php else: ?>
+                                            <span class="badge text-bg-secondary">Nonaktif (libur)</span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="small"><?php
@@ -484,6 +556,15 @@ include __DIR__ . '/../../includes/header.php';
                                     <div class="d-flex flex-wrap gap-1">
                                         <a class="btn btn-outline-primary btn-sm" href="<?php echo $base_url; ?>/siswa/admin/attendance_window_view.php?id=<?php echo (int)($w['id'] ?? 0); ?>">Lihat</a>
                                         <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/siswa/admin/attendance_window_edit.php?id=<?php echo (int)($w['id'] ?? 0); ?>">Edit</a>
+                                        <?php if (!$ended): ?>
+                                            <form method="post" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="action" value="set_active">
+                                                <input type="hidden" name="window_id" value="<?php echo (int)($w['id'] ?? 0); ?>">
+                                                <input type="hidden" name="is_active" value="<?php echo $isActive ? '0' : '1'; ?>">
+                                                <button type="submit" class="btn btn-outline-warning btn-sm"><?php echo $isActive ? 'Nonaktifkan' : 'Aktifkan'; ?></button>
+                                            </form>
+                                        <?php endif; ?>
                                         <form method="post" class="d-inline" onsubmit="return confirm('<?php echo htmlspecialchars($deleteConfirmMsg, ENT_QUOTES); ?>');">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                             <input type="hidden" name="action" value="delete_window">

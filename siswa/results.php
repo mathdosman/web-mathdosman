@@ -18,7 +18,7 @@ try {
     // Prefer selecting score columns. If schema doesn't have them yet, fallback.
     try {
         $sql = 'SELECT sa.id, sa.jenis, sa.judul, sa.status, sa.assigned_at, sa.due_at, sa.started_at, sa.updated_at,
-                sa.score, sa.correct_count, sa.total_count, sa.graded_at,
+                sa.score, sa.correct_count, sa.total_count, sa.graded_at, sa.exam_reset_count,
                 p.code AS package_code, p.name AS package_name
             FROM student_assignments sa
             JOIN packages p ON p.id = sa.package_id
@@ -201,6 +201,7 @@ include __DIR__ . '/../includes/header.php';
                                                 $scoreVal = $hasScoreColumn ? ($r['score'] ?? null) : null;
                                                 $cc = $hasScoreColumn ? ($r['correct_count'] ?? null) : null;
                                                 $tc = $hasScoreColumn ? ($r['total_count'] ?? null) : null;
+                                                $resetCount = isset($r['exam_reset_count']) ? (int)$r['exam_reset_count'] : 0;
                                             ?>
                                             <tr>
                                                 <td><span class="badge text-bg-secondary">#<?php echo (int)$no; ?></span></td>
@@ -241,7 +242,12 @@ include __DIR__ . '/../includes/header.php';
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="text-end">
-                                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/result_view.php?id=<?php echo (int)($r['id'] ?? 0); ?>">Rekap</a>
+                                                    <div class="d-flex flex-column align-items-end gap-1">
+                                                        <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/result_view.php?id=<?php echo (int)($r['id'] ?? 0); ?>">Rekap</a>
+                                                        <?php if ($resetCount > 0): ?>
+                                                            <div class="small text-muted">Reset ujian: <?php echo $resetCount; ?>x</div>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

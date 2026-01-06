@@ -80,6 +80,7 @@ try {
                              FROM student_attendance_windows w
                              JOIN student_attendance_window_students sws ON sws.window_id = w.id
                              WHERE sws.student_id = :sid
+                                 AND w.is_active = 1
                                  AND NOW() BETWEEN w.start_at AND w.end_at
                                  AND NOT EXISTS (
                                          SELECT 1 FROM student_attendance_records r

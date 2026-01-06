@@ -37,6 +37,26 @@ try {
     $hasParentPhoneColumn = false;
 }
 
+function build_students_return_url(array $get, string $success = ''): string
+{
+    $allowed = ['nama', 'kelas', 'username'];
+    $qp = [];
+    foreach ($allowed as $k) {
+        if (!isset($get[$k])) {
+            continue;
+        }
+        $v = (string)$get[$k];
+        if ($v === '') {
+            continue;
+        }
+        $qp[$k] = $v;
+    }
+    if ($success !== '') {
+        $qp['success'] = $success;
+    }
+    return 'students.php' . ($qp ? ('?' . http_build_query($qp)) : '');
+}
+
 $errors = [];
 
 // Filter query (GET)
@@ -100,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     siswa_delete_photo($foto);
                 }
 
-                header('Location: students.php?success=deleted');
+                header('Location: ' . build_students_return_url($_GET, 'deleted'));
                 exit;
             } catch (Throwable $e) {
                 $errors[] = 'Gagal menghapus akun siswa.';
@@ -115,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hash = password_hash('123456', PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare('UPDATE students SET password_hash = :ph, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
                 $stmt->execute([':ph' => $hash, ':id' => $id]);
-                header('Location: students.php?success=reset');
+                header('Location: ' . build_students_return_url($_GET, 'reset'));
                 exit;
             } catch (Throwable $e) {
                 $errors[] = 'Gagal reset password siswa.';

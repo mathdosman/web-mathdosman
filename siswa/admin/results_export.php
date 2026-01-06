@@ -19,6 +19,7 @@ if (!class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
 // Deteksi kolom nilai & tanggal koreksi
 $hasScoreColumn = false;
 $hasGradedAtColumn = false;
+$hasResetCountColumn = false;
 try {
     $cols = [];
     $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
@@ -29,6 +30,7 @@ try {
     }
     $hasScoreColumn = !empty($cols['score']);
     $hasGradedAtColumn = !empty($cols['graded_at']);
+    $hasResetCountColumn = !empty($cols['exam_reset_count']);
 } catch (Throwable $e) {
     $hasScoreColumn = false;
     $hasGradedAtColumn = false;
@@ -52,7 +54,7 @@ try {
 
     $titleExpr = 'COALESCE(NULLIF(TRIM(sa.judul), ""), p.name)';
 
-    $select = 'SELECT
+        $select = 'SELECT
             sa.id AS assignment_id,
             sa.student_id,
             s.nama_siswa,
@@ -65,6 +67,11 @@ try {
         $select .= ', sa.score';
     } else {
         $select .= ', NULL AS score';
+    }
+    if ($hasResetCountColumn) {
+        $select .= ', sa.exam_reset_count';
+    } else {
+        $select .= ', NULL AS exam_reset_count';
     }
     $select .= ', ' . $latestExpr . ' AS latest_at';
     $select .= '
@@ -112,12 +119,12 @@ $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Hasil ' . $jenisLabel);
 
-$headers = ['Jenis', 'Nama Siswa', 'Kelas', 'Rombel', 'Kode Paket', 'Judul Paket', 'Nilai', 'Tanggal Selesai'];
+$headers = ['Jenis', 'Nama Siswa', 'Kelas', 'Rombel', 'Kode Paket', 'Judul Paket', 'Nilai', 'Reset Ujian', 'Tanggal Selesai'];
 // Header judul laporan di baris pertama
 $title = 'Laporan Hasil ' . $jenisLabel . ' Siswa';
 $sheet->setCellValueExplicit('A1', $title, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-// Gabungkan sel A1 sampai H1 untuk judul
-$sheet->mergeCells('A1:H1');
+// Gabungkan sel A1 sampai I1 untuk judul
+$sheet->mergeCells('A1:I1');
 
 // Header kolom dimulai di baris ke-3
 foreach ($headers as $i => $h) {
@@ -134,6 +141,7 @@ foreach ($rows as $r) {
     $title = $judul !== '' ? $judul : $pkgName;
     $score = $hasScoreColumn ? ($r['score'] ?? null) : null;
     $latestAt = (string)($r['latest_at'] ?? '');
+    $resetCount = $hasResetCountColumn ? (int)($r['exam_reset_count'] ?? 0) : 0;
 
     $values = [
         $jenisLabel,
@@ -143,6 +151,7 @@ foreach ($rows as $r) {
         (string)($r['package_code'] ?? ''),
         $title,
         $score !== null && $score !== '' ? (string)$score : '',
+        ($tab === 'ujian' && $hasResetCountColumn && $resetCount > 0) ? (string)$resetCount : '',
         $latestAt,
     ];
 
