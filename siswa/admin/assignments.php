@@ -454,7 +454,7 @@ include __DIR__ . '/../../includes/header.php';
                                 <td><span class="fw-semibold"><?php echo htmlspecialchars($tokenLabel); ?></span></td>
                                 <td>
                                     <div class="d-flex justify-content-start justify-content-md-end">
-                                        <div class="d-grid gap-1" style="grid-template-columns: repeat(2, minmax(0, auto));">
+                                        <div class="admin-actions-grid">
                                         <?php if ($packageViewUrl !== ''): ?>
                                             <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($packageViewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

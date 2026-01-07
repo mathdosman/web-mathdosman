@@ -337,8 +337,8 @@ include __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td class="text-end">
                                     <div class="d-flex justify-content-end">
-                                        <div class="d-grid" style="grid-template-columns: repeat(2, 42px); gap: 8px;">
-                                            <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" style="width:36px; height:36px;" href="content_view.php?id=<?php echo $cid; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat" aria-label="Lihat">
+                                        <div class="admin-actions-grid">
+                                            <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" href="content_view.php?id=<?php echo $cid; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat" aria-label="Lihat">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
@@ -346,7 +346,7 @@ include __DIR__ . '/../includes/header.php';
                                                 <span class="visually-hidden">Lihat</span>
                                             </a>
 
-                                            <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" style="width:36px; height:36px;" href="content_edit.php?id=<?php echo $cid; ?>" title="Edit" aria-label="Edit">
+                                            <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" href="content_edit.php?id=<?php echo $cid; ?>" title="Edit" aria-label="Edit">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                     <path d="M12 20h9"/>
                                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
@@ -359,7 +359,7 @@ include __DIR__ . '/../includes/header.php';
                                                 <input type="hidden" name="action" value="toggle_status">
                                                 <input type="hidden" name="id" value="<?php echo $cid; ?>">
                                                 <?php if ($cstatus === 'published'): ?>
-                                                    <button type="submit" class="btn btn-outline-warning btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" style="width:36px; height:36px;" title="Jadikan Draft" aria-label="Jadikan Draft">
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" title="Jadikan Draft" aria-label="Jadikan Draft">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                             <path d="M12 5v14"/>
                                                             <path d="M19 12l-7 7-7-7"/>
@@ -367,7 +367,7 @@ include __DIR__ . '/../includes/header.php';
                                                         <span class="visually-hidden">Draft</span>
                                                     </button>
                                                 <?php else: ?>
-                                                    <button type="submit" class="btn btn-outline-success btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" style="width:36px; height:36px;" title="Publish" aria-label="Publish">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" title="Publish" aria-label="Publish">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                             <path d="M12 19V5"/>
                                                             <path d="M5 12l7-7 7 7"/>
@@ -381,7 +381,7 @@ include __DIR__ . '/../includes/header.php';
                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="id" value="<?php echo $cid; ?>">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" style="width:36px; height:36px;" title="Hapus" aria-label="Hapus">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center rounded-circle" title="Hapus" aria-label="Hapus">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                         <path d="M3 6h18"/>
                                                         <path d="M8 6V4h8v2"/>
