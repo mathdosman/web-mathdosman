@@ -40,11 +40,25 @@ try {
 
 $rows = [];
 try {
+    // Fallback record in rentang window jika attendance_record_id kosong
+    $fallbackStatus = '(SELECT r2.status FROM student_attendance_records r2 WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
+    $fallbackTakenAt = '(SELECT r2.taken_at FROM student_attendance_records r2 WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
+    $fallbackPhoto = '(SELECT r2.photo_path FROM student_attendance_records r2 WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
+    $fallbackDistance = '(SELECT r2.distance_m FROM student_attendance_records r2 WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
+    $fallbackSetting = '(SELECT r2.setting_id FROM student_attendance_records r2 WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
+    $fallbackSettingName = '(SELECT st2.name FROM student_attendance_records r2 LEFT JOIN student_attendance_settings st2 ON st2.id = r2.setting_id WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
+
     $sql = 'SELECT sws.id AS ws_id, sws.student_id, sws.status AS ws_status, sws.attendance_record_id,
                    w.start_at, w.end_at,
                    r.id AS record_id, r.taken_at, r.lat, r.lng, r.distance_m, r.status AS record_status, r.photo_path,
+                   COALESCE(r.status, ' . $fallbackStatus . ') AS eff_record_status,
+                   COALESCE(r.taken_at, ' . $fallbackTakenAt . ') AS eff_taken_at,
+                   COALESCE(r.photo_path, ' . $fallbackPhoto . ') AS eff_photo_path,
+                   COALESCE(r.distance_m, ' . $fallbackDistance . ') AS eff_distance_m,
+                   COALESCE(r.setting_id, ' . $fallbackSetting . ') AS eff_setting_id,
                    s.nama_siswa, s.kelas, s.rombel,
-                   st.name AS setting_name, st.radius_m,
+                   COALESCE(st.name, ' . $fallbackSettingName . ') AS setting_name,
+                   st.radius_m,
                    latest_cr.status AS cr_status, latest_cr.requested_status AS cr_requested_status
             FROM student_attendance_window_students sws
             JOIN students s ON s.id = sws.student_id
@@ -74,7 +88,7 @@ try {
     }
 
     if ($status !== '') {
-        $sql .= ' AND r.status = :status';
+        $sql .= ' AND COALESCE(r.status, ' . $fallbackStatus . ') = :status';
         $params[':status'] = $status;
     }
 
@@ -88,7 +102,7 @@ try {
         $params[':nama'] = '%' . $qNama . '%';
     }
 
-    $sql .= ' ORDER BY r.taken_at DESC, r.id DESC LIMIT 500';
+    $sql .= ' ORDER BY COALESCE(r.taken_at, ' . $fallbackTakenAt . ') DESC, sws.id DESC LIMIT 500';
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -190,9 +204,9 @@ include __DIR__ . '/../../includes/header.php';
                                 $kelasRombel = trim($kelas . ' ' . $rombel);
 
                                 $radius = (int)($r['radius_m'] ?? 0);
-                                $distance = (int)($r['distance_m'] ?? 0);
+                                $distance = (int)($r['eff_distance_m'] ?? $r['distance_m'] ?? 0);
 
-                                $photoPath = trim((string)($r['photo_path'] ?? ''));
+                                $photoPath = trim((string)($r['eff_photo_path'] ?? ($r['photo_path'] ?? '')));
                                 $photoUrl = '';
                                 if ($photoPath !== '') {
                                     $photoUrl = rtrim((string)$base_url, '/') . '/' . ltrim($photoPath, '/');
@@ -201,7 +215,7 @@ include __DIR__ . '/../../includes/header.php';
 
                                 // Hitung status efektif berdasarkan window + ajuan
                                 $wsStatus = (string)($r['ws_status'] ?? '');
-                                $recordStatus = (string)($r['record_status'] ?? '');
+                                $recordStatus = (string)($r['eff_record_status'] ?? ($r['record_status'] ?? ''));
                                 $crStatus = (string)($r['cr_status'] ?? '');
                                 $crRequested = (string)($r['cr_requested_status'] ?? '');
                                 $windowEnd = null;
@@ -253,7 +267,7 @@ include __DIR__ . '/../../includes/header.php';
                             <tr>
                                 <td>
                                     <?php
-                                        $takenAt = (string)($r['taken_at'] ?? '');
+                                        $takenAt = (string)($r['eff_taken_at'] ?? ($r['taken_at'] ?? ''));
                                         $label = function_exists('format_id_datetime_short') ? format_id_datetime_short($takenAt) : $takenAt;
                                     ?>
                                     <div class="small fw-semibold"><?php echo htmlspecialchars($label); ?></div>
