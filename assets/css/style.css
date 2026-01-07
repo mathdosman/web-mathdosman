@@ -215,6 +215,24 @@ pre {
     justify-content: end;
 }
 
+.packages-actions-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .35rem;
+}
+
+.packages-actions.shuffle-actions {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    justify-content: stretch;
+    width: 100%;
+    max-width: 280px;
+}
+
+.packages-actions.shuffle-actions .btn {
+    justify-content: space-between;
+}
+
 /* Truncate long cell text without making the table wider */
 .md-cell-truncate {
     white-space: nowrap;
