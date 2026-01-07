@@ -311,8 +311,37 @@ $windows = [];
 try {
     $sql = 'SELECT w.*, 
                    COUNT(sws.id) AS total_students,
-                   SUM(CASE WHEN sws.status = "present" THEN 1 ELSE 0 END) AS present_count,
-                   SUM(CASE WHEN w.is_active = 1 AND sws.status = "pending" AND NOW() > w.end_at THEN 1 ELSE 0 END) AS alpha_count
+                   SUM(
+                       CASE
+                           WHEN sws.status IN ("present", "izin", "sakit", "dispen") THEN 1
+                           WHEN sws.status = "pending" AND EXISTS (
+                               SELECT 1
+                               FROM student_attendance_records r
+                               WHERE r.student_id = sws.student_id
+                                 AND r.status = "accepted"
+                                 AND r.taken_at BETWEEN w.start_at AND w.end_at
+                               LIMIT 1
+                           ) THEN 1
+                           ELSE 0
+                       END
+                   ) AS present_count,
+                   SUM(
+                       CASE
+                           WHEN w.is_active = 1
+                                AND sws.status = "pending"
+                                AND NOW() > w.end_at
+                                AND NOT EXISTS (
+                                    SELECT 1
+                                    FROM student_attendance_records r
+                                    WHERE r.student_id = sws.student_id
+                                      AND r.status = "accepted"
+                                      AND r.taken_at BETWEEN w.start_at AND w.end_at
+                                    LIMIT 1
+                                )
+                           THEN 1
+                           ELSE 0
+                       END
+                   ) AS alpha_count
             FROM student_attendance_windows w
             LEFT JOIN student_attendance_window_students sws ON sws.window_id = w.id
             GROUP BY w.id
