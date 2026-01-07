@@ -348,7 +348,7 @@ include __DIR__ . '/../../includes/header.php';
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover table-compact align-middle">
+                <table class="table table-striped table-hover table-compact align-middle packages-table">
                     <thead>
                         <tr>
                             <th style="width:64px">No</th>
@@ -356,7 +356,7 @@ include __DIR__ . '/../../includes/header.php';
                             <th style="width:110px">Jenis</th>
                             <th style="width:120px">Status</th>
                             <th style="width:140px">Token</th>
-                            <th style="width:220px">Aksi</th>
+                            <th class="text-end packages-col-actions" style="width:220px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -452,9 +452,9 @@ include __DIR__ . '/../../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td><span class="fw-semibold"><?php echo htmlspecialchars($tokenLabel); ?></span></td>
-                                <td>
+                                <td class="text-end packages-col-actions">
                                     <div class="d-flex justify-content-start justify-content-md-end">
-                                        <div class="admin-actions-grid">
+                                        <div class="packages-actions">
                                         <?php if ($packageViewUrl !== ''): ?>
                                             <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($packageViewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
