@@ -40,16 +40,17 @@ try {
 
 $rows = [];
 try {
-    $sql = 'SELECT r.id, r.student_id, r.setting_id, r.taken_at, r.lat, r.lng, r.distance_m, r.status, r.photo_path,
+    $sql = 'SELECT sws.id AS ws_id, sws.student_id, sws.status AS ws_status, sws.attendance_record_id,
+                   w.start_at, w.end_at,
+                   r.id AS record_id, r.taken_at, r.lat, r.lng, r.distance_m, r.status AS record_status, r.photo_path,
                    s.nama_siswa, s.kelas, s.rombel,
                    st.name AS setting_name, st.radius_m,
-                   sws.status AS ws_status, w.end_at AS window_end_at,
                    latest_cr.status AS cr_status, latest_cr.requested_status AS cr_requested_status
-            FROM student_attendance_records r
-            JOIN students s ON s.id = r.student_id
+            FROM student_attendance_window_students sws
+            JOIN students s ON s.id = sws.student_id
+            JOIN student_attendance_windows w ON w.id = sws.window_id
+            LEFT JOIN student_attendance_records r ON r.id = sws.attendance_record_id
             LEFT JOIN student_attendance_settings st ON st.id = r.setting_id
-            LEFT JOIN student_attendance_window_students sws ON sws.attendance_record_id = r.id
-            LEFT JOIN student_attendance_windows w ON w.id = sws.window_id
             LEFT JOIN (
                 SELECT r1.*
                 FROM student_attendance_change_requests r1
@@ -64,11 +65,11 @@ try {
     $params = [];
 
     if ($dateFrom !== '') {
-        $sql .= ' AND r.taken_at >= :from';
+        $sql .= ' AND w.start_at >= :from';
         $params[':from'] = $dateFrom . ' 00:00:00';
     }
     if ($dateTo !== '') {
-        $sql .= ' AND r.taken_at <= :to';
+        $sql .= ' AND w.end_at <= :to';
         $params[':to'] = $dateTo . ' 23:59:59';
     }
 
@@ -175,6 +176,13 @@ include __DIR__ . '/../../includes/header.php';
                         <?php if (!$rows): ?>
                             <tr><td colspan="7" class="text-center text-muted">Belum ada data absen.</td></tr>
                         <?php endif; ?>
+                        <?php
+                            try {
+                                $nowObj = new DateTimeImmutable('now');
+                            } catch (Throwable $e) {
+                                $nowObj = null;
+                            }
+                        ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
                                 $kelas = trim((string)($r['kelas'] ?? ''));
@@ -193,12 +201,12 @@ include __DIR__ . '/../../includes/header.php';
 
                                 // Hitung status efektif berdasarkan window + ajuan
                                 $wsStatus = (string)($r['ws_status'] ?? '');
-                                $recordStatus = (string)($r['status'] ?? '');
+                                $recordStatus = (string)($r['record_status'] ?? '');
                                 $crStatus = (string)($r['cr_status'] ?? '');
                                 $crRequested = (string)($r['cr_requested_status'] ?? '');
                                 $windowEnd = null;
                                 try {
-                                    $windowEnd = $r['window_end_at'] ? new DateTimeImmutable((string)$r['window_end_at']) : null;
+                                    $windowEnd = $r['end_at'] ? new DateTimeImmutable((string)$r['end_at']) : null;
                                 } catch (Throwable $e) {
                                     $windowEnd = null;
                                 }
@@ -227,7 +235,7 @@ include __DIR__ . '/../../includes/header.php';
                                 } elseif ($wsStatus === 'present' || $recordStatus === 'accepted') {
                                     $effectiveLabel = 'Hadir';
                                     $badgeClass = 'text-bg-success';
-                                } elseif ($windowEnd && $windowEnd < new DateTimeImmutable('now')) {
+                                } elseif ($windowEnd && $nowObj && $windowEnd < $nowObj) {
                                     // Window sudah berakhir, belum ada status hadir/izin/sakit/dispen
                                     $effectiveLabel = 'Alpha (A)';
                                     $badgeClass = 'text-bg-danger';
