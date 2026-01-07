@@ -407,6 +407,8 @@ include __DIR__ . '/../../includes/header.php';
                                 if ($hasShuffleOptionsColumn) {
                                     $soBtnClass = $soMixed ? 'btn-outline-warning' : ($soOn ? 'btn-outline-success' : 'btn-outline-secondary');
                                 }
+                                $packageCode = (string)($r['package_code'] ?? '');
+                                $packageViewUrl = $packageCode !== '' ? ('../../paket.php?code=' . rawurlencode($packageCode)) : '';
                             ?>
                             <tr>
                                 <td class="text-muted"><?php echo $no; ?></td>
@@ -451,7 +453,18 @@ include __DIR__ . '/../../includes/header.php';
                                 </td>
                                 <td><span class="fw-semibold"><?php echo htmlspecialchars($tokenLabel); ?></span></td>
                                 <td>
-                                    <div class="d-flex gap-1 flex-wrap">
+                                    <div class="d-flex justify-content-start justify-content-md-end">
+                                        <div class="d-grid gap-1" style="grid-template-columns: repeat(2, minmax(0, auto));">
+                                        <?php if ($packageViewUrl !== ''): ?>
+                                            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($packageViewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                                                    <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                                </svg>
+                                                <span class="visually-hidden">Lihat Paket</span>
+                                            </a>
+                                        <?php endif; ?>
+
                                         <a class="btn btn-outline-secondary btn-sm" href="assignment_students.php?id=<?php echo (int)$r['id']; ?>" title="Detail Siswa" aria-label="Detail Siswa">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                                                 <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
@@ -516,6 +529,7 @@ include __DIR__ . '/../../includes/header.php';
                                                 <span class="visually-hidden">Generate Token</span>
                                             </button>
                                         </form>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

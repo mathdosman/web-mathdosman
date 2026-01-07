@@ -275,6 +275,8 @@ include __DIR__ . '/../../includes/header.php';
                                     $isExam = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false;
                                     $pid = (int)($p['id'] ?? 0);
                                     $kelasList = ($pid > 0 && isset($kelasByPackageId[$pid])) ? (string)$kelasByPackageId[$pid] : '';
+                                    $packageCode = (string)($p['code'] ?? '');
+                                    $viewUrl = $packageCode !== '' ? ('../../paket.php?code=' . rawurlencode($packageCode)) : '';
                                 ?>
                                 <tr>
                                     <td>
@@ -296,7 +298,18 @@ include __DIR__ . '/../../includes/header.php';
                                         </span>
                                     </td>
                                     <td class="text-end">
-                                        <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                        <div class="d-flex justify-content-end">
+                                            <div class="d-grid gap-1" style="grid-template-columns: repeat(2, minmax(0, auto));">
+                                                <?php if ($viewUrl !== ''): ?>
+                                                    <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($viewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                                                            <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                                        </svg>
+                                                        <span class="visually-hidden">Lihat Paket</span>
+                                                    </a>
+                                                <?php endif; ?>
+
                                             <a class="btn btn-outline-primary btn-sm" href="../../admin/package_edit.php?id=<?php echo (int)($p['id'] ?? 0); ?>&return=<?php echo urlencode('../siswa/admin/exam_packages.php'); ?>" title="Edit Paket" aria-label="Edit Paket">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                                                     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10ZM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5ZM12.793 5.5 10.5 3.207 4 9.707V10h.293l6.5-6.5ZM3.5 10.5v.793l-.146.353-.854 2.134 2.134-.854.353-.146h.793v-.293l-2.28-2.28Z"/>
@@ -325,6 +338,7 @@ include __DIR__ . '/../../includes/header.php';
                                                 </button>
                                             </form>
                                         </div>
+                                    </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

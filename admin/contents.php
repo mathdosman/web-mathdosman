@@ -281,6 +281,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </form>
 
+            <?php $returnUrl = build_contents_return_url($_GET); ?>
             <div class="table-responsive">
                 <table class="table table-sm align-middle">
                     <thead>
@@ -335,7 +336,16 @@ include __DIR__ . '/../includes/header.php';
                                     <?php echo htmlspecialchars(format_id_date($cdate)); ?>
                                 </td>
                                 <td class="text-end">
-                                    <div class="d-flex gap-2 justify-content-end">
+                                    <div class="d-flex justify-content-end">
+                                        <div class="d-grid gap-2" style="grid-template-columns: repeat(2, minmax(0, auto));">
+                                        <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center" href="content_view.php?id=<?php echo $cid; ?>&return=<?php echo urlencode($returnUrl); ?>" title="Lihat" aria-label="Lihat">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
+                                                <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                            </svg>
+                                            <span class="visually-hidden">Lihat</span>
+                                        </a>
+
                                         <a class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center" href="content_edit.php?id=<?php echo $cid; ?>" title="Edit" aria-label="Edit">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                 <path d="M12 20h9"/>
@@ -382,6 +392,7 @@ include __DIR__ . '/../includes/header.php';
                                                 <span class="visually-hidden">Hapus</span>
                                             </button>
                                         </form>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
