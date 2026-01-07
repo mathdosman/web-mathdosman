@@ -13,6 +13,22 @@ $status = trim((string)($_GET['status'] ?? ''));
 $qRombel = preg_replace('/\s+/', ' ', trim((string)($_GET['rombel'] ?? '')));
 $qNama = trim((string)($_GET['nama'] ?? ''));
 
+$exportUrl = 'attendance_export.php';
+$exportParams = [];
+if ($dateFrom !== '') {
+    $exportParams['date_from'] = $dateFrom;
+}
+if ($dateTo !== '') {
+    $exportParams['date_to'] = $dateTo;
+}
+if ($qRombel !== '') {
+    $exportParams['rombel'] = $qRombel;
+}
+$exportQs = http_build_query($exportParams);
+if ($exportQs !== '') {
+    $exportUrl .= '?' . $exportQs;
+}
+
 if ($status !== '' && !in_array($status, ['accepted', 'rejected'], true)) {
     $status = '';
 }
@@ -121,6 +137,7 @@ include __DIR__ . '/../../includes/header.php';
             <p class="admin-page-subtitle">Rekap absen berbasis foto dan lokasi.</p>
         </div>
         <div class="admin-page-actions d-flex gap-2">
+            <a class="btn btn-success" href="<?php echo htmlspecialchars($exportUrl); ?>" target="_blank">Download XLS</a>
             <a class="btn btn-outline-secondary" href="attendance_settings.php">Pengaturan Absen</a>
         </div>
     </div>
