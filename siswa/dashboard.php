@@ -97,6 +97,60 @@ try {
         $activeAttendance = null;
 }
 
+// Rekap cepat total status absen siswa (Hadir/Sakit/Izin/Dispen/Alpha)
+$attendanceSummary = [
+    'hadir' => 0,
+    'sakit' => 0,
+    'izin' => 0,
+    'dispen' => 0,
+    'alpha' => 0,
+];
+try {
+    $sqlSum = 'SELECT
+                    SUM(CASE
+                        WHEN sws.status = "present" THEN 1
+                        WHEN sws.status = "pending" AND EXISTS (
+                            SELECT 1 FROM student_attendance_records r
+                            WHERE r.student_id = sws.student_id
+                              AND r.status = "accepted"
+                              AND r.taken_at BETWEEN w.start_at AND w.end_at
+                            LIMIT 1
+                        ) THEN 1
+                        ELSE 0
+                    END) AS hadir_count,
+                    SUM(CASE WHEN sws.status = "sakit" THEN 1 ELSE 0 END) AS sakit_count,
+                    SUM(CASE WHEN sws.status = "izin" THEN 1 ELSE 0 END) AS izin_count,
+                    SUM(CASE WHEN sws.status = "dispen" THEN 1 ELSE 0 END) AS dispen_count,
+                    SUM(CASE
+                        WHEN sws.status = "pending"
+                             AND w.end_at < NOW()
+                             AND NOT EXISTS (
+                                SELECT 1 FROM student_attendance_records r
+                                WHERE r.student_id = sws.student_id
+                                  AND r.status = "accepted"
+                                  AND r.taken_at BETWEEN w.start_at AND w.end_at
+                                LIMIT 1
+                             )
+                        THEN 1
+                        ELSE 0
+                    END) AS alpha_count
+                FROM student_attendance_window_students sws
+                JOIN student_attendance_windows w ON w.id = sws.window_id
+                WHERE sws.student_id = :sid';
+    $stmtSum = $pdo->prepare($sqlSum);
+    $stmtSum->execute([':sid' => (int)($student['id'] ?? 0)]);
+    $summaryRow = $stmtSum->fetch(PDO::FETCH_ASSOC);
+    if ($summaryRow) {
+        $attendanceSummary['hadir'] = (int)($summaryRow['hadir_count'] ?? 0);
+        $attendanceSummary['sakit'] = (int)($summaryRow['sakit_count'] ?? 0);
+        $attendanceSummary['izin'] = (int)($summaryRow['izin_count'] ?? 0);
+        $attendanceSummary['dispen'] = (int)($summaryRow['dispen_count'] ?? 0);
+        $attendanceSummary['alpha'] = (int)($summaryRow['alpha_count'] ?? 0);
+    }
+} catch (Throwable $eSum) {
+    // keep defaults if query fails
+}
+
 $page_title = 'Dashboard Siswa';
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -152,6 +206,13 @@ include __DIR__ . '/../includes/header.php';
                 <div class="vstack gap-3 h-100">
                     <div class="border rounded-3 p-3">
                         <div class="fw-semibold mb-2">Absen</div>
+                        <div class="d-flex flex-wrap gap-2 mb-3 small">
+                            <span class="badge text-bg-success">Hadir: <?php echo (int)$attendanceSummary['hadir']; ?></span>
+                            <span class="badge text-bg-info text-dark">Sakit: <?php echo (int)$attendanceSummary['sakit']; ?></span>
+                            <span class="badge text-bg-primary">Izin: <?php echo (int)$attendanceSummary['izin']; ?></span>
+                            <span class="badge text-bg-secondary">Dispen: <?php echo (int)$attendanceSummary['dispen']; ?></span>
+                            <span class="badge text-bg-danger">Alpha: <?php echo (int)$attendanceSummary['alpha']; ?></span>
+                        </div>
                         <?php if (!$activeAttendance): ?>
                             <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada absen yang dijadwalkan saat ini.</div>
                             <div class="d-flex flex-wrap gap-2 small">
