@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/security.php';
 require_once __DIR__ . '/../lib.php';
 
 require_role('admin');
@@ -67,165 +68,191 @@ $values = [
     'username' => (string)($student['username'] ?? ''),
 ];
 
+$success = (string)($_GET['success'] ?? '');
+$successMsg = '';
+if ($success === 'photo_deleted') {
+    $successMsg = 'Foto siswa berhasil dihapus.';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $values['nama_siswa'] = siswa_clean_string($_POST['nama_siswa'] ?? '');
-    $values['kelas'] = siswa_clean_string($_POST['kelas'] ?? '');
-    $values['rombel'] = siswa_clean_string($_POST['rombel'] ?? '');
-    $values['no_hp'] = siswa_clean_phone($_POST['no_hp'] ?? '');
-    $values['no_hp_ortu'] = siswa_clean_phone($_POST['no_hp_ortu'] ?? '');
-    $values['username'] = siswa_clean_string($_POST['username'] ?? '');
-    $password = (string)($_POST['password'] ?? '');
+    require_csrf_valid();
+    $action = (string)($_POST['action'] ?? '');
 
-    if ($values['nama_siswa'] === '') $errors[] = 'Nama siswa wajib diisi.';
-    if ($values['kelas'] === '') $errors[] = 'Kelas wajib diisi.';
-    if ($values['rombel'] === '') $errors[] = 'Rombel wajib diisi.';
-    if ($values['username'] === '') $errors[] = 'Username wajib diisi.';
-
-    if (!$errors) {
-        if ($hasKelasRombelsTable && $kelasRombelMap) {
-            $ok = isset($kelasRombelMap[$values['kelas']]) && in_array($values['rombel'], $kelasRombelMap[$values['kelas']], true);
-            if (!$ok) {
-                $errors[] = 'Kelas/Rombel tidak terdaftar. Tambahkan dulu di menu Data Siswa → Rombel.';
-            }
-        }
-    }
-
-    if (!$errors) {
+    if ($action === 'delete_photo') {
+        $oldFotoPath = trim((string)($student['foto'] ?? ''));
         try {
-            $stmt = $pdo->prepare('SELECT 1 FROM students WHERE username = :u AND id <> :id LIMIT 1');
-            $stmt->execute([':u' => $values['username'], ':id' => $id]);
-            if ($stmt->fetchColumn()) {
-                $errors[] = 'Username sudah digunakan.';
-            }
-        } catch (Throwable $e) {
-            $errors[] = 'Gagal memvalidasi username.';
-        }
-    }
-
-    $oldFotoPath = (string)($student['foto'] ?? '');
-    $fotoPath = $oldFotoPath;
-    $newUploadedFoto = '';
-    if (!$errors && !empty($_FILES['foto']) && isset($_FILES['foto']['error']) && (int)$_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
-        // Important: do NOT delete old photo before DB update succeeds.
-        [$stored, $err] = siswa_upload_photo($_FILES['foto'], null);
-        if ($err !== '') {
-            $errors[] = $err;
-        } elseif ($stored !== null && $stored !== '') {
-            $newUploadedFoto = (string)$stored;
-            $fotoPath = $newUploadedFoto;
-        }
-    }
-
-    if (!$errors) {
-        try {
-            if (method_exists($pdo, 'beginTransaction')) {
-                $pdo->beginTransaction();
-            }
-            if ($password !== '') {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                if ($hasParentPhoneColumn) {
-                    $stmt = $pdo->prepare('UPDATE students
-                        SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, no_hp_ortu = :hpo, foto = :f, username = :u, password_hash = :ph
-                        WHERE id = :id');
-                    $stmt->execute([
-                        ':n' => $values['nama_siswa'],
-                        ':k' => $values['kelas'],
-                        ':r' => $values['rombel'],
-                        ':hp' => $values['no_hp'],
-                        ':hpo' => $values['no_hp_ortu'],
-                        ':f' => $fotoPath,
-                        ':u' => $values['username'],
-                        ':ph' => $hash,
-                        ':id' => $id,
-                    ]);
-                } else {
-                    $stmt = $pdo->prepare('UPDATE students
-                        SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, foto = :f, username = :u, password_hash = :ph
-                        WHERE id = :id');
-                    $stmt->execute([
-                        ':n' => $values['nama_siswa'],
-                        ':k' => $values['kelas'],
-                        ':r' => $values['rombel'],
-                        ':hp' => $values['no_hp'],
-                        ':f' => $fotoPath,
-                        ':u' => $values['username'],
-                        ':ph' => $hash,
-                        ':id' => $id,
-                    ]);
-                }
-            } else {
-                if ($hasParentPhoneColumn) {
-                    $stmt = $pdo->prepare('UPDATE students
-                        SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, no_hp_ortu = :hpo, foto = :f, username = :u
-                        WHERE id = :id');
-                    $stmt->execute([
-                        ':n' => $values['nama_siswa'],
-                        ':k' => $values['kelas'],
-                        ':r' => $values['rombel'],
-                        ':hp' => $values['no_hp'],
-                        ':hpo' => $values['no_hp_ortu'],
-                        ':f' => $fotoPath,
-                        ':u' => $values['username'],
-                        ':id' => $id,
-                    ]);
-                } else {
-                    $stmt = $pdo->prepare('UPDATE students
-                        SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, foto = :f, username = :u
-                        WHERE id = :id');
-                    $stmt->execute([
-                        ':n' => $values['nama_siswa'],
-                        ':k' => $values['kelas'],
-                        ':r' => $values['rombel'],
-                        ':hp' => $values['no_hp'],
-                        ':f' => $fotoPath,
-                        ':u' => $values['username'],
-                        ':id' => $id,
-                    ]);
-                }
-            }
-
-            if (method_exists($pdo, 'inTransaction') && $pdo->inTransaction()) {
-                $pdo->commit();
-            }
-
-            // keep master in sync
-            if ($hasKelasRombelsTable) {
-                try {
-                    $stmt = $pdo->prepare('INSERT IGNORE INTO kelas_rombels (kelas, rombel) VALUES (:k, :r)');
-                    $stmt->execute([':k' => $values['kelas'], ':r' => $values['rombel']]);
-                } catch (Throwable $e) {
-                }
-            }
-
-            // After successful commit: delete old photo if replaced.
-            if ($newUploadedFoto !== '' && $oldFotoPath !== '' && $oldFotoPath !== $newUploadedFoto) {
+            $stmt = $pdo->prepare('UPDATE students SET foto = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+            $stmt->execute([':id' => $id]);
+            if ($oldFotoPath !== '') {
                 siswa_delete_photo($oldFotoPath);
             }
-            header('Location: students.php');
+            header('Location: student_edit.php?id=' . $id . '&success=photo_deleted');
             exit;
         } catch (Throwable $e) {
-            if (method_exists($pdo, 'inTransaction') && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
+            $errors[] = 'Gagal menghapus foto siswa.';
+        }
+    }
 
-            // Rollback file: delete new uploaded photo if DB update failed.
-            if ($newUploadedFoto !== '') {
-                siswa_delete_photo($newUploadedFoto);
-                $fotoPath = $oldFotoPath;
-            }
+    if ($action !== 'delete_photo') {
+        $values['nama_siswa'] = siswa_clean_string($_POST['nama_siswa'] ?? '');
+        $values['kelas'] = siswa_clean_string($_POST['kelas'] ?? '');
+        $values['rombel'] = siswa_clean_string($_POST['rombel'] ?? '');
+        $values['no_hp'] = siswa_clean_phone($_POST['no_hp'] ?? '');
+        $values['no_hp_ortu'] = siswa_clean_phone($_POST['no_hp_ortu'] ?? '');
+        $values['username'] = siswa_clean_string($_POST['username'] ?? '');
+        $password = (string)($_POST['password'] ?? '');
 
-            $isDuplicate = false;
-            if ($e instanceof PDOException) {
-                $info = $e->errorInfo ?? null;
-                if (is_array($info) && isset($info[1]) && (int)$info[1] === 1062) {
-                    $isDuplicate = true;
+        if ($values['nama_siswa'] === '') $errors[] = 'Nama siswa wajib diisi.';
+        if ($values['kelas'] === '') $errors[] = 'Kelas wajib diisi.';
+        if ($values['rombel'] === '') $errors[] = 'Rombel wajib diisi.';
+        if ($values['username'] === '') $errors[] = 'Username wajib diisi.';
+
+        if (!$errors) {
+            if ($hasKelasRombelsTable && $kelasRombelMap) {
+                $ok = isset($kelasRombelMap[$values['kelas']]) && in_array($values['rombel'], $kelasRombelMap[$values['kelas']], true);
+                if (!$ok) {
+                    $errors[] = 'Kelas/Rombel tidak terdaftar. Tambahkan dulu di menu Data Siswa → Rombel.';
                 }
-                if ((string)$e->getCode() === '23000') {
-                    $isDuplicate = true;
-                }
             }
+        }
 
-            $errors[] = $isDuplicate ? 'Username sudah digunakan.' : 'Gagal menyimpan perubahan.';
+        if (!$errors) {
+            try {
+                $stmt = $pdo->prepare('SELECT 1 FROM students WHERE username = :u AND id <> :id LIMIT 1');
+                $stmt->execute([':u' => $values['username'], ':id' => $id]);
+                if ($stmt->fetchColumn()) {
+                    $errors[] = 'Username sudah digunakan.';
+                }
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal memvalidasi username.';
+            }
+        }
+
+        $oldFotoPath = (string)($student['foto'] ?? '');
+        $fotoPath = $oldFotoPath;
+        $newUploadedFoto = '';
+        if (!$errors && !empty($_FILES['foto']) && isset($_FILES['foto']['error']) && (int)$_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+            // Important: do NOT delete old photo before DB update succeeds.
+            [$stored, $err] = siswa_upload_photo($_FILES['foto'], null);
+            if ($err !== '') {
+                $errors[] = $err;
+            } elseif ($stored !== null && $stored !== '') {
+                $newUploadedFoto = (string)$stored;
+                $fotoPath = $newUploadedFoto;
+            }
+        }
+
+        if (!$errors) {
+            try {
+                if (method_exists($pdo, 'beginTransaction')) {
+                    $pdo->beginTransaction();
+                }
+                if ($password !== '') {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    if ($hasParentPhoneColumn) {
+                        $stmt = $pdo->prepare('UPDATE students
+                            SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, no_hp_ortu = :hpo, foto = :f, username = :u, password_hash = :ph
+                            WHERE id = :id');
+                        $stmt->execute([
+                            ':n' => $values['nama_siswa'],
+                            ':k' => $values['kelas'],
+                            ':r' => $values['rombel'],
+                            ':hp' => $values['no_hp'],
+                            ':hpo' => $values['no_hp_ortu'],
+                            ':f' => $fotoPath,
+                            ':u' => $values['username'],
+                            ':ph' => $hash,
+                            ':id' => $id,
+                        ]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE students
+                            SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, foto = :f, username = :u, password_hash = :ph
+                            WHERE id = :id');
+                        $stmt->execute([
+                            ':n' => $values['nama_siswa'],
+                            ':k' => $values['kelas'],
+                            ':r' => $values['rombel'],
+                            ':hp' => $values['no_hp'],
+                            ':f' => $fotoPath,
+                            ':u' => $values['username'],
+                            ':ph' => $hash,
+                            ':id' => $id,
+                        ]);
+                    }
+                } else {
+                    if ($hasParentPhoneColumn) {
+                        $stmt = $pdo->prepare('UPDATE students
+                            SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, no_hp_ortu = :hpo, foto = :f, username = :u
+                            WHERE id = :id');
+                        $stmt->execute([
+                            ':n' => $values['nama_siswa'],
+                            ':k' => $values['kelas'],
+                            ':r' => $values['rombel'],
+                            ':hp' => $values['no_hp'],
+                            ':hpo' => $values['no_hp_ortu'],
+                            ':f' => $fotoPath,
+                            ':u' => $values['username'],
+                            ':id' => $id,
+                        ]);
+                    } else {
+                        $stmt = $pdo->prepare('UPDATE students
+                            SET nama_siswa = :n, kelas = :k, rombel = :r, no_hp = :hp, foto = :f, username = :u
+                            WHERE id = :id');
+                        $stmt->execute([
+                            ':n' => $values['nama_siswa'],
+                            ':k' => $values['kelas'],
+                            ':r' => $values['rombel'],
+                            ':hp' => $values['no_hp'],
+                            ':f' => $fotoPath,
+                            ':u' => $values['username'],
+                            ':id' => $id,
+                        ]);
+                    }
+                }
+
+                if (method_exists($pdo, 'inTransaction') && $pdo->inTransaction()) {
+                    $pdo->commit();
+                }
+
+                // keep master in sync
+                if ($hasKelasRombelsTable) {
+                    try {
+                        $stmt = $pdo->prepare('INSERT IGNORE INTO kelas_rombels (kelas, rombel) VALUES (:k, :r)');
+                        $stmt->execute([':k' => $values['kelas'], ':r' => $values['rombel']]);
+                    } catch (Throwable $e) {
+                    }
+                }
+
+                // After successful commit: delete old photo if replaced.
+                if ($newUploadedFoto !== '' && $oldFotoPath !== '' && $oldFotoPath !== $newUploadedFoto) {
+                    siswa_delete_photo($oldFotoPath);
+                }
+                header('Location: students.php');
+                exit;
+            } catch (Throwable $e) {
+                if (method_exists($pdo, 'inTransaction') && $pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                // Rollback file: delete new uploaded photo if DB update failed.
+                if ($newUploadedFoto !== '') {
+                    siswa_delete_photo($newUploadedFoto);
+                    $fotoPath = $oldFotoPath;
+                }
+
+                $isDuplicate = false;
+                if ($e instanceof PDOException) {
+                    $info = $e->errorInfo ?? null;
+                    if (is_array($info) && isset($info[1]) && (int)$info[1] === 1062) {
+                        $isDuplicate = true;
+                    }
+                    if ((string)$e->getCode() === '23000') {
+                        $isDuplicate = true;
+                    }
+                }
+
+                $errors[] = $isDuplicate ? 'Username sudah digunakan.' : 'Gagal menyimpan perubahan.';
+            }
         }
     }
 }
@@ -252,6 +279,9 @@ include __DIR__ . '/../../includes/header.php';
                 <?php endforeach; ?>
             </ul>
         </div>
+    <?php endif; ?>
+    <?php if ($successMsg !== ''): ?>
+        <div class="alert alert-success"><?php echo htmlspecialchars($successMsg); ?></div>
     <?php endif; ?>
 
     <div class="card shadow-sm">
@@ -319,6 +349,18 @@ include __DIR__ . '/../../includes/header.php';
                             <div class="mt-2">
                                 <img class="img-thumbnail" style="max-width:180px" src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$student['foto'], '/')); ?>" alt="Foto siswa">
                             </div>
+                            <button
+                                type="submit"
+                                name="action"
+                                value="delete_photo"
+                                class="btn btn-outline-danger btn-sm mt-2"
+                                data-swal-confirm
+                                data-swal-title="Hapus foto?"
+                                data-swal-text="Foto profil siswa akan dihapus dari server."
+                                data-swal-confirm-text="Hapus"
+                                data-swal-cancel-text="Batal">
+                                Hapus foto
+                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
