@@ -26,24 +26,14 @@ $dateFrom = trim((string)($_GET['date_from'] ?? ''));
 $dateTo = trim((string)($_GET['date_to'] ?? ''));
 $qRombel = preg_replace('/\s+/', ' ', trim((string)($_GET['rombel'] ?? '')));
 
-if ($dateFrom === '') {
-    $dateFrom = date('Y-m-d');
-}
-if ($dateTo === '') {
-    $dateTo = $dateFrom;
-}
-
 try {
-    $fromObj = new DateTimeImmutable($dateFrom . ' 00:00:00');
-    $toObj = new DateTimeImmutable($dateTo . ' 23:59:59');
+    $fromStr = $dateFrom !== '' ? (new DateTimeImmutable($dateFrom . ' 00:00:00'))->format('Y-m-d H:i:s') : null;
+    $toStr = $dateTo !== '' ? (new DateTimeImmutable($dateTo . ' 23:59:59'))->format('Y-m-d H:i:s') : null;
 } catch (Throwable $e) {
     header('Content-Type: text/plain; charset=utf-8');
     echo "Format tanggal tidak valid.";
     exit;
 }
-
-$fromStr = $fromObj->format('Y-m-d H:i:s');
-$toStr = $toObj->format('Y-m-d H:i:s');
 
 // Subquery fallback jika attendance_record_id kosong tapi siswa punya record dalam rentang window.
 $fallbackStatus = '(SELECT r2.status FROM student_attendance_records r2 WHERE r2.student_id = sws.student_id AND r2.taken_at BETWEEN w.start_at AND w.end_at ORDER BY r2.id DESC LIMIT 1)';
@@ -79,9 +69,18 @@ $sql = 'SELECT sws.id AS ws_id, sws.student_id, sws.status AS ws_status, sws.att
                 GROUP BY window_student_id
             ) r2 ON r2.window_student_id = r1.window_student_id AND r2.max_id = r1.id
         ) latest_cr ON latest_cr.window_student_id = sws.id
-        WHERE w.end_at BETWEEN :from AND :to';
+        WHERE 1=1';
 
-$params = [':from' => $fromStr, ':to' => $toStr];
+$params = [];
+
+if ($fromStr !== null) {
+    $sql .= ' AND w.start_at >= :from';
+    $params[':from'] = $fromStr;
+}
+if ($toStr !== null) {
+    $sql .= ' AND w.end_at <= :to';
+    $params[':to'] = $toStr;
+}
 
 if ($qRombel !== '') {
     $sql .= ' AND CONCAT(TRIM(s.kelas), " ", TRIM(s.rombel)) = :rombel';
