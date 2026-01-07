@@ -42,10 +42,23 @@ $rows = [];
 try {
     $sql = 'SELECT r.id, r.student_id, r.setting_id, r.taken_at, r.lat, r.lng, r.distance_m, r.status, r.photo_path,
                    s.nama_siswa, s.kelas, s.rombel,
-                   st.name AS setting_name, st.radius_m
+                   st.name AS setting_name, st.radius_m,
+                   sws.status AS ws_status, w.end_at AS window_end_at,
+                   latest_cr.status AS cr_status, latest_cr.requested_status AS cr_requested_status
             FROM student_attendance_records r
             JOIN students s ON s.id = r.student_id
             LEFT JOIN student_attendance_settings st ON st.id = r.setting_id
+            LEFT JOIN student_attendance_window_students sws ON sws.attendance_record_id = r.id
+            LEFT JOIN student_attendance_windows w ON w.id = sws.window_id
+            LEFT JOIN (
+                SELECT r1.*
+                FROM student_attendance_change_requests r1
+                JOIN (
+                    SELECT window_student_id, MAX(id) AS max_id
+                    FROM student_attendance_change_requests
+                    GROUP BY window_student_id
+                ) r2 ON r2.window_student_id = r1.window_student_id AND r2.max_id = r1.id
+            ) latest_cr ON latest_cr.window_student_id = sws.id
             WHERE 1=1';
 
     $params = [];
@@ -154,7 +167,7 @@ include __DIR__ . '/../../includes/header.php';
                             <th style="width:140px">Kelas</th>
                             <th style="width:160px">Titik Absen</th>
                             <th style="width:140px">Jarak / Radius</th>
-                            <th style="width:130px">Status</th>
+                            <th style="width:160px">Status</th>
                             <th style="width:90px">Foto</th>
                         </tr>
                     </thead>
@@ -177,6 +190,57 @@ include __DIR__ . '/../../includes/header.php';
                                     $photoUrl = rtrim((string)$base_url, '/') . '/' . ltrim($photoPath, '/');
                                 }
                                 $noPhotoUrl = rtrim((string)$base_url, '/') . '/assets/img/no-photo.png';
+
+                                // Hitung status efektif berdasarkan window + ajuan
+                                $wsStatus = (string)($r['ws_status'] ?? '');
+                                $recordStatus = (string)($r['status'] ?? '');
+                                $crStatus = (string)($r['cr_status'] ?? '');
+                                $crRequested = (string)($r['cr_requested_status'] ?? '');
+                                $windowEnd = null;
+                                try {
+                                    $windowEnd = $r['window_end_at'] ? new DateTimeImmutable((string)$r['window_end_at']) : null;
+                                } catch (Throwable $e) {
+                                    $windowEnd = null;
+                                }
+
+                                $effectiveLabel = '';
+                                $badgeClass = '';
+                                $notes = '';
+
+                                // Status perubahan (ajuan) jika ada
+                                if ($crStatus !== '') {
+                                    $notes = 'Ajuan: ' . $crStatus;
+                                    if ($crRequested !== '') {
+                                        $notes .= ' (' . $crRequested . ')';
+                                    }
+                                }
+
+                                if ($wsStatus === 'sakit') {
+                                    $effectiveLabel = 'Sakit (S)';
+                                    $badgeClass = 'text-bg-info';
+                                } elseif ($wsStatus === 'izin') {
+                                    $effectiveLabel = 'Izin (I)';
+                                    $badgeClass = 'text-bg-primary';
+                                } elseif ($wsStatus === 'dispen') {
+                                    $effectiveLabel = 'Dispen (D)';
+                                    $badgeClass = 'text-bg-secondary';
+                                } elseif ($wsStatus === 'present' || $recordStatus === 'accepted') {
+                                    $effectiveLabel = 'Hadir';
+                                    $badgeClass = 'text-bg-success';
+                                } elseif ($windowEnd && $windowEnd < new DateTimeImmutable('now')) {
+                                    // Window sudah berakhir, belum ada status hadir/izin/sakit/dispen
+                                    $effectiveLabel = 'Alpha (A)';
+                                    $badgeClass = 'text-bg-danger';
+                                } else {
+                                    // Pending / belum selesai
+                                    if ($recordStatus === 'rejected') {
+                                        $effectiveLabel = 'Ditolak';
+                                        $badgeClass = 'text-bg-warning text-dark';
+                                    } else {
+                                        $effectiveLabel = 'Belum ditentukan';
+                                        $badgeClass = 'text-bg-secondary';
+                                    }
+                                }
                             ?>
                             <tr>
                                 <td>
@@ -199,11 +263,12 @@ include __DIR__ . '/../../includes/header.php';
                                     <div class="small"><?php echo htmlspecialchars((string)$distance); ?> m / <?php echo htmlspecialchars((string)$radius); ?> m</div>
                                 </td>
                                 <td>
-                                    <?php if ((string)($r['status'] ?? '') === 'accepted'): ?>
-                                        <span class="badge text-bg-success">Hadir</span>
-                                    <?php else: ?>
-                                        <span class="badge text-bg-warning text-dark">Ditolak</span>
-                                    <?php endif; ?>
+                                    <div class="d-flex flex-column gap-1">
+                                        <span class="badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($effectiveLabel); ?></span>
+                                        <?php if ($notes !== ''): ?>
+                                            <div class="small text-muted"><?php echo htmlspecialchars($notes); ?></div>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td>
                                     <button
