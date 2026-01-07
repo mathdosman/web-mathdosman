@@ -302,9 +302,9 @@ include __DIR__ . '/../../includes/header.php';
                                             <div class="d-grid gap-1" style="grid-template-columns: repeat(2, minmax(0, auto));">
                                                 <?php if ($viewUrl !== ''): ?>
                                                     <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($viewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
-                                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>
-                                                            <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                                                            <circle cx="12" cy="12" r="3"></circle>
                                                         </svg>
                                                         <span class="visually-hidden">Lihat Paket</span>
                                                     </a>
