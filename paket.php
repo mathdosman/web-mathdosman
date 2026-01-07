@@ -8,6 +8,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
 
+$isPreview = $isAdmin && ((string)($_GET['preview'] ?? '')) === '1';
+
 // Admin boleh memaksa tampil jawaban via URL (?show_answers=1)
 // Publik tidak bisa memaksa (ditentukan dari izin paket di DB).
 $requestedShowAnswers = ((string)($_GET['show_answers'] ?? '')) === '1';
@@ -37,10 +39,15 @@ try {
         LEFT JOIN subjects s ON s.id = p.subject_id
         WHERE p.code = :c';
 
-    $sql = $sqlWithIntro;
-    // Halaman publik: selalu tampilkan yang published saja.
-    $sql .= ' AND p.status = "published"';
-    $sql .= ' LIMIT 1';
+    if ($isPreview) {
+        // Admin preview: izinkan draft & exam.
+        $sql = $sqlWithIntro . ' LIMIT 1';
+    } else {
+        $sql = $sqlWithIntro;
+        // Halaman publik: selalu tampilkan yang published saja.
+        $sql .= ' AND p.status = "published"';
+        $sql .= ' LIMIT 1';
+    }
 
     try {
         $stmt = $pdo->prepare($sql);
@@ -48,10 +55,14 @@ try {
         $package = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Throwable $e) {
         // Backward compatible: older DB may not have intro_content_id.
-        $sql = $sqlBase;
-        // Halaman publik: selalu tampilkan yang published saja.
-        $sql .= ' AND p.status = "published"';
-        $sql .= ' LIMIT 1';
+        if ($isPreview) {
+            $sql = $sqlBase . ' LIMIT 1';
+        } else {
+            $sql = $sqlBase;
+            // Halaman publik: selalu tampilkan yang published saja.
+            $sql .= ' AND p.status = "published"';
+            $sql .= ' LIMIT 1';
+        }
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':c' => $code]);
         $package = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -79,7 +90,7 @@ if (!$package) {
 }
 
 // If this package is used as an exam (ujian), do not show it on public pages.
-if (!$isAdmin) {
+if (!$isAdmin && !$isPreview) {
     try {
         // Explicit exam package flag.
         try {
