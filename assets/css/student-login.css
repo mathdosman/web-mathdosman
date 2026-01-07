@@ -101,6 +101,12 @@ body.student-login-page .password-wrapper input {
     padding-right: 120px;
 }
 
+/* Hilangkan ikon bawaan (Edge/IE) agar tidak dobel dengan toggle custom */
+body.student-login-page input[type="password"]::-ms-reveal,
+body.student-login-page input[type="password"]::-ms-clear {
+    display: none;
+}
+
 body.student-login-page .toggle-password {
     position: absolute;
     right: 12px;
