@@ -376,6 +376,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($input !== $tokenCode) {
                 $actionError = 'Token salah.';
             } else {
+                // Start exam timer on first successful token entry to prevent delays.
+                if ($isExamAssignment && $assignment && !$isLocked) {
+                    $durInt = (int)($assignment['duration_minutes'] ?? 0);
+                    $statusNow = (string)($assignment['status'] ?? 'assigned');
+                    $startedNow = trim((string)($assignment['started_at'] ?? ''));
+                    if ($statusNow !== 'done' && $durInt > 0 && $startedNow === '') {
+                        try {
+                            $stmt = $pdo->prepare('UPDATE student_assignments
+                                SET started_at = NOW(), updated_at = NOW()
+                                WHERE id = :id AND student_id = :sid AND (started_at IS NULL OR started_at = "")');
+                            $stmt->execute([':id' => $id, ':sid' => $studentId]);
+                        } catch (Throwable $e) {
+                            // best-effort; fallback to start button if this fails.
+                        }
+                    }
+                }
+
                 if (!isset($_SESSION['assignment_token_ok']) || !is_array($_SESSION['assignment_token_ok'])) {
                     $_SESSION['assignment_token_ok'] = [];
                 }
@@ -847,6 +864,21 @@ include __DIR__ . '/../includes/header.php';
             $startedNow = trim((string)($assignment['started_at'] ?? ''));
 
             $requiresStart = ($jenisNow === 'ujian' && $statusNow !== 'done' && $durNowInt > 0);
+
+            // Auto-start exam timer as soon as token sudah benar, supaya countdown jalan sejak token dimasukkan.
+            if ($requiresStart && $startedNow === '' && $isExamAssignment && $tokenOk && !$isLocked) {
+                try {
+                    $stmt = $pdo->prepare('UPDATE student_assignments
+                        SET started_at = NOW(), updated_at = NOW()
+                        WHERE id = :id AND student_id = :sid AND (started_at IS NULL OR started_at = "")');
+                    $stmt->execute([':id' => $id, ':sid' => $studentId]);
+
+                    $startedNow = date('Y-m-d H:i:s');
+                    $startedAtTs = time();
+                } catch (Throwable $e) {
+                    // best-effort; fallback ke tombol Mulai jika gagal
+                }
+            }
         ?>
 
         <?php if ($requiresStart && $startedNow === ''): ?>

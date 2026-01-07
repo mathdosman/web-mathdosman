@@ -53,6 +53,11 @@ $useSidebar = $useAdminSidebar || $useStudentSidebar;
 
 $disable_navbar = !empty($disable_navbar);
 
+// Navbar burger (top-right) only needed when there is something inside the collapse
+// (public menu or admin account dropdown). This prevents a useless second burger
+// on student pages that already use the left sidebar toggle.
+$has_navbar_menu = (!$useSidebar) || !empty($_SESSION['user']);
+
 $use_print_soal_css = !empty($use_print_soal_css);
 $body_class = isset($body_class) && is_string($body_class) ? trim($body_class) : '';
 
@@ -326,10 +331,12 @@ try {
             </span>
             <span class="brand-name">MATHDOSMAN</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <?php if ($has_navbar_menu): ?>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        <?php endif; ?>
+        <div class="<?php echo $has_navbar_menu ? 'collapse navbar-collapse' : 'navbar-collapse'; ?>" id="navbarNav">
             <?php if (!$useSidebar): ?>
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
