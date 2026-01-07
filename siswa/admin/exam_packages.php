@@ -260,13 +260,13 @@ include __DIR__ . '/../../includes/header.php';
                 <div class="alert alert-info mb-0">Belum ada paket yang dipilih.</div>
             <?php else: ?>
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover table-compact align-middle">
+                    <table class="table table-striped table-hover table-compact align-middle packages-table">
                         <thead>
                             <tr>
                                 <th>Nama Paket</th>
                                 <th style="width:220px">Kelas</th>
                                 <th style="width:120px">Status</th>
-                                <th style="width:220px" class="text-end">Aksi</th>
+                                <th style="width:220px" class="text-end packages-col-actions">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -297,9 +297,9 @@ include __DIR__ . '/../../includes/header.php';
                                             <?php echo (int)($p['draft_count'] ?? 0); ?>
                                         </span>
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end packages-col-actions">
                                         <div class="d-flex justify-content-end">
-                                            <div class="admin-actions-grid">
+                                            <div class="packages-actions">
                                                 <?php if ($viewUrl !== ''): ?>
                                                     <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($viewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
