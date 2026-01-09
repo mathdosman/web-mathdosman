@@ -341,6 +341,7 @@ include __DIR__ . '/../includes/header.php';
                                 <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Lihat Hasil Tugas / Ujian</a>
                             </div>
                         <?php else: ?>
+                            <?php $renderedAssignmentCount = 0; ?>
                             <div class="vstack gap-2">
                                 <?php foreach ($assignments as $idx => $a): ?>
                                 <?php
@@ -391,6 +392,8 @@ include __DIR__ . '/../includes/header.php';
                                     if ($jenisRaw === 'ujian' && $status !== 'done' && $isLocked) {
                                         continue;
                                     }
+
+                                    $renderedAssignmentCount++;
 
                                     $btnLabel = 'Buka';
                                     if ($jenisRaw === 'ujian' && $durationMinutes !== null && $startedAt === '' && $status !== 'done') {
@@ -507,6 +510,10 @@ include __DIR__ . '/../includes/header.php';
                                 </div>
                             <?php endforeach; ?>
                             </div>
+
+                            <?php if ($renderedAssignmentCount === 0): ?>
+                                <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada tugas/ujian yang dijadwalkan saat ini.</div>
+                            <?php endif; ?>
                             <div class="mt-3 d-flex flex-wrap gap-2 small">
                                 <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Lihat Hasil Tugas / Ujian</a>
                             </div>
