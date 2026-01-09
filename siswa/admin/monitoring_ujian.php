@@ -9,12 +9,19 @@ $errors = [];
 $successMsg = '';
 
 $qNama = trim((string)($_GET['nama'] ?? ''));
+$tab = strtolower(trim((string)($_GET['tab'] ?? 'ujian')));
+if ($tab !== 'tugas') {
+    $tab = 'ujian';
+}
 
 function build_monitoring_ujian_return_url(array $get, bool $withSuccess = false): string
 {
     $qp = [];
     if (!empty($get['nama'])) {
         $qp['nama'] = (string)$get['nama'];
+    }
+    if (!empty($get['tab'])) {
+        $qp['tab'] = (string)$get['tab'];
     }
     if ($withSuccess) {
         $qp['success'] = '1';
@@ -46,6 +53,56 @@ $hasCorrectCount = !empty($cols['correct_count']);
 $hasTotalCount = !empty($cols['total_count']);
 $hasScore = !empty($cols['score']);
 $hasGradedAt = !empty($cols['graded_at']);
+
+$serverNowTs = null;
+try {
+    $rsNow = $pdo->query('SELECT UNIX_TIMESTAMP(NOW()) AS ts');
+    $serverNowTs = $rsNow ? (int)($rsNow->fetchColumn() ?? 0) : 0;
+    if ($serverNowTs <= 0) {
+        $serverNowTs = null;
+    }
+} catch (Throwable $eNow) {
+    $serverNowTs = null;
+}
+if ($serverNowTs === null) {
+    $serverNowTs = time();
+}
+
+$isExamTimeExpired = static function (?string $dueRaw, ?string $startedRaw, ?int $durationMinutes, int $nowTs): bool {
+    $dueRaw = trim((string)($dueRaw ?? ''));
+    $startedRaw = trim((string)($startedRaw ?? ''));
+
+    $dueTs = null;
+    if ($dueRaw !== '') {
+        $t = strtotime($dueRaw);
+        if ($t !== false) {
+            $dueTs = $t;
+        }
+    }
+
+    $startTs = null;
+    if ($startedRaw !== '') {
+        $t = strtotime($startedRaw);
+        if ($t !== false) {
+            $startTs = $t;
+        }
+    }
+
+    $candidates = [];
+    if ($dueTs !== null) {
+        $candidates[] = $dueTs;
+    }
+    if ($startTs !== null && $durationMinutes !== null && $durationMinutes > 0) {
+        $candidates[] = $startTs + ($durationMinutes * 60);
+    }
+
+    if (!$candidates) {
+        return false;
+    }
+
+    $endTs = min($candidates);
+    return $nowTs >= $endTs;
+};
 
 $normalizeList = static function (string $s, string $sep = ','): array {
     $parts = array_map('trim', explode($sep, (string)$s));
@@ -108,6 +165,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($hasRevoked) {
                     $sqlSel .= ', exam_revoked_at';
                 }
+                if ($hasStartedAt) {
+                    $sqlSel .= ', started_at';
+                }
+                if ($hasDuration) {
+                    $sqlSel .= ', duration_minutes';
+                }
+                if ($hasDueAt) {
+                    $sqlSel .= ', due_at';
+                }
                 $sqlSel .= ' FROM student_assignments WHERE id IN (' . $placeholders . ')';
                 $stmtSel = $pdo->prepare($sqlSel);
                 $stmtSel->execute($ids);
@@ -160,6 +226,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
+                    // Jika waktu ujian sudah habis, reset tidak berlaku.
+                    $dueRaw = $hasDueAt ? (string)($t['due_at'] ?? '') : '';
+                    $startedRaw = $hasStartedAt ? (string)($t['started_at'] ?? '') : '';
+                    $durMin = $hasDuration ? (int)($t['duration_minutes'] ?? 0) : 0;
+                    if ($isExamTimeExpired($dueRaw, $startedRaw, $durMin > 0 ? $durMin : null, $serverNowTs)) {
+                        continue;
+                    }
+
                     if ($stmtDelAns) {
                         try {
                             $stmtDelAns->execute([':aid' => $aid, ':sid' => $sid]);
@@ -172,13 +246,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $countDone++;
                 }
 
+                if ($countDone <= 0) {
+                    throw new RuntimeException('no_eligible');
+                }
+
                 $pdo->commit();
 
                 header('Location: ' . build_monitoring_ujian_return_url($_GET, true));
                 exit;
             } catch (Throwable $e) {
                 try { $pdo->rollBack(); } catch (Throwable $e2) {}
-                $errors[] = 'Gagal reset massal.';
+                if ($e instanceof RuntimeException && $e->getMessage() === 'no_eligible') {
+                    $errors[] = 'Tidak ada ujian yang bisa di-reset (waktu sudah habis atau belum terkunci).';
+                } else {
+                    $errors[] = 'Gagal reset massal.';
+                }
             }
         }
     }
@@ -201,9 +283,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $jenis = strtolower(trim((string)($as['jenis'] ?? '')));
                 $status = strtolower(trim((string)($as['status'] ?? 'assigned')));
                 $packageId = (int)($as['package_id'] ?? 0);
-                if ($jenis !== 'ujian') {
-                    throw new RuntimeException('Bukan ujian');
-                }
                 if ($status === 'done') {
                     // Already finished; treat as success.
                     $pdo->commit();
@@ -363,6 +442,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($hasRevoked) {
                     $sqlSel .= ', exam_revoked_at';
                 }
+                if ($hasStartedAt) {
+                    $sqlSel .= ', started_at';
+                }
+                if ($hasDuration) {
+                    $sqlSel .= ', duration_minutes';
+                }
+                if ($hasDueAt) {
+                    $sqlSel .= ', due_at';
+                }
                 $sqlSel .= ' FROM student_assignments WHERE id = :id AND student_id = :sid LIMIT 1';
                 $stmt = $pdo->prepare($sqlSel);
                 $stmt->execute([':id' => $assignmentId, ':sid' => $studentId]);
@@ -388,6 +476,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: ' . build_monitoring_ujian_return_url($_GET, true));
                     exit;
                 }
+
+                // Jika waktu ujian sudah habis, reset tidak ditampilkan/dinonaktifkan.
+                $dueRaw = $hasDueAt ? (string)($as['due_at'] ?? '') : '';
+                $startedRaw = $hasStartedAt ? (string)($as['started_at'] ?? '') : '';
+                $durMin = $hasDuration ? (int)($as['duration_minutes'] ?? 0) : 0;
+                if ($isExamTimeExpired($dueRaw, $startedRaw, $durMin > 0 ? $durMin : null, $serverNowTs)) {
+                    try { $pdo->rollBack(); } catch (Throwable $e2) {}
+                    $errors[] = 'Waktu ujian sudah habis. Reset tidak tersedia.';
+                } else {
 
                 try {
                     $stmtDel = $pdo->prepare('DELETE FROM student_assignment_answers WHERE assignment_id = :aid AND student_id = :sid');
@@ -422,6 +519,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->commit();
                 header('Location: ' . build_monitoring_ujian_return_url($_GET, true));
                 exit;
+                }
             } catch (Throwable $e) {
                 try { $pdo->rollBack(); } catch (Throwable $e2) {}
                 $errors[] = 'Gagal reset ujian.';
@@ -450,18 +548,25 @@ try {
     $select .= ' FROM student_assignments sa
         JOIN students s ON s.id = sa.student_id
         JOIN packages p ON p.id = sa.package_id
-        WHERE sa.jenis = "ujian" AND (sa.status IS NULL OR sa.status <> "done")';
+        WHERE sa.jenis = :jenis AND (sa.status IS NULL OR sa.status <> "done")';
 
-    $params = [];
+    $params = [
+        ':jenis' => ($tab === 'tugas' ? 'tugas' : 'ujian'),
+    ];
 
     if ($qNama !== '') {
         $select .= ' AND s.nama_siswa LIKE :nama';
         $params[':nama'] = '%' . $qNama . '%';
     }
 
-    // Only show students who are currently taking the exam.
-    if ($hasStartedAt) {
+    // Only show students who are currently taking the exam / have started the task.
+    if ($tab === 'ujian' && $hasStartedAt) {
         $select .= ' AND sa.started_at IS NOT NULL';
+    } elseif ($tab === 'tugas') {
+        $select .= ' AND EXISTS (
+            SELECT 1 FROM student_assignment_answers aa
+            WHERE aa.assignment_id = sa.id AND aa.student_id = sa.student_id
+        )';
     }
 
     if ($hasRevoked) {
@@ -482,14 +587,70 @@ try {
     $errors[] = 'Gagal memuat data monitoring. Pastikan tabel student_assignments ada.';
 }
 
+$tokenSummary = [
+    'token_distinct' => 0,
+    'token_max' => '',
+];
+if ($hasToken) {
+    try {
+        $sql = 'SELECT COUNT(DISTINCT sa.token_code) AS token_distinct, MAX(sa.token_code) AS token_max
+            FROM student_assignments sa
+            JOIN students s ON s.id = sa.student_id
+            WHERE sa.jenis = :jenis AND (sa.status IS NULL OR sa.status <> "done")
+              AND sa.token_code IS NOT NULL AND sa.token_code <> ""';
+
+        $params = [
+            ':jenis' => ($tab === 'tugas' ? 'tugas' : 'ujian'),
+        ];
+
+        if ($qNama !== '') {
+            $sql .= ' AND s.nama_siswa LIKE :nama';
+            $params[':nama'] = '%' . $qNama . '%';
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        $tokenSummary['token_distinct'] = (int)($row['token_distinct'] ?? 0);
+        $tokenSummary['token_max'] = trim((string)($row['token_max'] ?? ''));
+    } catch (Throwable $e) {
+        $tokenSummary = [
+            'token_distinct' => 0,
+            'token_max' => '',
+        ];
+    }
+}
+
+$hasEligibleBulkReset = false;
+if ($tab === 'ujian' && $rows && $hasRevoked) {
+    foreach ($rows as $r) {
+        $examRevokedAtRow = trim((string)($r['exam_revoked_at'] ?? ''));
+        if ($examRevokedAtRow === '') continue;
+
+        $dueRaw = $hasDueAt ? (string)($r['due_at'] ?? '') : '';
+        $startedRaw = $hasStartedAt ? (string)($r['started_at'] ?? '') : '';
+        $durMin = $hasDuration ? (int)($r['duration_minutes'] ?? 0) : 0;
+        if ($isExamTimeExpired($dueRaw, $startedRaw, $durMin > 0 ? $durMin : null, $serverNowTs)) {
+            continue;
+        }
+        $hasEligibleBulkReset = true;
+        break;
+    }
+}
+
 $page_title = 'Monitoring Ujian';
 include __DIR__ . '/../../includes/header.php';
 ?>
 <div class="admin-page">
     <div class="admin-page-header">
         <div>
-            <h4 class="admin-page-title">Monitoring Ujian</h4>
-            <p class="admin-page-subtitle">Pantau ujian berjalan dan lakukan reset jika siswa keluar dari halaman ujian.</p>
+            <h4 class="admin-page-title"><?php echo $tab === 'tugas' ? 'Monitoring Tugas' : 'Monitoring Ujian'; ?></h4>
+            <?php if ($tab === 'tugas'): ?>
+                <p class="admin-page-subtitle">Pantau tugas siswa (terutama yang melewati batas waktu) dan paksa selesai jika diperlukan.</p>
+            <?php else: ?>
+                <p class="admin-page-subtitle">Pantau ujian berjalan dan lakukan reset jika siswa keluar dari halaman ujian.</p>
+            <?php endif; ?>
         </div>
         <div class="admin-page-actions">
             <a class="btn btn-outline-secondary" href="assignments.php">Penugasan</a>
@@ -512,7 +673,17 @@ include __DIR__ . '/../../includes/header.php';
 
     <div class="card shadow-sm">
         <div class="card-body">
+            <ul class="nav nav-pills mb-3">
+                <li class="nav-item">
+                    <a class="nav-link <?php echo $tab === 'ujian' ? 'active' : ''; ?>" href="monitoring_ujian.php?tab=ujian<?php echo $qNama !== '' ? '&amp;nama=' . urlencode($qNama) : ''; ?>">Ujian</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <?php echo $tab === 'tugas' ? 'active' : ''; ?>" href="monitoring_ujian.php?tab=tugas<?php echo $qNama !== '' ? '&amp;nama=' . urlencode($qNama) : ''; ?>">Tugas</a>
+                </li>
+            </ul>
+
             <form method="get" class="row g-2 align-items-end mb-3">
+                <input type="hidden" name="tab" value="<?php echo htmlspecialchars($tab); ?>">
                 <div class="col-12 col-md-8">
                     <label class="form-label">Filter Nama Siswa</label>
                     <input type="text" name="nama" class="form-control" value="<?php echo htmlspecialchars($qNama); ?>" placeholder="Ketik nama (contoh: Andi)">
@@ -522,101 +693,181 @@ include __DIR__ . '/../../includes/header.php';
                     <button type="submit" class="btn btn-primary w-100">Cari</button>
                 </div>
             </form>
+            <?php if ($tab === 'ujian' && $hasEligibleBulkReset): ?>
+                <form id="bulkResetForm" method="post" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center mb-3" data-swal-confirm data-swal-title="Reset terpilih?" data-swal-text="Reset semua ujian yang dipilih? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                    <input type="hidden" name="action" value="reset_exam_bulk">
+                    <button type="submit" class="btn btn-outline-danger">Reset Terpilih</button>
+                    <div class="form-text text-muted m-0">Centang beberapa siswa lalu klik Reset Terpilih.</div>
+                </form>
+            <?php endif; ?>
 
-            <form id="bulkResetForm" method="post" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center mb-3" data-swal-confirm data-swal-title="Reset terpilih?" data-swal-text="Reset semua ujian yang dipilih? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                <input type="hidden" name="action" value="reset_exam_bulk">
-                <button type="submit" class="btn btn-outline-danger">Reset Terpilih</button>
-                <div class="form-text text-muted m-0">Centang beberapa siswa lalu klik Reset Terpilih.</div>
-            </form>
+            <div class="alert alert-info py-2 mb-2" data-no-swal="1">
+                <div class="fw-semibold">Token</div>
+                <?php if (!$hasToken): ?>
+                    <div class="text-muted">Token belum tersedia (kolom <code>student_assignments.token_code</code> belum ada). Jalankan <code>php scripts/migrate_db.php</code>.</div>
+                <?php elseif ((int)($tokenSummary['token_distinct'] ?? 0) <= 0 || trim((string)($tokenSummary['token_max'] ?? '')) === ''): ?>
+                    <div class="text-muted">Belum ada token untuk ditampilkan.</div>
+                <?php else: ?>
+                    <?php
+                    $tokenDistinct = (int)($tokenSummary['token_distinct'] ?? 0);
+                    $tokenMax = trim((string)($tokenSummary['token_max'] ?? ''));
+                    ?>
+                    <div class="mt-1">
+                        <span class="badge text-bg-light border text-dark font-monospace" title="Token (ringkas)"><?php echo htmlspecialchars($tokenMax); ?></span>
+                    </div>
+                    <?php if ($tokenDistinct > 1): ?>
+                        <div class="form-text text-muted m-0">Ada <?php echo (int)$tokenDistinct; ?> token aktif; yang ditampilkan salah satu.</div>
+                    <?php else: ?>
+                        <div class="form-text text-muted m-0">Token aktif untuk <?php echo $tab === 'tugas' ? 'tugas' : 'ujian'; ?>.</div>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+
             <div class="table-responsive">
-                <table class="table table-striped table-hover table-compact align-middle">
-                    <thead>
-                        <tr>
-                            <th style="width:44px">Pilih</th>
-                            <th style="width:64px">No</th>
-                            <th>Nama Siswa</th>
-                            <th>Judul Paket</th>
-                            <?php if ($hasFocusSeconds): ?>
-                                <th style="width:110px">Aktif (menit)</th>
-                            <?php endif; ?>
-                            <?php if ($hasResetCount): ?>
-                                <th style="width:80px">Reset</th>
-                            <?php endif; ?>
-                            <th style="width:170px">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!$rows): ?>
-                            <tr><td colspan="<?php echo 5 + ($hasFocusSeconds ? 1 : 0) + ($hasResetCount ? 1 : 0); ?>" class="text-center text-muted">Belum ada ujian berjalan.</td></tr>
-                        <?php endif; ?>
-                        <?php $no = 0; foreach ($rows as $r): $no++; ?>
-                            <?php
-                            $examRevokedAtRow = '';
-                            $isLocked = false;
-                            if ($hasRevoked) {
-                                $examRevokedAtRow = trim((string)($r['exam_revoked_at'] ?? ''));
-                                $isLocked = ($examRevokedAtRow !== '');
-                            }
-                            ?>
+                <?php if ($tab === 'ujian'): ?>
+                    <table class="table table-striped table-hover table-compact align-middle">
+                        <thead>
                             <tr>
-                                <td>
-                                    <?php if ($isLocked): ?>
-                                        <input class="form-check-input" type="checkbox" name="assignment_ids[]" value="<?php echo (int)$r['assignment_id']; ?>" form="bulkResetForm" aria-label="Pilih untuk reset massal">
-                                    <?php else: ?>
-                                        <span class="text-muted" title="Reset hanya untuk ujian yang terkunci">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-muted"><?php echo $no; ?></td>
-                                <td>
-                                    <?php echo htmlspecialchars((string)($r['nama_siswa'] ?? '')); ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars((string)($r['package_name'] ?? '')); ?>
-                                </td>
+                                <th style="width:44px">Pilih</th>
+                                <th style="width:64px">No</th>
+                                <th>Nama Siswa</th>
+                                <th>Judul Paket</th>
                                 <?php if ($hasFocusSeconds): ?>
-                                    <td>
-                                        <?php
-                                        $sec = (int)($r['exam_focus_seconds'] ?? 0);
-                                        if ($sec < 0) $sec = 0;
-                                        $minutes = $sec / 60;
-                                        ?>
-                                        <span class="text-muted"><?php echo number_format($minutes, 1); ?></span>
-                                    </td>
+                                    <th style="width:110px">Aktif (menit)</th>
                                 <?php endif; ?>
                                 <?php if ($hasResetCount): ?>
-                                    <td>
-                                        <?php $rc = (int)($r['exam_reset_count'] ?? 0); ?>
-                                        <span class="badge text-bg-light border text-dark"><?php echo $rc; ?>x</span>
-                                    </td>
+                                    <th style="width:80px">Reset</th>
                                 <?php endif; ?>
-                                <td>
-                                    <form method="post" class="d-inline" data-swal-confirm data-swal-title="Akhiri ujian?" data-swal-text="Paksa akhiri ujian ini? Ujian akan ditandai selesai. Nilai dihitung dari jawaban yang tersimpan." data-swal-confirm-text="Akhiri" data-swal-cancel-text="Batal" data-swal-require-check="1" data-swal-check-text="Saya yakin ingin mengakhiri ujian ini." data-swal-check-error="Centang dulu sebelum mengakhiri ujian.">
-                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                                        <input type="hidden" name="action" value="force_finish_exam">
-                                        <input type="hidden" name="assignment_id" value="<?php echo (int)$r['assignment_id']; ?>">
-                                        <input type="hidden" name="student_id" value="<?php echo (int)$r['student_id']; ?>">
-                                        <button type="submit" class="btn btn-outline-secondary btn-sm" title="Akhiri ujian" aria-label="Akhiri ujian">
-                                            <span aria-hidden="true">&#9632;</span>
-                                        </button>
-                                    </form>
-                                    <?php if ($isLocked): ?>
-                                        <span class="mx-1"></span>
-                                        <form method="post" class="d-inline" data-swal-confirm data-swal-title="Reset?" data-swal-text="Reset ujian ini? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
+                                <th style="width:170px">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!$rows): ?>
+                                <tr><td colspan="<?php echo 5 + ($hasFocusSeconds ? 1 : 0) + ($hasResetCount ? 1 : 0); ?>" class="text-center text-muted">Belum ada ujian berjalan.</td></tr>
+                            <?php endif; ?>
+                            <?php $no = 0; foreach ($rows as $r): $no++; ?>
+                                <?php
+                                $examRevokedAtRow = '';
+                                $isLocked = false;
+                                if ($hasRevoked) {
+                                    $examRevokedAtRow = trim((string)($r['exam_revoked_at'] ?? ''));
+                                    $isLocked = ($examRevokedAtRow !== '');
+                                }
+
+                                $dueRaw = $hasDueAt ? (string)($r['due_at'] ?? '') : '';
+                                $startedRaw = $hasStartedAt ? (string)($r['started_at'] ?? '') : '';
+                                $durMin = $hasDuration ? (int)($r['duration_minutes'] ?? 0) : 0;
+                                $timeExpired = $isExamTimeExpired($dueRaw, $startedRaw, $durMin > 0 ? $durMin : null, $serverNowTs);
+
+                                $canReset = ($isLocked && !$timeExpired);
+                                ?>
+                                <tr>
+                                    <td>
+                                        <?php if ($canReset): ?>
+                                            <input class="form-check-input" type="checkbox" name="assignment_ids[]" value="<?php echo (int)$r['assignment_id']; ?>" form="bulkResetForm" aria-label="Pilih untuk reset massal">
+                                        <?php else: ?>
+                                            <span class="text-muted" title="<?php echo $isLocked && $timeExpired ? 'Waktu ujian sudah habis; reset dinonaktifkan' : 'Reset hanya untuk ujian yang terkunci'; ?>">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-muted"><?php echo $no; ?></td>
+                                    <td>
+                                        <?php echo htmlspecialchars((string)($r['nama_siswa'] ?? '')); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo htmlspecialchars((string)($r['package_name'] ?? '')); ?>
+                                    </td>
+                                    <?php if ($hasFocusSeconds): ?>
+                                        <td>
+                                            <?php
+                                            $sec = (int)($r['exam_focus_seconds'] ?? 0);
+                                            if ($sec < 0) $sec = 0;
+                                            $minutes = $sec / 60;
+                                            ?>
+                                            <span class="text-muted"><?php echo number_format($minutes, 1); ?></span>
+                                        </td>
+                                    <?php endif; ?>
+                                    <?php if ($hasResetCount): ?>
+                                        <td>
+                                            <?php $rc = (int)($r['exam_reset_count'] ?? 0); ?>
+                                            <span class="badge text-bg-light border text-dark"><?php echo $rc; ?>x</span>
+                                        </td>
+                                    <?php endif; ?>
+                                    <td>
+                                        <form method="post" class="d-inline" data-swal-confirm data-swal-title="Akhiri ujian?" data-swal-text="Paksa akhiri ujian ini? Ujian akan ditandai selesai. Nilai dihitung dari jawaban yang tersimpan." data-swal-confirm-text="Akhiri" data-swal-cancel-text="Batal" data-swal-require-check="1" data-swal-check-text="Saya yakin ingin mengakhiri ujian ini." data-swal-check-error="Centang dulu sebelum mengakhiri ujian.">
                                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                                            <input type="hidden" name="action" value="reset_exam">
+                                            <input type="hidden" name="action" value="force_finish_exam">
                                             <input type="hidden" name="assignment_id" value="<?php echo (int)$r['assignment_id']; ?>">
                                             <input type="hidden" name="student_id" value="<?php echo (int)$r['student_id']; ?>">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">Reset</button>
+                                            <button type="submit" class="btn <?php echo $timeExpired ? 'btn-outline-danger' : 'btn-outline-secondary'; ?> btn-sm" title="<?php echo $timeExpired ? 'Waktu habis: paksa akhiri ujian' : 'Akhiri ujian'; ?>" aria-label="Akhiri ujian">
+                                                <span aria-hidden="true">&#9632;</span>
+                                            </button>
                                         </form>
-                                    <?php endif; ?>
-                                </td>
+                                        <?php if ($canReset): ?>
+                                            <span class="mx-1"></span>
+                                            <form method="post" class="d-inline" data-swal-confirm data-swal-title="Reset?" data-swal-text="Reset ujian ini? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="action" value="reset_exam">
+                                                <input type="hidden" name="assignment_id" value="<?php echo (int)$r['assignment_id']; ?>">
+                                                <input type="hidden" name="student_id" value="<?php echo (int)$r['student_id']; ?>">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">Reset</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <table class="table table-striped table-hover table-compact align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width:64px">No</th>
+                                <th>Nama Siswa</th>
+                                <th>Judul Paket</th>
+                                <?php if ($hasDueAt): ?>
+                                    <th style="width:180px">Batas Waktu</th>
+                                <?php endif; ?>
+                                <th style="width:170px">Aksi</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php if (!$rows): ?>
+                                <tr><td colspan="<?php echo 4 + ($hasDueAt ? 1 : 0); ?>" class="text-center text-muted">Belum ada tugas yang perlu dimonitor.</td></tr>
+                            <?php endif; ?>
+                            <?php $no = 0; foreach ($rows as $r): $no++; ?>
+                                <tr>
+                                    <td class="text-muted"><?php echo $no; ?></td>
+                                    <td><?php echo htmlspecialchars((string)($r['nama_siswa'] ?? '')); ?></td>
+                                    <td><?php echo htmlspecialchars((string)($r['package_name'] ?? '')); ?></td>
+                                    <?php if ($hasDueAt): ?>
+                                        <td>
+                                            <?php
+                                            $dueRaw = trim((string)($r['due_at'] ?? ''));
+                                            echo $dueRaw !== ''
+                                                ? htmlspecialchars(function_exists('format_id_datetime_short') ? format_id_datetime_short($dueRaw) : $dueRaw)
+                                                : '<span class="text-muted">-</span>';
+                                            ?>
+                                        </td>
+                                    <?php endif; ?>
+                                    <td>
+                                        <form method="post" class="d-inline" data-swal-confirm data-swal-title="Akhiri tugas?" data-swal-text="Paksa akhiri tugas ini? Tugas akan ditandai selesai. Nilai dihitung dari jawaban yang tersimpan." data-swal-confirm-text="Akhiri" data-swal-cancel-text="Batal" data-swal-require-check="1" data-swal-check-text="Saya yakin ingin mengakhiri tugas ini." data-swal-check-error="Centang dulu sebelum mengakhiri tugas.">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                            <input type="hidden" name="action" value="force_finish_exam">
+                                            <input type="hidden" name="assignment_id" value="<?php echo (int)$r['assignment_id']; ?>">
+                                            <input type="hidden" name="student_id" value="<?php echo (int)$r['student_id']; ?>">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm" title="Akhiri tugas" aria-label="Akhiri tugas">
+                                                <span aria-hidden="true">&#9632;</span>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
             </div>
-            <?php if (!$hasRevoked): ?>
+            <?php if ($tab === 'ujian' && !$hasRevoked): ?>
                 <div class="form-text text-warning mt-2">
                     Fitur lock/reset butuh kolom <code>student_assignments.exam_revoked_at</code>. Jalankan <code>php scripts/migrate_db.php</code>.
                 </div>

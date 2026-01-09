@@ -321,7 +321,10 @@ $now = new DateTimeImmutable('now');
                             <tr>
                                 <td class="text-center"><span class="small text-muted"><?php echo (int)$rowNo; ?></span></td>
                                 <td>
-                                    <div class="small fw-semibold"><?php echo htmlspecialchars($windowName !== '' ? $windowName : 'Jadwal Absen'); ?></div>
+                                    <div class="small fw-semibold d-flex align-items-center gap-1">
+                                        <i class="bi bi-calendar-check text-primary"></i>
+                                        <span><?php echo htmlspecialchars($windowName !== '' ? $windowName : 'Jadwal Absen'); ?></span>
+                                    </div>
                                     <div class="small text-muted mt-1">
                                         <?php
                                             $startLabel = $startAt !== '' && function_exists('format_id_datetime_short') ? format_id_datetime_short($startAt) : $startAt;

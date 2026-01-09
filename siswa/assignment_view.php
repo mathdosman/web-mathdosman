@@ -71,6 +71,45 @@ $revokedSelect = $hasExamRevokedColumn ? ', sa.exam_revoked_at' : '';
 $shuffleSelect = ($hasShuffleQuestionsColumn ? ', sa.shuffle_questions' : '') . ($hasShuffleOptionsColumn ? ', sa.shuffle_options' : '');
 $calculatorSelect = $hasAllowCalculatorColumn ? ', sa.allow_calculator' : '';
 
+$serverNowTs = null;
+try {
+    $rsNow = $pdo->query('SELECT UNIX_TIMESTAMP(NOW()) AS ts');
+    $serverNowTs = $rsNow ? (int)($rsNow->fetchColumn() ?? 0) : 0;
+    if ($serverNowTs <= 0) {
+        $serverNowTs = null;
+    }
+} catch (Throwable $e) {
+    $serverNowTs = null;
+}
+if ($serverNowTs === null) {
+    $serverNowTs = time();
+}
+
+$computeEffectiveDurationSec = static function (?int $dueTs, ?int $startedAtTs, ?int $durationMinutes): ?int {
+    if ($startedAtTs === null) {
+        return null;
+    }
+
+    $durationSec = null;
+    if ($durationMinutes !== null && $durationMinutes > 0) {
+        $durationSec = $durationMinutes * 60;
+    }
+
+    // If due time exists, cap duration to end at due time.
+    if ($dueTs !== null) {
+        $spanToDue = $dueTs - $startedAtTs;
+        // Jika mulai di/ setelah due_at, tidak ada waktu tersisa (ujian harus terkunci).
+        if ($spanToDue <= 0) {
+            return 0;
+        }
+        if ($durationSec === null || $spanToDue < $durationSec) {
+            $durationSec = $spanToDue;
+        }
+    }
+
+    return $durationSec;
+};
+
 $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at,
         p.id AS package_id, p.code, p.name, p.description
     FROM student_assignments sa
@@ -159,6 +198,11 @@ if ($assignment && $isExamAssignment && $requiresToken && isset($_GET['force_tok
     if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
         unset($_SESSION['assignment_token_ok'][$id]);
     }
+    // Mark that the next token entry is a re-auth (resume), not a first-time entry.
+    if (!isset($_SESSION['assignment_token_forced']) || !is_array($_SESSION['assignment_token_forced'])) {
+        $_SESSION['assignment_token_forced'] = [];
+    }
+    $_SESSION['assignment_token_forced'][$id] = 1;
     $tokenOk = false;
 }
 
@@ -173,11 +217,40 @@ if ($assignment && $isExamAssignment && $hasExamRevokedColumn && $examRevokedAt 
     $disable_navbar = true;
     include __DIR__ . '/../includes/header.php';
     ?>
-    <div class="alert alert-warning" data-no-swal="1">
-        <div class="fw-semibold mb-1">Ujian terkunci</div>
-        <div class="small">Kamu sudah keluar dari halaman ujian. Hubungi admin untuk reset ujian.</div>
+    <div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+        <div class="card shadow-sm border-0" style="max-width:520px;width:100%;">
+            <div class="card-body text-center p-4 p-md-5">
+                <div class="mb-3">
+                    <svg width="80" height="80" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                        <defs>
+                            <linearGradient id="lockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffc107"/>
+                                <stop offset="100%" stop-color="#ff9800"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="8" y="24" width="48" height="32" rx="6" fill="url(#lockGradient)" opacity="0.9"/>
+                        <rect x="18" y="14" width="28" height="22" rx="10" fill="none" stroke="#ffc107" stroke-width="3"/>
+                        <circle cx="32" cy="40" r="5" fill="#ffffff"/>
+                        <path d="M32 45 L32 52" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h5 class="fw-semibold mb-2">Ujian terkunci</h5>
+                <p class="text-muted mb-3">
+                    Kamu sudah keluar dari halaman ujian. Untuk bisa masuk kembali ke ujian ini,
+                    hubungi admin atau guru agar melakukan reset ujian terlebih dahulu.
+                </p>
+                <div class="d-grid d-sm-inline-flex gap-2 justify-content-sm-center">
+                    <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-primary">
+                        Kembali ke Dashboard
+                    </a>
+                </div>
+                <p class="small text-muted mt-3 mb-0">
+                    Jika kamu merasa ini terjadi karena kendala teknis (misalnya koneksi terputus),
+                    jelaskan kronologinya ke guru saat meminta reset.
+                </p>
+            </div>
+        </div>
     </div>
-    <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
     <?php
     include __DIR__ . '/../includes/footer.php';
     exit;
@@ -224,23 +297,29 @@ if ($assignment) {
     }
 
     if ($isExam && $status !== 'done') {
-        $now = time();
+        $now = $serverNowTs;
+
         // Lock by due_at even if not started.
-        if ($dueTs !== null && $now > $dueTs) {
+        if ($dueTs !== null && $now >= $dueTs) {
             $isLocked = true;
             $lockReason = 'Waktu ujian sudah berakhir.';
         }
 
-        // If started and has duration, also lock by started_at + duration.
-        if (!$isLocked && $hasDuration && $startedAtTs !== null) {
-            $endAtTs = $startedAtTs + ($durationMinutes * 60);
-            $lockAtTs = $endAtTs;
-            if ($dueTs !== null && $dueTs < $lockAtTs) {
-                $lockAtTs = $dueTs;
-            }
-            if ($now > $lockAtTs) {
-                $isLocked = true;
-                $lockReason = 'Waktu ujian sudah berakhir.';
+        // If started, lock by effective duration capped by due_at (if earlier).
+        if (!$isLocked && $startedAtTs !== null) {
+            $effectiveDurationSec = $computeEffectiveDurationSec($dueTs, $startedAtTs, $hasDuration ? $durationMinutes : null);
+            if ($effectiveDurationSec !== null) {
+                // Jika durasi efektif nol atau negatif (mis. mulai melewati due_at), kunci langsung.
+                if ($effectiveDurationSec <= 0) {
+                    $isLocked = true;
+                    $lockReason = 'Waktu ujian sudah berakhir.';
+                } else {
+                    $lockAtTs = $startedAtTs + $effectiveDurationSec;
+                    if ($now >= $lockAtTs) {
+                        $isLocked = true;
+                        $lockReason = 'Waktu ujian sudah berakhir.';
+                    }
+                }
             }
         }
     }
@@ -332,19 +411,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $startedNow = trim((string)($assignment['started_at'] ?? ''));
 
         if ($jenisNow === 'ujian' && $statusNow !== 'done' && $startedNow !== '') {
-            try {
-                $stmt = $pdo->prepare('UPDATE student_assignments
-                    SET exam_revoked_at = NOW(), updated_at = NOW()
-                    WHERE id = :id AND student_id = :sid AND (exam_revoked_at IS NULL OR exam_revoked_at = "")');
-                $stmt->execute([':id' => $id, ':sid' => $studentId]);
-            } catch (Throwable $e) {
-                // best-effort
-            }
-        }
+            // Jika waktu ujian sudah habis, jangan ubah menjadi "terkunci".
+            // Ini penting karena saat countdown habis kita melakukan redirect internal untuk submit/konfirmasi.
+            if (!$isLocked) {
+                try {
+                    $stmt = $pdo->prepare('UPDATE student_assignments
+                        SET exam_revoked_at = NOW(), updated_at = NOW()
+                        WHERE id = :id AND student_id = :sid AND (exam_revoked_at IS NULL OR exam_revoked_at = "")');
+                    $stmt->execute([':id' => $id, ':sid' => $studentId]);
+                } catch (Throwable $e) {
+                    // best-effort
+                }
 
-        // Force token re-check after reset (best-effort).
-        if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
-            unset($_SESSION['assignment_token_ok'][$id]);
+                // Force token re-check after reset (best-effort).
+                if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
+                    unset($_SESSION['assignment_token_ok'][$id]);
+                }
+            }
         }
 
         http_response_code(204);
@@ -404,6 +487,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? 'Token ujian belum tersedia. Minta admin untuk generate token.'
                 : 'Token belum tersedia.';
         } else {
+            $resumeAttempt = false;
+            if (isset($_SESSION['assignment_token_forced']) && is_array($_SESSION['assignment_token_forced']) && !empty($_SESSION['assignment_token_forced'][$id])) {
+                $resumeAttempt = true;
+            }
+
             $input = (string)($_POST['token_code'] ?? '');
             $input = preg_replace('/\D+/', '', $input);
             $input = substr((string)$input, 0, 6);
@@ -415,8 +503,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($input !== $tokenCode) {
                 $actionError = 'Token salah.';
             } else {
-                // Start exam timer on first successful token entry to prevent delays.
-                if ($isExamAssignment && $assignment && !$isLocked) {
+                // Start exam timer only on FIRST successful token entry (not on re-auth/resume).
+                if (!$resumeAttempt && $isExamAssignment && $assignment && !$isLocked) {
                     $durInt = (int)($assignment['duration_minutes'] ?? 0);
                     $statusNow = (string)($assignment['status'] ?? 'assigned');
                     $startedNow = trim((string)($assignment['started_at'] ?? ''));
@@ -436,7 +524,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['assignment_token_ok'] = [];
                 }
                 $_SESSION['assignment_token_ok'][$id] = $tokenCode;
-                siswa_redirect_to('siswa/assignment_view.php?id=' . $id . '&flash=token_ok');
+
+                if (isset($_SESSION['assignment_token_forced']) && is_array($_SESSION['assignment_token_forced'])) {
+                    unset($_SESSION['assignment_token_forced'][$id]);
+                }
+
+                siswa_redirect_to('siswa/assignment_view.php?id=' . $id . '&flash=token_ok' . ($resumeAttempt ? '&resume=1' : ''));
             }
         }
         $stopAction = true;
@@ -716,9 +809,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$stopAction && $action === 'mark_done' && $assignment) {
-        if ($isLocked) {
+        $jenisNow = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
+        $isAutoSubmit = isset($_POST['auto_submit']) && (string)$_POST['auto_submit'] === '1';
+
+        if ($isLocked && $jenisNow === 'ujian' && !$isAutoSubmit) {
+            // Untuk ujian yang sudah terkunci karena waktu habis atau aturan lain,
+            // tolak penyelesaian manual.
             $actionError = $lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.';
         } else {
+            // Izinkan mark_done, termasuk auto submit ketika waktu habis.
             $actionError = $saveAnswersAndMaybeGrade(true);
             if ($actionError === '') {
                 siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=done');
@@ -856,7 +955,78 @@ include __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <?php if ($isLocked): ?>
-            <div class="alert alert-warning mt-3 mb-0" data-no-swal="1"><?php echo htmlspecialchars($lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.'); ?></div>
+            <?php $timeOverSubmitted = isset($_GET['submitted']) && $_GET['submitted'] !== ''; ?>
+            <div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+                <div class="card shadow-sm border-0" style="max-width:520px;width:100%;">
+                    <div class="card-body text-center p-4 p-md-5">
+                        <div class="mb-3">
+                            <svg width="80" height="80" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                                <defs>
+                                    <linearGradient id="examTimeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#0d6efd"/>
+                                        <stop offset="100%" stop-color="#6610f2"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="32" cy="32" r="24" fill="url(#examTimeGradient)" opacity="0.9"/>
+                                <circle cx="32" cy="32" r="20" fill="#ffffff"/>
+                                <line x1="32" y1="32" x2="32" y2="18" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="32" y1="32" x2="44" y2="32" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="32" cy="32" r="2" fill="#0d6efd"/>
+                            </svg>
+                        </div>
+                        <h5 class="fw-semibold mb-2">Waktu ujian sudah habis</h5>
+                        <p class="text-muted mb-3">
+                            Batas waktu ujian untuk akun kamu sudah berakhir.
+                            Kamu tidak dapat lagi mengerjakan atau mengubah jawaban untuk ujian ini.
+                        </p>
+                        <?php
+                            $statusLocked = (string)($assignment['status'] ?? 'assigned');
+                            // Tampilkan tombol submit untuk ujian yang belum selesai, meski siswa belum sempat klik "Mulai".
+                            // (Untuk ujian yang sudah time-over, submit diproses sebagai auto_submit agar tidak ditolak oleh guard isLocked.)
+                            $canSubmitAfterTimeOver = ($isExamAssignment && $statusLocked !== 'done');
+                        ?>
+                        <div class="d-grid d-sm-inline-flex gap-2 justify-content-sm-center">
+                            <?php if ($canSubmitAfterTimeOver): ?>
+                                <form method="post" class="d-inline" id="timeOverSubmitForm">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                    <input type="hidden" name="action" value="mark_done">
+                                    <input type="hidden" name="auto_submit" value="1">
+                                    <button type="submit" class="btn btn-primary">Submit Jawaban Ujian</button>
+                                </form>
+                            <?php endif; ?>
+                            <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary">
+                                Kembali ke Dashboard
+                            </a>
+                        </div>
+
+                        <?php if ($canSubmitAfterTimeOver): ?>
+                            <div class="small text-muted mt-3" id="timeOverAutoText">
+                                <?php if ($timeOverSubmitted): ?>
+                                    Jawaban kamu sudah diproses. Jika ada kendala, kamu bisa klik <b>Submit Jawaban Ujian</b>.
+                                <?php else: ?>
+                                    Mengirim jawaban secara otomatis… Jika tidak berhasil, klik tombol <b>Submit Jawaban Ujian</b>.
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!$timeOverSubmitted): ?>
+                                <script>
+                                (function() {
+                                    var form = document.getElementById('timeOverSubmitForm');
+                                    if (!form) return;
+                                    // Best-effort auto submit after time over.
+                                    setTimeout(function() {
+                                        try { form.submit(); } catch (e) {}
+                                    }, 800);
+                                })();
+                                </script>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <p class="small text-muted mt-3 mb-0">
+                            Jika menurutmu ini terjadi karena kesalahan jadwal atau kendala teknis,
+                            silakan hubungi guru/admin untuk klarifikasi.
+                        </p>
+                    </div>
+                </div>
+            </div>
             <?php include __DIR__ . '/../includes/footer.php'; ?>
             <?php exit; ?>
         <?php endif; ?>
@@ -912,8 +1082,9 @@ include __DIR__ . '/../includes/header.php';
                         WHERE id = :id AND student_id = :sid AND (started_at IS NULL OR started_at = "")');
                     $stmt->execute([':id' => $id, ':sid' => $studentId]);
 
-                    $startedNow = date('Y-m-d H:i:s');
-                    $startedAtTs = time();
+                    // Samakan dengan jam server yang dipakai countdown/lock.
+                    $startedNow = date('Y-m-d H:i:s', $serverNowTs);
+                    $startedAtTs = $serverNowTs;
                 } catch (Throwable $e) {
                     // best-effort; fallback ke tombol Mulai jika gagal
                 }
@@ -944,24 +1115,55 @@ include __DIR__ . '/../includes/header.php';
             <?php exit; ?>
         <?php endif; ?>
 
-        <?php if ($requiresStart && $startedNow !== '' && $hasDuration && $startedAtTs !== null && $durationMinutes !== null): ?>
+        <?php if ($requiresStart && $startedNow !== '' && $startedAtTs !== null): ?>
             <?php
-                $now = time();
-                $endTs = $startedAtTs + ($durationMinutes * 60);
-                $lockTs = $endTs;
+                $now = $serverNowTs;
                 $dueRaw = trim((string)($assignment['due_at'] ?? ''));
-                if ($dueRaw !== '') {
-                    $d = strtotime($dueRaw);
-                    if ($d !== false && $d < $lockTs) $lockTs = $d;
+                $d = ($dueRaw !== '') ? strtotime($dueRaw) : false;
+                $dueTsLocal = ($d !== false) ? $d : null;
+                $effectiveDurationSec = $computeEffectiveDurationSec($dueTsLocal, $startedAtTs, $hasDuration ? $durationMinutes : null);
+
+                // Untuk tampilan di halaman ujian: cukup jam-menit-detik (tanpa tanggal) agar ringkas.
+                $dueTimeStr = ($dueTsLocal !== null) ? date('H:i:s', $dueTsLocal) : '-';
+                $durationEndTs = ($hasDuration && $durationMinutes !== null) ? ($startedAtTs + ($durationMinutes * 60)) : null;
+                $durationEndStr = ($durationEndTs !== null) ? date('Y-m-d H:i:s', $durationEndTs) : '-';
+
+                // Hitung titik kunci terawal: due_at vs durasi sejak start.
+                $lockCandidates = [];
+                if ($dueTsLocal !== null) {
+                    $lockCandidates[] = $dueTsLocal;
                 }
-                $remain = max(0, $lockTs - $now);
-                $remainMin = (int)floor($remain / 60);
-                $remainSec = (int)($remain % 60);
+                if ($effectiveDurationSec !== null) {
+                    // Jika effectiveDurationSec bernilai 0, tetap gunakan batas due_at (jika ada) atau kunci segera.
+                    $lockCandidates[] = $startedAtTs + max(0, $effectiveDurationSec);
+                }
+
+                // Jika tidak ada kandidat (fallback ekstrem), pakai now supaya tidak memberi waktu ekstra.
+                $lockTs = $lockCandidates ? min($lockCandidates) : $now;
+
+                // Jika titik kunci sudah lewat, sisa waktu nol.
+                $remain = ($lockTs > $now) ? ($lockTs - $now) : 0;
+                $formatCountdown = static function (int $seconds): string {
+                    if ($seconds < 0) $seconds = 0;
+                    $h = (int)floor($seconds / 3600);
+                    $m = (int)floor(($seconds % 3600) / 60);
+                    $s = (int)($seconds % 60);
+                    if ($h > 0) {
+                        return sprintf('%02d:%02d:%02d', $h, $m, $s);
+                    }
+                    return sprintf('%02d:%02d', $m, $s);
+                };
+                $remainFmt = $formatCountdown((int)$remain);
+                $currentTimeStr = date('H:i:s', $now);
+                $lockTimeStr = date('H:i:s', $lockTs);
             ?>
             <div class="alert alert-secondary mt-3 mb-0">
-                <div class="small">
-                    Sisa waktu (otomatis submit jika habis): <b id="mdCountdownTimer"><?php echo $remainMin; ?> menit <?php echo $remainSec; ?> detik</b>
+                <div class="small text-center">
+                    Server <b id="mdCurrentTime"><?php echo htmlspecialchars($currentTimeStr); ?></b>
+                    <span class="text-muted">|</span>
+                    Batas <b><?php echo htmlspecialchars($dueTimeStr); ?></b>
                 </div>
+                <div class="small mt-1 text-center">Sisa <b id="mdCountdownTimer"><?php echo htmlspecialchars($remainFmt); ?></b></div>
             </div>
             <script>
             // Aturan:
@@ -970,83 +1172,147 @@ include __DIR__ . '/../includes/header.php';
             // - Countdown dihitung dari waktu tersingkat antara durasi dan due_at
             (function() {
                 var remain = <?php echo (int)$remain; ?>;
+                var serverNow = <?php echo (int)$now; ?>;
+                var serverTzOffsetSec = <?php echo (int)date('Z'); ?>;
                 var timerEl = document.getElementById('mdCountdownTimer');
-                function pad(n) { return n < 10 ? '0' + n : n; }
+                var currentEl = document.getElementById('mdCurrentTime');
+                var timeOverUrl = '<?php echo addslashes($base_url); ?>/siswa/assignment_view.php?id=<?php echo (int)$id; ?>&flash=time_over&submitted=1';
+                function pad(n) { return n < 10 ? '0' + n : String(n); }
                 function updateTimer() {
                     if (!timerEl) return;
                     if (remain <= 0) {
-                        timerEl.textContent = '00 menit 00 detik';
+                        timerEl.textContent = '00:00';
                         return;
                     }
-                    var m = Math.floor(remain / 60);
+                    var h = Math.floor(remain / 3600);
+                    var m = Math.floor((remain % 3600) / 60);
                     var s = remain % 60;
-                    timerEl.textContent = pad(m) + ' menit ' + pad(s) + ' detik';
+                    if (h > 0) {
+                        timerEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+                    } else {
+                        timerEl.textContent = pad(m) + ':' + pad(s);
+                    }
+                }
+                function updateCurrentTime() {
+                    if (!currentEl) return;
+                    // Tampilkan JAM SERVER (bukan jam device).
+                    // Gunakan offset timezone dari server (PHP) agar konsisten meski timezone HP berbeda.
+                    var d = new Date((serverNow + serverTzOffsetSec) * 1000);
+                    var h = pad(d.getUTCHours());
+                    var m = pad(d.getUTCMinutes());
+                    var s = pad(d.getUTCSeconds());
+                    currentEl.textContent = h + ':' + m + ':' + s;
                 }
                 updateTimer();
+                updateCurrentTime();
+
+                function disableInputs() {
+                    var form = document.getElementById('answerForm');
+                    if (!form) return;
+                    try {
+                        var els = form.querySelectorAll('input, textarea, select, button');
+                        for (var i = 0; i < els.length; i++) {
+                            var el = els[i];
+                            // Biarkan tombol submit berjalan jika diperlukan.
+                            if (el && el.type === 'submit') continue;
+                            if (el) el.disabled = true;
+                        }
+                    } catch (e) {}
+                }
+
+                function handleTimeOver() {
+                    disableInputs();
+
+                    var form = document.getElementById('answerForm');
+                    if (!form || form.classList.contains('md-form-done')) {
+                        window.location.href = timeOverUrl;
+                        return;
+                    }
+
+                    form.classList.add('md-form-done'); // prevent double submit
+
+                    // Best-effort: kirim jawaban via fetch, lalu tetap arahkan ke halaman "waktu habis".
+                    try {
+                        var fd = new FormData(form);
+                        fd.set('auto_submit', '1');
+                        fd.set('action', 'mark_done');
+
+                        fetch(form.getAttribute('action') || window.location.href, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin'
+                        }).then(function() {
+                            window.location.href = timeOverUrl;
+                        }).catch(function() {
+                            window.location.href = timeOverUrl;
+                        });
+                    } catch (e) {
+                        window.location.href = timeOverUrl;
+                    }
+                }
+
                 var interval = setInterval(function() {
                     remain--;
+                    serverNow++;
                     if (remain <= 0) {
                         clearInterval(interval);
-                        timerEl.textContent = '00 menit 00 detik';
-                        // Auto submit hanya jika status belum selesai
-                        var form = document.getElementById('answerForm');
-                        if (form && !form.classList.contains('md-form-done')) {
-                            var autoInput = document.createElement('input');
-                            autoInput.type = 'hidden';
-                            autoInput.name = 'auto_submit';
-                            autoInput.value = '1';
-                            form.appendChild(autoInput);
-                            form.classList.add('md-form-done'); // prevent double submit
-                            form.submit();
-                            setTimeout(function() {
-                                window.location.href = '<?php echo addslashes($base_url); ?>/siswa/dashboard.php';
-                            }, 4000);
-                        } else {
-                            window.location.href = '<?php echo addslashes($base_url); ?>/siswa/dashboard.php';
-                        }
+                        if (timerEl) timerEl.textContent = '00:00';
+                        handleTimeOver();
                     } else {
                         updateTimer();
+                        updateCurrentTime();
                     }
                 }, 1000);
             })();
             </script>
         <?php endif; ?>
 
-        <?php if (!empty($assignment['catatan'])): ?>
-            <div class="alert alert-info mt-3 mb-0">
-                <?php echo nl2br(htmlspecialchars((string)$assignment['catatan'])); ?>
-            </div>
-        <?php endif; ?>
-
-        <div id="mdIntroWrap">
-            <?php if (!empty($assignment['description'])): ?>
-                <div class="mt-3">
-                    <div class="small text-muted mb-1">Deskripsi Paket</div>
-                    <div class="richtext-content border rounded-3 p-3 bg-body-tertiary">
-                        <?php echo $renderHtml((string)$assignment['description']); ?>
+        <div id="mdIntroWrap" class="mt-3">
+            <div id="mdIntroBox" class="card shadow-sm border-0" data-no-swal="1">
+                <div class="card-body p-3 p-md-4">
+                    <?php
+                        $introIsExam = (bool)$isExamAssignment;
+                        $introJenis = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
+                        $introTitle = $introIsExam ? 'Sebelum mulai ujian' : 'Sebelum mulai mengerjakan';
+                        $introCount = is_array($items) ? count($items) : 0;
+                        $introDurMin = (int)($assignment['duration_minutes'] ?? 0);
+                    ?>
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="fw-semibold"><?php echo htmlspecialchars($introTitle); ?></div>
+                        <?php if ($introCount > 0): ?>
+                            <div class="small text-muted"><?php echo (int)$introCount; ?> soal</div>
+                        <?php endif; ?>
                     </div>
-                </div>
-            <?php endif; ?>
 
-            <hr>
-        </div>
+                    <div class="small text-muted mt-1">
+                        Klik tombol <b>Mulai</b> untuk menampilkan soal.
+                        <?php if ($introIsExam): ?>
+                            Waktu akan berjalan dan otomatis terkunci saat habis.
+                        <?php endif; ?>
+                    </div>
 
-        <?php if (!$items): ?>
-            <div class="alert alert-warning mb-0">Soal belum tersedia di paket ini.</div>
-        <?php else: ?>
-            <div id="mdIntroBox" class="border rounded-3 p-3 bg-body-tertiary mb-3">
-                <div class="fw-semibold mb-1">Intro Soal</div>
-                <div class="small text-muted">
-                    Klik <b>Mulai</b> untuk menampilkan soal. Gunakan <b>Prev</b>/<b>Next</b> atau <b>Daftar Soal</b> untuk navigasi.
-                    <span class="d-block mt-1">Jika sudah selesai, klik <b>Selesai</b> di soal terakhir.</span>
-                    <?php if (strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian'): ?>
-                        <span class="d-block mt-1">Mode ujian: waktu berjalan terus setelah dimulai.</span>
+                    <ul class="small mt-2 mb-0">
+                        <li>Pastikan koneksi stabil.</li>
+                        <li>Jawaban disimpan otomatis saat kamu memilih opsi.</li>
+                        <?php if ($introIsExam && $introDurMin > 0): ?>
+                            <li>Durasi: <?php echo (int)$introDurMin; ?> menit.</li>
+                        <?php endif; ?>
+                        <li>Jika waktu habis, jawaban akan diproses otomatis.</li>
+                    </ul>
+
+                    <?php if (!empty($assignment['catatan'])): ?>
+                        <div class="small mt-3 p-2 bg-body-tertiary rounded-3">
+                            <div class="fw-semibold mb-1">Catatan</div>
+                            <div><?php echo nl2br(htmlspecialchars((string)$assignment['catatan'])); ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($requiresToken && $tokenOk && $tokenAvailable): ?>
+                        <div class="small mt-3">Token: <b><?php echo htmlspecialchars($tokenCode); ?></b></div>
                     <?php endif; ?>
                 </div>
-                <?php if ($requiresToken && $tokenOk && $tokenAvailable): ?>
-                    <div class="small mt-2">Token: <b><?php echo htmlspecialchars($tokenCode); ?></b></div>
-                <?php endif; ?>
             </div>
+        </div>
 
             <form id="answerForm" method="post">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
@@ -1107,12 +1373,19 @@ include __DIR__ . '/../includes/header.php';
                             <?php if ($hasAny): ?>
                                 <div class="mt-2">
                                     <div class="small text-muted mb-2">Jawaban:</div>
-                                    <?php foreach (($shuffleOptions ? $optOrder : array_keys($opts)) as $label): ?>
+                                    <?php
+                                        $displayLetters = ['A', 'B', 'C', 'D', 'E'];
+                                        $sequence = $shuffleOptions ? $optOrder : array_keys($opts);
+                                        $seqIdx = 0;
+                                    ?>
+                                    <?php foreach ($sequence as $label): ?>
                                         <?php $optHtml = (string)($opts[$label] ?? ''); ?>
                                         <?php if (trim(strip_tags($optHtml)) === '') continue; ?>
                                         <?php
                                             $optIdx = ['A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5][$label] ?? null;
                                             $val = $optIdx ? ('pilihan_' . $optIdx) : '';
+                                            $displayLabel = $displayLetters[$seqIdx] ?? $label;
+                                            $seqIdx++;
                                         ?>
                                         <label class="md-answer-box d-flex gap-2 align-items-start mb-2">
                                             <?php if ($isPgKompleks): ?>
@@ -1121,7 +1394,7 @@ include __DIR__ . '/../includes/header.php';
                                                 <input class="form-check-input mt-1" type="radio" name="ans[<?php echo (int)$qid; ?>]" value="<?php echo htmlspecialchars($val); ?>" <?php echo ($saved !== '' && $saved === $val) ? 'checked' : ''; ?> <?php echo $isDone ? 'disabled' : ''; ?>>
                                             <?php endif; ?>
                                             <span class="d-flex gap-2 align-items-start" style="flex:1;">
-                                                <span class="fw-semibold" style="min-width: 22px;"><?php echo htmlspecialchars($label); ?>.</span>
+                                                <span class="fw-semibold" style="min-width: 22px;"><?php echo htmlspecialchars($displayLabel); ?>.</span>
                                                 <span class="richtext-content"><?php echo $renderHtml($optHtml); ?></span>
                                             </span>
                                         </label>
@@ -1620,149 +1893,154 @@ include __DIR__ . '/../includes/header.php';
                             });
                         }
 
-                        if (startBtn) {
-                            startBtn.addEventListener('click', function () {
-                                // For exams without the separate "Mulai Ujian" POST gate, record started_at when the student begins.
+                        // Exam/session helpers (shared for initial load + after token re-entry).
+                        var isExam = <?php echo json_encode(strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian'); ?>;
+                        var statusNotDone = <?php echo json_encode(strtolower(trim((string)($assignment['status'] ?? 'assigned'))) !== 'done'); ?>;
+                        var hasRevokedCol = <?php echo json_encode((bool)$hasExamRevokedColumn); ?>;
+                        var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
+                        var url = window.location.href;
+
+                        var focusAccum = 0;
+                        var focusIntervalMs = 5000;
+                        var focusMinSend = 15;
+                        var focusTimerStarted = false;
+
+                        function sendFocusDelta(force) {
+                            if (!isExam || !statusNotDone || !csrf) return;
+                            var delta = focusAccum;
+                            if (!force && delta < focusMinSend) return;
+                            if (delta <= 0) return;
+                            focusAccum = 0;
+                            try {
+                                var fd = new FormData();
+                                fd.append('csrf_token', csrf);
+                                fd.append('action', 'focus_tick');
+                                fd.append('delta', String(delta));
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon(url, fd);
+                                } else {
+                                    fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
+                                }
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+
+                        function startFocusTimer() {
+                            if (!isExam || !statusNotDone || focusTimerStarted) return;
+                            focusTimerStarted = true;
+                            try {
+                                setInterval(function () {
+                                    if (document.hidden) return;
+                                    focusAccum += focusIntervalMs / 1000;
+                                    if (focusAccum >= focusMinSend) {
+                                        sendFocusDelta(false);
+                                    }
+                                }, focusIntervalMs);
+                                window.addEventListener('pagehide', function () { sendFocusDelta(true); });
+                                window.addEventListener('beforeunload', function () { sendFocusDelta(true); });
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+
+                        function installLeaveLock() {
+                            if (!hasRevokedCol || !isExam || !statusNotDone) return;
+                            if (window.__mdLeaveLockInstalled) return;
+                            window.__mdLeaveLockInstalled = true;
+
+                            var allowLeave = true;
+                            var sent = false;
+                            var maxViolations = 3;
+                            var violationCount = 0;
+
+                            try {
+                                var storedV = localStorage.getItem(violationKey);
+                                if (storedV) {
+                                    var parsedV = parseInt(storedV, 10);
+                                    if (!isNaN(parsedV) && parsedV > 0) {
+                                        violationCount = parsedV;
+                                    }
+                                }
+                            } catch (e) {}
+
+                            var formEl3 = document.getElementById('answerForm');
+                            if (formEl3) {
+                                formEl3.addEventListener('submit', function () {
+                                    allowLeave = false;
+                                });
+                            }
+
+                            function persistViolationCount() {
                                 try {
-                                    var isExam = <?php echo json_encode(strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian'); ?>;
-                                    var statusNotDone = <?php echo json_encode(strtolower(trim((string)($assignment['status'] ?? 'assigned'))) !== 'done'); ?>;
-                                    var hasRevokedCol = <?php echo json_encode((bool)$hasExamRevokedColumn); ?>;
-                                    var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
-                                    var url = window.location.href;
+                                    localStorage.setItem(violationKey, String(violationCount));
+                                } catch (e) {}
+                            }
 
-                                    var focusAccum = 0;
-                                    var focusIntervalMs = 5000;
-                                    var focusMinSend = 15;
-                                    var focusTimerStarted = false;
+                            function sendLeave() {
+                                if (!allowLeave || sent) return;
+                                sent = true;
+                                try {
+                                    var fd = new FormData();
+                                    fd.append('csrf_token', csrf);
+                                    fd.append('action', 'leave_exam');
 
-                                    function sendFocusDelta(force) {
-                                        if (!isExam || !statusNotDone || !csrf) return;
-                                        var delta = focusAccum;
-                                        if (!force && delta < focusMinSend) return;
-                                        if (delta <= 0) return;
-                                        focusAccum = 0;
-                                        try {
-                                            var fd = new FormData();
-                                            fd.append('csrf_token', csrf);
-                                            fd.append('action', 'focus_tick');
-                                            fd.append('delta', String(delta));
-                                            if (navigator.sendBeacon) {
-                                                navigator.sendBeacon(url, fd);
-                                            } else {
-                                                fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
-                                            }
-                                        } catch (e) {
-                                            // ignore
-                                        }
-                                    }
-
-                                    function startFocusTimer() {
-                                        if (!isExam || !statusNotDone || focusTimerStarted) return;
-                                        focusTimerStarted = true;
-                                        try {
-                                            setInterval(function () {
-                                                if (document.hidden) return;
-                                                focusAccum += focusIntervalMs / 1000;
-                                                if (focusAccum >= focusMinSend) {
-                                                    sendFocusDelta(false);
-                                                }
-                                            }, focusIntervalMs);
-                                            window.addEventListener('pagehide', function () { sendFocusDelta(true); });
-                                            window.addEventListener('beforeunload', function () { sendFocusDelta(true); });
-                                        } catch (e) {
-                                            // ignore
-                                        }
-                                    }
-
-                                    function installLeaveLock() {
-                                        if (!hasRevokedCol || !isExam || !statusNotDone) return;
-                                        if (window.__mdLeaveLockInstalled) return;
-                                        window.__mdLeaveLockInstalled = true;
-
-                                        var allowLeave = true;
-                                        var sent = false;
-                                        var maxViolations = 3;
-                                        var violationCount = 0;
-
-                                        try {
-                                            var storedV = localStorage.getItem(violationKey);
-                                            if (storedV) {
-                                                var parsedV = parseInt(storedV, 10);
-                                                if (!isNaN(parsedV) && parsedV > 0) {
-                                                    violationCount = parsedV;
-                                                }
-                                            }
-                                        } catch (e) {}
-
-                                        var formEl3 = document.getElementById('answerForm');
-                                        if (formEl3) {
-                                            formEl3.addEventListener('submit', function () {
-                                                allowLeave = false;
-                                            });
-                                        }
-
-                                        function persistViolationCount() {
-                                            try {
-                                                localStorage.setItem(violationKey, String(violationCount));
-                                            } catch (e) {}
-                                        }
-
-                                        function sendLeave() {
-                                            if (!allowLeave || sent) return;
-                                            sent = true;
-                                            try {
-                                                var fd = new FormData();
-                                                fd.append('csrf_token', csrf);
-                                                fd.append('action', 'leave_exam');
-
-                                                if (navigator.sendBeacon) {
-                                                    navigator.sendBeacon(url, fd);
-                                                } else {
-                                                    fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
-                                                }
-                                            } catch (e) {
-                                                // ignore
-                                            }
-                                        }
-
-                                        function registerSuspiciousLeave() {
-                                            if (!allowLeave || sent) return;
-                                            violationCount++;
-                                            persistViolationCount();
-                                            if (violationCount >= maxViolations) {
-                                                sendLeave();
-                                            }
-                                        }
-
-                                        document.addEventListener('visibilitychange', function () {
-                                            if (document.hidden) {
-                                                registerSuspiciousLeave();
-                                            }
-                                        });
-                                        window.addEventListener('blur', function () {
-                                            registerSuspiciousLeave();
-                                        });
-                                    }
-
-                                    if (isExam && statusNotDone) {
-                                        var fd2 = new FormData();
-                                        fd2.append('csrf_token', csrf);
-                                        fd2.append('action', 'touch_started');
-
-                                        if (navigator.sendBeacon) {
-                                            navigator.sendBeacon(url, fd2);
-                                        } else {
-                                            fetch(url, { method: 'POST', body: fd2, credentials: 'same-origin', keepalive: true });
-                                        }
-
-                                        // Enable lock-on-leave after the student starts.
-                                        installLeaveLock();
-                                        // Mulai pencatatan waktu fokus di layar ujian.
-                                        startFocusTimer();
+                                    if (navigator.sendBeacon) {
+                                        navigator.sendBeacon(url, fd);
+                                    } else {
+                                        fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
                                     }
                                 } catch (e) {
                                     // ignore
                                 }
+                            }
+
+                            function registerSuspiciousLeave() {
+                                if (!allowLeave || sent) return;
+                                violationCount++;
+                                persistViolationCount();
+                                if (violationCount >= maxViolations) {
+                                    sendLeave();
+                                }
+                            }
+
+                            document.addEventListener('visibilitychange', function () {
+                                if (document.hidden) {
+                                    registerSuspiciousLeave();
+                                }
+                            });
+                            window.addEventListener('blur', function () {
+                                registerSuspiciousLeave();
+                            });
+                        }
+
+                        function touchStarted() {
+                            if (!isExam || !statusNotDone || !csrf) return;
+                            try {
+                                var fd2 = new FormData();
+                                fd2.append('csrf_token', csrf);
+                                fd2.append('action', 'touch_started');
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon(url, fd2);
+                                } else {
+                                    fetch(url, { method: 'POST', body: fd2, credentials: 'same-origin', keepalive: true });
+                                }
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+
+                        if (startBtn) {
+                            startBtn.addEventListener('click', function () {
+                                // Record started_at (best-effort) and enable monitoring.
+                                touchStarted();
+                                installLeaveLock();
+                                startFocusTimer();
+
+                                // Remember UI start so refresh goes back to soal.
+                                try {
+                                    localStorage.setItem('md_ui_started_' + String(<?php echo (int)$id; ?>), '1');
+                                } catch (e) {}
 
                                 // Requirement: start goes to question no 1
                                 show(0);
@@ -1803,8 +2081,35 @@ include __DIR__ . '/../includes/header.php';
                         loadDraft();
                         refreshAnswerBoxStyles();
 
-                        // Init: start on intro (no question shown) until user clicks Mulai.
-                        show(-1);
+                        // Init rules:
+                        // - New exam should land on intro.
+                        // - Re-auth token (resume=1) should return to soal without restarting UI.
+                        // - Refresh during an already-started exam should return to soal if the student previously clicked Mulai.
+                        var examStarted = <?php echo json_encode((bool)($assignment && $isExamAssignment && $startedAtTs !== null && (string)($assignment['status'] ?? 'assigned') !== 'done')); ?>;
+                        var resume = false;
+                        try {
+                            var params = new URLSearchParams(window.location.search || '');
+                            resume = String(params.get('resume') || '') === '1';
+                            if (resume) {
+                                params.delete('resume');
+                                var qs = params.toString();
+                                var nextUrl = window.location.pathname + (qs ? ('?' + qs) : '') + (window.location.hash || '');
+                                window.history.replaceState({}, '', nextUrl);
+                            }
+                        } catch (e) {}
+
+                        var uiStarted = false;
+                        try {
+                            uiStarted = localStorage.getItem('md_ui_started_' + String(<?php echo (int)$id; ?>)) === '1';
+                        } catch (e) {}
+
+                        if (examStarted && (resume || uiStarted)) {
+                            installLeaveLock();
+                            startFocusTimer();
+                            show(0);
+                        } else {
+                            show(-1);
+                        }
 
                         // Exam focus rule: if the student leaves the question screen for > 5 seconds,
                         // require token re-entry.
@@ -1930,7 +2235,6 @@ include __DIR__ . '/../includes/header.php';
                     });
                 })();
             </script>
-        <?php endif; ?>
     </div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

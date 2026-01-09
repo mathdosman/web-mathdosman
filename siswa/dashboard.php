@@ -70,6 +70,66 @@ try {
     $assignments = [];
 }
 
+$serverNowTs = null;
+try {
+    $rsNow = $pdo->query('SELECT UNIX_TIMESTAMP(NOW()) AS ts');
+    $serverNowTs = $rsNow ? (int)($rsNow->fetchColumn() ?? 0) : 0;
+    if ($serverNowTs <= 0) {
+        $serverNowTs = null;
+    }
+} catch (Throwable $eNow) {
+    $serverNowTs = null;
+}
+if ($serverNowTs === null) {
+    $serverNowTs = time();
+}
+
+$formatSecondsBrief = static function (int $seconds): string {
+    if ($seconds < 0) $seconds = 0;
+    $m = (int)floor($seconds / 60);
+    $s = $seconds % 60;
+    if ($m >= 60) {
+        $h = (int)floor($m / 60);
+        $m = $m % 60;
+        return $h . ' jam ' . $m . ' menit';
+    }
+    return $m . ' menit ' . $s . ' detik';
+};
+
+$computeTimingInfo = static function (string $dueRaw, ?int $durationMinutes, int $nowTs) use ($formatSecondsBrief): ?array {
+    if ($dueRaw === '') return null;
+    $t = strtotime($dueRaw);
+    if ($t === false) return null;
+
+    $dueLabel = date('H:i', $t);
+    $span = $t - $nowTs;
+    if ($span < 0) $span = 0;
+
+    $durSec = null;
+    if ($durationMinutes !== null && $durationMinutes > 0) {
+        $durSec = $durationMinutes * 60;
+    }
+
+    $displaySec = $span;
+    $mode = 'sisa';
+    if ($durSec !== null) {
+        if ($span >= $durSec) {
+            $displaySec = $durSec;
+            $mode = 'durasi';
+        } else {
+            $displaySec = $span;
+            $mode = 'sisa';
+        }
+    }
+
+    return [
+        'due_label' => $dueLabel,
+        'display_label' => $formatSecondsBrief($displaySec),
+        'mode' => $mode,
+        'display_seconds' => $displaySec,
+    ];
+};
+
 // Deteksi jadwal absen aktif untuk siswa ini:
 // - Window sedang berjalan (NOW di antara start_at dan end_at)
 // - Siswa sudah terdaftar di jadwal tsb
@@ -168,40 +228,62 @@ include __DIR__ . '/../includes/header.php';
         <hr class="mt-3 mb-3">
         <div class="row g-3 align-items-stretch">
             <div class="col-lg-4 col-md-5">
-                <div class="border rounded-3 p-3 h-100">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body p-3">
                     <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
                         <i class="bi bi-person-circle text-primary"></i>
                         <span>Profil</span>
                     </div>
                     <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
-                        <div class="text-center">
+                        <div class="text-center flex-shrink-0">
                             <?php if (!empty($student['foto'])): ?>
                                 <img
                                     src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)($student['foto'] ?? ''), '/')); ?>"
                                     alt="Foto siswa"
                                     class="img-thumbnail rounded-circle"
-                                    style="width: 110px; height: 110px; object-fit: cover;"
+                                    style="width: 96px; height: 96px; object-fit: cover;"
                                 >
                             <?php else: ?>
                                 <img
                                     src="<?php echo htmlspecialchars(asset_url('assets/img/no-photo.png', (string)$base_url)); ?>"
                                     alt="No Foto"
                                     class="img-thumbnail rounded-circle"
-                                    style="width: 110px; height: 110px; object-fit: cover;"
+                                    style="width: 96px; height: 96px; object-fit: cover;"
                                 >
                             <?php endif; ?>
-                            <div class="text-muted small mt-2">Foto Profil</div>
                         </div>
-                        <div class="flex-grow-1">
-                            <div><span class="text-muted">Nama:</span> <?php echo htmlspecialchars((string)($student['nama_siswa'] ?? '')); ?></div>
-                            <div><span class="text-muted">Kelas:</span> <?php echo htmlspecialchars((string)($student['kelas'] ?? '')); ?></div>
-                            <div><span class="text-muted">Rombel:</span> <?php echo htmlspecialchars((string)($student['rombel'] ?? '')); ?></div>
-                            <div><span class="text-muted">No HP:</span> <?php echo htmlspecialchars((string)($student['no_hp'] ?? '')); ?></div>
-                            <?php if ($hasParentPhoneColumn): ?>
-                                <div><span class="text-muted">No HP Ortu:</span> <?php echo htmlspecialchars((string)($student['no_hp_ortu'] ?? '')); ?></div>
-                            <?php endif; ?>
-                            <div><span class="text-muted">Username:</span> <?php echo htmlspecialchars((string)($student['username'] ?? '')); ?></div>
+                        <div class="flex-grow-1 min-w-0">
+                            <?php
+                                $vNama = trim((string)($student['nama_siswa'] ?? ''));
+                                $vKelas = trim((string)($student['kelas'] ?? ''));
+                                $vRombel = trim((string)($student['rombel'] ?? ''));
+                                $vHp = trim((string)($student['no_hp'] ?? ''));
+                                $vHpOrtu = trim((string)($student['no_hp_ortu'] ?? ''));
+                                $vUser = trim((string)($student['username'] ?? ''));
+                            ?>
+                            <div class="row g-1 small">
+                                <div class="col-4 text-muted">Nama</div>
+                                <div class="col-8 fw-semibold text-truncate"><?php echo htmlspecialchars($vNama !== '' ? $vNama : '-'); ?></div>
+
+                                <div class="col-4 text-muted">Kelas</div>
+                                <div class="col-8"><?php echo htmlspecialchars($vKelas !== '' ? $vKelas : '-'); ?></div>
+
+                                <div class="col-4 text-muted">Rombel</div>
+                                <div class="col-8"><?php echo htmlspecialchars($vRombel !== '' ? $vRombel : '-'); ?></div>
+
+                                <div class="col-4 text-muted">No HP</div>
+                                <div class="col-8"><?php echo htmlspecialchars($vHp !== '' ? $vHp : '-'); ?></div>
+
+                                <?php if ($hasParentPhoneColumn): ?>
+                                    <div class="col-4 text-muted">HP Ortu</div>
+                                    <div class="col-8"><?php echo htmlspecialchars($vHpOrtu !== '' ? $vHpOrtu : '-'); ?></div>
+                                <?php endif; ?>
+
+                                <div class="col-4 text-muted">Username</div>
+                                <div class="col-8"><?php echo htmlspecialchars($vUser !== '' ? $vUser : '-'); ?></div>
+                            </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -279,10 +361,11 @@ include __DIR__ . '/../includes/header.php';
                                         if ($dur > 0) $durationMinutes = $dur;
                                     }
                                     $startedAt = isset($a['started_at']) ? trim((string)$a['started_at']) : '';
+                                    $timingInfo = $computeTimingInfo((string)$due, $durationMinutes, $serverNowTs);
 
                                     $isLocked = false;
                                     if ($jenisRaw === 'ujian' && $status !== 'done') {
-                                        $now = time();
+                                        $now = $serverNowTs;
                                         $dueTs = null;
                                         if ($due !== '') {
                                             $t = strtotime($due);
@@ -302,68 +385,120 @@ include __DIR__ . '/../includes/header.php';
                                         }
                                     }
 
+                                    if ($jenisRaw === 'ujian' && $status !== 'done' && $isLocked) {
+                                        continue;
+                                    }
+
                                     $btnLabel = 'Buka';
                                     if ($jenisRaw === 'ujian' && $durationMinutes !== null && $startedAt === '' && $status !== 'done') {
                                         $btnLabel = 'Mulai';
                                     }
                                 ?>
 
-                                <div class="border rounded-3 p-3 bg-body">
-                                    <div class="d-flex align-items-start justify-content-between gap-3">
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                                                <span class="badge text-bg-secondary">#<?php echo (int)$no; ?></span>
-                                                <?php if ($jenisRaw === 'ujian'): ?>
-                                                    <span class="badge text-bg-danger">UJIAN</span>
-                                                <?php else: ?>
-                                                    <span class="badge text-bg-primary">TUGAS</span>
-                                                <?php endif; ?>
-
-                                                <?php if ($status === 'done'): ?>
-                                                    <span class="badge text-bg-success">DONE</span>
-                                                    <?php if ($scoreVal !== null && $scoreVal !== ''): ?>
-                                                        <?php
-                                                            $scoreNum = (float)$scoreVal;
-                                                            if ($scoreNum < 0) $scoreNum = 0;
-                                                            if ($scoreNum > 100) $scoreNum = 100;
-                                                            $scoreClass = 'score-primary';
-                                                            if ($scoreNum < 50) $scoreClass = 'score-danger';
-                                                            elseif ($scoreNum < 75) $scoreClass = 'score-warning';
-                                                            elseif ($scoreNum <= 90) $scoreClass = 'score-primary';
-                                                            else $scoreClass = 'score-success';
-                                                        ?>
-                                                        <span class="badge <?php echo htmlspecialchars($scoreClass); ?>">Nilai <?php echo htmlspecialchars((string)$scoreVal); ?></span>
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-start justify-content-between gap-3">
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                                    <span class="badge text-bg-secondary">#<?php echo (int)$no; ?></span>
+                                                    <?php if ($jenisRaw === 'ujian'): ?>
+                                                        <span class="badge text-bg-danger">UJIAN</span>
+                                                    <?php else: ?>
+                                                        <span class="badge text-bg-primary">TUGAS</span>
                                                     <?php endif; ?>
-                                                <?php elseif ($isLocked): ?>
-                                                    <span class="badge text-bg-danger">TERKUNCI</span>
-                                                <?php elseif ($jenisRaw === 'ujian' && $durationMinutes !== null && $startedAt === ''): ?>
-                                                    <span class="badge text-bg-warning">BELUM MULAI</span>
+
+                                                    <?php if ($status === 'done'): ?>
+                                                        <span class="badge text-bg-success">DONE</span>
+                                                        <?php if ($scoreVal !== null && $scoreVal !== ''): ?>
+                                                            <?php
+                                                                $scoreNum = (float)$scoreVal;
+                                                                if ($scoreNum < 0) $scoreNum = 0;
+                                                                if ($scoreNum > 100) $scoreNum = 100;
+                                                                $scoreClass = 'score-primary';
+                                                                if ($scoreNum < 50) $scoreClass = 'score-danger';
+                                                                elseif ($scoreNum < 75) $scoreClass = 'score-warning';
+                                                                elseif ($scoreNum <= 90) $scoreClass = 'score-primary';
+                                                                else $scoreClass = 'score-success';
+                                                            ?>
+                                                            <span class="badge <?php echo htmlspecialchars($scoreClass); ?>">Nilai <?php echo htmlspecialchars((string)$scoreVal); ?></span>
+                                                        <?php endif; ?>
+                                                    <?php elseif ($isLocked): ?>
+                                                        <span class="badge text-bg-danger">TERKUNCI</span>
+                                                    <?php elseif ($jenisRaw === 'ujian' && $durationMinutes !== null && $startedAt === ''): ?>
+                                                        <span class="badge text-bg-warning">BELUM MULAI</span>
+                                                    <?php else: ?>
+                                                        <span class="badge text-bg-secondary">ASSIGNED</span>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <div class="fw-semibold mb-1 text-truncate"><?php echo htmlspecialchars($judul); ?></div>
+
+                                                <div class="row g-1 small text-muted">
+                                                    <div class="col-12 col-sm-6">Jumlah soal: <?php echo (int)($a['total_soal'] ?? 0); ?></div>
+                                                    <?php if ($jenisRaw === 'ujian' && $durationMinutes !== null): ?>
+                                                        <?php
+                                                            $dueTimeShort = '-';
+                                                            if ($due !== '') {
+                                                                $dueTs2 = strtotime($due);
+                                                                if ($dueTs2 !== false) {
+                                                                    $dueTimeShort = date('H:i', $dueTs2);
+                                                                }
+                                                            }
+                                                            $dueDateLabel = '-';
+                                                            if ($due !== '') {
+                                                                try {
+                                                                    $dtDue = new DateTime($due);
+                                                                    $months = [
+                                                                        1 => 'Jan',
+                                                                        2 => 'Feb',
+                                                                        3 => 'Mar',
+                                                                        4 => 'Apr',
+                                                                        5 => 'Mei',
+                                                                        6 => 'Jun',
+                                                                        7 => 'Jul',
+                                                                        8 => 'Agu',
+                                                                        9 => 'Sep',
+                                                                        10 => 'Okt',
+                                                                        11 => 'Nov',
+                                                                        12 => 'Des',
+                                                                    ];
+                                                                    $day = (int)$dtDue->format('j');
+                                                                    $monthNum = (int)$dtDue->format('n');
+                                                                    $mon = $months[$monthNum] ?? $dtDue->format('M');
+                                                                    $dueDateLabel = sprintf('%d %s', $day, $mon);
+                                                                } catch (Throwable $e) {
+                                                                    $dueDateLabel = $due;
+                                                                }
+                                                            }
+                                                        ?>
+                                                        <div class="col-12">
+                                                            Batas Waktu: <?php echo htmlspecialchars($dueTimeShort); ?>
+                                                            <span class="text-muted">|</span>
+                                                            <?php echo htmlspecialchars($dueDateLabel); ?>
+                                                            <span class="text-muted">|</span>
+                                                            <?php echo (int)$durationMinutes; ?> menit
+                                                            <?php echo $startedAt !== '' ? ' • Mulai: ' . htmlspecialchars(function_exists('format_id_date') ? format_id_date($startedAt) : $startedAt) : ''; ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <?php if ($jenisRaw !== 'ujian'): ?>
+                                                        <div class="col-12">
+                                                            Batas: <?php echo $due !== '' ? htmlspecialchars(function_exists('format_id_date') ? format_id_date($due) : $due) : '<span class="text-muted">-</span>'; ?>
+                                                            <?php if ($status === 'done' && $cc !== null && $cc !== '' && $tc !== null && $tc !== ''): ?>
+                                                                <span class="ms-2"><?php echo (int)$cc; ?>/<?php echo (int)$tc; ?> benar</span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-end flex-shrink-0">
+                                                <?php if ($isLocked): ?>
+                                                    <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Terkunci</button>
                                                 <?php else: ?>
-                                                    <span class="badge text-bg-secondary">ASSIGNED</span>
+                                                    <?php $btnClass = ($btnLabel === 'Mulai') ? 'btn-primary' : 'btn-outline-primary'; ?>
+                                                    <a class="btn <?php echo $btnClass; ?> btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/assignment_view.php?id=<?php echo (int)$a['id']; ?>"><?php echo htmlspecialchars($btnLabel); ?></a>
                                                 <?php endif; ?>
                                             </div>
-
-                                            <div class="fw-semibold mb-1"><?php echo htmlspecialchars($judul); ?></div>
-                                            <div class="small text-muted">Jumlah soal: <?php echo (int)($a['total_soal'] ?? 0); ?></div>
-
-                                            <?php if ($jenisRaw === 'ujian' && $durationMinutes !== null): ?>
-                                                <div class="small text-muted">Durasi: <?php echo (int)$durationMinutes; ?> menit<?php echo $startedAt !== '' ? ' • Mulai: ' . htmlspecialchars(function_exists('format_id_date') ? format_id_date($startedAt) : $startedAt) : ''; ?></div>
-                                            <?php endif; ?>
-
-                                            <div class="small text-muted">
-                                                Batas: <?php echo $due !== '' ? htmlspecialchars(function_exists('format_id_date') ? format_id_date($due) : $due) : '<span class="text-muted">-</span>'; ?>
-                                                <?php if ($status === 'done' && $cc !== null && $cc !== '' && $tc !== null && $tc !== ''): ?>
-                                                    <span class="ms-2"><?php echo (int)$cc; ?>/<?php echo (int)$tc; ?> benar</span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="text-end">
-                                            <?php if ($isLocked): ?>
-                                                <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Terkunci</button>
-                                            <?php else: ?>
-                                                <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/assignment_view.php?id=<?php echo (int)$a['id']; ?>"><?php echo htmlspecialchars($btnLabel); ?></a>
-                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>

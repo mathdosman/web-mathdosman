@@ -34,4 +34,4 @@ if (!defined('RECAPTCHA_SECRET_KEY')) {
 }
 
 // Zona waktu default
-date_default_timezone_set('Asia/Jakarta');
+date_default_timezone_set('Asia/Makassar');
