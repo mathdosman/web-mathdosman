@@ -336,7 +336,7 @@ include __DIR__ . '/../includes/header.php';
                             <span>Tugas / Ujian</span>
                         </div>
                         <?php if (!$assignments): ?>
-                            <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang ditugaskan.</div>
+                                <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang dijadwalkan.</div>
                         <?php else: ?>
                             <div class="vstack gap-2">
                                 <?php foreach ($assignments as $idx => $a): ?>
