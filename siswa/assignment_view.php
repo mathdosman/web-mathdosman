@@ -920,8 +920,57 @@ include __DIR__ . '/../includes/header.php';
                 $remainSec = (int)($remain % 60);
             ?>
             <div class="alert alert-secondary mt-3 mb-0">
-                <div class="small">Sisa waktu: <b><?php echo $remainMin; ?> menit <?php echo $remainSec; ?> detik</b></div>
+                <div class="small">
+                    Sisa waktu (otomatis submit jika habis): <b id="mdCountdownTimer"><?php echo $remainMin; ?> menit <?php echo $remainSec; ?> detik</b>
+                </div>
             </div>
+            <script>
+            // Aturan:
+            // - Jika siswa klik Selesai, submit manual (status selesai)
+            // - Jika countdown habis (karena durasi ATAU due_at lebih cepat), auto submit
+            // - Countdown dihitung dari waktu tersingkat antara durasi dan due_at
+            (function() {
+                var remain = <?php echo (int)$remain; ?>;
+                var timerEl = document.getElementById('mdCountdownTimer');
+                function pad(n) { return n < 10 ? '0' + n : n; }
+                function updateTimer() {
+                    if (!timerEl) return;
+                    if (remain <= 0) {
+                        timerEl.textContent = '00 menit 00 detik';
+                        return;
+                    }
+                    var m = Math.floor(remain / 60);
+                    var s = remain % 60;
+                    timerEl.textContent = pad(m) + ' menit ' + pad(s) + ' detik';
+                }
+                updateTimer();
+                var interval = setInterval(function() {
+                    remain--;
+                    if (remain <= 0) {
+                        clearInterval(interval);
+                        timerEl.textContent = '00 menit 00 detik';
+                        // Auto submit hanya jika status belum selesai
+                        var form = document.getElementById('answerForm');
+                        if (form && !form.classList.contains('md-form-done')) {
+                            var autoInput = document.createElement('input');
+                            autoInput.type = 'hidden';
+                            autoInput.name = 'auto_submit';
+                            autoInput.value = '1';
+                            form.appendChild(autoInput);
+                            form.classList.add('md-form-done'); // prevent double submit
+                            form.submit();
+                            setTimeout(function() {
+                                window.location.href = '<?php echo addslashes($base_url); ?>/siswa/dashboard.php';
+                            }, 4000);
+                        } else {
+                            window.location.href = '<?php echo addslashes($base_url); ?>/siswa/dashboard.php';
+                        }
+                    } else {
+                        updateTimer();
+                    }
+                }, 1000);
+            })();
+            </script>
         <?php endif; ?>
 
         <?php if (!empty($assignment['catatan'])): ?>
@@ -1078,20 +1127,30 @@ include __DIR__ . '/../includes/header.php';
                 <div id="mdNavBar" class="md-nav-grid mt-3 pt-3 border-top">
                     <div class="md-nav-left d-flex align-items-center gap-2">
                         <a id="mdBackBtn" class="btn btn-outline-secondary md-nav-btn" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Kembali</a>
-                        <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdPrevBtn">Prev</button>
+                                                <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdPrevBtn" title="Sebelumnya">
+                                                    <i class="bi bi-arrow-left"></i><span>Prev</span>
+                                                </button>
                     </div>
 
                     <div class="md-nav-center d-flex align-items-center justify-content-center">
                         <div class="d-flex align-items-center justify-content-center gap-2">
-                            <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal">Daftar Soal</button>
+                                                        <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal" title="Daftar Soal">
+                                                            <i class="bi bi-list-ol"></i><span>Daftar Soal</span>
+                                                        </button>
                             <?php if ($showCalculator): ?>
-                                <button type="button" id="mdCalcBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdCalcModal" aria-controls="mdCalcModal">Kalkulator</button>
+                                                                <button type="button" id="mdCalcBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdCalcModal" aria-controls="mdCalcModal" title="Kalkulator">
+                                                                    <i class="bi bi-calculator"></i><span>Kalkulator</span>
+                                                                </button>
                             <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="md-nav-right d-flex align-items-center justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdNextBtn">Next</button>
+                                                <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdNextBtn" title="Berikutnya">
+                                                    <i class="bi bi-arrow-right"></i><span>Next</span>
+                                                </button>
+<!-- Bootstrap Icons CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
                         <?php $jenisLabel = strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))); ?>
                         <button type="button" class="btn btn-primary md-nav-btn" id="mdStartBtn">Mulai <?php echo $jenisLabel === 'ujian' ? 'Ujian' : 'Mengerjakan'; ?></button>
