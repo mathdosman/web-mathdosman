@@ -306,7 +306,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Load latest windows + simple stats.
+// Filter tanggal untuk daftar jadwal absen.
+// Secara default menampilkan jadwal pada minggu berjalan (Senin–Minggu).
+$dateFromRaw = isset($_GET['date_from']) ? trim((string)$_GET['date_from']) : '';
+$dateToRaw = isset($_GET['date_to']) ? trim((string)$_GET['date_to']) : '';
+
+if ($dateFromRaw === '' && $dateToRaw === '') {
+    try {
+        $today = new DateTimeImmutable('today');
+        $dow = (int)$today->format('N'); // 1 (Senin) .. 7 (Minggu)
+        $monday = $today->modify('-' . ($dow - 1) . ' days');
+        $sunday = $monday->modify('+6 days');
+        $dateFromRaw = $monday->format('Y-m-d');
+        $dateToRaw = $sunday->format('Y-m-d');
+    } catch (Throwable $e) {
+        // fallback: biarkan kosong jika gagal hitung minggu
+    }
+}
+
+$filterFrom = null;
+$filterTo = null;
+
+if ($dateFromRaw !== '') {
+    try {
+        $filterFrom = new DateTimeImmutable($dateFromRaw . ' 00:00:00');
+    } catch (Throwable $e) {
+        $filterFrom = null;
+    }
+}
+
+if ($dateToRaw !== '') {
+    try {
+        $filterTo = new DateTimeImmutable($dateToRaw . ' 23:59:59');
+    } catch (Throwable $e) {
+        $filterTo = null;
+    }
+}
+
+// Jika range terbalik, tukar supaya from <= to
+if ($filterFrom && $filterTo && $filterFrom > $filterTo) {
+    $tmpDt = $filterFrom;
+    $filterFrom = $filterTo;
+    $filterTo = $tmpDt;
+
+    $tmpStr = $dateFromRaw;
+    $dateFromRaw = $dateToRaw;
+    $dateToRaw = $tmpStr;
+}
+
+// Load windows + simple stats, dengan filter tanggal dari–sampai (overlap dengan rentang window).
 $windows = [];
 try {
     $sql = 'SELECT w.*, 
@@ -344,11 +392,27 @@ try {
                    ) AS alpha_count
             FROM student_attendance_windows w
             LEFT JOIN student_attendance_window_students sws ON sws.window_id = w.id
-            GROUP BY w.id
-            ORDER BY w.start_at DESC, w.id DESC
-            LIMIT 50';
-    $stmt = $pdo->query($sql);
-    $windows = $stmt ? ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+            WHERE 1=1';
+
+    $params = [];
+    if ($filterFrom instanceof DateTimeImmutable) {
+        // Window yang selesai setelah atau sama dengan tanggal dari
+        $sql .= ' AND w.end_at >= :from';
+        $params[':from'] = $filterFrom->format('Y-m-d H:i:s');
+    }
+    if ($filterTo instanceof DateTimeImmutable) {
+        // Window yang mulai sebelum atau sama dengan tanggal sampai
+        $sql .= ' AND w.start_at <= :to';
+        $params[':to'] = $filterTo->format('Y-m-d H:i:s');
+    }
+
+    $sql .= ' GROUP BY w.id
+              ORDER BY w.start_at DESC, w.id DESC
+              LIMIT 50';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $windows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } catch (Throwable $e) {
     $windows = [];
 }
@@ -378,6 +442,38 @@ include __DIR__ . '/../../includes/header.php';
                 </ul>
             </div>
         <?php endif; ?>
+
+        <form method="get" class="row g-2 align-items-end mb-3">
+            <div class="col-sm-4 col-md-3">
+                <label for="attFilterFrom" class="form-label mb-1 small">Tanggal dari</label>
+                <input
+                    type="date"
+                    name="date_from"
+                    id="attFilterFrom"
+                    class="form-control form-control-sm"
+                    value="<?php echo htmlspecialchars($dateFromRaw); ?>">
+            </div>
+            <div class="col-sm-4 col-md-3">
+                <label for="attFilterTo" class="form-label mb-1 small">Tanggal sampai</label>
+                <input
+                    type="date"
+                    name="date_to"
+                    id="attFilterTo"
+                    class="form-control form-control-sm"
+                    value="<?php echo htmlspecialchars($dateToRaw); ?>">
+            </div>
+            <div class="col-sm-4 col-md-3 col-lg-2">
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100">Terapkan filter</button>
+            </div>
+            <div class="col-sm-4 col-md-3 col-lg-2">
+                <a href="attendance_windows.php" class="btn btn-outline-secondary btn-sm w-100">Reset ke minggu ini</a>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="text-muted small mt-2 mt-lg-0">
+                    Default menampilkan jadwal pada minggu berjalan (Senin–Minggu). Ubah tanggal untuk melihat jadwal pada rentang lain.
+                </div>
+            </div>
+        </form>
 
         <form method="post" class="mb-4" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
