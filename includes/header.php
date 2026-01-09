@@ -506,7 +506,7 @@ try {
 <?php endif; ?>
 <?php if ($isStudentArea && $isStudent): ?>
     <div class="modal fade" id="studentProfileModal" tabindex="-1" aria-labelledby="studentProfileModalLabel" aria-hidden="true" data-no-swal="1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-body p-3">
                     <div class="d-flex flex-column align-items-center text-center">

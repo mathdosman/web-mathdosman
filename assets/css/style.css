@@ -691,6 +691,13 @@ body.student-area .student-top-avatar-img {
     object-fit: cover;
 }
 
+/* Student profile modal: keep photo compact */
+body.student-area .student-profile-modal-photo img {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+}
+
 /* Student logout icon on top navbar when no photo yet */
 body.student-area .student-top-logout-btn {
     display: inline-flex;
