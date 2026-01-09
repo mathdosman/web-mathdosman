@@ -343,11 +343,14 @@ include __DIR__ . '/../../includes/header.php';
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Ganti Foto (opsional)</label>
-                        <input type="file" name="foto" class="form-control" accept="image/jpeg,image/png,image/webp">
+                        <input type="file" name="foto" id="student_foto_input" class="form-control" accept="image/jpeg,image/png,image/webp">
                         <div class="form-text">JPG/PNG/WEBP, max 1MB.</div>
                         <?php if (!empty($student['foto'])): ?>
                             <div class="mt-2">
-                                <img class="img-thumbnail" style="max-width:180px" src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$student['foto'], '/')); ?>" alt="Foto siswa">
+                                <label for="student_foto_input" class="d-inline-block" style="cursor: pointer;">
+                                    <img class="img-thumbnail" style="max-width:180px" src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$student['foto'], '/')); ?>" alt="Foto siswa">
+                                </label>
+                                <div class="small text-muted mt-1">Klik foto untuk memilih file baru.</div>
                             </div>
                             <button
                                 type="submit"
