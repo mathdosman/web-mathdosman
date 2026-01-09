@@ -245,7 +245,7 @@ $now = new DateTimeImmutable('now');
         <?php endif; ?>
 
         <?php if (!$rows): ?>
-            <div class="alert alert-info mb-0 small">Belum ada jadwal absen yang terdaftar untuk Anda.</div>
+            <div class="alert alert-info mb-0 small" data-no-swal="1">Belum ada jadwal absen yang terdaftar untuk Anda.</div>
         <?php else: ?>
             <div class="table-responsive mt-2">
                 <table class="table table-sm align-middle mb-0 attendance-requests-table">
