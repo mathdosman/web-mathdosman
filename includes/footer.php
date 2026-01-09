@@ -1,6 +1,6 @@
 
 <?php if (!empty($useStudentSidebar)): ?>
-	<nav class="student-bottom-nav d-md-none" aria-label="Navigasi utama siswa">
+	<nav class="student-bottom-nav position-sticky bottom-0 d-md-none" aria-label="Navigasi utama siswa">
 		<?php
 			$isDashboard = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
 			$isAttendance = in_array($currentPage, ['attendance_history.php', 'attendance_requests.php', 'absen.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);

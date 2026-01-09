@@ -59,7 +59,7 @@ foreach ($rows as $r) {
 $page_title = 'Hasil';
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card shadow-sm">
+<div class="card shadow-sm results-main-card">
     <div class="card-body">
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-1">
             <div>
