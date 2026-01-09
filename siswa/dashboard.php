@@ -336,7 +336,10 @@ include __DIR__ . '/../includes/header.php';
                             <span>Tugas / Ujian</span>
                         </div>
                         <?php if (!$assignments): ?>
-                                <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang dijadwalkan.</div>
+                            <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada tugas/ujian yang dijadwalkan saat ini.</div>
+                            <div class="d-flex flex-wrap gap-2 small">
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Lihat Hasil Tugas / Ujian</a>
+                            </div>
                         <?php else: ?>
                             <div class="vstack gap-2">
                                 <?php foreach ($assignments as $idx => $a): ?>
@@ -504,11 +507,10 @@ include __DIR__ . '/../includes/header.php';
                                 </div>
                             <?php endforeach; ?>
                             </div>
+                            <div class="mt-3 d-flex flex-wrap gap-2 small">
+                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Lihat Hasil Tugas / Ujian</a>
+                            </div>
                         <?php endif; ?>
-
-                        <div class="mt-3 d-flex flex-wrap gap-2 small">
-                            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Lihat Hasil Tugas / Ujian</a>
-                        </div>
                     </div>
                 </div>
             </div>
