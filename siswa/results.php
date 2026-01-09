@@ -80,7 +80,7 @@ include __DIR__ . '/../includes/header.php';
             <hr>
 
             <?php if (!$rows): ?>
-                <div class="alert alert-info mb-0">Belum ada tugas/ujian yang sudah dikumpulkan.</div>
+                <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada tugas/ujian yang sudah dikumpulkan saat ini.</div>
             <?php else: ?>
                 <ul class="nav nav-pills mb-3 results-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
@@ -98,7 +98,7 @@ include __DIR__ . '/../includes/header.php';
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="panelTugas" role="tabpanel" aria-labelledby="tabTugas" tabindex="0">
                         <?php if (!$rowsTugas): ?>
-                            <div class="alert alert-info mb-0">Belum ada tugas yang sudah dikumpulkan.</div>
+                            <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada tugas yang sudah dikumpulkan saat ini.</div>
                         <?php else: ?>
                             <div class="table-responsive mt-1">
                                 <table class="table table-sm align-middle mb-0 results-table">
@@ -174,7 +174,7 @@ include __DIR__ . '/../includes/header.php';
 
                     <div class="tab-pane fade" id="panelUjian" role="tabpanel" aria-labelledby="tabUjian" tabindex="0">
                         <?php if (!$rowsUjian): ?>
-                            <div class="alert alert-info mb-0">Belum ada ujian yang sudah dikumpulkan.</div>
+                            <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada ujian yang sudah dikumpulkan saat ini.</div>
                         <?php else: ?>
                             <div class="table-responsive mt-1">
                                 <table class="table table-sm align-middle mb-0 results-table">

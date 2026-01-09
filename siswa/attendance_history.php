@@ -179,7 +179,7 @@ include __DIR__ . '/../includes/header.php';
         <?php if ($error !== ''): ?>
             <div class="alert alert-danger mb-0" data-no-swal="1"><?php echo htmlspecialchars($error); ?></div>
         <?php elseif (!$combined): ?>
-            <div class="alert alert-info mb-0" data-no-swal="1">Belum ada data absen atau ajuan status.</div>
+            <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada rekap absen atau ajuan status saat ini.</div>
         <?php else: ?>
             <div class="table-responsive mt-2">
                 <table class="table table-sm align-middle mb-0 attendance-history-table">
