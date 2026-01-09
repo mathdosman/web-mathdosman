@@ -20,6 +20,34 @@ if ($code === '') {
     exit;
 }
 
+// --- Analytics: Catat kunjungan unique IP per minggu (seperti index.php) ---
+$dbPreflightOk = isset($pdo) && $pdo instanceof PDO;
+$getClientIp = static function (): string {
+    return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+};
+if ($dbPreflightOk) {
+    try {
+        $stmt1 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visits'");
+        $hasVisits = $stmt1 && $stmt1->fetch(PDO::FETCH_NUM);
+        $stmt2 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visit_ips'");
+        $hasIps = $stmt2 && $stmt2->fetch(PDO::FETCH_NUM);
+        if ($hasVisits && $hasIps) {
+            $ip = $getClientIp();
+            if ($ip !== '') {
+                $ipHash = hash('sha256', $ip);
+                $weekStartSql = 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
+                $pdo->beginTransaction();
+                $stmt = $pdo->prepare('INSERT IGNORE INTO site_weekly_visit_ips (week_start, ip_hash) VALUES (' . $weekStartSql . ', :h)');
+                $stmt->execute([':h' => $ipHash]);
+                $pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
+                $pdo->commit();
+            }
+        }
+    } catch (Throwable $e) {
+        try { if ($pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); } } catch (Throwable $e2) {}
+    }
+}
+
 $package = null;
 try {
     $sqlBase = 'SELECT p.id, p.code, p.name, p.description, p.status, p.created_at, p.subject_id, p.materi, p.submateri,
