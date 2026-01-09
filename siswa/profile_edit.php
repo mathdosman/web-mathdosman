@@ -207,6 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 }
 
 $page_title = 'Edit Profil';
+$body_class = trim((string)($body_class ?? '') . ' profile-edit-page');
 $extra_head_links = [
     'https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css',
 ];
@@ -395,6 +396,13 @@ include __DIR__ . '/../includes/header.php';
     const ensureModal = () => {
         if (modal) return modal;
         if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return null;
+        // Ensure modal is attached to <body> to avoid stacking/containing-block issues
+        // (especially on mobile browsers when parents use filters/backdrop-filter).
+        try {
+            if (modalEl.parentElement !== document.body) {
+                document.body.appendChild(modalEl);
+            }
+        } catch (e) {}
         // Use dismissible backdrop so user can tap outside to close.
         modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true, focus: true });
         return modal;

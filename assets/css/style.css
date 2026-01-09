@@ -1347,6 +1347,15 @@ body.student-area.attendance-requests-page .modal-backdrop.show {
     opacity: 0;
 }
 
+/* Profile edit: keep Cropper modal interactive above any overlays */
+body.student-area.profile-edit-page .modal {
+    z-index: 2100;
+}
+
+body.student-area.profile-edit-page .modal-backdrop {
+    z-index: 2090;
+}
+
 /* Daftar Soal modal: grid 5 kolom + ukuran seragam */
 body.student-area.assignment-view .md-soal-grid {
     display: grid;
