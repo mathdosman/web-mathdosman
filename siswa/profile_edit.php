@@ -395,7 +395,8 @@ include __DIR__ . '/../includes/header.php';
     const ensureModal = () => {
         if (modal) return modal;
         if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return null;
-        modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+        // Use dismissible backdrop so user can tap outside to close.
+        modal = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true, focus: true });
         return modal;
     };
 
@@ -438,6 +439,18 @@ include __DIR__ . '/../includes/header.php';
         // If user cancels, keep existing photo and clear file input.
         try { input.value = ''; } catch (e) {}
         cleanup();
+
+        // Defensive: if a backdrop gets stuck, remove it so the page is clickable.
+        // Only do this when there are no other visible modals.
+        window.setTimeout(() => {
+            try {
+                const anyShown = document.querySelector('.modal.show');
+                if (anyShown) return;
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.querySelectorAll('.modal-backdrop').forEach((el) => el.remove());
+            } catch (e) {}
+        }, 0);
     });
 
     useBtn.addEventListener('click', () => {
