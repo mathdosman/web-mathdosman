@@ -303,6 +303,32 @@ try {
         }
     ?>
 
+    <?php
+        // Optional per-page external stylesheet links (absolute URLs).
+        // Usage before include header.php:
+        //   $extra_head_links = ['https://.../lib.css'];
+        $extra_head_links = $extra_head_links ?? [];
+        if (is_string($extra_head_links) && trim($extra_head_links) !== '') {
+            $extra_head_links = [trim($extra_head_links)];
+        }
+        if (is_array($extra_head_links)) {
+            foreach ($extra_head_links as $href) {
+                if (!is_string($href)) {
+                    continue;
+                }
+                $href = trim($href);
+                if ($href === '') {
+                    continue;
+                }
+                // Allow only http(s) to avoid accidental local paths.
+                if (!preg_match('~^https?://~i', $href)) {
+                    continue;
+                }
+                echo '<link href="' . htmlspecialchars($href) . '" rel="stylesheet">';
+            }
+        }
+    ?>
+
     <?php if ($use_mathjax): ?>
         <script>
             window.MathJax = {

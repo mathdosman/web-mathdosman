@@ -1,4 +1,38 @@
 
+<?php if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer)): ?>
+	<?php
+		$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+		$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
+	?>
+	<footer class="mt-4 pt-3 border-top">
+		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
+			<div>
+				<?php if ($isHomePage): ?>
+					<a href="<?php echo htmlspecialchars((string)$base_url); ?>/login.php" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> MATHDOSMAN</a>
+				<?php else: ?>
+					<span>&copy; <?php echo date('Y'); ?> MATHDOSMAN</span>
+				<?php endif; ?>
+			</div>
+			<?php if (empty($hide_public_footer_links)): ?>
+				<div class="d-flex flex-wrap gap-3">
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kebijakan-privasi.php">Kebijakan Privasi</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/syarat-ketentuan.php">Syarat &amp; Ketentuan</a>
+				</div>
+			<?php endif; ?>
+		</div>
+	</footer>
+<?php endif; ?>
+
+<?php if (!empty($useAdminSidebar) || !empty($useStudentSidebar)): ?>
+			</div>
+		</div>
+<?php endif; ?>
+
+</div>
+</div>
+
 <?php if (!empty($useStudentSidebar)): ?>
 	<nav class="student-bottom-nav position-sticky bottom-0 d-md-none" aria-label="Navigasi utama siswa">
 		<?php
@@ -43,39 +77,6 @@
 	</nav>
 <?php endif; ?>
 
-<?php if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer)): ?>
-	<?php
-		$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
-		$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
-	?>
-	<footer class="mt-4 pt-3 border-top">
-		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
-			<div>
-				<?php if ($isHomePage): ?>
-					<a href="<?php echo htmlspecialchars((string)$base_url); ?>/login.php" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> MATHDOSMAN</a>
-				<?php else: ?>
-					<span>&copy; <?php echo date('Y'); ?> MATHDOSMAN</span>
-				<?php endif; ?>
-			</div>
-			<?php if (empty($hide_public_footer_links)): ?>
-				<div class="d-flex flex-wrap gap-3">
-					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
-					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
-					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kebijakan-privasi.php">Kebijakan Privasi</a>
-					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/syarat-ketentuan.php">Syarat &amp; Ketentuan</a>
-				</div>
-			<?php endif; ?>
-		</div>
-	</footer>
-<?php endif; ?>
-
-<?php if (!empty($useAdminSidebar) || !empty($useStudentSidebar)): ?>
-			</div>
-		</div>
-<?php endif; ?>
-
-</div>
-</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

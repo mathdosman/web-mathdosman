@@ -129,6 +129,112 @@ function siswa_upload_photo(array $file, ?string $oldStoredPath = null): array
     return [$storedPath, ''];
 }
 
+function siswa_upload_photo_data_url(string $dataUrl, ?string $oldStoredPath = null): array
+{
+    // Returns: [storedPath|null, errorMessage]
+    $dataUrl = trim($dataUrl);
+    if ($dataUrl === '') {
+        return [null, ''];
+    }
+
+    // Expect a base64 data URL: data:image/jpeg;base64,...
+    if (!str_starts_with($dataUrl, 'data:')) {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    $commaPos = strpos($dataUrl, ',');
+    if ($commaPos === false) {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    $meta = substr($dataUrl, 5, $commaPos - 5); // after "data:"
+    $payload = substr($dataUrl, $commaPos + 1);
+    $meta = strtolower(trim($meta));
+    $payload = trim($payload);
+
+    if ($payload === '') {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    $isBase64 = str_contains($meta, ';base64');
+    $mime = trim(str_replace(';base64', '', $meta));
+    if (!$isBase64 || $mime === '') {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/pjpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+    ];
+
+    if (!isset($allowed[$mime])) {
+        return [null, 'Format foto harus JPG/PNG/WEBP.'];
+    }
+
+    // Strict-ish base64 decode.
+    $binary = base64_decode($payload, true);
+    if ($binary === false || $binary === '') {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    $maxBytes = 1 * 1024 * 1024;
+    if (strlen($binary) > $maxBytes) {
+        return [null, 'Ukuran foto maksimal 1MB.'];
+    }
+
+    // Validate that this is a real image.
+    try {
+        if (!function_exists('getimagesizefromstring')) {
+            return [null, 'Server belum mendukung validasi foto.'];
+        }
+        $info = @getimagesizefromstring($binary);
+        if (!$info || empty($info['mime'])) {
+            return [null, 'File foto tidak valid.'];
+        }
+        $detectedMime = strtolower(trim((string)$info['mime']));
+        if (!isset($allowed[$detectedMime])) {
+            return [null, 'Format foto harus JPG/PNG/WEBP.'];
+        }
+        // Prefer detected mime over declared.
+        $mime = $detectedMime;
+    } catch (Throwable $e) {
+        return [null, 'File foto tidak valid.'];
+    }
+
+    $ext = $allowed[$mime];
+
+    try {
+        $rand = bin2hex(random_bytes(10));
+    } catch (Throwable $e) {
+        $rand = sha1((string)microtime(true) . ':' . (string)mt_rand());
+    }
+
+    $fileName = 'siswa-' . date('Ymd-His') . '-' . substr($rand, 0, 16) . '.' . $ext;
+
+    $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'uploads';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0775, true);
+    }
+
+    $targetFs = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
+    if (@file_put_contents($targetFs, $binary) === false) {
+        return [null, 'Gagal menyimpan foto.'];
+    }
+
+    // Stored path relative to web root.
+    $storedPath = 'siswa/uploads/' . $fileName;
+
+    // Best-effort delete old.
+    if ($oldStoredPath) {
+        siswa_delete_photo($oldStoredPath);
+    }
+
+    return [$storedPath, ''];
+}
+
 function siswa_upload_attendance_photo(array $file, ?string $oldStoredPath = null): array
 {
     // Upload khusus foto absen ke folder terpisah: siswa/absen_uploads.

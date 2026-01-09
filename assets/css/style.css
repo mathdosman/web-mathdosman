@@ -745,8 +745,29 @@ body.student-area .profile-edit-form .form-control {
     background-color: #ffffff;
     border: 1px solid rgba(15, 23, 42, 0.10);
     border-radius: 1rem 1rem 0 0;
-    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.18);
     z-index: 1030;
+}
+
+/* Student bottom nav: force true viewport-centering on mobile.
+   Bootstrap's .position-sticky uses !important, so we override it here. */
+@media (max-width: 767.98px) {
+    /* Prevent fixed bottom nav from covering the last content */
+    body.student-layout .app-container {
+        padding-bottom: calc(4.0rem + env(safe-area-inset-bottom));
+    }
+
+    body.student-layout .student-bottom-nav {
+        position: fixed !important;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        margin-inline: 0;
+        border-radius: 0;
+        padding-bottom: .45rem;
+        padding-bottom: calc(.45rem + env(safe-area-inset-bottom));
+    }
 }
 
 .student-bottom-nav .student-bottom-nav-item {

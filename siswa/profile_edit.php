@@ -118,7 +118,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
     $oldFoto = (string)($values['foto'] ?? '');
     $newFoto = $oldFoto;
     $newUploadedFoto = '';
-    if ($error === '' && isset($_FILES['foto']) && is_array($_FILES['foto']) && isset($_FILES['foto']['error']) && (int)$_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $croppedDataUrl = trim((string)($_POST['foto_cropped_data'] ?? ''));
+    if ($error === '' && $croppedDataUrl !== '') {
+        // Client-side cropped photo (data URL).
+        // Important: do NOT delete old photo before DB update succeeds.
+        [$storedPath, $uploadError] = siswa_upload_photo_data_url($croppedDataUrl, null);
+        if ($uploadError !== '') {
+            $error = $uploadError;
+        } elseif ($storedPath !== null && $storedPath !== '') {
+            $newUploadedFoto = (string)$storedPath;
+            $newFoto = $newUploadedFoto;
+        }
+    } elseif ($error === '' && isset($_FILES['foto']) && is_array($_FILES['foto']) && isset($_FILES['foto']['error']) && (int)$_FILES['foto']['error'] !== UPLOAD_ERR_NO_FILE) {
+        // Fallback: normal file upload.
         // Important: do NOT delete old photo before DB update succeeds.
         [$storedPath, $uploadError] = siswa_upload_photo($_FILES['foto'], null);
         if ($uploadError !== '') {
@@ -195,6 +207,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 }
 
 $page_title = 'Edit Profil';
+$extra_head_links = [
+    'https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css',
+];
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">
@@ -220,12 +235,14 @@ include __DIR__ . '/../includes/header.php';
 
         <form method="post" enctype="multipart/form-data" class="row g-3 profile-edit-form" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+            <input type="hidden" name="foto_cropped_data" id="profile_foto_cropped_data" value="">
 
             <div class="col-12">
                 <div class="d-flex flex-column align-items-center text-center gap-2">
                     <label for="profile_foto_input" class="d-inline-block" style="cursor: pointer;">
                         <?php if (!empty($values['foto'])): ?>
                             <img
+                                id="profile_foto_preview"
                                 src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$values['foto'], '/')); ?>"
                                 alt="Foto siswa"
                                 class="img-thumbnail rounded-circle"
@@ -233,6 +250,7 @@ include __DIR__ . '/../includes/header.php';
                             >
                         <?php else: ?>
                             <img
+                                id="profile_foto_preview"
                                 src="<?php echo htmlspecialchars(asset_url('assets/img/no-photo.png', (string)$base_url)); ?>"
                                 alt="No Foto"
                                 class="img-thumbnail rounded-circle"
@@ -240,7 +258,7 @@ include __DIR__ . '/../includes/header.php';
                             >
                         <?php endif; ?>
                     </label>
-                    <div class="text-muted small mt-2">Klik foto untuk mengganti (JPG/JPEG, PNG, WEBP, max 1MB).</div>
+                    <div class="text-muted small mt-2">Klik foto untuk mengganti. Setelah pilih file, kamu bisa crop dulu sebelum disimpan (max 1MB).</div>
                     <input
                         type="file"
                         name="foto"
@@ -307,7 +325,143 @@ include __DIR__ . '/../includes/header.php';
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </div>
         </form>
+
+        <!-- Modal: crop foto profil -->
+        <div class="modal fade" id="profilePhotoCropModal" tabindex="-1" aria-labelledby="profilePhotoCropModalLabel" aria-hidden="true" data-no-swal="1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="profilePhotoCropModalLabel">Crop Foto Profil</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-9">
+                                <div class="border rounded-3 p-2" style="max-height: 65vh;">
+                                    <img id="profileCropImage" alt="Crop foto" style="max-width: 100%; display: block; max-height: 62vh; margin: 0 auto;" />
+                                </div>
+                                <div class="form-text mt-2">Geser untuk memindahkan, pinch/scroll untuk zoom. Foto akan disimpan dalam bentuk kotak (1:1).</div>
+                            </div>
+                            <div class="col-12 col-lg-3">
+                                <div class="small fw-semibold mb-2">Preview</div>
+                                <div class="d-flex justify-content-center">
+                                    <div id="profileCropperPreview" class="rounded-circle overflow-hidden border" style="width: 120px; height: 120px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-primary" id="btnUseCroppedPhoto">Gunakan Foto</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+(() => {
+    // Profile photo cropper (student)
+    const input = document.getElementById('profile_foto_input');
+    const previewImg = document.getElementById('profile_foto_preview');
+    const hiddenCropped = document.getElementById('profile_foto_cropped_data');
+    const modalEl = document.getElementById('profilePhotoCropModal');
+    const cropImg = document.getElementById('profileCropImage');
+    const useBtn = document.getElementById('btnUseCroppedPhoto');
+    if (!input || !modalEl || !cropImg || !useBtn || !hiddenCropped || !previewImg) return;
+
+    let modal = null;
+    let cropper = null;
+    let lastObjectUrl = '';
+
+    const destroyCropper = () => {
+        if (cropper) {
+            try { cropper.destroy(); } catch (e) {}
+            cropper = null;
+        }
+    };
+
+    const cleanup = () => {
+        destroyCropper();
+        if (lastObjectUrl) {
+            try { URL.revokeObjectURL(lastObjectUrl); } catch (e) {}
+            lastObjectUrl = '';
+        }
+        cropImg.removeAttribute('src');
+    };
+
+    const ensureModal = () => {
+        if (modal) return modal;
+        if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return null;
+        modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+        return modal;
+    };
+
+    input.addEventListener('change', () => {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+        if (typeof Cropper === 'undefined') {
+            // If Cropper fails to load, fallback to normal upload.
+            hiddenCropped.value = '';
+            return;
+        }
+
+        // Reset previous crop state.
+        hiddenCropped.value = '';
+
+        cleanup();
+        lastObjectUrl = URL.createObjectURL(file);
+        cropImg.src = lastObjectUrl;
+
+        const m = ensureModal();
+        if (!m) return;
+        m.show();
+    });
+
+    modalEl.addEventListener('shown.bs.modal', () => {
+        if (!cropImg.getAttribute('src')) return;
+        if (typeof Cropper === 'undefined') return;
+        destroyCropper();
+        cropper = new Cropper(cropImg, {
+            aspectRatio: 1,
+            viewMode: 1,
+            autoCropArea: 1,
+            background: false,
+            responsive: true,
+            preview: '#profileCropperPreview',
+        });
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        // If user cancels, keep existing photo and clear file input.
+        try { input.value = ''; } catch (e) {}
+        cleanup();
+    });
+
+    useBtn.addEventListener('click', () => {
+        if (!cropper) return;
+        // Generate a reasonably small square JPEG.
+        let dataUrl = '';
+        try {
+            const canvas = cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
+            dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        } catch (e) {
+            dataUrl = '';
+        }
+        if (!dataUrl || !dataUrl.startsWith('data:image/')) return;
+
+        hiddenCropped.value = dataUrl;
+        previewImg.src = dataUrl;
+
+        // Clear the file input so server uses cropped data.
+        try { input.value = ''; } catch (e) {}
+
+        const m = ensureModal();
+        if (m) m.hide();
+    });
+})();
+</script>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>
