@@ -396,7 +396,7 @@ try {
                 class="btn btn-link p-0 ms-auto student-top-avatar-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#studentProfileModal"
-                aria-label="Lihat profil siswa"
+                aria-label="Profil & Logout"
             >
                 <span class="student-top-avatar-inner">
                     <img
@@ -409,6 +409,15 @@ try {
                     >
                 </span>
             </button>
+        <?php elseif ($isStudentArea && $isStudent): ?>
+            <a
+                href="<?php echo $base_url; ?>/siswa/logout.php"
+                class="btn btn-outline-light btn-sm ms-auto student-top-logout-btn"
+                aria-label="Logout"
+                title="Logout"
+            >
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            </a>
         <?php endif; ?>
         <?php if ($has_navbar_menu): ?>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -530,8 +539,16 @@ try {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between py-2 px-3">
-                    <a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="btn btn-outline-primary btn-sm">Kelola profil</a>
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                    <div class="d-flex align-items-center gap-2 w-100 justify-content-between">
+                        <a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="btn btn-outline-primary btn-sm">Kelola profil</a>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="<?php echo $base_url; ?>/siswa/logout.php" class="btn btn-outline-danger btn-sm" aria-label="Logout">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                                <span class="ms-1">Logout</span>
+                            </a>
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
