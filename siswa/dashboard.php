@@ -156,20 +156,23 @@ include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">
     <div class="card-body">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-1">
             <div>
-                <h5 class="mb-1">Dashboard Siswa</h5>
-                <div class="text-muted small">Ringkasan profil, jadwal absen, serta tugas dan ujian yang diberikan guru.</div>
-            </div>
-            <div>
-                <!-- Logout tersedia di sidebar siswa -->
+                <h5 class="mb-1 d-flex align-items-center gap-2 dashboard-card-title">
+                    <i class="bi bi-speedometer2 text-primary"></i>
+                    <span>Dashboard Siswa</span>
+                </h5>
+                <div class="text-muted dashboard-card-subtitle">Ringkasan profil, jadwal absen, serta tugas dan ujian yang diberikan guru.</div>
             </div>
         </div>
-        <hr>
-        <div class="row g-3">
-            <div class="col-md-4">
+        <hr class="mt-3 mb-3">
+        <div class="row g-3 align-items-stretch">
+            <div class="col-lg-4 col-md-5">
                 <div class="border rounded-3 p-3 h-100">
-                    <div class="fw-semibold mb-2">Profil</div>
+                    <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-circle text-primary"></i>
+                        <span>Profil</span>
+                    </div>
                     <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
                         <div class="text-center">
                             <?php if (!empty($student['foto'])): ?>
@@ -202,10 +205,12 @@ include __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
             </div>
-            <div class="col-md-8">
-                <div class="vstack gap-3 h-100">
-                    <div class="border rounded-3 p-3">
-                        <div class="fw-semibold mb-2">Absen</div>
+            <div class="col-lg-8 col-md-7">
+                <div class="border rounded-3 p-3 h-100">
+                        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar-check text-success"></i>
+                            <span>Absen</span>
+                        </div>
                         <div class="d-flex flex-wrap gap-2 mb-3 small">
                             <span class="badge text-bg-success">Hadir: <?php echo (int)$attendanceSummary['hadir']; ?></span>
                             <span class="badge text-bg-info text-dark">Sakit: <?php echo (int)$attendanceSummary['sakit']; ?></span>
@@ -241,10 +246,13 @@ include __DIR__ . '/../includes/header.php';
                                 <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php">Lihat Rekap Absen</a>
                             </div>
                         <?php endif; ?>
-                    </div>
 
-                    <div class="border rounded-3 p-3 flex-grow-1">
-                        <div class="fw-semibold mb-2">Tugas / Ujian</div>
+                        <hr class="my-3">
+
+                        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-journal-text text-warning"></i>
+                            <span>Tugas / Ujian</span>
+                        </div>
                         <?php if (!$assignments): ?>
                             <div class="alert alert-info mb-0" data-no-swal="1">Belum ada tugas/ujian yang ditugaskan.</div>
                         <?php else: ?>
@@ -336,7 +344,7 @@ include __DIR__ . '/../includes/header.php';
                                             </div>
 
                                             <div class="fw-semibold mb-1"><?php echo htmlspecialchars($judul); ?></div>
-                                            <div class="small text-muted">Paket: <?php echo htmlspecialchars((string)($a['package_code'] ?? '')); ?> • Jumlah soal: <?php echo (int)($a['total_soal'] ?? 0); ?></div>
+                                            <div class="small text-muted">Jumlah soal: <?php echo (int)($a['total_soal'] ?? 0); ?></div>
 
                                             <?php if ($jenisRaw === 'ujian' && $durationMinutes !== null): ?>
                                                 <div class="small text-muted">Durasi: <?php echo (int)$durationMinutes; ?> menit<?php echo $startedAt !== '' ? ' • Mulai: ' . htmlspecialchars(function_exists('format_id_date') ? format_id_date($startedAt) : $startedAt) : ''; ?></div>
@@ -362,6 +370,10 @@ include __DIR__ . '/../includes/header.php';
                             <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
+
+                        <div class="mt-3 d-flex flex-wrap gap-2 small">
+                            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Lihat Hasil Tugas / Ujian</a>
+                        </div>
                     </div>
                 </div>
             </div>

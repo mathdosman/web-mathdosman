@@ -107,6 +107,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// Rekap skor pribadi per siswa (untuk tampilan di bawah game).
+$studentId = (int)($student['id'] ?? 0);
+$historyRows = [];
+if ($studentId > 0) {
+    try {
+        $stmtTable = $pdo->query("SHOW TABLES LIKE 'math_game_scores'");
+        $hasTable = (bool)$stmtTable->fetchColumn();
+    } catch (Throwable $eTbl) {
+        $hasTable = false;
+    }
+
+    if ($hasTable) {
+        $hasModeColumn = false;
+        try {
+            $stmtCol = $pdo->prepare('SHOW COLUMNS FROM math_game_scores LIKE :c');
+            $stmtCol->execute([':c' => 'mode']);
+            $hasModeColumn = (bool)$stmtCol->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $eCol) {
+            $hasModeColumn = false;
+        }
+
+        try {
+            if ($hasModeColumn) {
+                $historySql = 'SELECT created_at, mode, score, max_level, questions_answered
+                    FROM math_game_scores
+                    WHERE student_id = :sid
+                    ORDER BY created_at DESC
+                    LIMIT 10';
+            } else {
+                // Skema lama: treat sebagai penjumlahan/pengurangan.
+                $historySql = 'SELECT created_at, score, max_level, questions_answered, "addsub" AS mode
+                    FROM math_game_scores
+                    WHERE student_id = :sid
+                    ORDER BY created_at DESC
+                    LIMIT 10';
+            }
+
+            $stmtHist = $pdo->prepare($historySql);
+            $stmtHist->execute([':sid' => $studentId]);
+            $historyRows = $stmtHist->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (Throwable $eHist) {
+            $historyRows = [];
+        }
+    }
+}
+
 if ($mode === 'muldiv') {
     $page_title = 'Game Hitung Cepat (× / ÷)';
 } else {
@@ -116,14 +162,14 @@ include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">
     <div class="card-body">
-        <h5 class="mb-3">
+           <h5 class="mb-1 d-flex align-items-center gap-2 dashboard-card-title">
             <?php if ($mode === 'muldiv'): ?>
                 Game Hitung Cepat (× / ÷)
             <?php else: ?>
                 Game Hitung Cepat (+ / -)
             <?php endif; ?>
-        </h5>
-        <p class="text-muted small mb-3">
+           </h5>
+           <p class="text-muted dashboard-card-subtitle mb-3">
             <?php if ($mode === 'muldiv'): ?>
                 Jawab soal perkalian dan pembagian sebanyak mungkin dalam waktu terbatas.
             <?php else: ?>
@@ -168,6 +214,61 @@ include __DIR__ . '/../includes/header.php';
         <div class="small text-muted">
             Catatan: Skor terbaik akan tersimpan dan dapat dilihat oleh admin di halaman laporan.
         </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-bar-chart-line text-primary"></i>
+            <span>Rekap Hasil Mini Game Kamu</span>
+        </div>
+        <?php if (empty($historyRows)): ?>
+            <div class="text-muted small mb-0">Belum ada data permainan yang tersimpan. Mainkan salah satu mode untuk menyimpan skor pertama.</div>
+        <?php else: ?>
+            <div class="table-responsive small mb-0">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 1%;">No</th>
+                            <th>Waktu</th>
+                            <th>Mode</th>
+                            <th>Skor</th>
+                            <th>Level</th>
+                            <th>Soal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $no = 1; foreach ($historyRows as $row): ?>
+                            <tr>
+                                <td><?php echo $no++; ?></td>
+                                <td>
+                                    <?php
+                                        $ts = (string)($row['created_at'] ?? '');
+                                        echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($ts) : $ts);
+                                    ?>
+                                </td>
+                                <td class="text-nowrap">
+                                    <?php
+                                        $m = (string)($row['mode'] ?? '');
+                                        if ($m === 'muldiv') {
+                                            echo '<span class="badge bg-success rounded-pill d-inline-flex align-items-center gap-1" title="Perkalian / Pembagian"><i class="bi bi-calculator"></i><span>×/÷</span></span>';
+                                        } elseif ($m === 'addsub' || $m === '') {
+                                            echo '<span class="badge bg-info text-dark rounded-pill d-inline-flex align-items-center gap-1" title="Penjumlahan / Pengurangan"><i class="bi bi-calculator"></i><span>+/−</span></span>';
+                                        } else {
+                                            echo '<span class="badge bg-secondary rounded-pill">' . htmlspecialchars($m) . '</span>';
+                                        }
+                                    ?>
+                                </td>
+                                <td><strong><?php echo (int)($row['score'] ?? 0); ?></strong></td>
+                                <td><?php echo (int)($row['max_level'] ?? 0); ?></td>
+                                <td><?php echo (int)($row['questions_answered'] ?? 0); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 

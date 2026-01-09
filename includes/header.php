@@ -53,6 +53,27 @@ $useSidebar = $useAdminSidebar || $useStudentSidebar;
 
 $disable_navbar = !empty($disable_navbar);
 
+// Student profile photo (for top navbar and modal)
+$studentHasPhoto = false;
+$studentPhotoUrl = '';
+$studentModalPhotoUrl = '';
+if ($isStudent && $isStudentArea && !empty($_SESSION['student']) && is_array($_SESSION['student'])) {
+    $rawFoto = trim((string)($_SESSION['student']['foto'] ?? ''));
+    if ($rawFoto !== '') {
+        $studentHasPhoto = true;
+        $studentPhotoUrl = rtrim((string)$base_url, '/') . '/' . ltrim($rawFoto, '/');
+    }
+
+    // Modal selalu punya foto (fallback ke placeholder jika belum upload)
+    try {
+        $studentModalPhotoUrl = $studentHasPhoto
+            ? $studentPhotoUrl
+            : asset_url('assets/img/no-photo.png', (string)$base_url);
+    } catch (Throwable $e) {
+        $studentModalPhotoUrl = $studentPhotoUrl;
+    }
+}
+
 // Navbar burger (top-right) only needed when there is something inside the collapse
 // (public menu or admin account dropdown). This prevents a useless second burger
 // on student pages that already use the left sidebar toggle.
@@ -251,6 +272,7 @@ try {
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4649430696681971" crossorigin="anonymous"></script>
     <?php endif; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="<?php echo htmlspecialchars(asset_url('assets/css/style.css', (string)$base_url)); ?>" rel="stylesheet">
     <?php if ($isFrontArea): ?>
         <link href="<?php echo htmlspecialchars(asset_url('assets/css/front.css', (string)$base_url)); ?>" rel="stylesheet">
@@ -306,18 +328,29 @@ try {
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <?php endif; ?>
 </head>
-<body class="bg-light<?php echo $useSidebar ? ' admin-layout sidebar-collapsed' : ''; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $siswaAdminBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
+<?php
+    // Body layout classes:
+    // - Admin pages with sidebar: admin-layout + sidebar-collapsed (start collapsed, toggleable).
+    // - Student pages with sidebar: admin-layout only (sidebar always visible on desktop).
+    $body_layout_class = '';
+    if ($useAdminSidebar) {
+        $body_layout_class = ' admin-layout sidebar-collapsed';
+    } elseif ($useStudentSidebar) {
+        $body_layout_class = ' admin-layout';
+    }
+?>
+<body class="bg-light<?php echo $body_layout_class; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $siswaAdminBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
 <?php if (!$disable_navbar): ?>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 app-navbar">
     <div class="<?php echo $useSidebar ? 'container-fluid' : 'container'; ?>">
-        <?php if ($useSidebar): ?>
+        <?php if ($useSidebar && !$useStudentSidebar): ?>
             <button class="btn btn-outline-light me-2" type="button" id="sidebarToggle" aria-controls="adminSidebar" aria-label="Toggle sidebar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
             </button>
         <?php endif; ?>
-        <a class="navbar-brand d-inline-flex align-items-center gap-2" href="<?php echo $base_url; ?>/index.php" aria-label="MATHDOSMAN">
+        <a class="navbar-brand d-inline-flex align-items-center gap-2<?php echo $isStudentArea ? '' : ' mx-auto'; ?>" href="<?php echo $base_url; ?>/index.php" aria-label="MATHDOSMAN">
             <span class="brand-mark" aria-hidden="true">
                 <?php if (!empty($brandLogoPath)): ?>
                     <img class="brand-logo" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="28" height="28" alt="" loading="eager" decoding="async">
@@ -331,6 +364,26 @@ try {
             </span>
             <span class="brand-name">MATHDOSMAN</span>
         </a>
+        <?php if ($isStudentArea && $isStudent && $studentHasPhoto && $studentPhotoUrl !== ''): ?>
+            <button
+                type="button"
+                class="btn btn-link p-0 ms-auto student-top-avatar-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#studentProfileModal"
+                aria-label="Lihat profil siswa"
+            >
+                <span class="student-top-avatar-inner">
+                    <img
+                        src="<?php echo htmlspecialchars($studentPhotoUrl); ?>"
+                        alt="Foto siswa"
+                        class="student-top-avatar-img"
+                        width="36"
+                        height="36"
+                        loading="lazy"
+                    >
+                </span>
+            </button>
+        <?php endif; ?>
         <?php if ($has_navbar_menu): ?>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -412,7 +465,51 @@ try {
             </ul>
         </div>
     </div>
+        </div>
+    </div>
 </nav>
+<?php endif; ?>
+<?php if ($isStudentArea && $isStudent): ?>
+    <div class="modal fade" id="studentProfileModal" tabindex="-1" aria-labelledby="studentProfileModalLabel" aria-hidden="true" data-no-swal="1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-3">
+                    <div class="d-flex flex-column align-items-center text-center">
+                        <?php if ($studentModalPhotoUrl !== ''): ?>
+                            <div class="student-profile-modal-photo mb-3">
+                                <img src="<?php echo htmlspecialchars($studentModalPhotoUrl); ?>" alt="Foto siswa" class="img-fluid rounded-circle">
+                            </div>
+                        <?php endif; ?>
+                        <h6 class="mb-1">
+                            <?php echo htmlspecialchars((string)($_SESSION['student']['nama_siswa'] ?? '')); ?>
+                        </h6>
+                        <div class="text-muted small mb-3">
+                            Kelas <?php
+                                $kelasLabel = trim((string)($_SESSION['student']['kelas'] ?? ''));
+                                $rombelLabel = trim((string)($_SESSION['student']['rombel'] ?? ''));
+                                $kelasRombel = trim($kelasLabel . ' ' . $rombelLabel);
+                                echo htmlspecialchars($kelasRombel);
+                            ?>
+                        </div>
+                        <dl class="row small text-start w-100 mb-0 student-profile-modal-details">
+                            <dt class="col-4">Username</dt>
+                            <dd class="col-8 mb-1">
+                                <?php echo htmlspecialchars((string)($_SESSION['student']['username'] ?? '')); ?>
+                            </dd>
+                            <dt class="col-4">No HP</dt>
+                            <dd class="col-8 mb-1">
+                                <?php echo htmlspecialchars((string)($_SESSION['student']['no_hp'] ?? '')); ?>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between py-2 px-3">
+                    <a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="btn btn-outline-primary btn-sm">Kelola profil</a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
 <?php if ($useAdminSidebar): ?>
     <aside class="app-sidebar bg-dark text-white" id="adminSidebar" aria-label="Sidebar Admin">

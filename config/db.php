@@ -638,6 +638,16 @@ try {
                 // ignore
             }
 
+            // Total waktu aktif di layar ujian (dalam detik, hanya saat tab aktif).
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM student_assignments LIKE " . $pdo->quote('exam_focus_seconds'))->fetch();
+                if (!$col) {
+                    $pdo->exec('ALTER TABLE student_assignments ADD COLUMN exam_focus_seconds INT UNSIGNED NOT NULL DEFAULT 0 AFTER exam_reset_count');
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
             try {
                 $idx = $pdo->query("SHOW INDEX FROM student_assignments WHERE Key_name = 'idx_sa_exam_revoked'")->fetch();
                 if (!$idx) {

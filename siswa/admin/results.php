@@ -9,6 +9,7 @@ $errors = [];
 $hasScoreColumn = false;
 $hasGradedAtColumn = false;
 $hasResetCountColumn = false;
+$hasFocusSecondsColumn = false;
 try {
     $cols = [];
     $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
@@ -20,6 +21,7 @@ try {
     $hasScoreColumn = !empty($cols['score']);
     $hasGradedAtColumn = !empty($cols['graded_at']);
     $hasResetCountColumn = !empty($cols['exam_reset_count']);
+    $hasFocusSecondsColumn = !empty($cols['exam_focus_seconds']);
 } catch (Throwable $e) {
     $hasScoreColumn = false;
     $hasGradedAtColumn = false;
@@ -61,6 +63,11 @@ try {
         $select .= ', sa.exam_reset_count';
     } else {
         $select .= ', NULL AS exam_reset_count';
+    }
+    if ($hasFocusSecondsColumn) {
+        $select .= ', sa.exam_focus_seconds';
+    } else {
+        $select .= ', NULL AS exam_focus_seconds';
     }
     $select .= ', ' . $latestExpr . ' AS latest_at';
     $select .= '
@@ -182,6 +189,9 @@ include __DIR__ . '/../../includes/header.php';
                             <th>Judul Paket</th>
                             <th style="width:120px">Kelas</th>
                             <th style="width:120px">Nilai</th>
+                            <?php if ($tab === 'ujian' && $hasFocusSecondsColumn): ?>
+                                <th style="width:110px">Aktif (menit)</th>
+                            <?php endif; ?>
                             <?php if ($tab === 'ujian' && $hasResetCountColumn): ?>
                                 <th style="width:80px">Reset</th>
                             <?php endif; ?>
@@ -190,7 +200,7 @@ include __DIR__ . '/../../includes/header.php';
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="<?php echo ($tab === 'ujian' && $hasResetCountColumn) ? 6 : 5; ?>" class="text-center text-muted">Belum ada hasil.</td></tr>
+                            <tr><td colspan="<?php echo 5 + (($tab === 'ujian' && $hasFocusSecondsColumn) ? 1 : 0) + (($tab === 'ujian' && $hasResetCountColumn) ? 1 : 0); ?>" class="text-center text-muted">Belum ada hasil.</td></tr>
                         <?php endif; ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
@@ -207,6 +217,7 @@ include __DIR__ . '/../../includes/header.php';
 
                                 $score = $r['score'] ?? null;
                                 $resetCount = (int)($r['exam_reset_count'] ?? 0);
+                                $focusSeconds = (int)($r['exam_focus_seconds'] ?? 0);
                             ?>
                             <tr>
                                 <td>
@@ -226,6 +237,16 @@ include __DIR__ . '/../../includes/header.php';
                                         <span class="small text-muted">-</span>
                                     <?php endif; ?>
                                 </td>
+                                <?php if ($tab === 'ujian' && $hasFocusSecondsColumn): ?>
+                                    <td>
+                                        <?php if ($focusSeconds > 0): ?>
+                                            <?php $focusMinutes = $focusSeconds / 60; ?>
+                                            <span class="small text-muted"><?php echo number_format($focusMinutes, 1); ?></span>
+                                        <?php else: ?>
+                                            <span class="small text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                <?php endif; ?>
                                 <?php if ($tab === 'ujian' && $hasResetCountColumn): ?>
                                     <td>
                                         <span class="badge text-bg-light border text-dark"><?php echo $resetCount; ?>x</span>

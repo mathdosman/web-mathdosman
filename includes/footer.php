@@ -1,3 +1,48 @@
+
+<?php if (!empty($useStudentSidebar)): ?>
+	<nav class="student-bottom-nav d-md-none" aria-label="Navigasi utama siswa">
+		<?php
+			$isDashboard = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+			$isAttendance = in_array($currentPage, ['attendance_history.php', 'attendance_requests.php', 'absen.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+			$isResults = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+			$isGame = in_array($currentPage, ['game_math.php', 'game_math_scores.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+			$isProfile = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		?>
+		<a href="<?php echo $base_url; ?>/siswa/dashboard.php" class="student-bottom-nav-item<?php echo $isDashboard ? ' active' : ''; ?>">
+			<i class="bi bi-speedometer2" aria-hidden="true"></i>
+			<span>Beranda</span>
+		</a>
+		<div class="student-bottom-nav-group">
+			<button type="button" class="student-bottom-nav-item js-bottom-nav-attendance<?php echo $isAttendance ? ' active' : ''; ?>" aria-expanded="false">
+				<i class="bi bi-calendar-check" aria-hidden="true"></i>
+				<span>Absen</span>
+			</button>
+			<div class="student-bottom-nav-submenu" id="bottomNavAttendanceMenu" hidden>
+				<a href="<?php echo $base_url; ?>/siswa/attendance_history.php">
+					<i class="bi bi-clock-history" aria-hidden="true"></i>
+					<span>Rekap Absen</span>
+				</a>
+				<a href="<?php echo $base_url; ?>/siswa/attendance_requests.php">
+					<i class="bi bi-envelope-exclamation" aria-hidden="true"></i>
+					<span>Ajuan Status</span>
+				</a>
+			</div>
+		</div>
+		<a href="<?php echo $base_url; ?>/siswa/results.php" class="student-bottom-nav-item<?php echo $isResults ? ' active' : ''; ?>">
+			<i class="bi bi-clipboard-check" aria-hidden="true"></i>
+			<span>Hasil</span>
+		</a>
+		<a href="<?php echo $base_url; ?>/siswa/game_math.php" class="student-bottom-nav-item<?php echo $isGame ? ' active' : ''; ?>">
+			<i class="bi bi-controller" aria-hidden="true"></i>
+			<span>Game</span>
+		</a>
+		<a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="student-bottom-nav-item<?php echo $isProfile ? ' active' : ''; ?>">
+			<i class="bi bi-person-circle" aria-hidden="true"></i>
+			<span>Profil</span>
+		</a>
+	</nav>
+<?php endif; ?>
+
 <?php if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer)): ?>
 	<?php
 		$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
@@ -768,6 +813,47 @@
 		icon: msg.icon,
 		title: msg.title,
 		text: msg.text,
+	});
+})();
+</script>
+
+<script>
+(() => {
+	// Bottom nav: attendance submenu (Rekap Absen / Ajuan Status)
+	const body = document.body;
+	if (!body || !body.classList || !body.classList.contains('student-area')) return;
+
+	const trigger = document.querySelector('.js-bottom-nav-attendance');
+	const menu = document.getElementById('bottomNavAttendanceMenu');
+	if (!trigger || !menu) return;
+
+	const closeMenu = () => {
+		menu.classList.remove('show');
+		menu.hidden = true;
+		trigger.setAttribute('aria-expanded', 'false');
+	};
+
+	trigger.addEventListener('click', (ev) => {
+		ev.preventDefault();
+		const isOpen = menu.classList.contains('show');
+		if (isOpen) {
+			closeMenu();
+		} else {
+			menu.classList.add('show');
+			menu.hidden = false;
+			trigger.setAttribute('aria-expanded', 'true');
+		}
+	});
+
+	document.addEventListener('click', (ev) => {
+		if (!menu.classList.contains('show')) return;
+		const target = ev.target;
+		if (!(target instanceof HTMLElement)) return;
+		const group = trigger.closest('.student-bottom-nav-group');
+		if (group && target.closest('.student-bottom-nav-group') === group) {
+			return;
+		}
+		closeMenu();
 	});
 })();
 </script>

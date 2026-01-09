@@ -219,7 +219,10 @@ $now = new DateTimeImmutable('now');
     <div class="card-body">
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-2">
             <div>
-                <h5 class="mb-1">Ajuan Perubahan Status Absen</h5>
+                <h5 class="mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-envelope-exclamation text-warning"></i>
+                    <span>Ajuan Perubahan Status Absen</span>
+                </h5>
                 <div class="text-muted small">Ajukan perubahan dari Alpha (A) menjadi Izin (I), Sakit (S), atau Dispen (D) dengan alasan dan bukti.</div>
             </div>
             <div class="d-flex gap-2">
@@ -245,18 +248,18 @@ $now = new DateTimeImmutable('now');
             <div class="alert alert-info mb-0 small">Belum ada jadwal absen yang terdaftar untuk Anda.</div>
         <?php else: ?>
             <div class="table-responsive mt-2">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table table-sm align-middle mb-0 attendance-requests-table">
                     <thead>
                         <tr>
-                            <th>Jadwal</th>
-                            <th style="width:170px">Rentang Waktu</th>
-                            <th style="width:130px">Status Kehadiran</th>
-                            <th style="width:170px">Status Ajuan</th>
-                            <th style="width:170px">Aksi</th>
+                            <th class="text-center" style="width:52px">No</th>
+                            <th>Jadwal &amp; Waktu</th>
+                            <th class="text-center" style="width:150px">Status Kehadiran</th>
+                            <th class="text-center" style="width:180px">Status Ajuan</th>
+                            <th class="text-center" style="width:150px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($rows as $row): ?>
+                        <?php $rowNo = 1; foreach ($rows as $row): ?>
                             <?php
                                 $wsStatus = (string)($row['ws_status'] ?? 'pending');
                                 $startAt = trim((string)($row['start_at'] ?? ''));
@@ -316,26 +319,29 @@ $now = new DateTimeImmutable('now');
                                 $canRequest = ($wsStatus === 'pending' && $crStatus !== 'pending');
                             ?>
                             <tr>
+                                <td class="text-center"><span class="small text-muted"><?php echo (int)$rowNo; ?></span></td>
                                 <td>
                                     <div class="small fw-semibold"><?php echo htmlspecialchars($windowName !== '' ? $windowName : 'Jadwal Absen'); ?></div>
-                                </td>
-                                <td>
-                                    <div class="small">
+                                    <div class="small text-muted mt-1">
                                         <?php
                                             $startLabel = $startAt !== '' && function_exists('format_id_datetime_short') ? format_id_datetime_short($startAt) : $startAt;
                                             $endLabel = $endAtStr !== '' && function_exists('format_id_datetime_short') ? format_id_datetime_short($endAtStr) : $endAtStr;
                                             echo htmlspecialchars($startLabel !== '' ? $startLabel : '-');
-                                        ?><br>
-                                        s/d <?php echo htmlspecialchars($endLabel !== '' ? $endLabel : '-'); ?>
+                                        ?>
+                                        &ndash;
+                                        <?php echo htmlspecialchars($endLabel !== '' ? $endLabel : '-'); ?>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($effectiveLabel); ?></span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="small <?php echo htmlspecialchars($reqClass); ?>"><?php echo htmlspecialchars($reqLabel); ?></span>
+                                    <?php if ($crAdminNote !== ''): ?>
+                                        <div class="small text-muted mt-1">Catatan admin: <?php echo htmlspecialchars($crAdminNote); ?></div>
+                                    <?php endif; ?>
                                 </td>
-                                <td style="width: 150px;">
+                                <td class="text-center">
                                     <?php if ($canRequest): ?>
                                         <?php
                                             $rangeLabel = '';
@@ -359,15 +365,12 @@ $now = new DateTimeImmutable('now');
                                             data-range-label="<?php echo htmlspecialchars($rangeLabel, ENT_QUOTES); ?>">
                                             <?php echo ($crStatus === 'returned') ? 'Ajukan Ulang' : 'Ajukan'; ?>
                                         </button>
-                                        <?php if ($crStatus === 'returned' && $crAdminNote !== ''): ?>
-                                            <div class="small text-muted mt-1">Catatan admin: <?php echo htmlspecialchars($crAdminNote); ?></div>
-                                        <?php endif; ?>
                                     <?php else: ?>
                                         <span class="small text-muted">Tidak bisa diajukan.</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php $rowNo++; endforeach; ?>
                     </tbody>
                 </table>
             </div>

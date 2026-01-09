@@ -39,6 +39,7 @@ $hasDuration = !empty($cols['duration_minutes']);
 $hasDueAt = !empty($cols['due_at']);
 $hasRevoked = !empty($cols['exam_revoked_at']);
 $hasResetCount = !empty($cols['exam_reset_count']);
+$hasFocusSeconds = !empty($cols['exam_focus_seconds']);
 $hasToken = !empty($cols['token_code']);
 $hasScoring = !empty($cols['score']) || !empty($cols['correct_count']) || !empty($cols['total_count']) || !empty($cols['graded_at']);
 $hasCorrectCount = !empty($cols['correct_count']);
@@ -442,6 +443,7 @@ try {
     if ($hasDueAt) $select .= ', sa.due_at';
     if ($hasRevoked) $select .= ', sa.exam_revoked_at';
     if ($hasResetCount) $select .= ', sa.exam_reset_count';
+    if ($hasFocusSeconds) $select .= ', sa.exam_focus_seconds';
 
     $select .= ', s.nama_siswa, s.kelas, s.rombel, p.name AS package_name, p.code AS package_code';
 
@@ -535,6 +537,9 @@ include __DIR__ . '/../../includes/header.php';
                             <th style="width:64px">No</th>
                             <th>Nama Siswa</th>
                             <th>Judul Paket</th>
+                            <?php if ($hasFocusSeconds): ?>
+                                <th style="width:110px">Aktif (menit)</th>
+                            <?php endif; ?>
                             <?php if ($hasResetCount): ?>
                                 <th style="width:80px">Reset</th>
                             <?php endif; ?>
@@ -543,7 +548,7 @@ include __DIR__ . '/../../includes/header.php';
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="<?php echo $hasResetCount ? 6 : 5; ?>" class="text-center text-muted">Belum ada ujian berjalan.</td></tr>
+                            <tr><td colspan="<?php echo 5 + ($hasFocusSeconds ? 1 : 0) + ($hasResetCount ? 1 : 0); ?>" class="text-center text-muted">Belum ada ujian berjalan.</td></tr>
                         <?php endif; ?>
                         <?php $no = 0; foreach ($rows as $r): $no++; ?>
                             <?php
@@ -569,6 +574,16 @@ include __DIR__ . '/../../includes/header.php';
                                 <td>
                                     <?php echo htmlspecialchars((string)($r['package_name'] ?? '')); ?>
                                 </td>
+                                <?php if ($hasFocusSeconds): ?>
+                                    <td>
+                                        <?php
+                                        $sec = (int)($r['exam_focus_seconds'] ?? 0);
+                                        if ($sec < 0) $sec = 0;
+                                        $minutes = $sec / 60;
+                                        ?>
+                                        <span class="text-muted"><?php echo number_format($minutes, 1); ?></span>
+                                    </td>
+                                <?php endif; ?>
                                 <?php if ($hasResetCount): ?>
                                     <td>
                                         <?php $rc = (int)($r['exam_reset_count'] ?? 0); ?>

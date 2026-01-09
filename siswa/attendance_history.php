@@ -159,7 +159,10 @@ include __DIR__ . '/../includes/header.php';
     <div class="card-body">
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-2">
             <div>
-                <h5 class="mb-1">Rekap Absen</h5>
+                <h5 class="mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-primary"></i>
+                    <span>Rekap Absen</span>
+                </h5>
                 <div class="text-muted small">Riwayat absen yang sudah Anda lakukan.</div>
                 <div class="text-muted small">Minggu: <?php echo htmlspecialchars($weekLabelStart); ?> - <?php echo htmlspecialchars($weekLabelEnd); ?> (Senin&ndash;Sabtu)</div>
             </div>
@@ -172,7 +175,6 @@ include __DIR__ . '/../includes/header.php';
                     <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php?page=<?php echo (int)($page + 1); ?>">Minggu lebih lama</a>
                 <?php endif; ?>
             </div>
-        </div>
 
         <?php if ($error !== ''): ?>
             <div class="alert alert-danger mb-0" data-no-swal="1"><?php echo htmlspecialchars($error); ?></div>
@@ -180,17 +182,18 @@ include __DIR__ . '/../includes/header.php';
             <div class="alert alert-info mb-0" data-no-swal="1">Belum ada data absen atau ajuan status.</div>
         <?php else: ?>
             <div class="table-responsive mt-2">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table table-sm align-middle mb-0 attendance-history-table">
                     <thead>
                         <tr>
-                            <th style="width:76px">Waktu</th>
-                            <th style="width:120px">Jenis</th>
-                            <th style="width:260px">Status</th>
-                            <th style="width:70px">Foto</th>
+                            <th class="text-center" style="width:56px">No</th>
+                            <th class="text-center" style="width:120px">Waktu</th>
+                            <th class="text-center" style="width:120px">Jenis</th>
+                            <th>Status / Keterangan</th>
+                            <th class="text-center" style="width:80px">Lampiran</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($combined as $item): ?>
+                        <?php $rowNo = 1; foreach ($combined as $item): ?>
                             <?php if ($item['type'] === 'record'): ?>
                                 <?php
                                     $r = $item['raw'];
@@ -216,14 +219,15 @@ include __DIR__ . '/../includes/header.php';
                                     $statusClass = ((string)($r['status'] ?? '') === 'accepted') ? 'text-bg-success' : 'text-bg-warning text-dark';
                                 ?>
                                 <tr>
-                                    <td><div class="small fw-semibold"><?php echo htmlspecialchars($timeLabel); ?></div></td>
-                                    <td><span class="badge text-bg-secondary">Absen</span></td>
+                                    <td class="text-center"><span class="small text-muted"><?php echo (int)$rowNo; ?></span></td>
+                                    <td class="text-center"><div class="small fw-semibold"><?php echo htmlspecialchars($timeLabel); ?></div></td>
+                                    <td class="text-center"><span class="badge text-bg-secondary">Absen</span></td>
                                     <td>
                                         <div class="small fw-semibold mb-1"><?php echo htmlspecialchars((string)($r['setting_name'] ?? '-')); ?></div>
                                         <span class="badge <?php echo htmlspecialchars($statusClass); ?>"><?php echo htmlspecialchars($statusText); ?></span>
                                         <div class="small text-muted mt-1"><?php echo htmlspecialchars((string)$distance); ?> m / <?php echo htmlspecialchars((string)$radius); ?> m</div>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <?php if ($photoUrl !== '' && $photoExists): ?>
                                             <button type="button" class="btn p-0 border-0 bg-transparent js-history-media" data-media-type="image" data-media-src="<?php echo htmlspecialchars($photoUrl); ?>" aria-label="Lihat foto absen">
                                                 <img src="<?php echo htmlspecialchars($photoUrl); ?>" alt="Foto absen" class="rounded border" style="width:40px;height:40px;object-fit:cover;" loading="lazy" decoding="async">
@@ -288,10 +292,14 @@ include __DIR__ . '/../includes/header.php';
                                     }
                                 ?>
                                 <tr>
-                                    <td><div class="small fw-semibold"><?php echo htmlspecialchars($timeLabel); ?></div></td>
-                                    <td>
+                                    <td class="text-center"><span class="small text-muted"><?php echo (int)$rowNo; ?></span></td>
+                                    <td class="text-center"><div class="small fw-semibold"><?php echo htmlspecialchars($timeLabel); ?></div></td>
+                                    <td class="text-center">
                                         <span class="badge text-bg-info">Ajuan Status</span>
-                                        <div class="small fw-semibold mt-1"><?php echo htmlspecialchars($wName !== '' ? $wName : 'Jadwal Absen'); ?></div>
+                                    </td>
+                                    <td>
+                                        <div class="small fw-semibold"><?php echo htmlspecialchars($wName !== '' ? $wName : 'Jadwal Absen'); ?></div>
+                                        <span class="badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
                                         <?php if ($crReason !== ''): ?>
                                             <div class="small text-muted mt-1">Alasan siswa: <?php echo htmlspecialchars($crReason); ?></div>
                                         <?php endif; ?>
@@ -299,8 +307,7 @@ include __DIR__ . '/../includes/header.php';
                                             <div class="small text-muted mt-1">Catatan admin: <?php echo htmlspecialchars($crAdminNote); ?></div>
                                         <?php endif; ?>
                                     </td>
-                                    <td><span class="badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($statusLabel); ?></span></td>
-                                    <td class="text-muted small">
+                                    <td class="text-muted small text-center">
                                         <?php if ($crEvidencePath !== ''): ?>
                                             <?php
                                                 $evidenceUrl = rtrim((string)$base_url, '/') . '/' . ltrim($crEvidencePath, '/');
@@ -316,7 +323,7 @@ include __DIR__ . '/../includes/header.php';
                                     </td>
                                 </tr>
                             <?php endif; ?>
-                        <?php endforeach; ?>
+                            <?php $rowNo++; endforeach; ?>
                     </tbody>
                 </table>
             </div>

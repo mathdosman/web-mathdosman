@@ -87,19 +87,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
     require_csrf_valid();
 
     $newNama = siswa_clean_string($_POST['nama_siswa'] ?? '');
-    $newKelas = siswa_clean_string($_POST['kelas'] ?? '');
-    $newRombel = siswa_clean_string($_POST['rombel'] ?? '');
     $newNoHp = siswa_clean_phone($_POST['no_hp'] ?? '');
 
-    if ($newNama === '' || $newKelas === '' || $newRombel === '') {
-        $error = 'Nama, kelas, dan rombel wajib diisi.';
-    }
+    // Kelas dan rombel tidak bisa diubah oleh siswa; gunakan nilai dari database.
+    $newKelas = (string)$values['kelas'];
+    $newRombel = (string)$values['rombel'];
 
-    if ($error === '' && $hasKelasRombelsTable && $kelasRombelMap) {
-        $ok = isset($kelasRombelMap[$newKelas]) && in_array($newRombel, (array)$kelasRombelMap[$newKelas], true);
-        if (!$ok) {
-            $error = 'Kelas/Rombel tidak terdaftar. Hubungi admin.';
-        }
+    if ($newNama === '') {
+        $error = 'Nama wajib diisi.';
     }
 
     $currentPassword = (string)($_POST['current_password'] ?? '');
@@ -203,11 +198,14 @@ $page_title = 'Edit Profil';
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">
-    <div class="card-body">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
+    <div class="card-body pb-2">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-1">
             <div>
-                <h5 class="mb-1">Edit Profil</h5>
-                <div class="text-muted small">Perbarui data kontak dan password akun.</div>
+                <h5 class="mb-1 d-flex align-items-center gap-2 dashboard-card-title">
+                    <i class="bi bi-person-gear text-primary"></i>
+                    <span>Edit Profil</span>
+                </h5>
+                <div class="text-muted dashboard-card-subtitle">Perbarui data kontak dan password akun.</div>
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars((string)$base_url); ?>/siswa/dashboard.php">Kembali</a>
@@ -218,94 +216,76 @@ include __DIR__ . '/../includes/header.php';
             <div class="alert alert-danger mt-3 mb-0"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
 
-        <hr>
+        <hr class="my-3">
 
-        <form method="post" enctype="multipart/form-data" class="row g-3" autocomplete="off">
+        <form method="post" enctype="multipart/form-data" class="row g-3 profile-edit-form" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
 
             <div class="col-12">
-                <div class="d-flex flex-column align-items-center text-center">
-                    <?php if (!empty($values['foto'])): ?>
-                        <img
-                            src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$values['foto'], '/')); ?>"
-                            alt="Foto siswa"
-                            class="img-thumbnail rounded-circle"
-                            style="width: 140px; height: 140px; object-fit: cover;"
-                        >
-                    <?php else: ?>
-                        <img
-                            src="<?php echo htmlspecialchars(asset_url('assets/img/no-photo.png', (string)$base_url)); ?>"
-                            alt="No Foto"
-                            class="img-thumbnail rounded-circle"
-                            style="width: 140px; height: 140px; object-fit: cover;"
-                        >
-                    <?php endif; ?>
-                    <div class="text-muted small mt-2">Foto Profil</div>
+                <div class="d-flex flex-column align-items-center text-center gap-2">
+                    <label for="profile_foto_input" class="d-inline-block" style="cursor: pointer;">
+                        <?php if (!empty($values['foto'])): ?>
+                            <img
+                                src="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/' . ltrim((string)$values['foto'], '/')); ?>"
+                                alt="Foto siswa"
+                                class="img-thumbnail rounded-circle"
+                                style="width: 140px; height: 140px; object-fit: cover;"
+                            >
+                        <?php else: ?>
+                            <img
+                                src="<?php echo htmlspecialchars(asset_url('assets/img/no-photo.png', (string)$base_url)); ?>"
+                                alt="No Foto"
+                                class="img-thumbnail rounded-circle"
+                                style="width: 140px; height: 140px; object-fit: cover;"
+                            >
+                        <?php endif; ?>
+                    </label>
+                    <div class="text-muted small mt-2">Klik foto untuk mengganti (JPG/JPEG, PNG, WEBP, max 1MB).</div>
+                    <input
+                        type="file"
+                        name="foto"
+                        id="profile_foto_input"
+                        class="d-none"
+                        accept="image/jpeg,image/png,image/webp">
                 </div>
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Nama</label>
+                <label class="form-label fw-semibold mb-1">Nama</label>
                 <input type="text" name="nama_siswa" class="form-control" value="<?php echo htmlspecialchars($values['nama_siswa']); ?>" required>
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Kelas</label>
-                <?php if ($kelasOptions): ?>
-                    <select class="form-select" name="kelas" id="kelas_select" required>
-                        <option value="">-- pilih kelas --</option>
-                        <?php foreach ($kelasOptions as $k): $k = (string)$k; ?>
-                            <option value="<?php echo htmlspecialchars($k); ?>"<?php echo $values['kelas'] === $k ? ' selected' : ''; ?>><?php echo htmlspecialchars($k); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php else: ?>
-                    <input type="text" name="kelas" class="form-control" value="<?php echo htmlspecialchars($values['kelas']); ?>" required>
-                <?php endif; ?>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Rombel</label>
-                <?php if ($kelasOptions): ?>
-                    <select class="form-select" name="rombel" id="rombel_select" required>
-                        <option value="">-- pilih rombel --</option>
-                        <?php
-                            $kSel = (string)$values['kelas'];
-                            $rList = ($kSel !== '' && isset($kelasRombelMap[$kSel])) ? (array)$kelasRombelMap[$kSel] : [];
-                        ?>
-                        <?php foreach ($rList as $rb): $rb = (string)$rb; ?>
-                            <option value="<?php echo htmlspecialchars($rb); ?>"<?php echo $values['rombel'] === $rb ? ' selected' : ''; ?>><?php echo htmlspecialchars($rb); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php else: ?>
-                    <input type="text" name="rombel" class="form-control" value="<?php echo htmlspecialchars($values['rombel']); ?>" required>
-                <?php endif; ?>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold mb-1">Kelas / Rombel</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    value="<?php echo htmlspecialchars(trim((string)($values['kelas'] ?? '') . ' ' . (string)($values['rombel'] ?? ''))); ?>"
+                    readonly
+                >
+                <div class="form-text">Perubahan kelas/rombel hanya dapat dilakukan oleh admin.</div>
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Username</label>
+                <label class="form-label fw-semibold mb-1">Username</label>
                 <input type="text" class="form-control" value="<?php echo htmlspecialchars($values['username']); ?>" readonly>
             </div>
             <div class="col-md-6">
-                <label class="form-label">No HP</label>
+                <label class="form-label fw-semibold mb-1">No HP</label>
                 <input type="text" name="no_hp" class="form-control" value="<?php echo htmlspecialchars($values['no_hp']); ?>" placeholder="08..." inputmode="numeric" pattern="[0-9]*" maxlength="30">
                 <div class="form-text">Gunakan angka saja. Spasi/tanda baca akan dihapus otomatis.</div>
             </div>
 
             <?php if ($hasParentPhoneColumn): ?>
                 <div class="col-md-6">
-                    <label class="form-label">No HP Ortu</label>
+                    <label class="form-label fw-semibold mb-1">No HP Ortu</label>
                     <input type="text" class="form-control" value="<?php echo htmlspecialchars($values['no_hp_ortu']); ?>" readonly inputmode="numeric" pattern="[0-9]*" maxlength="30">
                     <div class="form-text">Nomor ini hanya bisa diubah oleh admin.</div>
                 </div>
             <?php endif; ?>
 
-            <div class="col-md-6">
-                <label class="form-label">Foto (opsional)</label>
-                <input type="file" name="foto" class="form-control" accept="image/jpeg,image/png,image/webp">
-                <div class="form-text">Format yang didukung: JPG/JPEG, PNG, WEBP. Ukuran maksimal: 1MB (±1024KB).</div>
-            </div>
-
             <div class="col-12">
                 <div class="border rounded-3 p-3">
-                    <div class="fw-semibold mb-2">Ganti Password (opsional)</div>
+                    <div class="fw-semibold mb-2 small text-uppercase">Ganti Password (opsional)</div>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Password saat ini</label>
@@ -330,39 +310,4 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php if ($kelasOptions): ?>
-<script>
-(() => {
-    const map = <?php echo json_encode($kelasRombelMap, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
-    const kelasSel = document.getElementById('kelas_select');
-    const rombelSel = document.getElementById('rombel_select');
-    if (!kelasSel || !rombelSel) return;
-
-    const rebuild = () => {
-        const k = String(kelasSel.value || '');
-        const list = Array.isArray(map[k]) ? map[k] : [];
-        const prev = String(rombelSel.value || '');
-        rombelSel.innerHTML = '';
-        const opt0 = document.createElement('option');
-        opt0.value = '';
-        opt0.textContent = '-- pilih rombel --';
-        rombelSel.appendChild(opt0);
-        list.forEach((rb) => {
-            const opt = document.createElement('option');
-            opt.value = rb;
-            opt.textContent = rb;
-            rombelSel.appendChild(opt);
-        });
-        if (prev && list.includes(prev)) {
-            rombelSel.value = prev;
-        } else {
-            rombelSel.value = '';
-        }
-    };
-
-    kelasSel.addEventListener('change', rebuild);
-    rebuild();
-})();
-</script>
-<?php endif; ?>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

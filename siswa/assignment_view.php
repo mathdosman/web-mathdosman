@@ -30,6 +30,15 @@ try {
     $hasExamRevokedColumn = false;
 }
 
+$hasExamFocusSecondsColumn = false;
+try {
+    $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
+    $stmt->execute([':c' => 'exam_focus_seconds']);
+    $hasExamFocusSecondsColumn = (bool)$stmt->fetch();
+} catch (Throwable $e) {
+    $hasExamFocusSecondsColumn = false;
+}
+
 $hasShuffleQuestionsColumn = false;
 try {
     $stmt = $pdo->prepare('SHOW COLUMNS FROM student_assignments LIKE :c');
@@ -336,6 +345,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Force token re-check after reset (best-effort).
         if (isset($_SESSION['assignment_token_ok']) && is_array($_SESSION['assignment_token_ok'])) {
             unset($_SESSION['assignment_token_ok'][$id]);
+        }
+
+        http_response_code(204);
+        exit;
+    }
+
+    // Catat waktu aktif siswa di layar ujian (dalam detik), hanya untuk ujian yang belum selesai.
+    if ($action === 'focus_tick' && $assignment && $hasExamFocusSecondsColumn) {
+        $jenisNow = strtolower(trim((string)($assignment['jenis'] ?? 'tugas')));
+        $statusNow = (string)($assignment['status'] ?? 'assigned');
+
+        if ($jenisNow === 'ujian' && $statusNow !== 'done') {
+            $delta = isset($_POST['delta']) ? (int)$_POST['delta'] : 0;
+            if ($delta < 0) {
+                $delta = 0;
+            }
+            if ($delta > 600) {
+                $delta = 600;
+            }
+
+            if ($delta > 0) {
+                try {
+                    $stmt = $pdo->prepare('UPDATE student_assignments
+                        SET exam_focus_seconds = exam_focus_seconds + :d, updated_at = NOW()
+                        WHERE id = :id AND student_id = :sid');
+                    $stmt->execute([':d' => $delta, ':id' => $id, ':sid' => $studentId]);
+                } catch (Throwable $e) {
+                    // best-effort
+                }
+            }
         }
 
         http_response_code(204);
@@ -1347,6 +1386,7 @@ include __DIR__ . '/../includes/header.php';
                         var currentIndex = 0;
 
                         var storageKey = 'md_ans_' + String(<?php echo (int)$id; ?>);
+                        var violationKey = 'md_exam_violation_' + String(<?php echo (int)$id; ?>);
 
                         function loadDraft() {
                             try {
@@ -1590,6 +1630,50 @@ include __DIR__ . '/../includes/header.php';
                                     var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
                                     var url = window.location.href;
 
+                                    var focusAccum = 0;
+                                    var focusIntervalMs = 5000;
+                                    var focusMinSend = 15;
+                                    var focusTimerStarted = false;
+
+                                    function sendFocusDelta(force) {
+                                        if (!isExam || !statusNotDone || !csrf) return;
+                                        var delta = focusAccum;
+                                        if (!force && delta < focusMinSend) return;
+                                        if (delta <= 0) return;
+                                        focusAccum = 0;
+                                        try {
+                                            var fd = new FormData();
+                                            fd.append('csrf_token', csrf);
+                                            fd.append('action', 'focus_tick');
+                                            fd.append('delta', String(delta));
+                                            if (navigator.sendBeacon) {
+                                                navigator.sendBeacon(url, fd);
+                                            } else {
+                                                fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
+                                            }
+                                        } catch (e) {
+                                            // ignore
+                                        }
+                                    }
+
+                                    function startFocusTimer() {
+                                        if (!isExam || !statusNotDone || focusTimerStarted) return;
+                                        focusTimerStarted = true;
+                                        try {
+                                            setInterval(function () {
+                                                if (document.hidden) return;
+                                                focusAccum += focusIntervalMs / 1000;
+                                                if (focusAccum >= focusMinSend) {
+                                                    sendFocusDelta(false);
+                                                }
+                                            }, focusIntervalMs);
+                                            window.addEventListener('pagehide', function () { sendFocusDelta(true); });
+                                            window.addEventListener('beforeunload', function () { sendFocusDelta(true); });
+                                        } catch (e) {
+                                            // ignore
+                                        }
+                                    }
+
                                     function installLeaveLock() {
                                         if (!hasRevokedCol || !isExam || !statusNotDone) return;
                                         if (window.__mdLeaveLockInstalled) return;
@@ -1597,12 +1681,30 @@ include __DIR__ . '/../includes/header.php';
 
                                         var allowLeave = true;
                                         var sent = false;
+                                        var maxViolations = 3;
+                                        var violationCount = 0;
+
+                                        try {
+                                            var storedV = localStorage.getItem(violationKey);
+                                            if (storedV) {
+                                                var parsedV = parseInt(storedV, 10);
+                                                if (!isNaN(parsedV) && parsedV > 0) {
+                                                    violationCount = parsedV;
+                                                }
+                                            }
+                                        } catch (e) {}
 
                                         var formEl3 = document.getElementById('answerForm');
                                         if (formEl3) {
                                             formEl3.addEventListener('submit', function () {
                                                 allowLeave = false;
                                             });
+                                        }
+
+                                        function persistViolationCount() {
+                                            try {
+                                                localStorage.setItem(violationKey, String(violationCount));
+                                            } catch (e) {}
                                         }
 
                                         function sendLeave() {
@@ -1623,8 +1725,23 @@ include __DIR__ . '/../includes/header.php';
                                             }
                                         }
 
-                                        window.addEventListener('pagehide', sendLeave);
-                                        window.addEventListener('beforeunload', sendLeave);
+                                        function registerSuspiciousLeave() {
+                                            if (!allowLeave || sent) return;
+                                            violationCount++;
+                                            persistViolationCount();
+                                            if (violationCount >= maxViolations) {
+                                                sendLeave();
+                                            }
+                                        }
+
+                                        document.addEventListener('visibilitychange', function () {
+                                            if (document.hidden) {
+                                                registerSuspiciousLeave();
+                                            }
+                                        });
+                                        window.addEventListener('blur', function () {
+                                            registerSuspiciousLeave();
+                                        });
                                     }
 
                                     if (isExam && statusNotDone) {
@@ -1640,6 +1757,8 @@ include __DIR__ . '/../includes/header.php';
 
                                         // Enable lock-on-leave after the student starts.
                                         installLeaveLock();
+                                        // Mulai pencatatan waktu fokus di layar ujian.
+                                        startFocusTimer();
                                     }
                                 } catch (e) {
                                     // ignore

@@ -137,7 +137,6 @@ include __DIR__ . '/../includes/header.php';
                     <span class="badge text-bg-success ms-1">DONE</span>
                 </div>
                 <h5 class="mb-1"><?php echo htmlspecialchars($judul); ?></h5>
-                <div class="small text-muted">Paket: <?php echo htmlspecialchars((string)($assignment['code'] ?? '')); ?></div>
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Kembali</a>

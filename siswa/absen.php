@@ -319,7 +319,10 @@ include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">
     <div class="card-body">
-        <h5 class="mb-3">Absen Kehadiran</h5>
+        <h5 class="mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check text-success"></i>
+            <span>Absen Kehadiran</span>
+        </h5>
         <p class="text-muted small mb-3">
             Untuk melakukan absen, pastikan Anda berada di sekitar lokasi yang ditentukan sekolah dan izinkan akses lokasi &amp; kamera pada perangkat.
         </p>

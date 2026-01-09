@@ -20,6 +20,7 @@ if (!class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
 $hasScoreColumn = false;
 $hasGradedAtColumn = false;
 $hasResetCountColumn = false;
+$hasFocusSecondsColumn = false;
 try {
     $cols = [];
     $rs = $pdo->query('SHOW COLUMNS FROM student_assignments');
@@ -31,6 +32,7 @@ try {
     $hasScoreColumn = !empty($cols['score']);
     $hasGradedAtColumn = !empty($cols['graded_at']);
     $hasResetCountColumn = !empty($cols['exam_reset_count']);
+    $hasFocusSecondsColumn = !empty($cols['exam_focus_seconds']);
 } catch (Throwable $e) {
     $hasScoreColumn = false;
     $hasGradedAtColumn = false;
@@ -72,6 +74,11 @@ try {
         $select .= ', sa.exam_reset_count';
     } else {
         $select .= ', NULL AS exam_reset_count';
+    }
+    if ($hasFocusSecondsColumn) {
+        $select .= ', sa.exam_focus_seconds';
+    } else {
+        $select .= ', NULL AS exam_focus_seconds';
     }
     $select .= ', ' . $latestExpr . ' AS latest_at';
     $select .= '
@@ -119,12 +126,12 @@ $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
 $sheet->setTitle('Hasil ' . $jenisLabel);
 
-$headers = ['Jenis', 'Nama Siswa', 'Kelas', 'Rombel', 'Kode Paket', 'Judul Paket', 'Nilai', 'Reset Ujian', 'Tanggal Selesai'];
+$headers = ['Jenis', 'Nama Siswa', 'Kelas', 'Rombel', 'Kode Paket', 'Judul Paket', 'Nilai', 'Menit Aktif', 'Reset Ujian', 'Tanggal Selesai'];
 // Header judul laporan di baris pertama
 $title = 'Laporan Hasil ' . $jenisLabel . ' Siswa';
 $sheet->setCellValueExplicit('A1', $title, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-// Gabungkan sel A1 sampai I1 untuk judul
-$sheet->mergeCells('A1:I1');
+// Gabungkan sel A1 sampai J1 untuk judul
+$sheet->mergeCells('A1:J1');
 
 // Header kolom dimulai di baris ke-3
 foreach ($headers as $i => $h) {
@@ -142,6 +149,8 @@ foreach ($rows as $r) {
     $score = $hasScoreColumn ? ($r['score'] ?? null) : null;
     $latestAt = (string)($r['latest_at'] ?? '');
     $resetCount = $hasResetCountColumn ? (int)($r['exam_reset_count'] ?? 0) : 0;
+    $focusSeconds = $hasFocusSecondsColumn ? (int)($r['exam_focus_seconds'] ?? 0) : 0;
+    $focusMinutes = $focusSeconds > 0 ? number_format($focusSeconds / 60, 1) : '';
 
     $values = [
         $jenisLabel,
@@ -151,6 +160,7 @@ foreach ($rows as $r) {
         (string)($r['package_code'] ?? ''),
         $title,
         $score !== null && $score !== '' ? (string)$score : '',
+        $tab === 'ujian' ? (string)$focusMinutes : '',
         ($tab === 'ujian' && $hasResetCountColumn && $resetCount > 0) ? (string)$resetCount : '',
         $latestAt,
     ];

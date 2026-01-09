@@ -75,6 +75,16 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
         </div>
+
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="admin-tile h-100">
+                <div class="admin-tile-body">
+                    <h5 class="admin-tile-title">Backup &amp; Restore Data</h5>
+                    <p class="admin-tile-text">Unduh backup database dan lakukan restore dari file SQL snapshot.</p>
+                    <a href="admin/backup_restore.php" class="btn btn-outline-primary btn-sm">Buka Fitur</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>
