@@ -430,14 +430,16 @@ if ($useAdminSidebar) {
                     <span class="brand-name">MATHDOSMAN</span>
                 </a>
                 <div class="d-flex align-items-center gap-2 ms-auto">
-                    <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm"
-                        id="themeToggle"
-                        aria-label="Ganti tema"
-                        title="Dark/Light">
-                        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
-                    </button>
+                    <?php if ($useSidebar): ?>
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="themeToggle"
+                            aria-label="Ganti tema"
+                            title="Dark/Light">
+                            <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+                        </button>
+                    <?php endif; ?>
 
                     <?php if ($isStudentArea && $isStudent && $studentHasPhoto && $studentPhotoUrl !== ''): ?>
                         <button
@@ -490,6 +492,16 @@ if ($useAdminSidebar) {
                             <li class="nav-item">
                                 <?php $isActive = ($currentPage === 'kontak.php'); ?>
                                 <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/kontak.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>Kontak</a>
+                            </li>
+                            <li class="nav-item ms-lg-2 d-flex align-items-center">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary btn-sm my-2 my-lg-0"
+                                    id="themeToggle"
+                                    aria-label="Ganti tema"
+                                    title="Dark/Light">
+                                    <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+                                </button>
                             </li>
                         </ul>
                     <?php endif; ?>
