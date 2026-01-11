@@ -371,23 +371,35 @@ pre {
     z-index: 1100;
 }
 
-/* Dark navbar: make link text brighter for readability */
-html[data-bs-theme="dark"] .app-navbar .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.88);
+/* Navbar color inversion:
+   - Light theme: navbar dark (like the original look)
+   - Dark theme: navbar light */
+html[data-bs-theme="light"] .app-navbar {
+    background-color: #212529 !important;
+    border-bottom-color: rgba(var(--bs-primary-rgb), 0.25) !important;
+    --bs-navbar-color: rgba(255, 255, 255, 0.88);
+    --bs-navbar-hover-color: rgba(255, 255, 255, 0.98);
+    --bs-navbar-active-color: #fff;
+    --bs-navbar-brand-color: #fff;
+    --bs-navbar-brand-hover-color: #fff;
+    --bs-navbar-toggler-border-color: rgba(255, 255, 255, 0.35);
+    --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-html[data-bs-theme="dark"] .app-navbar .navbar-nav .nav-link:hover,
-html[data-bs-theme="dark"] .app-navbar .navbar-nav .nav-link:focus {
-    color: rgba(255, 255, 255, 0.98);
+html[data-bs-theme="dark"] .app-navbar {
+    background-color: #f8f9fa !important;
+    border-bottom-color: rgba(var(--bs-primary-rgb), 0.18) !important;
+    --bs-navbar-color: rgba(17, 24, 39, 0.82);
+    --bs-navbar-hover-color: rgba(17, 24, 39, 0.96);
+    --bs-navbar-active-color: #111827;
+    --bs-navbar-brand-color: #111827;
+    --bs-navbar-brand-hover-color: #111827;
+    --bs-navbar-toggler-border-color: rgba(17, 24, 39, 0.25);
+    --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2817,24,39,0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-html[data-bs-theme="dark"] .app-navbar .navbar-nav .nav-link.active,
-html[data-bs-theme="dark"] .app-navbar .navbar-nav .nav-link[aria-current="page"] {
-    color: #fff;
-}
-
-/* Navbar buttons: keep contrast in dark mode (we use btn-outline-secondary in markup). */
-html[data-bs-theme="dark"] .app-navbar .btn-outline-secondary {
+/* Navbar buttons (btn-outline-secondary in markup) need proper contrast in both modes */
+html[data-bs-theme="light"] .app-navbar .btn-outline-secondary {
     --bs-btn-color: rgba(255, 255, 255, 0.92);
     --bs-btn-border-color: rgba(255, 255, 255, 0.35);
     --bs-btn-hover-color: rgba(255, 255, 255, 0.98);
@@ -395,6 +407,16 @@ html[data-bs-theme="dark"] .app-navbar .btn-outline-secondary {
     --bs-btn-hover-border-color: rgba(255, 255, 255, 0.45);
     --bs-btn-active-bg: rgba(255, 255, 255, 0.18);
     --bs-btn-active-border-color: rgba(255, 255, 255, 0.55);
+}
+
+html[data-bs-theme="dark"] .app-navbar .btn-outline-secondary {
+    --bs-btn-color: rgba(17, 24, 39, 0.86);
+    --bs-btn-border-color: rgba(17, 24, 39, 0.25);
+    --bs-btn-hover-color: rgba(17, 24, 39, 0.98);
+    --bs-btn-hover-bg: rgba(17, 24, 39, 0.06);
+    --bs-btn-hover-border-color: rgba(17, 24, 39, 0.35);
+    --bs-btn-active-bg: rgba(17, 24, 39, 0.10);
+    --bs-btn-active-border-color: rgba(17, 24, 39, 0.45);
 }
 
 /* ====== Admin-only sidebar (responsive + can open/close) ====== */
@@ -515,61 +537,31 @@ body.admin-layout.sidebar-collapsed .app-container {
     }
 }
 
-.app-sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.92);
-}
 
-/* Sidebar background should follow Bootstrap theme */
+/* Sidebar color inversion:
+   - Light theme: sidebar dark (like original)
+   - Dark theme: sidebar light */
 .app-sidebar {
     background-color: var(--bs-body-bg);
     color: var(--bs-body-color);
 }
 
-/* Light mode: override dark-sidebar styling to be readable on light surfaces */
+html[data-bs-theme="light"] .app-sidebar {
+    background-color: #212529;
+    color: #fff;
+}
+
+html[data-bs-theme="dark"] .app-sidebar {
+    background-color: #f8f9fa;
+    color: #111827;
+}
+
+/* Sidebar links: DARK sidebar (light theme) */
 html[data-bs-theme="light"] .app-sidebar .nav-link {
-    color: rgba(var(--bs-body-color-rgb), 0.90);
+    color: rgba(255, 255, 255, 0.92);
 }
 
 html[data-bs-theme="light"] .app-sidebar .sidebar-link {
-    color: rgba(var(--bs-body-color-rgb), 0.92);
-    background: rgba(var(--bs-body-color-rgb), 0.03);
-    border: 1px solid rgba(var(--bs-body-color-rgb), 0.12);
-}
-
-html[data-bs-theme="light"] .app-sidebar .sidebar-link:hover,
-html[data-bs-theme="light"] .app-sidebar .sidebar-link:focus {
-    color: rgba(var(--bs-body-color-rgb), 0.98);
-    background: rgba(var(--bs-body-color-rgb), 0.06);
-    border-color: rgba(var(--bs-body-color-rgb), 0.18);
-}
-
-html[data-bs-theme="light"] .app-sidebar .sidebar-link.active,
-html[data-bs-theme="light"] .app-sidebar .sidebar-link[aria-current="page"] {
-    color: rgba(var(--bs-body-color-rgb), 0.98);
-    background: rgba(var(--bs-primary-rgb), 0.10);
-    border-color: rgba(var(--bs-primary-rgb), 0.22);
-}
-
-html[data-bs-theme="light"] .app-sidebar hr {
-    border-color: var(--bs-border-color);
-    opacity: 1;
-}
-
-html[data-bs-theme="light"] .app-sidebar .sidebar-section-emphasis {
-    -webkit-text-stroke: 0;
-    text-shadow: none;
-}
-
-/* Offcanvas close icon: auto-contrast based on theme */
-html[data-bs-theme="dark"] .offcanvas .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
-}
-
-html[data-bs-theme="light"] .offcanvas .btn-close {
-    filter: none;
-}
-
-.app-sidebar .sidebar-link {
     display: flex;
     align-items: center;
     gap: .55rem;
@@ -580,27 +572,64 @@ html[data-bs-theme="light"] .offcanvas .btn-close {
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.app-sidebar .sidebar-link svg {
+html[data-bs-theme="light"] .app-sidebar .sidebar-link svg {
     flex: 0 0 auto;
 }
 
-.app-sidebar .sidebar-link:hover,
-.app-sidebar .sidebar-link:focus {
+html[data-bs-theme="light"] .app-sidebar .sidebar-link:hover,
+html[data-bs-theme="light"] .app-sidebar .sidebar-link:focus {
     color: #fff;
     text-decoration: none;
     background: rgba(255, 255, 255, 0.14);
     border-color: rgba(255, 255, 255, 0.18);
 }
 
-.app-sidebar .sidebar-link.active,
-.app-sidebar .sidebar-link[aria-current="page"] {
+html[data-bs-theme="light"] .app-sidebar .sidebar-link.active,
+html[data-bs-theme="light"] .app-sidebar .sidebar-link[aria-current="page"] {
     color: #fff;
     background: rgba(255, 255, 255, 0.18);
     border-color: rgba(255, 255, 255, 0.28);
 }
 
-.app-sidebar hr {
+html[data-bs-theme="light"] .app-sidebar hr {
     border-color: rgba(255, 255, 255, 0.18);
+    opacity: 1;
+}
+
+/* Sidebar links: LIGHT sidebar (dark theme) */
+html[data-bs-theme="dark"] .app-sidebar .nav-link {
+    color: rgba(17, 24, 39, 0.86);
+}
+
+html[data-bs-theme="dark"] .app-sidebar .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    border-radius: .5rem;
+    padding: .55rem .75rem;
+    margin: .15rem 0;
+    color: rgba(17, 24, 39, 0.92);
+    background: rgba(17, 24, 39, 0.03);
+    border: 1px solid rgba(17, 24, 39, 0.12);
+}
+
+html[data-bs-theme="dark"] .app-sidebar .sidebar-link:hover,
+html[data-bs-theme="dark"] .app-sidebar .sidebar-link:focus {
+    color: rgba(17, 24, 39, 0.98);
+    text-decoration: none;
+    background: rgba(17, 24, 39, 0.06);
+    border-color: rgba(17, 24, 39, 0.18);
+}
+
+html[data-bs-theme="dark"] .app-sidebar .sidebar-link.active,
+html[data-bs-theme="dark"] .app-sidebar .sidebar-link[aria-current="page"] {
+    color: rgba(17, 24, 39, 0.98);
+    background: rgba(var(--bs-primary-rgb), 0.10);
+    border-color: rgba(var(--bs-primary-rgb), 0.22);
+}
+
+html[data-bs-theme="dark"] .app-sidebar hr {
+    border-color: rgba(17, 24, 39, 0.12);
     opacity: 1;
 }
 
@@ -618,6 +647,39 @@ html[data-bs-theme="light"] .offcanvas .btn-close {
         0 1px rgba(var(--bs-black-rgb), .55),
         0 1px 0 rgba(var(--bs-white-rgb), .90),
         0 0 10px rgba(var(--bs-white-rgb), .35);
+}
+
+html[data-bs-theme="dark"] .app-sidebar .sidebar-section-emphasis {
+    -webkit-text-stroke: 0;
+    text-shadow: none;
+}
+
+/* Offcanvas (mobile sidebars): follow navbar/sidebar inversion */
+html[data-bs-theme="light"] .offcanvas {
+    background-color: #212529;
+    color: #fff;
+}
+
+html[data-bs-theme="dark"] .offcanvas {
+    background-color: #f8f9fa;
+    color: #111827;
+}
+
+html[data-bs-theme="light"] .offcanvas .offcanvas-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+html[data-bs-theme="dark"] .offcanvas .offcanvas-header {
+    border-bottom: 1px solid rgba(17, 24, 39, 0.10);
+}
+
+/* Close icon needs inversion when header/background is dark (light theme) */
+html[data-bs-theme="light"] .offcanvas .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+html[data-bs-theme="dark"] .offcanvas .btn-close {
+    filter: none;
 }
 
 /* Make important checkboxes more visible */
