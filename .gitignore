@@ -2,6 +2,17 @@
 logs/
 *.log
 
+# Common PHP/runtime leftovers
+error_log
+php_errorlog
+*.cache
+.phpunit.result.cache
+
+# Temp folders
+tmp/
+temp/
+cache/
+
 # Upload directories (keep local)
 gambar/
 
@@ -16,6 +27,10 @@ backups/
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # Optional env files
 .env
