@@ -44,7 +44,12 @@ if ($dbPreflightOk) {
             }
         }
     } catch (Throwable $e) {
-        try { if ($pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); } } catch (Throwable $e2) {}
+        try {
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+        } catch (Throwable $e2) {
+        }
     }
 }
 
@@ -105,7 +110,7 @@ if (!$package) {
     $use_print_soal_css = true;
     $body_class = 'front-page paket-preview';
     include __DIR__ . '/includes/header.php';
-    ?>
+?>
     <div class="row">
         <div class="col-12 col-lg-10 mx-auto">
             <div class="alert alert-warning">Paket soal tidak ditemukan atau belum dipublikasikan.</div>
@@ -135,14 +140,14 @@ if (!$isAdmin && !$isPreview) {
                     $use_print_soal_css = true;
                     $body_class = 'front-page paket-preview';
                     include __DIR__ . '/includes/header.php';
-                    ?>
+    ?>
                     <div class="row">
                         <div class="col-12 col-lg-10 mx-auto">
                             <div class="alert alert-warning">Paket soal ini tidak tersedia di halaman publik.</div>
                             <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
                         </div>
                     </div>
-                    <?php
+            <?php
                     include __DIR__ . '/includes/footer.php';
                     exit;
                 }
@@ -167,7 +172,7 @@ if (!$isAdmin && !$isPreview) {
                     <a href="index.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
                 </div>
             </div>
-            <?php
+    <?php
             include __DIR__ . '/includes/footer.php';
             exit;
         }
@@ -256,7 +261,7 @@ try {
     $ctxSubmateri = trim((string)($package['submateri'] ?? ''));
     $ctxMateri = trim((string)($package['materi'] ?? ''));
 
-        $feedSqlWithTax = '(
+    $feedSqlWithTax = '(
          SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
              p.id AS id,
              p.code COLLATE utf8mb4_unicode_ci AS code,
@@ -298,7 +303,7 @@ try {
            )
         ) feed';
 
-        $feedSqlNoTax = '(
+    $feedSqlNoTax = '(
          SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
              p.id AS id,
              p.code COLLATE utf8mb4_unicode_ci AS code,
@@ -463,8 +468,8 @@ try {
     }
 
     $params = [':d' => $currDate, ':id' => $currId];
-        // Collation-safe UNION: packages & contents bisa beda collation.
-        $feedSql = '(
+    // Collation-safe UNION: packages & contents bisa beda collation.
+    $feedSql = '(
                 SELECT "package" COLLATE utf8mb4_unicode_ci AS kind,
                              p.id AS id,
                              p.code COLLATE utf8mb4_unicode_ci AS code,
@@ -632,24 +637,24 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
         <nav class="nav flex-column mb-3">
             <?php foreach ($list as $row): ?>
                 <?php
-                    $kind = (string)($row['kind'] ?? '');
-                    $title2 = (string)($row['title'] ?? '');
-                    $materi2 = trim((string)($row['materi'] ?? ''));
-                    $submateri2 = trim((string)($row['submateri'] ?? ''));
-                    $qCount = (int)($row['question_count'] ?? 0);
-                    $href = '';
-                    $badge = '';
-                    $isActive = false;
-                    if ($kind === 'package' && !empty($row['code'])) {
-                        $pkgCode = (string)$row['code'];
-                        $href = 'paket.php?code=' . urlencode($pkgCode);
-                        $badge = 'Paket';
-                        $isActive = ($pkgCode === $currentCode);
-                    } elseif ($kind === 'content' && !empty($row['slug'])) {
-                        $href = 'post.php?slug=' . urlencode((string)$row['slug']);
-                        $ctype = (string)($row['ctype'] ?? 'materi');
-                        $badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
-                    }
+                $kind = (string)($row['kind'] ?? '');
+                $title2 = (string)($row['title'] ?? '');
+                $materi2 = trim((string)($row['materi'] ?? ''));
+                $submateri2 = trim((string)($row['submateri'] ?? ''));
+                $qCount = (int)($row['question_count'] ?? 0);
+                $href = '';
+                $badge = '';
+                $isActive = false;
+                if ($kind === 'package' && !empty($row['code'])) {
+                    $pkgCode = (string)$row['code'];
+                    $href = 'paket.php?code=' . urlencode($pkgCode);
+                    $badge = 'Paket';
+                    $isActive = ($pkgCode === $currentCode);
+                } elseif ($kind === 'content' && !empty($row['slug'])) {
+                    $href = 'post.php?slug=' . urlencode((string)$row['slug']);
+                    $ctype = (string)($row['ctype'] ?? 'materi');
+                    $badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
+                }
                 ?>
                 <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo htmlspecialchars($href !== '' ? $href : '#'); ?>" <?php echo $href === '' ? 'aria-disabled="true"' : ''; ?> <?php echo $isActive ? 'aria-current="page"' : ''; ?>>
                     <div class="d-flex align-items-start justify-content-between gap-2 w-100">
@@ -662,23 +667,23 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                     </div>
                     <div class="small text-white-50">
                         <?php
-                            $metaBits = [];
-                            if ($submateri2 !== '') {
-                                $metaBits[] = 'Submateri: ' . $submateri2;
-                            } elseif ($materi2 !== '') {
-                                $metaBits[] = 'Materi: ' . $materi2;
-                            }
-                            if ($kind === 'package') {
-                                $metaBits[] = 'Soal: ' . (string)$qCount;
-                            }
-                            echo htmlspecialchars($metaBits ? implode(' | ', $metaBits) : '-');
+                        $metaBits = [];
+                        if ($submateri2 !== '') {
+                            $metaBits[] = 'Submateri: ' . $submateri2;
+                        } elseif ($materi2 !== '') {
+                            $metaBits[] = 'Materi: ' . $materi2;
+                        }
+                        if ($kind === 'package') {
+                            $metaBits[] = 'Soal: ' . (string)$qCount;
+                        }
+                        echo htmlspecialchars($metaBits ? implode(' | ', $metaBits) : '-');
                         ?>
                     </div>
                 </a>
             <?php endforeach; ?>
         </nav>
     <?php endif; ?>
-    <?php
+<?php
 };
 ?>
 <div class="row">
@@ -686,35 +691,35 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
         <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="index.php" class="btn btn-dark btn-sm fw-semibold">&laquo; Kembali</a>
-                    <button type="button" class="btn btn-dark btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Munculkan Sidebar</button>
-                    <button type="button" class="btn btn-dark btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Sembunyikan Sidebar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Munculkan Sidebar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Sembunyikan Sidebar</button>
             </div>
             <div class="text-muted small">Kode: <strong><?php echo htmlspecialchars((string)$package['code']); ?></strong></div>
         </div>
 
-        <div class="offcanvas offcanvas-start d-lg-none text-bg-dark" tabindex="-1" id="paketSidebarOffcanvas" aria-labelledby="paketSidebarOffcanvasLabel">
+        <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="paketSidebarOffcanvas" aria-labelledby="paketSidebarOffcanvasLabel">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="paketSidebarOffcanvasLabel">Sidebar</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
             </div>
             <div class="offcanvas-body app-sidebar">
                 <?php
-                    $renderSidebarKonten('Konten Terkait', $sidebarRelated, (string)$code);
-                    $renderSidebarKonten('Konten Terbaru', $sidebarLatest, (string)$code);
-                    $renderSidebarKonten('Konten Random', $sidebarRandom, (string)$code);
+                $renderSidebarKonten('Konten Terkait', $sidebarRelated, (string)$code);
+                $renderSidebarKonten('Konten Terbaru', $sidebarLatest, (string)$code);
+                $renderSidebarKonten('Konten Random', $sidebarRandom, (string)$code);
                 ?>
             </div>
         </div>
 
         <div class="paket-dock-layout">
-            <div class="paket-dock-sidebar d-none d-lg-block app-sidebar bg-dark text-white p-3" id="paketDockSidebar">
+            <div class="paket-dock-sidebar d-none d-lg-block app-sidebar p-3" id="paketDockSidebar">
                 <div class="d-grid gap-2 mb-2">
                     <button type="button" class="btn btn-outline-light btn-sm" id="paketDockClose">Sembunyikan Sidebar</button>
                 </div>
                 <?php
-                    $renderSidebarKonten('Konten Terkait', $sidebarRelated, (string)$code);
-                    $renderSidebarKonten('Konten Terbaru', $sidebarLatest, (string)$code);
-                    $renderSidebarKonten('Konten Random', $sidebarRandom, (string)$code);
+                $renderSidebarKonten('Konten Terkait', $sidebarRelated, (string)$code);
+                $renderSidebarKonten('Konten Terbaru', $sidebarLatest, (string)$code);
+                $renderSidebarKonten('Konten Random', $sidebarRandom, (string)$code);
                 ?>
             </div>
 
@@ -726,10 +731,10 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                 <img class="logo-svg" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="72" height="72" alt="Logo MathDosman" loading="eager" decoding="async">
                             <?php else: ?>
                                 <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                                    <circle cx="50" cy="50" r="48" stroke="#c5a021" stroke-width="2"/>
-                                    <path d="M30 70V30L50 50L70 30V70" stroke="#1a237e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M40 50C40 40 60 60 60 50C60 40 40 60 40 50Z" stroke="#c5a021" stroke-width="3" stroke-linecap="round"/>
-                                    <path d="M25 45Q25 35 30 35" stroke="#1a237e" stroke-width="2" fill="none"/>
+                                    <circle cx="50" cy="50" r="48" stroke="#c5a021" stroke-width="2" />
+                                    <path d="M30 70V30L50 50L70 30V70" stroke="#1a237e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M40 50C40 40 60 60 60 50C60 40 40 60 40 50Z" stroke="#c5a021" stroke-width="3" stroke-linecap="round" />
+                                    <path d="M25 45Q25 35 30 35" stroke="#1a237e" stroke-width="2" fill="none" />
                                 </svg>
                             <?php endif; ?>
 
@@ -741,506 +746,505 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                         </div>
                     </header>
 
-            <div class="custom-card mb-3">
-                <div class="custom-card-header">
-                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
-                        <div>
-                            <div class="small text-muted">Preview Paket Soal</div>
-                            <div class="fw-bold"><?php echo htmlspecialchars((string)$package['name']); ?></div>
-                            <?php if ($meta): ?>
-                                <div class="mt-2 d-flex flex-wrap gap-2 package-meta-chips">
-                                    <?php foreach ($meta as $m): ?>
-                                        <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($m); ?></span>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="small text-muted">Dibuat: <?php echo htmlspecialchars(format_id_date((string)($package['created_at'] ?? ''))); ?></div>
-                    </div>
-                </div>
-                <?php if (trim((string)($package['description'] ?? '')) !== ''): ?>
-                    <div class="oke">
-                        <div class="text-muted richtext-content"><?php echo $renderHtml((string)($package['description'] ?? '')); ?></div>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <?php if ($introContent): ?>
-                <?php
-                    $introBadge = ((string)($introContent['type'] ?? '') === 'berita') ? 'Berita' : 'Materi';
-                    $introTitle = (string)($introContent['title'] ?? '');
-                    $introPublishedAt = (string)($introContent['published_at'] ?? '');
-                    $introExcerpt = trim((string)($introContent['excerpt'] ?? ''));
-                    $introSafeHtml = $renderHtml((string)($introContent['content_html'] ?? ''));
-                ?>
-                <div class="custom-card mb-3">
-                    <div class="custom-card-header">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                            <div>
-                                <div class="small text-muted">Materi</div>
-                                <?php if ($introTitle !== ''): ?>
-                                    <div class="fw-bold"><?php echo htmlspecialchars($introTitle); ?></div>
-                                <?php endif; ?>
-                                <div class="mt-2 d-flex flex-wrap gap-2 package-meta-chips">
-                                    <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($introBadge); ?></span>
-                                    <?php if ($introPublishedAt !== ''): ?>
-                                        <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars(format_id_date($introPublishedAt)); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="oke">
-                        <?php if ($introExcerpt !== ''): ?>
-                            <div class="text-muted mb-2"><?php echo htmlspecialchars($introExcerpt); ?></div>
-                        <?php endif; ?>
-                        <div class="richtext-content"><?php echo $introSafeHtml; ?></div>
-                    </div>
-                </div>
-
-                <div class="d-flex align-items-center my-4" aria-label="Pembatas Materi dan Soal">
-                    <hr class="flex-grow-1" />
-                    <div class="px-4 py-2 fw-bold fs-4 text-dark bg-body-secondary border rounded-pill">Soal-soal</div>
-                    <hr class="flex-grow-1" />
-                </div>
-            <?php endif; ?>
-
-            <?php if (!$items): ?>
-                <div class="alert alert-info">Belum ada soal di paket ini.</div>
-            <?php else: ?>
-                <?php $totalItems = count($items); ?>
-                <?php foreach ($items as $idx => $q): ?>
-                    <?php
-                        $no = $q['question_number'] === null ? ($idx + 1) : (int)$q['question_number'];
-                        $tipe = (string)($q['tipe_soal'] ?? '');
-                        $tipeLower = strtolower(trim($tipe));
-                        if ($tipeLower === 'pg') {
-                            $tipe = 'Pilihan Ganda';
-                        }
-                    ?>
-                    <div class="custom-card mb-3" id="q-<?php echo (int)($q['id'] ?? 0); ?>">
+                    <div class="custom-card mb-3">
                         <div class="custom-card-header">
-                            <div class="d-flex align-items-center justify-content-between gap-2">
+                            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
                                 <div>
-                                    <span class="soal-nomor">No. <?php echo (int)$no; ?></span>
-                                    <span class="soal-header ms-2"><?php echo htmlspecialchars($tipe); ?></span>
-
-                                </div>
-                                <?php
-                                    $qMeta = [];
-                                    if (!empty($q['materi'])) {
-                                        $qMeta[] = 'Materi: ' . (string)$q['materi'];
-                                    }
-                                    if (!empty($q['submateri'])) {
-                                        $qMeta[] = 'Submateri: ' . (string)$q['submateri'];
-                                    }
-                                ?>
-                                <?php if ($qMeta): ?>
-                                    <div class="d-none d-md-flex flex-wrap gap-2 package-meta-chips">
-                                        <?php foreach ($qMeta as $m): ?>
-                                            <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($m); ?></span>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <div class="oke">
-                            <div class="mb-3 richtext-content"><?php echo $renderHtml((string)($q['pertanyaan'] ?? '')); ?></div>
-
-                            <?php if ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks'): ?>
-                                <?php
-                                    $correctLabels = [];
-                                    if ($showAnswers) {
-                                        $jawabanRaw = trim((string)($q['jawaban_benar'] ?? ''));
-                                        if ($jawabanRaw !== '') {
-                                            $parts = preg_split('/\s*,\s*/', $jawabanRaw) ?: [];
-                                            $map = [
-                                                'pilihan_1' => 'A',
-                                                'pilihan_2' => 'B',
-                                                'pilihan_3' => 'C',
-                                                'pilihan_4' => 'D',
-                                                'pilihan_5' => 'E',
-                                            ];
-                                            foreach ($parts as $p) {
-                                                $p = trim((string)$p);
-                                                if ($p === '') {
-                                                    continue;
-                                                }
-                                                if (isset($map[$p])) {
-                                                    $correctLabels[] = $map[$p];
-                                                    continue;
-                                                }
-                                                $u = strtoupper($p);
-                                                if (preg_match('/^[A-E]$/', $u)) {
-                                                    $correctLabels[] = $u;
-                                                }
-                                            }
-                                            $correctLabels = array_values(array_unique($correctLabels));
-                                        }
-                                    }
-
-                                    $isComplex = ($tipe === 'Pilihan Ganda Kompleks');
-                                    $opts = [
-                                        'A' => (string)($q['pilihan_1'] ?? ''),
-                                        'B' => (string)($q['pilihan_2'] ?? ''),
-                                        'C' => (string)($q['pilihan_3'] ?? ''),
-                                        'D' => (string)($q['pilihan_4'] ?? ''),
-                                        'E' => (string)($q['pilihan_5'] ?? ''),
-                                    ];
-                                ?>
-                                <div class="row g-2">
-                                    <?php foreach ($opts as $label => $val): ?>
-                                        <?php if (trim(strip_tags($val)) === '' && trim($val) === '') continue; ?>
-                                        <?php
-                                            $isCorrect = $showAnswers && in_array($label, $correctLabels, true);
-                                            $boxClasses = ['border', 'rounded', 'p-2'];
-                                            if ($isCorrect && !$isComplex) {
-                                                $boxClasses[] = 'soal-option-correct-soft';
-                                            }
-                                            $boxClass = implode(' ', $boxClasses);
-
-                                            $badgeLabel = '';
-                                            $badgeClass = '';
-                                            if ($showAnswers && $isComplex) {
-                                                $badgeLabel = $isCorrect ? 'Benar' : 'Salah';
-                                                $badgeClass = 'soal-pgk-badge-soft ' . ($isCorrect ? 'soal-pgk-benar-soft' : 'soal-pgk-salah-soft');
-                                            }
-                                        ?>
-                                        <div class="col-12">
-                                            <div class="<?php echo $boxClass; ?>">
-                                                <div class="opsi-row">
-                                                    <div class="opsi-label fw-semibold"><?php echo htmlspecialchars($label); ?>.</div>
-                                                    <div class="opsi-content richtext-content"><?php echo $renderHtml($val); ?></div>
-                                                    <?php if ($badgeLabel !== ''): ?>
-                                                        <div class="ms-auto <?php echo $badgeClass; ?>" style="white-space:nowrap;">
-                                                            <?php echo htmlspecialchars($badgeLabel); ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-
-                            <?php elseif ($tipe === 'Benar/Salah'): ?>
-                                <?php
-                                    $statements = [
-                                        (string)($q['pilihan_1'] ?? ''),
-                                        (string)($q['pilihan_2'] ?? ''),
-                                        (string)($q['pilihan_3'] ?? ''),
-                                        (string)($q['pilihan_4'] ?? ''),
-                                    ];
-
-                                    $tfAnswers = [];
-                                    if ($showAnswers) {
-                                        $jawabanRaw = trim((string)($q['jawaban_benar'] ?? ''));
-                                        if ($jawabanRaw !== '') {
-                                            $tfAnswers = array_map('trim', explode('|', $jawabanRaw));
-                                        }
-                                    }
-
-                                    $normalizeTf = function (string $v): string {
-                                        $u = strtoupper(trim($v));
-                                        if ($u === 'BENAR' || $u === 'B' || $u === 'TRUE' || $u === '1' || $u === 'YA') {
-                                            return 'Benar';
-                                        }
-                                        if ($u === 'SALAH' || $u === 'S' || $u === 'FALSE' || $u === '0' || $u === 'TIDAK') {
-                                            return 'Salah';
-                                        }
-                                        return '';
-                                    };
-                                ?>
-                                <div class="row g-2">
-                                    <?php foreach ($statements as $sIdx => $st): ?>
-                                        <?php if (trim(strip_tags($st)) === '' && trim($st) === '') continue; ?>
-                                        <?php
-                                            $answerLabel = '';
-                                            if ($showAnswers) {
-                                                $answerLabel = $normalizeTf((string)($tfAnswers[$sIdx] ?? ''));
-                                            }
-
-                                            $answerBoxClasses = ['border', 'rounded', 'px-2', 'py-1', 'small', 'fw-semibold', 'text-muted', 'bg-body-tertiary', 'soal-tf-answer-soft'];
-                                            if ($answerLabel === 'Benar') {
-                                                $answerBoxClasses[] = 'soal-tf-benar-soft';
-                                            } elseif ($answerLabel === 'Salah') {
-                                                $answerBoxClasses[] = 'soal-tf-salah-soft';
-                                            }
-                                            $answerBoxClass = implode(' ', $answerBoxClasses);
-                                        ?>
-                                        <div class="col-12">
-                                            <div class="border rounded p-2">
-                                                <div class="d-flex align-items-start justify-content-between gap-2">
-                                                    <div class="fw-semibold mb-1">Pernyataan <?php echo (int)($sIdx + 1); ?></div>
-                                                    <?php if ($showAnswers): ?>
-                                                        <div class="<?php echo $answerBoxClass; ?>" style="white-space:nowrap;">
-                                                            <?php echo htmlspecialchars($answerLabel !== '' ? $answerLabel : '-'); ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                                        <div class="richtext-content"><?php echo $renderHtml($st); ?></div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-
-                            <?php elseif ($tipe === 'Menjodohkan'): ?>
-                                <?php
-                                    $pairsRaw = trim((string)($q['jawaban_benar'] ?? ''));
-                                    $left = [];
-                                    $right = [];
-                                    if ($pairsRaw !== '') {
-                                        $pairs = explode('|', $pairsRaw);
-                                        foreach ($pairs as $pair) {
-                                            $pair = trim((string)$pair);
-                                            if ($pair === '' || strpos($pair, ':') === false) {
-                                                continue;
-                                            }
-                                            [$a, $b] = explode(':', $pair, 2);
-                                            $a = trim($a);
-                                            $b = trim($b);
-                                            if ($a !== '' && $b !== '') {
-                                                $left[] = $a;
-                                                $right[] = $b;
-                                            }
-                                        }
-                                    }
-                                    $right = array_values(array_unique($right));
-
-                                    $hintPairs = [];
-                                    if ($showAnswers && $left && $right && $pairsRaw !== '') {
-                                        $pairs = explode('|', $pairsRaw);
-                                        foreach ($pairs as $pair) {
-                                            $pair = trim((string)$pair);
-                                            if ($pair === '' || strpos($pair, ':') === false) {
-                                                continue;
-                                            }
-                                            [$a, $b] = explode(':', $pair, 2);
-                                            $a = trim($a);
-                                            $b = trim($b);
-                                            if ($a === '' || $b === '') {
-                                                continue;
-                                            }
-
-                                            $aIndex = array_search($a, $left, true);
-                                            $bIndex = array_search($b, $right, true);
-                                            if ($aIndex === false || $bIndex === false) {
-                                                continue;
-                                            }
-                                            $hintPairs[] = (string)($aIndex + 1) . '→' . (string)($bIndex + 1);
-                                        }
-                                        $hintPairs = array_values(array_unique($hintPairs));
-                                    }
-                                ?>
-                                <?php if (!$left || !$right): ?>
-                                    <div class="text-muted small">(Data menjodohkan belum lengkap.)</div>
-                                <?php else: ?>
-                                    <div class="row g-2">
-                                        <div class="col-12 col-lg-6">
-                                            <div class="fw-semibold mb-1">Kolom A</div>
-                                            <ol class="mb-0 ps-3">
-                                                <?php foreach ($left as $v): ?>
-                                                        <li class="richtext-content"><?php echo $renderHtml($v); ?></li>
-                                                <?php endforeach; ?>
-                                            </ol>
-                                        </div>
-                                        <div class="col-12 col-lg-6">
-                                            <div class="fw-semibold mb-1">Kolom B</div>
-                                            <ol class="mb-0 ps-3">
-                                                <?php foreach ($right as $v): ?>
-                                                        <li class="richtext-content"><?php echo $renderHtml($v); ?></li>
-                                                <?php endforeach; ?>
-                                            </ol>
-                                        </div>
-                                    </div>
-
-                                    <?php if ($showAnswers && $hintPairs): ?>
-                                        <div class="mt-3">
-                                            <div class="small text-muted">Petunjuk jawaban benar</div>
-                                            <div class="mt-1 border rounded px-2 py-1 bg-body-tertiary small">
-                                                <?php echo htmlspecialchars(implode(' • ', $hintPairs)); ?>
-                                            </div>
+                                    <div class="small text-muted">Preview Paket Soal</div>
+                                    <div class="fw-bold"><?php echo htmlspecialchars((string)$package['name']); ?></div>
+                                    <?php if ($meta): ?>
+                                        <div class="mt-2 d-flex flex-wrap gap-2 package-meta-chips">
+                                            <?php foreach ($meta as $m): ?>
+                                                <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($m); ?></span>
+                                            <?php endforeach; ?>
                                         </div>
                                     <?php endif; ?>
-                                <?php endif; ?>
+                                </div>
+                                <div class="small text-muted">Dibuat: <?php echo htmlspecialchars(format_id_date((string)($package['created_at'] ?? ''))); ?></div>
+                            </div>
+                        </div>
+                        <?php if (trim((string)($package['description'] ?? '')) !== ''): ?>
+                            <div class="oke">
+                                <div class="text-muted richtext-content"><?php echo $renderHtml((string)($package['description'] ?? '')); ?></div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
 
-                            <?php elseif ($tipe === 'Uraian'): ?>
-                                <!-- Uraian: cukup tampilkan pertanyaan saja -->
-                            <?php else: ?>
-                                <!-- Tipe lain: tidak perlu label tambahan -->
-                            <?php endif; ?>
-
-                            <?php if ($showAnswers): ?>
-                                <?php
-                                    $jawabanRendered = $renderHtml((string)($q['jawaban_benar'] ?? ''));
-                                    $jawabanHasContent = trim(strip_tags($jawabanRendered)) !== '';
-                                ?>
-                                <?php if ($tipe === 'Uraian'): ?>
-                                    <div class="mt-3 pt-2 border-top">
-                                        <div class="small text-muted">Jawaban</div>
-                                        <?php
-                                            $uraianClasses = ['mt-1', 'form-control'];
-                                            if ($jawabanHasContent) {
-                                                $uraianClasses[] = 'soal-uraian-answered-soft';
-                                            } else {
-                                                $uraianClasses[] = 'border-secondary';
-                                                $uraianClasses[] = 'bg-body-tertiary';
-                                            }
-                                            $uraianClassAttr = implode(' ', $uraianClasses);
-                                        ?>
-                                        <div class="<?php echo $uraianClassAttr; ?>" style="height:auto;">
-                                            <?php if ($jawabanHasContent): ?>
-                                                <div class="richtext-content"><?php echo $jawabanRendered; ?></div>
-                                            <?php else: ?>
-                                                <div class="small text-muted">
-                                                    Soal ini belum memiliki jawaban yang tersimpan. Jika kamu mengetahui jawaban yang benar, silakan informasikan melalui halaman Kontak agar bisa kami lengkapi.
-                                                </div>
+                    <?php if ($introContent): ?>
+                        <?php
+                        $introBadge = ((string)($introContent['type'] ?? '') === 'berita') ? 'Berita' : 'Materi';
+                        $introTitle = (string)($introContent['title'] ?? '');
+                        $introPublishedAt = (string)($introContent['published_at'] ?? '');
+                        $introExcerpt = trim((string)($introContent['excerpt'] ?? ''));
+                        $introSafeHtml = $renderHtml((string)($introContent['content_html'] ?? ''));
+                        ?>
+                        <div class="custom-card mb-3">
+                            <div class="custom-card-header">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <div class="small text-muted">Materi</div>
+                                        <?php if ($introTitle !== ''): ?>
+                                            <div class="fw-bold"><?php echo htmlspecialchars($introTitle); ?></div>
+                                        <?php endif; ?>
+                                        <div class="mt-2 d-flex flex-wrap gap-2 package-meta-chips">
+                                            <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($introBadge); ?></span>
+                                            <?php if ($introPublishedAt !== ''): ?>
+                                                <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars(format_id_date($introPublishedAt)); ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
-                                <?php elseif ($tipe === 'Benar/Salah' || $tipe === 'Menjodohkan'): ?>
-                                    <!-- Jawaban ditampilkan inline sesuai tipe -->
-                                <?php elseif ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks'): ?>
-                                    <!-- Pilihan ganda: jawaban sudah ditandai pada opsi (tanpa label tambahan) -->
-                                <?php else: ?>
-                                    <div class="mt-3 pt-2 border-top">
-                                        <div class="small text-muted">Jawaban Benar</div>
-                                        <div class="mt-1"><?php echo $renderJawaban($q); ?></div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if (!$jawabanHasContent && ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks' || $tipe === 'Benar/Salah' || $tipe === 'Menjodohkan')): ?>
-                                    <div class="mt-3 pt-2 border-top">
-                                        <div class="small text-muted">Kunci Jawaban</div>
-                                        <div class="mt-1 border rounded px-2 py-2 bg-body-tertiary small text-muted">
-                                            Soal ini belum memiliki kunci jawaban. Jika kamu menemukan kunci yang tepat, silakan laporkan melalui halaman Kontak agar dapat kami perbarui.
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-
-                            <?php
-                                $penyelesaianHtmlRaw = (string)($q['penyelesaian'] ?? '');
-                                $penyelesaianRendered = $renderHtml($penyelesaianHtmlRaw);
-                                $penyelesaianHasContent = trim(strip_tags($penyelesaianRendered)) !== '';
-                                $collapseId = 'collapsePenyelesaian_' . (int)($q['id'] ?? 0);
-                            ?>
-                            <div class="mt-3 pt-2 border-top">
-                                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                                    <button
-                                        type="button"
-                                        class="btn btn-outline-secondary btn-sm"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>"
-                                        aria-controls="<?php echo htmlspecialchars($collapseId); ?>"
-                                        aria-expanded="false"
-                                    >
-                                        Penyelesaian
-                                    </button>
                                 </div>
-                                <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
-                                    <div class="border rounded p-2 bg-warning-subtle small text-break">
-                                        <?php if ($penyelesaianHasContent): ?>
-                                            <div class="richtext-content"><?php echo $penyelesaianRendered; ?></div>
-                                        <?php else: ?>
-                                            <div class="small text-muted">
-                                                Belum ada detail penyelesaian untuk soal ini. Jika kamu punya langkah penyelesaian yang benar dan rapi, silakan kirimkan melalui halaman Kontak agar bisa kami tambahkan.
+                            </div>
+                            <div class="oke">
+                                <?php if ($introExcerpt !== ''): ?>
+                                    <div class="text-muted mb-2"><?php echo htmlspecialchars($introExcerpt); ?></div>
+                                <?php endif; ?>
+                                <div class="richtext-content"><?php echo $introSafeHtml; ?></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center my-4" aria-label="Pembatas Materi dan Soal">
+                            <hr class="flex-grow-1" />
+                            <div class="px-4 py-2 fw-bold fs-4 text-dark bg-body-secondary border rounded-pill">Soal-soal</div>
+                            <hr class="flex-grow-1" />
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!$items): ?>
+                        <div class="alert alert-info">Belum ada soal di paket ini.</div>
+                    <?php else: ?>
+                        <?php $totalItems = count($items); ?>
+                        <?php foreach ($items as $idx => $q): ?>
+                            <?php
+                            $no = $q['question_number'] === null ? ($idx + 1) : (int)$q['question_number'];
+                            $tipe = (string)($q['tipe_soal'] ?? '');
+                            $tipeLower = strtolower(trim($tipe));
+                            if ($tipeLower === 'pg') {
+                                $tipe = 'Pilihan Ganda';
+                            }
+                            ?>
+                            <div class="custom-card mb-3" id="q-<?php echo (int)($q['id'] ?? 0); ?>">
+                                <div class="custom-card-header">
+                                    <div class="d-flex align-items-center justify-content-between gap-2">
+                                        <div>
+                                            <span class="soal-nomor">No. <?php echo (int)$no; ?></span>
+                                            <span class="soal-header ms-2"><?php echo htmlspecialchars($tipe); ?></span>
+
+                                        </div>
+                                        <?php
+                                        $qMeta = [];
+                                        if (!empty($q['materi'])) {
+                                            $qMeta[] = 'Materi: ' . (string)$q['materi'];
+                                        }
+                                        if (!empty($q['submateri'])) {
+                                            $qMeta[] = 'Submateri: ' . (string)$q['submateri'];
+                                        }
+                                        ?>
+                                        <?php if ($qMeta): ?>
+                                            <div class="d-none d-md-flex flex-wrap gap-2 package-meta-chips">
+                                                <?php foreach ($qMeta as $m): ?>
+                                                    <span class="badge rounded-pill text-bg-light border"><?php echo htmlspecialchars($m); ?></span>
+                                                <?php endforeach; ?>
                                             </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
+
+                                <div class="oke">
+                                    <div class="mb-3 richtext-content"><?php echo $renderHtml((string)($q['pertanyaan'] ?? '')); ?></div>
+
+                                    <?php if ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks'): ?>
+                                        <?php
+                                        $correctLabels = [];
+                                        if ($showAnswers) {
+                                            $jawabanRaw = trim((string)($q['jawaban_benar'] ?? ''));
+                                            if ($jawabanRaw !== '') {
+                                                $parts = preg_split('/\s*,\s*/', $jawabanRaw) ?: [];
+                                                $map = [
+                                                    'pilihan_1' => 'A',
+                                                    'pilihan_2' => 'B',
+                                                    'pilihan_3' => 'C',
+                                                    'pilihan_4' => 'D',
+                                                    'pilihan_5' => 'E',
+                                                ];
+                                                foreach ($parts as $p) {
+                                                    $p = trim((string)$p);
+                                                    if ($p === '') {
+                                                        continue;
+                                                    }
+                                                    if (isset($map[$p])) {
+                                                        $correctLabels[] = $map[$p];
+                                                        continue;
+                                                    }
+                                                    $u = strtoupper($p);
+                                                    if (preg_match('/^[A-E]$/', $u)) {
+                                                        $correctLabels[] = $u;
+                                                    }
+                                                }
+                                                $correctLabels = array_values(array_unique($correctLabels));
+                                            }
+                                        }
+
+                                        $isComplex = ($tipe === 'Pilihan Ganda Kompleks');
+                                        $opts = [
+                                            'A' => (string)($q['pilihan_1'] ?? ''),
+                                            'B' => (string)($q['pilihan_2'] ?? ''),
+                                            'C' => (string)($q['pilihan_3'] ?? ''),
+                                            'D' => (string)($q['pilihan_4'] ?? ''),
+                                            'E' => (string)($q['pilihan_5'] ?? ''),
+                                        ];
+                                        ?>
+                                        <div class="row g-2">
+                                            <?php foreach ($opts as $label => $val): ?>
+                                                <?php if (trim(strip_tags($val)) === '' && trim($val) === '') continue; ?>
+                                                <?php
+                                                $isCorrect = $showAnswers && in_array($label, $correctLabels, true);
+                                                $boxClasses = ['border', 'rounded', 'p-2'];
+                                                if ($isCorrect && !$isComplex) {
+                                                    $boxClasses[] = 'soal-option-correct-soft';
+                                                }
+                                                $boxClass = implode(' ', $boxClasses);
+
+                                                $badgeLabel = '';
+                                                $badgeClass = '';
+                                                if ($showAnswers && $isComplex) {
+                                                    $badgeLabel = $isCorrect ? 'Benar' : 'Salah';
+                                                    $badgeClass = 'soal-pgk-badge-soft ' . ($isCorrect ? 'soal-pgk-benar-soft' : 'soal-pgk-salah-soft');
+                                                }
+                                                ?>
+                                                <div class="col-12">
+                                                    <div class="<?php echo $boxClass; ?>">
+                                                        <div class="opsi-row">
+                                                            <div class="opsi-label fw-semibold"><?php echo htmlspecialchars($label); ?>.</div>
+                                                            <div class="opsi-content richtext-content"><?php echo $renderHtml($val); ?></div>
+                                                            <?php if ($badgeLabel !== ''): ?>
+                                                                <div class="ms-auto <?php echo $badgeClass; ?>" style="white-space:nowrap;">
+                                                                    <?php echo htmlspecialchars($badgeLabel); ?>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                    <?php elseif ($tipe === 'Benar/Salah'): ?>
+                                        <?php
+                                        $statements = [
+                                            (string)($q['pilihan_1'] ?? ''),
+                                            (string)($q['pilihan_2'] ?? ''),
+                                            (string)($q['pilihan_3'] ?? ''),
+                                            (string)($q['pilihan_4'] ?? ''),
+                                        ];
+
+                                        $tfAnswers = [];
+                                        if ($showAnswers) {
+                                            $jawabanRaw = trim((string)($q['jawaban_benar'] ?? ''));
+                                            if ($jawabanRaw !== '') {
+                                                $tfAnswers = array_map('trim', explode('|', $jawabanRaw));
+                                            }
+                                        }
+
+                                        $normalizeTf = function (string $v): string {
+                                            $u = strtoupper(trim($v));
+                                            if ($u === 'BENAR' || $u === 'B' || $u === 'TRUE' || $u === '1' || $u === 'YA') {
+                                                return 'Benar';
+                                            }
+                                            if ($u === 'SALAH' || $u === 'S' || $u === 'FALSE' || $u === '0' || $u === 'TIDAK') {
+                                                return 'Salah';
+                                            }
+                                            return '';
+                                        };
+                                        ?>
+                                        <div class="row g-2">
+                                            <?php foreach ($statements as $sIdx => $st): ?>
+                                                <?php if (trim(strip_tags($st)) === '' && trim($st) === '') continue; ?>
+                                                <?php
+                                                $answerLabel = '';
+                                                if ($showAnswers) {
+                                                    $answerLabel = $normalizeTf((string)($tfAnswers[$sIdx] ?? ''));
+                                                }
+
+                                                $answerBoxClasses = ['border', 'rounded', 'px-2', 'py-1', 'small', 'fw-semibold', 'text-muted', 'bg-body-tertiary', 'soal-tf-answer-soft'];
+                                                if ($answerLabel === 'Benar') {
+                                                    $answerBoxClasses[] = 'soal-tf-benar-soft';
+                                                } elseif ($answerLabel === 'Salah') {
+                                                    $answerBoxClasses[] = 'soal-tf-salah-soft';
+                                                }
+                                                $answerBoxClass = implode(' ', $answerBoxClasses);
+                                                ?>
+                                                <div class="col-12">
+                                                    <div class="border rounded p-2">
+                                                        <div class="d-flex align-items-start justify-content-between gap-2">
+                                                            <div class="fw-semibold mb-1">Pernyataan <?php echo (int)($sIdx + 1); ?></div>
+                                                            <?php if ($showAnswers): ?>
+                                                                <div class="<?php echo $answerBoxClass; ?>" style="white-space:nowrap;">
+                                                                    <?php echo htmlspecialchars($answerLabel !== '' ? $answerLabel : '-'); ?>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="richtext-content"><?php echo $renderHtml($st); ?></div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+
+                                    <?php elseif ($tipe === 'Menjodohkan'): ?>
+                                        <?php
+                                        $pairsRaw = trim((string)($q['jawaban_benar'] ?? ''));
+                                        $left = [];
+                                        $right = [];
+                                        if ($pairsRaw !== '') {
+                                            $pairs = explode('|', $pairsRaw);
+                                            foreach ($pairs as $pair) {
+                                                $pair = trim((string)$pair);
+                                                if ($pair === '' || strpos($pair, ':') === false) {
+                                                    continue;
+                                                }
+                                                [$a, $b] = explode(':', $pair, 2);
+                                                $a = trim($a);
+                                                $b = trim($b);
+                                                if ($a !== '' && $b !== '') {
+                                                    $left[] = $a;
+                                                    $right[] = $b;
+                                                }
+                                            }
+                                        }
+                                        $right = array_values(array_unique($right));
+
+                                        $hintPairs = [];
+                                        if ($showAnswers && $left && $right && $pairsRaw !== '') {
+                                            $pairs = explode('|', $pairsRaw);
+                                            foreach ($pairs as $pair) {
+                                                $pair = trim((string)$pair);
+                                                if ($pair === '' || strpos($pair, ':') === false) {
+                                                    continue;
+                                                }
+                                                [$a, $b] = explode(':', $pair, 2);
+                                                $a = trim($a);
+                                                $b = trim($b);
+                                                if ($a === '' || $b === '') {
+                                                    continue;
+                                                }
+
+                                                $aIndex = array_search($a, $left, true);
+                                                $bIndex = array_search($b, $right, true);
+                                                if ($aIndex === false || $bIndex === false) {
+                                                    continue;
+                                                }
+                                                $hintPairs[] = (string)($aIndex + 1) . '→' . (string)($bIndex + 1);
+                                            }
+                                            $hintPairs = array_values(array_unique($hintPairs));
+                                        }
+                                        ?>
+                                        <?php if (!$left || !$right): ?>
+                                            <div class="text-muted small">(Data menjodohkan belum lengkap.)</div>
+                                        <?php else: ?>
+                                            <div class="row g-2">
+                                                <div class="col-12 col-lg-6">
+                                                    <div class="fw-semibold mb-1">Kolom A</div>
+                                                    <ol class="mb-0 ps-3">
+                                                        <?php foreach ($left as $v): ?>
+                                                            <li class="richtext-content"><?php echo $renderHtml($v); ?></li>
+                                                        <?php endforeach; ?>
+                                                    </ol>
+                                                </div>
+                                                <div class="col-12 col-lg-6">
+                                                    <div class="fw-semibold mb-1">Kolom B</div>
+                                                    <ol class="mb-0 ps-3">
+                                                        <?php foreach ($right as $v): ?>
+                                                            <li class="richtext-content"><?php echo $renderHtml($v); ?></li>
+                                                        <?php endforeach; ?>
+                                                    </ol>
+                                                </div>
+                                            </div>
+
+                                            <?php if ($showAnswers && $hintPairs): ?>
+                                                <div class="mt-3">
+                                                    <div class="small text-muted">Petunjuk jawaban benar</div>
+                                                    <div class="mt-1 border rounded px-2 py-1 bg-body-tertiary small">
+                                                        <?php echo htmlspecialchars(implode(' • ', $hintPairs)); ?>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                    <?php elseif ($tipe === 'Uraian'): ?>
+                                        <!-- Uraian: cukup tampilkan pertanyaan saja -->
+                                    <?php else: ?>
+                                        <!-- Tipe lain: tidak perlu label tambahan -->
+                                    <?php endif; ?>
+
+                                    <?php if ($showAnswers): ?>
+                                        <?php
+                                        $jawabanRendered = $renderHtml((string)($q['jawaban_benar'] ?? ''));
+                                        $jawabanHasContent = trim(strip_tags($jawabanRendered)) !== '';
+                                        ?>
+                                        <?php if ($tipe === 'Uraian'): ?>
+                                            <div class="mt-3 pt-2 border-top">
+                                                <div class="small text-muted">Jawaban</div>
+                                                <?php
+                                                $uraianClasses = ['mt-1', 'form-control'];
+                                                if ($jawabanHasContent) {
+                                                    $uraianClasses[] = 'soal-uraian-answered-soft';
+                                                } else {
+                                                    $uraianClasses[] = 'border-secondary';
+                                                    $uraianClasses[] = 'bg-body-tertiary';
+                                                }
+                                                $uraianClassAttr = implode(' ', $uraianClasses);
+                                                ?>
+                                                <div class="<?php echo $uraianClassAttr; ?>" style="height:auto;">
+                                                    <?php if ($jawabanHasContent): ?>
+                                                        <div class="richtext-content"><?php echo $jawabanRendered; ?></div>
+                                                    <?php else: ?>
+                                                        <div class="small text-muted">
+                                                            Soal ini belum memiliki jawaban yang tersimpan. Jika kamu mengetahui jawaban yang benar, silakan informasikan melalui halaman Kontak agar bisa kami lengkapi.
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php elseif ($tipe === 'Benar/Salah' || $tipe === 'Menjodohkan'): ?>
+                                            <!-- Jawaban ditampilkan inline sesuai tipe -->
+                                        <?php elseif ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks'): ?>
+                                            <!-- Pilihan ganda: jawaban sudah ditandai pada opsi (tanpa label tambahan) -->
+                                        <?php else: ?>
+                                            <div class="mt-3 pt-2 border-top">
+                                                <div class="small text-muted">Jawaban Benar</div>
+                                                <div class="mt-1"><?php echo $renderJawaban($q); ?></div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!$jawabanHasContent && ($tipe === 'Pilihan Ganda' || $tipe === 'Pilihan Ganda Kompleks' || $tipe === 'Benar/Salah' || $tipe === 'Menjodohkan')): ?>
+                                            <div class="mt-3 pt-2 border-top">
+                                                <div class="small text-muted">Kunci Jawaban</div>
+                                                <div class="mt-1 border rounded px-2 py-2 bg-body-tertiary small text-muted">
+                                                    Soal ini belum memiliki kunci jawaban. Jika kamu menemukan kunci yang tepat, silakan laporkan melalui halaman Kontak agar dapat kami perbarui.
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php
+                                        $penyelesaianHtmlRaw = (string)($q['penyelesaian'] ?? '');
+                                        $penyelesaianRendered = $renderHtml($penyelesaianHtmlRaw);
+                                        $penyelesaianHasContent = trim(strip_tags($penyelesaianRendered)) !== '';
+                                        $collapseId = 'collapsePenyelesaian_' . (int)($q['id'] ?? 0);
+                                        ?>
+                                        <div class="mt-3 pt-2 border-top">
+                                            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-outline-secondary btn-sm"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>"
+                                                    aria-controls="<?php echo htmlspecialchars($collapseId); ?>"
+                                                    aria-expanded="false">
+                                                    Penyelesaian
+                                                </button>
+                                            </div>
+                                            <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
+                                                <div class="border rounded p-2 bg-warning-subtle small text-break">
+                                                    <?php if ($penyelesaianHasContent): ?>
+                                                        <div class="richtext-content"><?php echo $penyelesaianRendered; ?></div>
+                                                    <?php else: ?>
+                                                        <div class="small text-muted">
+                                                            Belum ada detail penyelesaian untuk soal ini. Jika kamu punya langkah penyelesaian yang benar dan rapi, silakan kirimkan melalui halaman Kontak agar bisa kami tambahkan.
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
+
+                            <?php if ($idx < ($totalItems - 1)): ?>
+                                <hr class="soal-divider" />
                             <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php
+                    require_once __DIR__ . '/includes/disqus.php';
+                    $disqusIdentifier = 'paket-' . (string)$code;
+                    $disqusUrl = rtrim((string)$base_url, '/') . '/paket.php?code=' . rawurlencode((string)$code);
+                    ?>
+                    <div class="custom-card mb-3 d-print-none">
+                        <div class="custom-card-header">
+                            <div class="small text-muted">Komentar</div>
+                        </div>
+                        <div class="oke">
+                            <?php app_render_disqus($disqusIdentifier, $disqusUrl); ?>
                         </div>
                     </div>
 
-                    <?php if ($idx < ($totalItems - 1)): ?>
-                        <hr class="soal-divider" />
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            <?php endif; ?>
+                    <nav class="mt-4" aria-label="Navigasi paket">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="flex-grow-1 text-start">
+                                <?php
+                                $prevKind = (string)($navPrev['kind'] ?? '');
+                                $prevHref = '';
+                                if ($prevKind === 'package' && !empty($navPrev['code'])) {
+                                    $prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
+                                } elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
+                                    $prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
+                                }
+                                ?>
+                                <?php if ($prevHref !== ''): ?>
+                                    <a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M15 18l-6-6 6-6" />
+                                        </svg>
+                                        <span>Sebelumnya</span>
+                                    </a>
+                                <?php else: ?>
+                                    <a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sebelumnya">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M15 18l-6-6 6-6" />
+                                        </svg>
+                                        <span>Sebelumnya</span>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
 
-            <?php
-                require_once __DIR__ . '/includes/disqus.php';
-                $disqusIdentifier = 'paket-' . (string)$code;
-                $disqusUrl = rtrim((string)$base_url, '/') . '/paket.php?code=' . rawurlencode((string)$code);
-            ?>
-            <div class="custom-card mb-3 d-print-none">
-                <div class="custom-card-header">
-                    <div class="small text-muted">Komentar</div>
-                </div>
-                <div class="oke">
-                    <?php app_render_disqus($disqusIdentifier, $disqusUrl); ?>
-                </div>
-            </div>
+                            <div class="flex-grow-1 text-center">
+                                <a class="btn btn-dark nav-action-btn" href="index.php" aria-label="Kembali ke beranda">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M3 10.5L12 3l9 7.5" />
+                                        <path d="M5 10v10h14V10" />
+                                        <path d="M10 20v-6h4v6" />
+                                    </svg>
+                                    <span>Beranda</span>
+                                </a>
+                            </div>
 
-            <nav class="mt-4" aria-label="Navigasi paket">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="flex-grow-1 text-start">
-                        <?php
-                            $prevKind = (string)($navPrev['kind'] ?? '');
-                            $prevHref = '';
-                            if ($prevKind === 'package' && !empty($navPrev['code'])) {
-                                $prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
-                            } elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
-                                $prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
-                            }
-                        ?>
-                        <?php if ($prevHref !== ''): ?>
-                            <a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M15 18l-6-6 6-6" />
-                                </svg>
-                                <span>Sebelumnya</span>
-                            </a>
-                        <?php else: ?>
-                            <a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sebelumnya">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M15 18l-6-6 6-6" />
-                                </svg>
-                                <span>Sebelumnya</span>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="flex-grow-1 text-center">
-                        <a class="btn btn-dark nav-action-btn" href="index.php" aria-label="Kembali ke beranda">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M3 10.5L12 3l9 7.5" />
-                                <path d="M5 10v10h14V10" />
-                                <path d="M10 20v-6h4v6" />
-                            </svg>
-                            <span>Beranda</span>
-                        </a>
-                    </div>
-
-                    <div class="flex-grow-1 text-end">
-                        <?php
-                            $nextKind = (string)($navNext['kind'] ?? '');
-                            $nextHref = '';
-                            if ($nextKind === 'package' && !empty($navNext['code'])) {
-                                $nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
-                            } elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
-                                $nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
-                            }
-                        ?>
-                        <?php if ($nextHref !== ''): ?>
-                            <a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
-                                <span>Sesudahnya</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </a>
-                        <?php else: ?>
-                            <a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sesudahnya">
-                                <span>Sesudahnya</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </nav>
+                            <div class="flex-grow-1 text-end">
+                                <?php
+                                $nextKind = (string)($navNext['kind'] ?? '');
+                                $nextHref = '';
+                                if ($nextKind === 'package' && !empty($navNext['code'])) {
+                                    $nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
+                                } elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
+                                    $nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
+                                }
+                                ?>
+                                <?php if ($nextHref !== ''): ?>
+                                    <a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
+                                        <span>Sesudahnya</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M9 18l6-6-6-6" />
+                                        </svg>
+                                    </a>
+                                <?php else: ?>
+                                    <a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sesudahnya">
+                                        <span>Sesudahnya</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M9 18l6-6-6-6" />
+                                        </svg>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </nav>
 
                 </div>
             </div>
@@ -1251,63 +1255,65 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
             id="scrollTopBtn"
             class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3 scroll-top-btn"
             aria-label="Ke atas"
-            title="Ke atas"
-        >
+            title="Ke atas">
             <span aria-hidden="true">↑</span>
         </button>
 
         <script>
-        (() => {
-            const body = document.body;
-            const btn = document.getElementById('paketDockToggle');
-            const closeBtn = document.getElementById('paketDockClose');
-            const cls = 'paket-sidebar-collapsed';
+            (() => {
+                const body = document.body;
+                const btn = document.getElementById('paketDockToggle');
+                const closeBtn = document.getElementById('paketDockClose');
+                const cls = 'paket-sidebar-collapsed';
 
-            const scrollTopBtn = document.getElementById('scrollTopBtn');
-            if (scrollTopBtn) {
-                scrollTopBtn.addEventListener('click', () => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-            }
+                const scrollTopBtn = document.getElementById('scrollTopBtn');
+                if (scrollTopBtn) {
+                    scrollTopBtn.addEventListener('click', () => {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    });
+                }
 
-            if (!btn) return;
+                if (!btn) return;
 
-            const sync = () => {
-                const collapsed = body.classList.contains(cls);
-                btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
-                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-            };
+                const sync = () => {
+                    const collapsed = body.classList.contains(cls);
+                    btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
+                    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                };
 
-            btn.addEventListener('click', () => {
-                body.classList.toggle(cls);
-                sync();
-            });
-
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    body.classList.add(cls);
+                btn.addEventListener('click', () => {
+                    body.classList.toggle(cls);
                     sync();
                 });
-            }
 
-            sync();
-        })();
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        body.classList.add(cls);
+                        sync();
+                    });
+                }
 
-        // Toggle highlight kunci jawaban hanya saat penyelesaian dibuka
-        document.addEventListener('DOMContentLoaded', function () {
-            const collapses = document.querySelectorAll('[id^="collapsePenyelesaian_"]');
-            collapses.forEach(function (el) {
-                const card = el.closest('.custom-card');
-                if (!card) return;
+                sync();
+            })();
 
-                el.addEventListener('show.bs.collapse', function () {
-                    card.classList.add('show-answers-active');
-                });
-                el.addEventListener('hide.bs.collapse', function () {
-                    card.classList.remove('show-answers-active');
+            // Toggle highlight kunci jawaban hanya saat penyelesaian dibuka
+            document.addEventListener('DOMContentLoaded', function() {
+                const collapses = document.querySelectorAll('[id^="collapsePenyelesaian_"]');
+                collapses.forEach(function(el) {
+                    const card = el.closest('.custom-card');
+                    if (!card) return;
+
+                    el.addEventListener('show.bs.collapse', function() {
+                        card.classList.add('show-answers-active');
+                    });
+                    el.addEventListener('hide.bs.collapse', function() {
+                        card.classList.remove('show-answers-active');
+                    });
                 });
             });
-        });
         </script>
     </div>
 </div>

@@ -1,8 +1,7 @@
-
 <?php if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer)): ?>
 	<?php
-		$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
-		$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
+	$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+	$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
 	?>
 	<footer class="mt-4 pt-3 border-top">
 		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
@@ -26,8 +25,8 @@
 <?php endif; ?>
 
 <?php if (!empty($useAdminSidebar) || !empty($useStudentSidebar)): ?>
-			</div>
-		</div>
+	</div>
+	</div>
 <?php endif; ?>
 
 </div>
@@ -36,11 +35,11 @@
 <?php if (!empty($useStudentSidebar)): ?>
 	<nav class="student-bottom-nav position-sticky bottom-0 d-md-none" aria-label="Navigasi utama siswa">
 		<?php
-			$isDashboard = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-			$isAttendance = in_array($currentPage, ['attendance_history.php', 'attendance_requests.php', 'absen.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-			$isResults = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-			$isGame = in_array($currentPage, ['game_math.php', 'game_math_scores.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-			$isProfile = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		$isDashboard = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		$isAttendance = in_array($currentPage, ['attendance_history.php', 'attendance_requests.php', 'absen.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		$isResults = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		$isGame = in_array($currentPage, ['game_math.php', 'game_math_scores.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		$isProfile = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
 		?>
 		<a href="<?php echo $base_url; ?>/siswa/dashboard.php" class="student-bottom-nav-item<?php echo $isDashboard ? ' active' : ''; ?>">
 			<i class="bi bi-speedometer2" aria-hidden="true"></i>
@@ -80,857 +79,982 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script>
+	(() => {
+		// Global theme toggle (Bootstrap 5.3 color modes)
+		const key = 'md_theme';
+		const btn = document.getElementById('themeToggle');
+		if (!btn) return;
+
+		const icon = btn.querySelector('i');
+		const getPreferred = () => (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ?
+			'dark' :
+			'light';
+
+		const getCurrent = () => {
+			const attr = document.documentElement.getAttribute('data-bs-theme');
+			if (attr === 'dark' || attr === 'light') return attr;
+			try {
+				const stored = String(window.localStorage.getItem(key) || '');
+				if (stored === 'dark' || stored === 'light') return stored;
+			} catch (e) {}
+			return getPreferred();
+		};
+
+		const apply = (theme) => {
+			document.documentElement.setAttribute('data-bs-theme', theme);
+			const isDark = theme === 'dark';
+			btn.setAttribute('aria-label', isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap');
+			btn.setAttribute('title', isDark ? 'Mode terang' : 'Mode gelap');
+			if (icon) {
+				icon.classList.toggle('bi-moon-stars-fill', !isDark);
+				icon.classList.toggle('bi-sun-fill', isDark);
+			}
+		};
+
+		apply(getCurrent());
+
+		btn.addEventListener('click', () => {
+			const current = getCurrent();
+			const next = current === 'dark' ? 'light' : 'dark';
+			try {
+				window.localStorage.setItem(key, next);
+			} catch (e) {}
+			apply(next);
+		});
+	})();
+</script>
+
 <?php if (!empty($useAdminSidebar)): ?>
-<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
 <?php endif; ?>
 
 <script>
-(() => {
-	const body = document.body;
-	const toggle = document.getElementById('sidebarToggle');
-	const backdrop = document.getElementById('sidebarBackdrop');
+	(() => {
+		const body = document.body;
+		const toggle = document.getElementById('sidebarToggle');
+		const backdrop = document.getElementById('sidebarBackdrop');
 
-	if (!toggle) {
-		return;
-	}
-
-	const syncDefault = () => {
-		// Default: open on md+; closed on small screens.
-		if (window.matchMedia('(min-width: 768px)').matches) {
-			body.classList.remove('sidebar-collapsed');
-		} else {
-			body.classList.add('sidebar-collapsed');
+		if (!toggle) {
+			return;
 		}
-	};
 
-	const closeSidebar = () => body.classList.add('sidebar-collapsed');
-	const toggleSidebar = () => body.classList.toggle('sidebar-collapsed');
+		const syncDefault = () => {
+			// Default: open on md+; closed on small screens.
+			if (window.matchMedia('(min-width: 768px)').matches) {
+				body.classList.remove('sidebar-collapsed');
+			} else {
+				body.classList.add('sidebar-collapsed');
+			}
+		};
 
-	syncDefault();
+		const closeSidebar = () => body.classList.add('sidebar-collapsed');
+		const toggleSidebar = () => body.classList.toggle('sidebar-collapsed');
 
-	toggle.addEventListener('click', toggleSidebar);
-	if (backdrop) {
-		backdrop.addEventListener('click', closeSidebar);
-	}
+		syncDefault();
 
-	window.addEventListener('resize', syncDefault);
-})();
+		toggle.addEventListener('click', toggleSidebar);
+		if (backdrop) {
+			backdrop.addEventListener('click', closeSidebar);
+		}
+
+		window.addEventListener('resize', syncDefault);
+	})();
 </script>
 
 <?php if (!empty($useAdminSidebar)): ?>
-<script>
-(() => {
-	// Keep sidebar scroll position and active item between page loads.
-	const sidebar = document.getElementById('adminSidebar');
-	if (!sidebar) return;
+	<script>
+		(() => {
+			// Keep sidebar scroll position and active item between page loads.
+			const sidebar = document.getElementById('adminSidebar');
+			if (!sidebar) return;
 
-	const path = String(window.location.pathname || '');
-	let cut = path.indexOf('/siswa/admin/');
-	if (cut < 0) cut = path.indexOf('/admin/');
-	const base = (cut >= 0) ? path.slice(0, cut) : '';
-	const scrollKey = 'md_admin_sidebar_scroll:' + base;
-	const activeKey = 'md_admin_sidebar_active:' + base;
+			const path = String(window.location.pathname || '');
+			let cut = path.indexOf('/siswa/admin/');
+			if (cut < 0) cut = path.indexOf('/admin/');
+			const base = (cut >= 0) ? path.slice(0, cut) : '';
+			const scrollKey = 'md_admin_sidebar_scroll:' + base;
+			const activeKey = 'md_admin_sidebar_active:' + base;
 
-	// Restore scroll position early.
-	try {
-		const saved = sessionStorage.getItem(scrollKey);
-		if (saved !== null) {
-			const n = parseInt(saved, 10);
-			if (!Number.isNaN(n)) {
-				sidebar.scrollTop = n;
-			}
-		}
-	} catch (e) {}
-
-	// Persist scroll position.
-	let scrollTimer = 0;
-	const saveScroll = () => {
-		try { sessionStorage.setItem(scrollKey, String(sidebar.scrollTop || 0)); } catch (e) {}
-	};
-	sidebar.addEventListener('scroll', () => {
-		if (scrollTimer) return;
-		scrollTimer = window.setTimeout(() => {
-			scrollTimer = 0;
-			saveScroll();
-		}, 120);
-	}, { passive: true });
-
-	// Ensure we save scroll before navigating via sidebar clicks.
-	sidebar.addEventListener('click', (e) => {
-		const a = e.target && (e.target.closest ? e.target.closest('a') : null);
-		if (!a) return;
-		if (!(a instanceof HTMLAnchorElement)) return;
-		// Skip if link opens in new tab/window.
-		if (a.target && a.target !== '_self') return;
-		saveScroll();
-		try { sessionStorage.setItem(activeKey, a.href || ''); } catch (err) {}
-	});
-
-	// Apply active styling based on current URL (fallback if PHP-side detection misses a page).
-	try {
-		const currentPath = new URL(window.location.href).pathname;
-		const links = Array.from(sidebar.querySelectorAll('a.sidebar-link'));
-		let matched = null;
-		for (const link of links) {
+			// Restore scroll position early.
 			try {
-				const linkPath = new URL(link.href, window.location.href).pathname;
-				if (linkPath === currentPath) {
-					matched = link;
-					break;
+				const saved = sessionStorage.getItem(scrollKey);
+				if (saved !== null) {
+					const n = parseInt(saved, 10);
+					if (!Number.isNaN(n)) {
+						sidebar.scrollTop = n;
+					}
 				}
 			} catch (e) {}
-		}
 
-		if (!matched) {
-			// Optional fallback: last clicked sidebar link.
-			const last = sessionStorage.getItem(activeKey) || '';
-			if (last) {
+			// Persist scroll position.
+			let scrollTimer = 0;
+			const saveScroll = () => {
+				try {
+					sessionStorage.setItem(scrollKey, String(sidebar.scrollTop || 0));
+				} catch (e) {}
+			};
+			sidebar.addEventListener('scroll', () => {
+				if (scrollTimer) return;
+				scrollTimer = window.setTimeout(() => {
+					scrollTimer = 0;
+					saveScroll();
+				}, 120);
+			}, {
+				passive: true
+			});
+
+			// Ensure we save scroll before navigating via sidebar clicks.
+			sidebar.addEventListener('click', (e) => {
+				const a = e.target && (e.target.closest ? e.target.closest('a') : null);
+				if (!a) return;
+				if (!(a instanceof HTMLAnchorElement)) return;
+				// Skip if link opens in new tab/window.
+				if (a.target && a.target !== '_self') return;
+				saveScroll();
+				try {
+					sessionStorage.setItem(activeKey, a.href || '');
+				} catch (err) {}
+			});
+
+			// Apply active styling based on current URL (fallback if PHP-side detection misses a page).
+			try {
+				const currentPath = new URL(window.location.href).pathname;
+				const links = Array.from(sidebar.querySelectorAll('a.sidebar-link'));
+				let matched = null;
 				for (const link of links) {
-					if (String(link.href || '') === String(last)) {
-						matched = link;
-						break;
-					}
+					try {
+						const linkPath = new URL(link.href, window.location.href).pathname;
+						if (linkPath === currentPath) {
+							matched = link;
+							break;
+						}
+					} catch (e) {}
 				}
-			}
-		}
 
-		if (matched) {
-			for (const link of links) {
-				link.classList.toggle('active', link === matched);
-				if (link === matched) {
-					link.setAttribute('aria-current', 'page');
-				} else {
-					if (link.getAttribute('aria-current') === 'page') {
-						link.removeAttribute('aria-current');
+				if (!matched) {
+					// Optional fallback: last clicked sidebar link.
+					const last = sessionStorage.getItem(activeKey) || '';
+					if (last) {
+						for (const link of links) {
+							if (String(link.href || '') === String(last)) {
+								matched = link;
+								break;
+							}
+						}
 					}
 				}
-			}
-		}
-	} catch (e) {}
-})();
-</script>
+
+				if (matched) {
+					for (const link of links) {
+						link.classList.toggle('active', link === matched);
+						if (link === matched) {
+							link.setAttribute('aria-current', 'page');
+						} else {
+							if (link.getAttribute('aria-current') === 'page') {
+								link.removeAttribute('aria-current');
+							}
+						}
+					}
+				}
+			} catch (e) {}
+		})();
+	</script>
 <?php endif; ?>
 
 <?php if (empty($useAdminSidebar) && !empty($useStudentSidebar)): ?>
-<script>
-(() => {
-	// Keep sidebar scroll position and active item between page loads (student).
-	const sidebar = document.getElementById('studentSidebar');
-	if (!sidebar) return;
+	<script>
+		(() => {
+			// Keep sidebar scroll position and active item between page loads (student).
+			const sidebar = document.getElementById('studentSidebar');
+			if (!sidebar) return;
 
-	const path = String(window.location.pathname || '');
-	let cut = path.indexOf('/siswa/');
-	const base = (cut >= 0) ? path.slice(0, cut) : '';
-	const scrollKey = 'md_student_sidebar_scroll:' + base;
-	const activeKey = 'md_student_sidebar_active:' + base;
+			const path = String(window.location.pathname || '');
+			let cut = path.indexOf('/siswa/');
+			const base = (cut >= 0) ? path.slice(0, cut) : '';
+			const scrollKey = 'md_student_sidebar_scroll:' + base;
+			const activeKey = 'md_student_sidebar_active:' + base;
 
-	try {
-		const saved = sessionStorage.getItem(scrollKey);
-		if (saved !== null) {
-			const n = parseInt(saved, 10);
-			if (!Number.isNaN(n)) sidebar.scrollTop = n;
-		}
-	} catch (e) {}
-
-	let scrollTimer = 0;
-	const saveScroll = () => {
-		try { sessionStorage.setItem(scrollKey, String(sidebar.scrollTop || 0)); } catch (e) {}
-	};
-	sidebar.addEventListener('scroll', () => {
-		if (scrollTimer) return;
-		scrollTimer = window.setTimeout(() => {
-			scrollTimer = 0;
-			saveScroll();
-		}, 120);
-	}, { passive: true });
-
-	sidebar.addEventListener('click', (e) => {
-		const a = e.target && (e.target.closest ? e.target.closest('a') : null);
-		if (!a) return;
-		if (!(a instanceof HTMLAnchorElement)) return;
-		if (a.target && a.target !== '_self') return;
-		saveScroll();
-		try { sessionStorage.setItem(activeKey, a.href || ''); } catch (err) {}
-	});
-
-	try {
-		const currentPath = new URL(window.location.href).pathname;
-		const links = Array.from(sidebar.querySelectorAll('a.sidebar-link'));
-		let matched = null;
-		for (const link of links) {
 			try {
-				const linkPath = new URL(link.href, window.location.href).pathname;
-				if (linkPath === currentPath) { matched = link; break; }
-			} catch (e) {}
-		}
-		if (!matched) {
-			const last = sessionStorage.getItem(activeKey) || '';
-			if (last) {
-				for (const link of links) {
-					if (String(link.href || '') === String(last)) { matched = link; break; }
+				const saved = sessionStorage.getItem(scrollKey);
+				if (saved !== null) {
+					const n = parseInt(saved, 10);
+					if (!Number.isNaN(n)) sidebar.scrollTop = n;
 				}
-			}
-		}
-		if (matched) {
-			for (const link of links) {
-				link.classList.toggle('active', link === matched);
-				if (link === matched) link.setAttribute('aria-current', 'page');
-				else if (link.getAttribute('aria-current') === 'page') link.removeAttribute('aria-current');
-			}
-		}
-	} catch (e) {}
-})();
-</script>
+			} catch (e) {}
+
+			let scrollTimer = 0;
+			const saveScroll = () => {
+				try {
+					sessionStorage.setItem(scrollKey, String(sidebar.scrollTop || 0));
+				} catch (e) {}
+			};
+			sidebar.addEventListener('scroll', () => {
+				if (scrollTimer) return;
+				scrollTimer = window.setTimeout(() => {
+					scrollTimer = 0;
+					saveScroll();
+				}, 120);
+			}, {
+				passive: true
+			});
+
+			sidebar.addEventListener('click', (e) => {
+				const a = e.target && (e.target.closest ? e.target.closest('a') : null);
+				if (!a) return;
+				if (!(a instanceof HTMLAnchorElement)) return;
+				if (a.target && a.target !== '_self') return;
+				saveScroll();
+				try {
+					sessionStorage.setItem(activeKey, a.href || '');
+				} catch (err) {}
+			});
+
+			try {
+				const currentPath = new URL(window.location.href).pathname;
+				const links = Array.from(sidebar.querySelectorAll('a.sidebar-link'));
+				let matched = null;
+				for (const link of links) {
+					try {
+						const linkPath = new URL(link.href, window.location.href).pathname;
+						if (linkPath === currentPath) {
+							matched = link;
+							break;
+						}
+					} catch (e) {}
+				}
+				if (!matched) {
+					const last = sessionStorage.getItem(activeKey) || '';
+					if (last) {
+						for (const link of links) {
+							if (String(link.href || '') === String(last)) {
+								matched = link;
+								break;
+							}
+						}
+					}
+				}
+				if (matched) {
+					for (const link of links) {
+						link.classList.toggle('active', link === matched);
+						if (link === matched) link.setAttribute('aria-current', 'page');
+						else if (link.getAttribute('aria-current') === 'page') link.removeAttribute('aria-current');
+					}
+				}
+			} catch (e) {}
+		})();
+	</script>
 <?php endif; ?>
 
 <script>
-(() => {
-	window.getCsrfToken = () => {
-		const meta = document.querySelector('meta[name="csrf-token"]');
-		return meta ? (meta.getAttribute('content') || '') : '';
-	};
-})();
+	(() => {
+		window.getCsrfToken = () => {
+			const meta = document.querySelector('meta[name="csrf-token"]');
+			return meta ? (meta.getAttribute('content') || '') : '';
+		};
+	})();
 </script>
 
 <?php
-	$publicGameScore = null;
-	$publicGameMode = null;
-	if (isset($_GET['game_score'])) {
-		$publicGameScore = (int)$_GET['game_score'];
-		if ($publicGameScore < 0) {
-			$publicGameScore = 0;
-		}
-		$modeRaw = isset($_GET['game_mode']) ? (string)$_GET['game_mode'] : '';
-		$publicGameMode = ($modeRaw === 'muldiv') ? 'muldiv' : 'addsub';
+$publicGameScore = null;
+$publicGameMode = null;
+if (isset($_GET['game_score'])) {
+	$publicGameScore = (int)$_GET['game_score'];
+	if ($publicGameScore < 0) {
+		$publicGameScore = 0;
 	}
+	$modeRaw = isset($_GET['game_mode']) ? (string)$_GET['game_mode'] : '';
+	$publicGameMode = ($modeRaw === 'muldiv') ? 'muldiv' : 'addsub';
+}
 ?>
 <?php if ($publicGameScore !== null): ?>
-<script>
-(() => {
-	if (typeof Swal === 'undefined') return;
-	const score = <?php echo (int)$publicGameScore; ?>;
-	const mode = <?php echo json_encode($publicGameMode); ?>;
-	if (!Number.isFinite(score) || score < 0) return;
-	let modeLabel = 'Tambah / Kurang';
-	if (mode === 'muldiv') modeLabel = 'Kali / Bagi';
+	<script>
+		(() => {
+			if (typeof Swal === 'undefined') return;
+			const score = <?php echo (int)$publicGameScore; ?>;
+			const mode = <?php echo json_encode($publicGameMode); ?>;
+			if (!Number.isFinite(score) || score < 0) return;
+			let modeLabel = 'Tambah / Kurang';
+			if (mode === 'muldiv') modeLabel = 'Kali / Bagi';
 
-	Swal.fire({
-		icon: 'success',
-		title: 'Game selesai',
-		html: 'Skor kamu: <strong>' + score + '</strong><br>Mode: ' + modeLabel,
-		showCancelButton: true,
-		confirmButtonText: 'Ulangi bermain',
-		cancelButtonText: 'Tutup',
-	}).then((res) => {
-		if (res.isConfirmed) {
-			let url = 'game_math_public.php';
-			if (mode === 'muldiv') url += '?mode=muldiv';
-			window.location.href = url;
-		}
-	});
+			Swal.fire({
+				icon: 'success',
+				title: 'Game selesai',
+				html: 'Skor kamu: <strong>' + score + '</strong><br>Mode: ' + modeLabel,
+				showCancelButton: true,
+				confirmButtonText: 'Ulangi bermain',
+				cancelButtonText: 'Tutup',
+			}).then((res) => {
+				if (res.isConfirmed) {
+					let url = 'game_math_public.php';
+					if (mode === 'muldiv') url += '?mode=muldiv';
+					window.location.href = url;
+				}
+			});
 
-	// Hapus parameter game_score dan game_mode dari URL supaya tidak muncul lagi saat refresh.
-	try {
-		const url = new URL(window.location.href);
-		url.searchParams.delete('game_score');
-		url.searchParams.delete('game_mode');
-		const qs = url.searchParams.toString();
-		const nextUrl = url.pathname + (qs ? ('?' + qs) : '') + (url.hash || '');
-		window.history.replaceState({}, '', nextUrl);
-	} catch (e) {}
-})();
-</script>
+			// Hapus parameter game_score dan game_mode dari URL supaya tidak muncul lagi saat refresh.
+			try {
+				const url = new URL(window.location.href);
+				url.searchParams.delete('game_score');
+				url.searchParams.delete('game_mode');
+				const qs = url.searchParams.toString();
+				const nextUrl = url.pathname + (qs ? ('?' + qs) : '') + (url.hash || '');
+				window.history.replaceState({}, '', nextUrl);
+			} catch (e) {}
+		})();
+	</script>
 <?php endif; ?>
 
 <?php if (!empty($useAdminSidebar)): ?>
-<script>
-(() => {
-	if (typeof tinymce === 'undefined') {
-		return;
-	}
-
-	const baseSelector = 'textarea:not(.no-tinymce):not([data-editor="plain"]):not([disabled])';
-	const hasAnyTextarea = document.querySelector(baseSelector);
-	if (!hasAnyTextarea) {
-		return;
-	}
-
-	// Use a relative URL so it automatically matches the current scheme (http/https)
-	// and avoids Mixed Content issues behind reverse proxies.
-	const uploadUrl = 'uploadeditor.php';
-
-	const triggerSaveSafe = () => {
-		try {
-			if (typeof tinymce !== 'undefined') {
-				tinymce.triggerSave();
+	<script>
+		(() => {
+			if (typeof tinymce === 'undefined') {
+				return;
 			}
-		} catch (e) {}
-	};
 
-	// Ensure editor content is synced into underlying <textarea> before any submit handlers/validation.
-	document.addEventListener('submit', () => {
-		triggerSaveSafe();
-	}, true);
+			const baseSelector = 'textarea:not(.no-tinymce):not([data-editor="plain"]):not([disabled])';
+			const hasAnyTextarea = document.querySelector(baseSelector);
+			if (!hasAnyTextarea) {
+				return;
+			}
 
-	const commonConfig = {
-		menubar: false,
-		statusbar: false,
-		branding: false,
-		promotion: false,
-		convert_urls: false,
-		relative_urls: false,
-		remove_script_host: false,
-		plugins: 'lists link image table code autoresize',
-		toolbar: 'undo redo | bold italic underline | bullist numlist | link image table | code',
-		table_default_attributes: {
-			border: '1',
-		},
-		images_upload_handler: (blobInfo, progress) => {
-			return new Promise((resolve, reject) => {
+			// Use a relative URL so it automatically matches the current scheme (http/https)
+			// and avoids Mixed Content issues behind reverse proxies.
+			const uploadUrl = 'uploadeditor.php';
+
+			const triggerSaveSafe = () => {
 				try {
-					const xhr = new XMLHttpRequest();
-					xhr.open('POST', uploadUrl);
-					xhr.responseType = 'json';
+					if (typeof tinymce !== 'undefined') {
+						tinymce.triggerSave();
+					}
+				} catch (e) {}
+			};
 
-					const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
-					if (token) {
-						xhr.setRequestHeader('X-CSRF-Token', token);
+			// Ensure editor content is synced into underlying <textarea> before any submit handlers/validation.
+			document.addEventListener('submit', () => {
+				triggerSaveSafe();
+			}, true);
+
+			const commonConfig = {
+				menubar: false,
+				statusbar: false,
+				branding: false,
+				promotion: false,
+				convert_urls: false,
+				relative_urls: false,
+				remove_script_host: false,
+				plugins: 'lists link image table code autoresize',
+				toolbar: 'undo redo | bold italic underline | bullist numlist | link image table | code',
+				table_default_attributes: {
+					border: '1',
+				},
+				images_upload_handler: (blobInfo, progress) => {
+					return new Promise((resolve, reject) => {
+						try {
+							const xhr = new XMLHttpRequest();
+							xhr.open('POST', uploadUrl);
+							xhr.responseType = 'json';
+
+							const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
+							if (token) {
+								xhr.setRequestHeader('X-CSRF-Token', token);
+							}
+
+							xhr.upload.onprogress = (e) => {
+								if (e.lengthComputable && typeof progress === 'function') {
+									progress((e.loaded / e.total) * 100);
+								}
+							};
+
+							xhr.onerror = () => reject('Upload gagal.');
+							xhr.onload = () => {
+								if (xhr.status < 200 || xhr.status >= 300) {
+									const msg = (xhr.response && xhr.response.error) ? xhr.response.error : ('HTTP ' + xhr.status);
+									reject(msg);
+									return;
+								}
+
+								const res = xhr.response;
+								if (res && typeof res.url === 'string' && res.url) {
+									resolve(res.url);
+									return;
+								}
+								reject('Respon upload tidak valid.');
+							};
+
+							const formData = new FormData();
+							formData.append('file', blobInfo.blob(), blobInfo.filename());
+							xhr.send(formData);
+						} catch (e) {
+							reject('Upload gagal.');
+						}
+					});
+				},
+				setup: (editor) => {
+					// Keep textarea updated during typing (helps required validation + debug tools).
+					editor.on('change keyup setcontent', () => {
+						triggerSaveSafe();
+					});
+				},
+			};
+
+			document.addEventListener('DOMContentLoaded', () => {
+				try {
+					// 1) Pertanyaan: height 320
+					const pertanyaan = document.querySelector('textarea#pertanyaan');
+					if (pertanyaan && pertanyaan.matches(baseSelector)) {
+						tinymce.init({
+							...commonConfig,
+							selector: 'textarea#pertanyaan',
+							height: 320,
+							min_height: 320,
+						});
 					}
 
-					xhr.upload.onprogress = (e) => {
-						if (e.lengthComputable && typeof progress === 'function') {
-							progress((e.loaded / e.total) * 100);
-						}
-					};
-
-					xhr.onerror = () => reject('Upload gagal.');
-					xhr.onload = () => {
-						if (xhr.status < 200 || xhr.status >= 300) {
-							const msg = (xhr.response && xhr.response.error) ? xhr.response.error : ('HTTP ' + xhr.status);
-							reject(msg);
-							return;
-						}
-
-						const res = xhr.response;
-						if (res && typeof res.url === 'string' && res.url) {
-							resolve(res.url);
-							return;
-						}
-						reject('Respon upload tidak valid.');
-					};
-
-					const formData = new FormData();
-					formData.append('file', blobInfo.blob(), blobInfo.filename());
-					xhr.send(formData);
+					// 2) Others keep default height 280
+					tinymce.init({
+						...commonConfig,
+						selector: baseSelector + ':not(#pertanyaan)',
+						height: 280,
+					});
 				} catch (e) {
-					reject('Upload gagal.');
+					// no-op
 				}
 			});
-		},
-		setup: (editor) => {
-			// Keep textarea updated during typing (helps required validation + debug tools).
-			editor.on('change keyup setcontent', () => {
-				triggerSaveSafe();
-			});
-		},
-	};
-
-	document.addEventListener('DOMContentLoaded', () => {
-		try {
-			// 1) Pertanyaan: height 320
-			const pertanyaan = document.querySelector('textarea#pertanyaan');
-			if (pertanyaan && pertanyaan.matches(baseSelector)) {
-				tinymce.init({
-					...commonConfig,
-					selector: 'textarea#pertanyaan',
-					height: 320,
-					min_height: 320,
-				});
-			}
-
-			// 2) Others keep default height 280
-			tinymce.init({
-				...commonConfig,
-				selector: baseSelector + ':not(#pertanyaan)',
-				height: 280,
-			});
-		} catch (e) {
-			// no-op
-		}
-	});
-})();
-</script>
+		})();
+	</script>
 <?php endif; ?>
 
 <script>
-(() => {
-	// Optional debugging helper for form submits.
-	// Enable by adding: ?md_debug_submit=1 (or &md_debug_submit=1) to the URL.
-	try {
-		const params = new URLSearchParams(window.location.search || '');
-		const enabled = params.get('md_debug_submit') === '1' || params.get('md_debug') === '1';
-		window.__md_debug_submit = !!enabled;
-		if (!enabled) return;
+	(() => {
+		// Optional debugging helper for form submits.
+		// Enable by adding: ?md_debug_submit=1 (or &md_debug_submit=1) to the URL.
+		try {
+			const params = new URLSearchParams(window.location.search || '');
+			const enabled = params.get('md_debug_submit') === '1' || params.get('md_debug') === '1';
+			window.__md_debug_submit = !!enabled;
+			if (!enabled) return;
 
-		const safeStr = (v) => {
-			try {
-				if (v === null || typeof v === 'undefined') return '';
-				return String(v);
-			} catch (e) {
-				return '';
-			}
-		};
-
-		const dumpForm = (form) => {
-			if (!(form instanceof HTMLFormElement)) return;
-			const id = form.getAttribute('id') || '(no-id)';
-			const action = form.getAttribute('action') || window.location.href;
-			const method = (form.getAttribute('method') || 'GET').toUpperCase();
-			console.groupCollapsed('[MATHDOSMAN DEBUG] submit', { id, method, action });
-
-			try {
-				const els = Array.from(form.elements || []);
-				const disabled = els
-					.filter((el) => el && (el.disabled === true) && el.name)
-					.map((el) => ({ name: el.name, id: el.id || '', type: el.type || el.tagName }));
-				if (disabled.length) {
-					console.warn('[MATHDOSMAN DEBUG] disabled controls (not submitted):', disabled);
-				}
-			} catch (e) {}
-
-			// What browser will actually submit
-			try {
-				const fd = new FormData(form);
-				const keys = [];
-				fd.forEach((_, k) => { keys.push(k); });
-				console.log('[MATHDOSMAN DEBUG] formdata keys:', Array.from(new Set(keys)));
-				const peek = (k) => {
-					try {
-						const all = fd.getAll(k);
-						if (!all || !all.length) return null;
-						return all.map((x) => {
-							if (x instanceof File) return { file: x.name, size: x.size, type: x.type };
-							const s = safeStr(x);
-							return s.length > 120 ? (s.slice(0, 120) + '…') : s;
-						});
-					} catch (e) {
-						return null;
-					}
-				};
-				console.log('[MATHDOSMAN DEBUG] pertanyaan:', peek('pertanyaan'));
-				console.log('[MATHDOSMAN DEBUG] pilihan_1:', peek('pilihan_1'));
-				console.log('[MATHDOSMAN DEBUG] pilihan_2:', peek('pilihan_2'));
-				console.log('[MATHDOSMAN DEBUG] pilihan_3:', peek('pilihan_3'));
-				console.log('[MATHDOSMAN DEBUG] pilihan_4:', peek('pilihan_4'));
-				console.log('[MATHDOSMAN DEBUG] pilihan_5:', peek('pilihan_5'));
-				console.log('[MATHDOSMAN DEBUG] jawaban_benar[]:', peek('jawaban_benar[]'));
-				console.log('[MATHDOSMAN DEBUG] csrf_token:', peek('csrf_token'));
-			} catch (e) {
-				console.error('[MATHDOSMAN DEBUG] FormData error:', e);
-			}
-
-			console.groupEnd();
-		};
-
-		window.mdDumpForm = (formId = 'questionForm') => {
-			try {
-				const form = document.getElementById(formId);
-				dumpForm(form);
-			} catch (e) {}
-		};
-
-		console.info('[MATHDOSMAN DEBUG] Submit debug enabled. Use mdDumpForm() to dump current form state.');
-		document.addEventListener('submit', (e) => {
-			try { dumpForm(e.target); } catch (err) {}
-		}, true);
-
-		// Some browsers/flows (native validation, custom handlers) can block submit events.
-		// Dump on submit button clicks too, so we still see what would be submitted.
-		document.addEventListener('click', (e) => {
-			try {
-				const t = e.target;
-				if (!(t instanceof Element)) return;
-				const btn = t.closest('button, input');
-				if (!btn) return;
-				// Use the DOM property (defaults to "submit" for <button> without type attribute).
-				let type = '';
+			const safeStr = (v) => {
 				try {
-					// HTMLButtonElement / HTMLInputElement both have .type
-					// @ts-ignore
-					type = String(btn.type || '').toLowerCase();
+					if (v === null || typeof v === 'undefined') return '';
+					return String(v);
 				} catch (e) {
-					type = String((btn.getAttribute('type') || '')).toLowerCase();
+					return '';
 				}
-				if (type !== 'submit') return;
-				const form = btn.closest('form');
-				if (!form) return;
-				dumpForm(form);
-			} catch (err) {}
-		}, true);
-	} catch (e) {
-		// no-op
-	}
-})();
-</script>
-
-<script>
-(() => {
-	// Auto-toggle button text for Bootstrap collapse triggers.
-	// Usage: add data-md-toggle-closed="Buka" and data-md-toggle-open="Tutup" on the button.
-	const buttons = document.querySelectorAll('[data-md-toggle-closed][data-md-toggle-open][data-bs-toggle="collapse"]');
-	if (!buttons.length) return;
-
-	const setText = (btn, expanded) => {
-		try {
-			const t = expanded ? (btn.getAttribute('data-md-toggle-open') || '') : (btn.getAttribute('data-md-toggle-closed') || '');
-			if (t) btn.textContent = t;
-		} catch (e) {}
-	};
-
-	buttons.forEach((btn) => {
-		try {
-			const targetSel = btn.getAttribute('data-bs-target') || btn.getAttribute('href') || '';
-			if (!targetSel) return;
-			const target = document.querySelector(targetSel);
-			if (!target) return;
-
-			// Initial state from aria-expanded
-			const expanded = (btn.getAttribute('aria-expanded') === 'true');
-			setText(btn, expanded);
-
-			target.addEventListener('shown.bs.collapse', () => setText(btn, true));
-			target.addEventListener('hidden.bs.collapse', () => setText(btn, false));
-		} catch (e) {}
-	});
-})();
-</script>
-
-<script>
-(() => {
-	// Automatically attach CSRF token to all POST forms.
-	document.addEventListener('DOMContentLoaded', () => {
-		const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
-		if (!token) return;
-		const forms = Array.from(document.querySelectorAll('form[method="post"], form[method="POST"]'));
-		forms.forEach((form) => {
-			if (!(form instanceof HTMLFormElement)) return;
-			if (form.querySelector('input[name="csrf_token"]')) return;
-			const input = document.createElement('input');
-			input.type = 'hidden';
-			input.name = 'csrf_token';
-			input.value = token;
-			form.appendChild(input);
-		});
-	});
-})();
-</script>
-
-<script>
-(() => {
-	if (typeof Swal === 'undefined') {
-		return;
-	}
-
-	// SweetAlert2 confirmations for destructive actions.
-	document.addEventListener('submit', (e) => {
-		const form = e.target;
-		if (!(form instanceof HTMLFormElement)) {
-			return;
-		}
-
-		// Allow confirmation to be configured either on the form or on the submit button.
-		const submitter = e.submitter || document.activeElement;
-		const hasOnSubmitter = submitter && submitter instanceof HTMLElement && submitter.hasAttribute('data-swal-confirm');
-		const hasOnForm = form.hasAttribute('data-swal-confirm');
-		if (!hasOnForm && !hasOnSubmitter) {
-			return;
-		}
-		// Avoid infinite loop when we re-submit programmatically.
-		if (form.dataset.swalConfirmed === '1') {
-			return;
-		}
-
-		e.preventDefault();
-		const src = hasOnSubmitter ? submitter : form;
-		const title = src.getAttribute('data-swal-title') || 'Konfirmasi';
-		const text = src.getAttribute('data-swal-text') || 'Lanjutkan aksi ini?';
-		const confirmText = src.getAttribute('data-swal-confirm-text') || 'Ya';
-		const cancelText = src.getAttribute('data-swal-cancel-text') || 'Batal';
-		const requireCheck = (src.getAttribute('data-swal-require-check') || '') === '1';
-		const checkText = src.getAttribute('data-swal-check-text') || 'Saya yakin dan paham konsekuensinya.';
-		const checkError = src.getAttribute('data-swal-check-error') || 'Wajib centang dulu sebelum melanjutkan.';
-
-		const swalOpts = {
-			title,
-			text,
-			icon: 'warning',
-			showCancelButton: true,
-			confirmButtonText: confirmText,
-			cancelButtonText: cancelText,
-			reverseButtons: true,
-		};
-
-		if (requireCheck) {
-			swalOpts.input = 'checkbox';
-			swalOpts.inputPlaceholder = checkText;
-			swalOpts.inputValue = 0;
-			swalOpts.inputValidator = (value) => {
-				// For checkbox input: value is 1 when checked, 0 otherwise.
-				return value ? undefined : checkError;
 			};
-		}
 
-		Swal.fire(swalOpts).then((res) => {
-			if (res.isConfirmed) {
-				form.dataset.swalConfirmed = '1';
-				// Prefer requestSubmit(submitter) to preserve which button was clicked (important for name/value like action=mark_done).
-				if (typeof form.requestSubmit === 'function') {
-					try {
-						if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
-							form.requestSubmit(submitter);
-						} else {
-							form.requestSubmit();
-						}
-						return;
-					} catch (err) {
-						// Fallback below.
-					}
-				}
+			const dumpForm = (form) => {
+				if (!(form instanceof HTMLFormElement)) return;
+				const id = form.getAttribute('id') || '(no-id)';
+				const action = form.getAttribute('action') || window.location.href;
+				const method = (form.getAttribute('method') || 'GET').toUpperCase();
+				console.groupCollapsed('[MATHDOSMAN DEBUG] submit', {
+					id,
+					method,
+					action
+				});
 
-				// Fallback for older browsers: ensure submitter name/value is present by appending a hidden input.
 				try {
-					if (submitter && submitter instanceof HTMLElement) {
-						const n = submitter.getAttribute('name') || '';
-						if (n) {
-							const v = submitter.getAttribute('value') || '';
-							const hidden = document.createElement('input');
-							hidden.type = 'hidden';
-							hidden.name = n;
-							hidden.value = v;
-							form.appendChild(hidden);
-						}
+					const els = Array.from(form.elements || []);
+					const disabled = els
+						.filter((el) => el && (el.disabled === true) && el.name)
+						.map((el) => ({
+							name: el.name,
+							id: el.id || '',
+							type: el.type || el.tagName
+						}));
+					if (disabled.length) {
+						console.warn('[MATHDOSMAN DEBUG] disabled controls (not submitted):', disabled);
 					}
 				} catch (e) {}
-				form.submit();
+
+				// What browser will actually submit
+				try {
+					const fd = new FormData(form);
+					const keys = [];
+					fd.forEach((_, k) => {
+						keys.push(k);
+					});
+					console.log('[MATHDOSMAN DEBUG] formdata keys:', Array.from(new Set(keys)));
+					const peek = (k) => {
+						try {
+							const all = fd.getAll(k);
+							if (!all || !all.length) return null;
+							return all.map((x) => {
+								if (x instanceof File) return {
+									file: x.name,
+									size: x.size,
+									type: x.type
+								};
+								const s = safeStr(x);
+								return s.length > 120 ? (s.slice(0, 120) + '…') : s;
+							});
+						} catch (e) {
+							return null;
+						}
+					};
+					console.log('[MATHDOSMAN DEBUG] pertanyaan:', peek('pertanyaan'));
+					console.log('[MATHDOSMAN DEBUG] pilihan_1:', peek('pilihan_1'));
+					console.log('[MATHDOSMAN DEBUG] pilihan_2:', peek('pilihan_2'));
+					console.log('[MATHDOSMAN DEBUG] pilihan_3:', peek('pilihan_3'));
+					console.log('[MATHDOSMAN DEBUG] pilihan_4:', peek('pilihan_4'));
+					console.log('[MATHDOSMAN DEBUG] pilihan_5:', peek('pilihan_5'));
+					console.log('[MATHDOSMAN DEBUG] jawaban_benar[]:', peek('jawaban_benar[]'));
+					console.log('[MATHDOSMAN DEBUG] csrf_token:', peek('csrf_token'));
+				} catch (e) {
+					console.error('[MATHDOSMAN DEBUG] FormData error:', e);
+				}
+
+				console.groupEnd();
+			};
+
+			window.mdDumpForm = (formId = 'questionForm') => {
+				try {
+					const form = document.getElementById(formId);
+					dumpForm(form);
+				} catch (e) {}
+			};
+
+			console.info('[MATHDOSMAN DEBUG] Submit debug enabled. Use mdDumpForm() to dump current form state.');
+			document.addEventListener('submit', (e) => {
+				try {
+					dumpForm(e.target);
+				} catch (err) {}
+			}, true);
+
+			// Some browsers/flows (native validation, custom handlers) can block submit events.
+			// Dump on submit button clicks too, so we still see what would be submitted.
+			document.addEventListener('click', (e) => {
+				try {
+					const t = e.target;
+					if (!(t instanceof Element)) return;
+					const btn = t.closest('button, input');
+					if (!btn) return;
+					// Use the DOM property (defaults to "submit" for <button> without type attribute).
+					let type = '';
+					try {
+						// HTMLButtonElement / HTMLInputElement both have .type
+						// @ts-ignore
+						type = String(btn.type || '').toLowerCase();
+					} catch (e) {
+						type = String((btn.getAttribute('type') || '')).toLowerCase();
+					}
+					if (type !== 'submit') return;
+					const form = btn.closest('form');
+					if (!form) return;
+					dumpForm(form);
+				} catch (err) {}
+			}, true);
+		} catch (e) {
+			// no-op
+		}
+	})();
+</script>
+
+<script>
+	(() => {
+		// Auto-toggle button text for Bootstrap collapse triggers.
+		// Usage: add data-md-toggle-closed="Buka" and data-md-toggle-open="Tutup" on the button.
+		const buttons = document.querySelectorAll('[data-md-toggle-closed][data-md-toggle-open][data-bs-toggle="collapse"]');
+		if (!buttons.length) return;
+
+		const setText = (btn, expanded) => {
+			try {
+				const t = expanded ? (btn.getAttribute('data-md-toggle-open') || '') : (btn.getAttribute('data-md-toggle-closed') || '');
+				if (t) btn.textContent = t;
+			} catch (e) {}
+		};
+
+		buttons.forEach((btn) => {
+			try {
+				const targetSel = btn.getAttribute('data-bs-target') || btn.getAttribute('href') || '';
+				if (!targetSel) return;
+				const target = document.querySelector(targetSel);
+				if (!target) return;
+
+				// Initial state from aria-expanded
+				const expanded = (btn.getAttribute('aria-expanded') === 'true');
+				setText(btn, expanded);
+
+				target.addEventListener('shown.bs.collapse', () => setText(btn, true));
+				target.addEventListener('hidden.bs.collapse', () => setText(btn, false));
+			} catch (e) {}
+		});
+	})();
+</script>
+
+<script>
+	(() => {
+		// Automatically attach CSRF token to all POST forms.
+		document.addEventListener('DOMContentLoaded', () => {
+			const token = (typeof window.getCsrfToken === 'function') ? window.getCsrfToken() : '';
+			if (!token) return;
+			const forms = Array.from(document.querySelectorAll('form[method="post"], form[method="POST"]'));
+			forms.forEach((form) => {
+				if (!(form instanceof HTMLFormElement)) return;
+				if (form.querySelector('input[name="csrf_token"]')) return;
+				const input = document.createElement('input');
+				input.type = 'hidden';
+				input.name = 'csrf_token';
+				input.value = token;
+				form.appendChild(input);
+			});
+		});
+	})();
+</script>
+
+<script>
+	(() => {
+		if (typeof Swal === 'undefined') {
+			return;
+		}
+
+		// SweetAlert2 confirmations for destructive actions.
+		document.addEventListener('submit', (e) => {
+			const form = e.target;
+			if (!(form instanceof HTMLFormElement)) {
+				return;
 			}
-		});
-	}, true);
 
-	// Convert Bootstrap alerts into SweetAlert2 popups.
-	// Keep complex/interactive inline callouts (forms/buttons/links) in place.
-	document.addEventListener('DOMContentLoaded', () => {
-		const selector = '.alert.alert-danger, .alert.alert-success, .alert.alert-warning, .alert.alert-info';
-		const candidates = Array.from(document.querySelectorAll(selector)).filter((el) => {
-			// Allow opting out per-alert (keep narrative inline on "locked" pages, etc).
-			if (el.getAttribute && el.getAttribute('data-no-swal') === '1') return false;
-			// Don't convert alerts inside Bootstrap modals (often hidden content).
-			if (el.closest && el.closest('.modal')) return false;
-			// Don't convert alerts that contain interactive elements.
-			if (el.querySelector('form, button, a, .btn, input, select, textarea')) return false;
-			return true;
+			// Allow confirmation to be configured either on the form or on the submit button.
+			const submitter = e.submitter || document.activeElement;
+			const hasOnSubmitter = submitter && submitter instanceof HTMLElement && submitter.hasAttribute('data-swal-confirm');
+			const hasOnForm = form.hasAttribute('data-swal-confirm');
+			if (!hasOnForm && !hasOnSubmitter) {
+				return;
+			}
+			// Avoid infinite loop when we re-submit programmatically.
+			if (form.dataset.swalConfirmed === '1') {
+				return;
+			}
+
+			e.preventDefault();
+			const src = hasOnSubmitter ? submitter : form;
+			const title = src.getAttribute('data-swal-title') || 'Konfirmasi';
+			const text = src.getAttribute('data-swal-text') || 'Lanjutkan aksi ini?';
+			const confirmText = src.getAttribute('data-swal-confirm-text') || 'Ya';
+			const cancelText = src.getAttribute('data-swal-cancel-text') || 'Batal';
+			const requireCheck = (src.getAttribute('data-swal-require-check') || '') === '1';
+			const checkText = src.getAttribute('data-swal-check-text') || 'Saya yakin dan paham konsekuensinya.';
+			const checkError = src.getAttribute('data-swal-check-error') || 'Wajib centang dulu sebelum melanjutkan.';
+
+			const swalOpts = {
+				title,
+				text,
+				icon: 'warning',
+				showCancelButton: true,
+				confirmButtonText: confirmText,
+				cancelButtonText: cancelText,
+				reverseButtons: true,
+			};
+
+			if (requireCheck) {
+				swalOpts.input = 'checkbox';
+				swalOpts.inputPlaceholder = checkText;
+				swalOpts.inputValue = 0;
+				swalOpts.inputValidator = (value) => {
+					// For checkbox input: value is 1 when checked, 0 otherwise.
+					return value ? undefined : checkError;
+				};
+			}
+
+			Swal.fire(swalOpts).then((res) => {
+				if (res.isConfirmed) {
+					form.dataset.swalConfirmed = '1';
+					// Prefer requestSubmit(submitter) to preserve which button was clicked (important for name/value like action=mark_done).
+					if (typeof form.requestSubmit === 'function') {
+						try {
+							if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
+								form.requestSubmit(submitter);
+							} else {
+								form.requestSubmit();
+							}
+							return;
+						} catch (err) {
+							// Fallback below.
+						}
+					}
+
+					// Fallback for older browsers: ensure submitter name/value is present by appending a hidden input.
+					try {
+						if (submitter && submitter instanceof HTMLElement) {
+							const n = submitter.getAttribute('name') || '';
+							if (n) {
+								const v = submitter.getAttribute('value') || '';
+								const hidden = document.createElement('input');
+								hidden.type = 'hidden';
+								hidden.name = n;
+								hidden.value = v;
+								form.appendChild(hidden);
+							}
+						}
+					} catch (e) {}
+					form.submit();
+				}
+			});
+		}, true);
+
+		// Convert Bootstrap alerts into SweetAlert2 popups.
+		// Keep complex/interactive inline callouts (forms/buttons/links) in place.
+		document.addEventListener('DOMContentLoaded', () => {
+			const selector = '.alert.alert-danger, .alert.alert-success, .alert.alert-warning, .alert.alert-info';
+			const candidates = Array.from(document.querySelectorAll(selector)).filter((el) => {
+				// Allow opting out per-alert (keep narrative inline on "locked" pages, etc).
+				if (el.getAttribute && el.getAttribute('data-no-swal') === '1') return false;
+				// Don't convert alerts inside Bootstrap modals (often hidden content).
+				if (el.closest && el.closest('.modal')) return false;
+				// Don't convert alerts that contain interactive elements.
+				if (el.querySelector('form, button, a, .btn, input, select, textarea')) return false;
+				return true;
+			});
+			if (candidates.length === 0) {
+				return;
+			}
+
+			const pick = (cls) => candidates.find((el) => el.classList.contains(cls));
+			const alertEl = pick('alert-danger') || pick('alert-success') || pick('alert-warning') || pick('alert-info') || candidates[0];
+			if (!alertEl) {
+				return;
+			}
+
+			let icon = 'info';
+			let title = 'Informasi';
+			if (alertEl.classList.contains('alert-danger')) {
+				icon = 'error';
+				title = 'Gagal';
+			} else if (alertEl.classList.contains('alert-success')) {
+				icon = 'success';
+				title = 'Berhasil';
+			} else if (alertEl.classList.contains('alert-warning')) {
+				icon = 'warning';
+				title = 'Perhatian';
+			}
+
+			const list = alertEl.querySelector('ul');
+			const html = list ? list.outerHTML : (alertEl.innerHTML || '').trim();
+			const text = (alertEl.innerText || '').trim();
+
+			// Hide all these alerts to avoid duplicate UI.
+			candidates.forEach((el) => {
+				el.style.display = 'none';
+			});
+
+			Swal.fire({
+				title,
+				icon,
+				html: html !== '' ? html : undefined,
+				text: html !== '' ? undefined : text,
+			});
 		});
-		if (candidates.length === 0) {
+	})();
+</script>
+
+<script>
+	(() => {
+		if (typeof Swal === 'undefined') return;
+		const body = document.body;
+		if (!body || !body.classList || !body.classList.contains('student-area')) return;
+
+		const params = new URLSearchParams(window.location.search || '');
+		const flash = String(params.get('flash') || '').trim();
+		if (!flash) return;
+
+		const messages = {
+			login_success: {
+				icon: 'success',
+				title: 'Berhasil',
+				text: 'Login berhasil.'
+			},
+			logout_success: {
+				icon: 'success',
+				title: 'Berhasil',
+				text: 'Logout berhasil.'
+			},
+			login_required: {
+				icon: 'info',
+				title: 'Perlu Login',
+				text: 'Silakan login dulu untuk melanjutkan.'
+			},
+			session_expired: {
+				icon: 'info',
+				title: 'Sesi Habis',
+				text: 'Sesi kamu sudah habis. Silakan login kembali.'
+			},
+			session_replaced: {
+				icon: 'info',
+				title: 'Logout Otomatis',
+				text: 'Akun ini login di perangkat lain, jadi kamu terlogout di perangkat ini.'
+			},
+			profile_updated: {
+				icon: 'success',
+				title: 'Tersimpan',
+				text: 'Profil berhasil diperbarui.'
+			},
+
+			saved: {
+				icon: 'success',
+				title: 'Tersimpan',
+				text: 'Jawaban berhasil disimpan.'
+			},
+			done: {
+				icon: 'success',
+				title: 'Dikumpulkan',
+				text: 'Tugas/ujian berhasil dikumpulkan. Nilai dan jawaban ditampilkan.'
+			},
+			already_done: {
+				icon: 'info',
+				title: 'Selesai',
+				text: 'Tugas/ujian sudah dikumpulkan. Nilai dan jawaban ditampilkan.'
+			},
+			started: {
+				icon: 'success',
+				title: 'Ujian Dimulai',
+				text: 'Ujian dimulai. Timer sudah berjalan.'
+			},
+			reopened: {
+				icon: 'success',
+				title: 'Diubah',
+				text: 'Status selesai dibatalkan. Kamu bisa mengerjakan lagi.'
+			},
+		};
+
+		const msg = messages[flash];
+		if (!msg) {
+			// Unknown flash codes are ignored on purpose.
 			return;
 		}
 
-		const pick = (cls) => candidates.find((el) => el.classList.contains(cls));
-		const alertEl = pick('alert-danger') || pick('alert-success') || pick('alert-warning') || pick('alert-info') || candidates[0];
-		if (!alertEl) {
-			return;
-		}
-
-		let icon = 'info';
-		let title = 'Informasi';
-		if (alertEl.classList.contains('alert-danger')) {
-			icon = 'error';
-			title = 'Gagal';
-		} else if (alertEl.classList.contains('alert-success')) {
-			icon = 'success';
-			title = 'Berhasil';
-		} else if (alertEl.classList.contains('alert-warning')) {
-			icon = 'warning';
-			title = 'Perhatian';
-		}
-
-		const list = alertEl.querySelector('ul');
-		const html = list ? list.outerHTML : (alertEl.innerHTML || '').trim();
-		const text = (alertEl.innerText || '').trim();
-
-		// Hide all these alerts to avoid duplicate UI.
-		candidates.forEach((el) => {
-			el.style.display = 'none';
-		});
+		// Remove flash from URL to prevent showing again on refresh.
+		try {
+			params.delete('flash');
+			const qs = params.toString();
+			const nextUrl = window.location.pathname + (qs ? ('?' + qs) : '') + (window.location.hash || '');
+			window.history.replaceState({}, '', nextUrl);
+		} catch (e) {}
 
 		Swal.fire({
-			title,
-			icon,
-			html: html !== '' ? html : undefined,
-			text: html !== '' ? undefined : text,
+			icon: msg.icon,
+			title: msg.title,
+			text: msg.text,
 		});
-	});
-})();
+	})();
 </script>
 
 <script>
-(() => {
-	if (typeof Swal === 'undefined') return;
-	const body = document.body;
-	if (!body || !body.classList || !body.classList.contains('student-area')) return;
+	(() => {
+		// Bottom nav: attendance submenu (Rekap Absen / Ajuan Status)
+		const body = document.body;
+		if (!body || !body.classList || !body.classList.contains('student-area')) return;
 
-	const params = new URLSearchParams(window.location.search || '');
-	const flash = String(params.get('flash') || '').trim();
-	if (!flash) return;
+		const trigger = document.querySelector('.js-bottom-nav-attendance');
+		const menu = document.getElementById('bottomNavAttendanceMenu');
+		if (!trigger || !menu) return;
 
-	const messages = {
-		login_success: { icon: 'success', title: 'Berhasil', text: 'Login berhasil.' },
-		logout_success: { icon: 'success', title: 'Berhasil', text: 'Logout berhasil.' },
-		login_required: { icon: 'info', title: 'Perlu Login', text: 'Silakan login dulu untuk melanjutkan.' },
-		session_expired: { icon: 'info', title: 'Sesi Habis', text: 'Sesi kamu sudah habis. Silakan login kembali.' },
-		session_replaced: { icon: 'info', title: 'Logout Otomatis', text: 'Akun ini login di perangkat lain, jadi kamu terlogout di perangkat ini.' },
-		profile_updated: { icon: 'success', title: 'Tersimpan', text: 'Profil berhasil diperbarui.' },
+		const closeMenu = () => {
+			menu.classList.remove('show');
+			menu.hidden = true;
+			trigger.setAttribute('aria-expanded', 'false');
+		};
 
-		saved: { icon: 'success', title: 'Tersimpan', text: 'Jawaban berhasil disimpan.' },
-			done: { icon: 'success', title: 'Dikumpulkan', text: 'Tugas/ujian berhasil dikumpulkan. Nilai dan jawaban ditampilkan.' },
-			already_done: { icon: 'info', title: 'Selesai', text: 'Tugas/ujian sudah dikumpulkan. Nilai dan jawaban ditampilkan.' },
-		started: { icon: 'success', title: 'Ujian Dimulai', text: 'Ujian dimulai. Timer sudah berjalan.' },
-		reopened: { icon: 'success', title: 'Diubah', text: 'Status selesai dibatalkan. Kamu bisa mengerjakan lagi.' },
-	};
+		trigger.addEventListener('click', (ev) => {
+			ev.preventDefault();
+			const isOpen = menu.classList.contains('show');
+			if (isOpen) {
+				closeMenu();
+			} else {
+				menu.classList.add('show');
+				menu.hidden = false;
+				trigger.setAttribute('aria-expanded', 'true');
+			}
+		});
 
-	const msg = messages[flash];
-	if (!msg) {
-		// Unknown flash codes are ignored on purpose.
-		return;
-	}
-
-	// Remove flash from URL to prevent showing again on refresh.
-	try {
-		params.delete('flash');
-		const qs = params.toString();
-		const nextUrl = window.location.pathname + (qs ? ('?' + qs) : '') + (window.location.hash || '');
-		window.history.replaceState({}, '', nextUrl);
-	} catch (e) {}
-
-	Swal.fire({
-		icon: msg.icon,
-		title: msg.title,
-		text: msg.text,
-	});
-})();
-</script>
-
-<script>
-(() => {
-	// Bottom nav: attendance submenu (Rekap Absen / Ajuan Status)
-	const body = document.body;
-	if (!body || !body.classList || !body.classList.contains('student-area')) return;
-
-	const trigger = document.querySelector('.js-bottom-nav-attendance');
-	const menu = document.getElementById('bottomNavAttendanceMenu');
-	if (!trigger || !menu) return;
-
-	const closeMenu = () => {
-		menu.classList.remove('show');
-		menu.hidden = true;
-		trigger.setAttribute('aria-expanded', 'false');
-	};
-
-	trigger.addEventListener('click', (ev) => {
-		ev.preventDefault();
-		const isOpen = menu.classList.contains('show');
-		if (isOpen) {
+		document.addEventListener('click', (ev) => {
+			if (!menu.classList.contains('show')) return;
+			const target = ev.target;
+			if (!(target instanceof HTMLElement)) return;
+			const group = trigger.closest('.student-bottom-nav-group');
+			if (group && target.closest('.student-bottom-nav-group') === group) {
+				return;
+			}
 			closeMenu();
-		} else {
-			menu.classList.add('show');
-			menu.hidden = false;
-			trigger.setAttribute('aria-expanded', 'true');
-		}
-	});
-
-	document.addEventListener('click', (ev) => {
-		if (!menu.classList.contains('show')) return;
-		const target = ev.target;
-		if (!(target instanceof HTMLElement)) return;
-		const group = trigger.closest('.student-bottom-nav-group');
-		if (group && target.closest('.student-bottom-nav-group') === group) {
-			return;
-		}
-		closeMenu();
-	});
-})();
+		});
+	})();
 </script>
 
 <script>
-(() => {
-	// Ensure tables use Bootstrap table styling site-wide.
-	// Excludes richtext content tables because they have their own styling.
-	const tables = Array.from(document.querySelectorAll('table'));
-	for (const table of tables) {
-		if (!(table instanceof HTMLTableElement)) continue;
-		if (table.closest && table.closest('.richtext-content')) continue;
-		if (table.getAttribute('data-no-bootstrap') === '1') continue;
-		if (table.classList.contains('table')) continue;
-		table.classList.add('table', 'table-striped', 'table-sm', 'align-middle');
-	}
-})();
+	(() => {
+		// Ensure tables use Bootstrap table styling site-wide.
+		// Excludes richtext content tables because they have their own styling.
+		const tables = Array.from(document.querySelectorAll('table'));
+		for (const table of tables) {
+			if (!(table instanceof HTMLTableElement)) continue;
+			if (table.closest && table.closest('.richtext-content')) continue;
+			if (table.getAttribute('data-no-bootstrap') === '1') continue;
+			if (table.classList.contains('table')) continue;
+			table.classList.add('table', 'table-striped', 'table-sm', 'align-middle');
+		}
+	})();
 </script>
 
 <script>
-(() => {
-	// Add row numbering column (No) to all tables site-wide.
-	// Excludes richtext content tables.
-	const tables = Array.from(document.querySelectorAll('table'));
-	for (const table of tables) {
-		if (!(table instanceof HTMLTableElement)) continue;
-		if (table.closest && table.closest('.richtext-content')) continue;
-		if (table.getAttribute('data-no-numbering') === '1') continue;
-		if (table.dataset && table.dataset.numberingApplied === '1') continue;
+	(() => {
+		// Add row numbering column (No) to all tables site-wide.
+		// Excludes richtext content tables.
+		const tables = Array.from(document.querySelectorAll('table'));
+		for (const table of tables) {
+			if (!(table instanceof HTMLTableElement)) continue;
+			if (table.closest && table.closest('.richtext-content')) continue;
+			if (table.getAttribute('data-no-numbering') === '1') continue;
+			if (table.dataset && table.dataset.numberingApplied === '1') continue;
 
-		// Detect existing numbering by header text.
-		const firstHeaderCell = table.querySelector('thead tr th, thead tr td');
-		if (firstHeaderCell) {
-			const txt = (firstHeaderCell.textContent || '').trim().toLowerCase();
-			if (txt === 'no' || txt === '#') {
-				continue;
-			}
-		}
-
-		// Insert header cell.
-		const headRow = table.querySelector('thead tr');
-		if (headRow) {
-			const th = document.createElement('th');
-			th.textContent = 'No';
-			th.style.width = '64px';
-			headRow.insertBefore(th, headRow.firstElementChild);
-		}
-
-		// Insert numbering cells.
-		let n = 1;
-		const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
-		for (const tr of bodyRows) {
-			if (!(tr instanceof HTMLTableRowElement)) continue;
-			// Skip header-like rows inside tbody.
-			if (tr.querySelector('th')) {
-				// still number if it's a normal row with th? keep simple: do nothing.
-			}
-			const firstCell = tr.firstElementChild;
-			// If this looks like a single "empty state" row with colspan, expand colspan.
-			if (tr.children.length === 1 && firstCell && (firstCell instanceof HTMLTableCellElement)) {
-				const colspan = parseInt(firstCell.getAttribute('colspan') || '0', 10);
-				if (colspan > 0) {
-					firstCell.setAttribute('colspan', String(colspan + 1));
+			// Detect existing numbering by header text.
+			const firstHeaderCell = table.querySelector('thead tr th, thead tr td');
+			if (firstHeaderCell) {
+				const txt = (firstHeaderCell.textContent || '').trim().toLowerCase();
+				if (txt === 'no' || txt === '#') {
 					continue;
 				}
 			}
 
-			const td = document.createElement('td');
-			td.className = 'text-muted';
-			td.textContent = String(n++);
-			tr.insertBefore(td, tr.firstElementChild);
-		}
+			// Insert header cell.
+			const headRow = table.querySelector('thead tr');
+			if (headRow) {
+				const th = document.createElement('th');
+				th.textContent = 'No';
+				th.style.width = '64px';
+				headRow.insertBefore(th, headRow.firstElementChild);
+			}
 
-		table.dataset.numberingApplied = '1';
-	}
-})();
+			// Insert numbering cells.
+			let n = 1;
+			const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+			for (const tr of bodyRows) {
+				if (!(tr instanceof HTMLTableRowElement)) continue;
+				// Skip header-like rows inside tbody.
+				if (tr.querySelector('th')) {
+					// still number if it's a normal row with th? keep simple: do nothing.
+				}
+				const firstCell = tr.firstElementChild;
+				// If this looks like a single "empty state" row with colspan, expand colspan.
+				if (tr.children.length === 1 && firstCell && (firstCell instanceof HTMLTableCellElement)) {
+					const colspan = parseInt(firstCell.getAttribute('colspan') || '0', 10);
+					if (colspan > 0) {
+						firstCell.setAttribute('colspan', String(colspan + 1));
+						continue;
+					}
+				}
+
+				const td = document.createElement('td');
+				td.className = 'text-muted';
+				td.textContent = String(n++);
+				tr.insertBefore(td, tr.firstElementChild);
+			}
+
+			table.dataset.numberingApplied = '1';
+		}
+	})();
 </script>
 </body>
+
 </html>

@@ -59,7 +59,12 @@ if ($dbPreflightOk) {
 			}
 		}
 	} catch (Throwable $e) {
-		try { if ($pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); } } catch (Throwable $e2) {}
+		try {
+			if ($pdo instanceof PDO && $pdo->inTransaction()) {
+				$pdo->rollBack();
+			}
+		} catch (Throwable $e2) {
+		}
 	}
 }
 $content = null;
@@ -410,7 +415,7 @@ $renderHtml = function (?string $html): string {
 };
 
 $renderSidebarKonten = function (string $title, array $list, string $currentKind, int $currentId, string $currentSlug, string $currentCode): void {
-	?>
+?>
 	<div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
 	<?php if (!$list): ?>
 		<div class="small text-white-50 text-start mb-3">Belum ada data.</div>
@@ -418,29 +423,29 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 		<nav class="nav flex-column mb-3">
 			<?php foreach ($list as $row): ?>
 				<?php
-					$kind = (string)($row['kind'] ?? '');
-					$id = (int)($row['id'] ?? 0);
-					$title2 = (string)($row['title'] ?? '');
-					$materi2 = trim((string)($row['materi'] ?? ''));
-					$submateri2 = trim((string)($row['submateri'] ?? ''));
-					$qCount = (int)($row['question_count'] ?? 0);
-					$href = '';
-					$badge = '';
-					if ($kind === 'package' && !empty($row['code'])) {
-						$href = 'paket.php?code=' . urlencode((string)$row['code']);
-						$badge = 'Paket';
-					} elseif ($kind === 'content' && !empty($row['slug'])) {
-						$href = 'post.php?slug=' . urlencode((string)$row['slug']);
-						$ctype = (string)($row['ctype'] ?? 'materi');
-						$badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
-					}
-					$isActive = ($kind === $currentKind && $id === $currentId);
-					if (!$isActive && $kind === 'content' && !empty($row['slug'])) {
-						$isActive = ((string)$row['slug'] === $currentSlug);
-					}
-					if (!$isActive && $kind === 'package' && !empty($row['code'])) {
-						$isActive = ((string)$row['code'] === $currentCode);
-					}
+				$kind = (string)($row['kind'] ?? '');
+				$id = (int)($row['id'] ?? 0);
+				$title2 = (string)($row['title'] ?? '');
+				$materi2 = trim((string)($row['materi'] ?? ''));
+				$submateri2 = trim((string)($row['submateri'] ?? ''));
+				$qCount = (int)($row['question_count'] ?? 0);
+				$href = '';
+				$badge = '';
+				if ($kind === 'package' && !empty($row['code'])) {
+					$href = 'paket.php?code=' . urlencode((string)$row['code']);
+					$badge = 'Paket';
+				} elseif ($kind === 'content' && !empty($row['slug'])) {
+					$href = 'post.php?slug=' . urlencode((string)$row['slug']);
+					$ctype = (string)($row['ctype'] ?? 'materi');
+					$badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
+				}
+				$isActive = ($kind === $currentKind && $id === $currentId);
+				if (!$isActive && $kind === 'content' && !empty($row['slug'])) {
+					$isActive = ((string)$row['slug'] === $currentSlug);
+				}
+				if (!$isActive && $kind === 'package' && !empty($row['code'])) {
+					$isActive = ((string)$row['code'] === $currentCode);
+				}
 				?>
 				<a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo htmlspecialchars($href !== '' ? $href : '#'); ?>" <?php echo $href === '' ? 'aria-disabled="true"' : ''; ?> <?php echo $isActive ? 'aria-current="page"' : ''; ?>>
 					<div class="d-flex align-items-start justify-content-between gap-2 w-100">
@@ -453,23 +458,23 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 					</div>
 					<div class="small text-white-50">
 						<?php
-							$metaBits = [];
-							if ($submateri2 !== '') {
-								$metaBits[] = 'Submateri: ' . $submateri2;
-							} elseif ($materi2 !== '') {
-								$metaBits[] = 'Materi: ' . $materi2;
-							}
-							if ($kind === 'package') {
-								$metaBits[] = 'Soal: ' . (string)$qCount;
-							}
-							echo htmlspecialchars($metaBits ? implode(' | ', $metaBits) : '-');
+						$metaBits = [];
+						if ($submateri2 !== '') {
+							$metaBits[] = 'Submateri: ' . $submateri2;
+						} elseif ($materi2 !== '') {
+							$metaBits[] = 'Materi: ' . $materi2;
+						}
+						if ($kind === 'package') {
+							$metaBits[] = 'Soal: ' . (string)$qCount;
+						}
+						echo htmlspecialchars($metaBits ? implode(' | ', $metaBits) : '-');
 						?>
 					</div>
 				</a>
 			<?php endforeach; ?>
 		</nav>
 	<?php endif; ?>
-	<?php
+<?php
 };
 
 ?>
@@ -478,41 +483,41 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 		<div class="d-flex align-items-center justify-content-between gap-2 mb-2">
 			<div class="d-flex align-items-center gap-2 flex-wrap">
 				<a href="index.php" class="btn btn-dark btn-sm fw-semibold">&laquo; Kembali</a>
-				<button type="button" class="btn btn-dark btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Munculkan Sidebar</button>
-				<button type="button" class="btn btn-dark btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Sembunyikan Sidebar</button>
+				<button type="button" class="btn btn-outline-secondary btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Munculkan Sidebar</button>
+				<button type="button" class="btn btn-outline-secondary btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Sembunyikan Sidebar</button>
 			</div>
 			<div class="text-muted small">Slug: <strong><?php echo htmlspecialchars($slug !== '' ? $slug : '-'); ?></strong></div>
 		</div>
 
-		<div class="offcanvas offcanvas-start d-lg-none text-bg-dark" tabindex="-1" id="paketSidebarOffcanvas" aria-labelledby="paketSidebarOffcanvasLabel">
+		<div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="paketSidebarOffcanvas" aria-labelledby="paketSidebarOffcanvasLabel">
 			<div class="offcanvas-header">
 				<h5 class="offcanvas-title" id="paketSidebarOffcanvasLabel">Sidebar</h5>
-				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
+				<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
 			</div>
 			<div class="offcanvas-body app-sidebar">
 				<?php
-					$currentKindSidebar = $linkedIntroPackage ? 'package' : 'content';
-					$currentIdSidebar = (int)($linkedIntroPackage['id'] ?? ($content['id'] ?? 0));
-					$currentCodeSidebar = (string)($linkedIntroPackage['code'] ?? '');
-					$renderSidebarKonten('Konten Terkait', $sidebarRelated, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
-					$renderSidebarKonten('Konten Terbaru', $sidebarLatest, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
-					$renderSidebarKonten('Konten Random', $sidebarRandom, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				$currentKindSidebar = $linkedIntroPackage ? 'package' : 'content';
+				$currentIdSidebar = (int)($linkedIntroPackage['id'] ?? ($content['id'] ?? 0));
+				$currentCodeSidebar = (string)($linkedIntroPackage['code'] ?? '');
+				$renderSidebarKonten('Konten Terkait', $sidebarRelated, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				$renderSidebarKonten('Konten Terbaru', $sidebarLatest, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				$renderSidebarKonten('Konten Random', $sidebarRandom, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
 				?>
 			</div>
 		</div>
 
 		<div class="paket-dock-layout">
-			<div class="paket-dock-sidebar d-none d-lg-block app-sidebar bg-dark text-white p-3" id="paketDockSidebar">
+			<div class="paket-dock-sidebar d-none d-lg-block app-sidebar p-3" id="paketDockSidebar">
 				<div class="d-grid gap-2 mb-2">
 					<button type="button" class="btn btn-outline-light btn-sm" id="paketDockClose">Sembunyikan Sidebar</button>
 				</div>
 				<?php
-					$currentKindSidebar = $linkedIntroPackage ? 'package' : 'content';
-					$currentIdSidebar = (int)($linkedIntroPackage['id'] ?? ($content['id'] ?? 0));
-					$currentCodeSidebar = (string)($linkedIntroPackage['code'] ?? '');
-					$renderSidebarKonten('Konten Terkait', $sidebarRelated, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
-					$renderSidebarKonten('Konten Terbaru', $sidebarLatest, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
-					$renderSidebarKonten('Konten Random', $sidebarRandom, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				$currentKindSidebar = $linkedIntroPackage ? 'package' : 'content';
+				$currentIdSidebar = (int)($linkedIntroPackage['id'] ?? ($content['id'] ?? 0));
+				$currentCodeSidebar = (string)($linkedIntroPackage['code'] ?? '');
+				$renderSidebarKonten('Konten Terkait', $sidebarRelated, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				$renderSidebarKonten('Konten Terbaru', $sidebarLatest, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				$renderSidebarKonten('Konten Random', $sidebarRandom, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
 				?>
 			</div>
 
@@ -524,10 +529,10 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 								<img class="logo-svg" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="72" height="72" alt="Logo MathDosman" loading="eager" decoding="async">
 							<?php else: ?>
 								<svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-									<circle cx="50" cy="50" r="48" stroke="#c5a021" stroke-width="2"/>
-									<path d="M30 70V30L50 50L70 30V70" stroke="#1a237e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M40 50C40 40 60 60 60 50C60 40 40 60 40 50Z" stroke="#c5a021" stroke-width="3" stroke-linecap="round"/>
-									<path d="M25 45Q25 35 30 35" stroke="#1a237e" stroke-width="2" fill="none"/>
+									<circle cx="50" cy="50" r="48" stroke="#c5a021" stroke-width="2" />
+									<path d="M30 70V30L50 50L70 30V70" stroke="#1a237e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+									<path d="M40 50C40 40 60 60 60 50C60 40 40 60 40 50Z" stroke="#c5a021" stroke-width="3" stroke-linecap="round" />
+									<path d="M25 45Q25 35 30 35" stroke="#1a237e" stroke-width="2" fill="none" />
 								</svg>
 							<?php endif; ?>
 
@@ -548,12 +553,12 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 						</div>
 					<?php else: ?>
 						<?php
-							$t = (string)($content['type'] ?? '');
-							$badge = ($t === 'berita') ? 'Berita' : 'Materi';
-							$publishedAt = (string)($content['published_at'] ?? '');
-							$title = (string)($content['title'] ?? '');
-							$excerpt = trim((string)($content['excerpt'] ?? ''));
-							$safeHtml = $renderHtml((string)($content['content_html'] ?? ''));
+						$t = (string)($content['type'] ?? '');
+						$badge = ($t === 'berita') ? 'Berita' : 'Materi';
+						$publishedAt = (string)($content['published_at'] ?? '');
+						$title = (string)($content['title'] ?? '');
+						$excerpt = trim((string)($content['excerpt'] ?? ''));
+						$safeHtml = $renderHtml((string)($content['content_html'] ?? ''));
 						?>
 
 						<div class="custom-card mb-3">
@@ -581,9 +586,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 						</div>
 
 						<?php
-							require_once __DIR__ . '/includes/disqus.php';
-							$disqusIdentifier = 'post-' . (string)$slug;
-							$disqusUrl = rtrim((string)$base_url, '/') . '/post.php?slug=' . rawurlencode((string)$slug);
+						require_once __DIR__ . '/includes/disqus.php';
+						$disqusIdentifier = 'post-' . (string)$slug;
+						$disqusUrl = rtrim((string)$base_url, '/') . '/post.php?slug=' . rawurlencode((string)$slug);
 						?>
 						<div class="custom-card mb-3 d-print-none">
 							<div class="custom-card-header">
@@ -598,13 +603,13 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 							<div class="d-flex align-items-center gap-2">
 								<div class="flex-grow-1 text-start">
 									<?php
-										$prevKind = (string)($navPrev['kind'] ?? '');
-										$prevHref = '';
-										if ($prevKind === 'package' && !empty($navPrev['code'])) {
-											$prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
-										} elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
-											$prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
-										}
+									$prevKind = (string)($navPrev['kind'] ?? '');
+									$prevHref = '';
+									if ($prevKind === 'package' && !empty($navPrev['code'])) {
+										$prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
+									} elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
+										$prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
+									}
 									?>
 									<?php if ($prevHref !== ''): ?>
 										<a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
@@ -636,13 +641,13 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 
 								<div class="flex-grow-1 text-end">
 									<?php
-										$nextKind = (string)($navNext['kind'] ?? '');
-										$nextHref = '';
-										if ($nextKind === 'package' && !empty($navNext['code'])) {
-											$nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
-										} elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
-											$nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
-										}
+									$nextKind = (string)($navNext['kind'] ?? '');
+									$nextHref = '';
+									if ($nextKind === 'package' && !empty($navNext['code'])) {
+										$nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
+									} elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
+										$nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
+									}
 									?>
 									<?php if ($nextHref !== ''): ?>
 										<a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
@@ -672,47 +677,49 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 			id="scrollTopBtn"
 			class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3 scroll-top-btn"
 			aria-label="Ke atas"
-			title="Ke atas"
-		>
+			title="Ke atas">
 			<span aria-hidden="true">↑</span>
 		</button>
 
 		<script>
-		(() => {
-			const body = document.body;
-			const btn = document.getElementById('paketDockToggle');
-			const closeBtn = document.getElementById('paketDockClose');
-			const cls = 'paket-sidebar-collapsed';
+			(() => {
+				const body = document.body;
+				const btn = document.getElementById('paketDockToggle');
+				const closeBtn = document.getElementById('paketDockClose');
+				const cls = 'paket-sidebar-collapsed';
 
-			const scrollTopBtn = document.getElementById('scrollTopBtn');
-			if (scrollTopBtn) {
-				scrollTopBtn.addEventListener('click', () => {
-					window.scrollTo({ top: 0, behavior: 'smooth' });
-				});
-			}
+				const scrollTopBtn = document.getElementById('scrollTopBtn');
+				if (scrollTopBtn) {
+					scrollTopBtn.addEventListener('click', () => {
+						window.scrollTo({
+							top: 0,
+							behavior: 'smooth'
+						});
+					});
+				}
 
-			if (!btn) return;
+				if (!btn) return;
 
-			const sync = () => {
-				const collapsed = body.classList.contains(cls);
-				btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
-				btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-			};
+				const sync = () => {
+					const collapsed = body.classList.contains(cls);
+					btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
+					btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+				};
 
-			btn.addEventListener('click', () => {
-				body.classList.toggle(cls);
-				sync();
-			});
-
-			if (closeBtn) {
-				closeBtn.addEventListener('click', () => {
-					body.classList.add(cls);
+				btn.addEventListener('click', () => {
+					body.classList.toggle(cls);
 					sync();
 				});
-			}
 
-			sync();
-		})();
+				if (closeBtn) {
+					closeBtn.addEventListener('click', () => {
+						body.classList.add(cls);
+						sync();
+					});
+				}
+
+				sync();
+			})();
 		</script>
 	</div>
 </div>

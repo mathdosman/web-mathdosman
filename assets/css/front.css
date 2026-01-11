@@ -408,9 +408,9 @@
         gap: .25rem;
     }
 
-    /* Brighten paket sidebar (~30%) while keeping admin sidebar look. */
-    body.paket-preview .paket-dock-sidebar.app-sidebar.bg-dark,
-    body.paket-preview #paketSidebarOffcanvas.text-bg-dark {
+    /* Paket sidebar: slightly darker in dark mode, normal in light mode */
+    html[data-bs-theme="dark"] body.paket-preview .paket-dock-sidebar,
+    html[data-bs-theme="dark"] body.paket-preview #paketSidebarOffcanvas {
         background-color: color-mix(in srgb, var(--bs-dark) 70%, var(--bs-body-bg));
     }
 
