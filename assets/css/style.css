@@ -22,6 +22,24 @@ body {
 
 :root {
     --app-sidebar-width: 260px;
+
+    /* Theme-aware elevations (light = darker shadow, dark = brighter glow) */
+    --md-surface-shadow: 0 10px 22px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+    --md-icon-card-shadow: 0 4px 8px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(15, 23, 42, 0.04);
+    --md-icon-pill-shadow: 0 2px 4px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+    --md-icon-pill-shadow-hover: 0 3px 7px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(var(--bs-primary-rgb), 0.45);
+    --md-icon-text-shadow: 0 2px 6px rgba(15, 23, 42, 0.35);
+    --md-icon-filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.35));
+}
+
+html[data-bs-theme="dark"] {
+    /* Brighter shadows so cards/icons still pop on dark surfaces */
+    --md-surface-shadow: 0 12px 26px rgba(255, 255, 255, 0.10), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    --md-icon-card-shadow: 0 6px 14px rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.14);
+    --md-icon-pill-shadow: 0 3px 10px rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    --md-icon-pill-shadow-hover: 0 4px 14px rgba(255, 255, 255, 0.16), 0 0 0 1px rgba(var(--bs-primary-rgb), 0.35);
+    --md-icon-text-shadow: 0 2px 10px rgba(255, 255, 255, 0.25);
+    --md-icon-filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.25));
 }
 
 /* Consistent keyboard focus (works with Bootstrap tokens) */
@@ -311,6 +329,8 @@ pre {
     border: 1px solid var(--bs-border-color);
     border-radius: .75rem;
     padding: 1rem;
+    box-shadow: var(--md-surface-shadow);
+    transition: box-shadow .18s ease;
 }
 
 @media (min-width: 768px) {
@@ -337,7 +357,7 @@ pre {
     /* Neutral but slightly 3D background so any icon color stays readable */
     background: linear-gradient(145deg, #ffffff, #e6eeff);
     border: 1px solid rgba(15, 23, 42, 0.16);
-    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--md-icon-card-shadow);
     flex: 0 0 auto;
 }
 
@@ -356,6 +376,36 @@ pre {
 .brand-name {
     font-weight: 600;
     letter-spacing: .02em;
+}
+
+/* Icons inside cards: subtle theme-aware shadow so they stay distinct */
+.content-card .bi,
+.content-card i.bi,
+.card .bi,
+.card i.bi {
+    text-shadow: var(--md-icon-text-shadow);
+}
+
+.content-card svg.icon,
+.card svg.icon,
+.content-card svg.bi,
+.card svg.bi {
+    filter: var(--md-icon-filter);
+}
+
+/* Do not add shadows to tiny action icons inside interactive controls */
+.btn .bi,
+.btn i.bi,
+.nav-link .bi,
+.nav-link i.bi {
+    text-shadow: none;
+}
+
+.btn svg.icon,
+.nav-link svg.icon,
+.btn svg.bi,
+.nav-link svg.bi {
+    filter: none;
 }
 
 .app-navbar .brand-name {
@@ -826,7 +876,7 @@ body.student-area .student-top-avatar-inner {
     padding: 2px;
     border-radius: 999px;
     background-color: #ffffff;
-    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18), 0 4px 8px rgba(15, 23, 42, 0.28);
+    box-shadow: var(--md-icon-card-shadow);
 }
 
 body.student-area .student-top-avatar-img {
@@ -859,7 +909,7 @@ body.student-area .student-top-logout-btn {
 body.student-area .content-card {
     background-color: rgba(var(--bs-body-bg-rgb), 0.92);
     border-color: rgba(var(--bs-body-color-rgb), 0.10);
-    box-shadow: var(--bs-box-shadow-sm);
+    box-shadow: var(--md-surface-shadow);
     backdrop-filter: saturate(120%) blur(6px);
 }
 
@@ -964,7 +1014,7 @@ body.student-area .profile-edit-form .form-control {
     align-items: center;
     justify-content: center;
     background: radial-gradient(circle at 30% 30%, #ffffff, #e4edff);
-    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+    box-shadow: var(--md-icon-pill-shadow);
     transform: translateY(0);
     transition: background-color .18s ease, box-shadow .18s ease, transform .18s ease, color .18s ease;
 }
@@ -987,7 +1037,7 @@ body.student-area .profile-edit-form .form-control {
 
 .student-bottom-nav .student-bottom-nav-item:hover i,
 .student-bottom-nav .student-bottom-nav-item:focus-visible i {
-    box-shadow: 0 3px 7px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(var(--bs-primary-rgb), 0.45);
+    box-shadow: var(--md-icon-pill-shadow-hover);
 }
 
 
@@ -1008,7 +1058,7 @@ body.student-area .profile-edit-form .form-control {
     background-color: #ffffff;
     border-radius: .75rem;
     border: 1px solid rgba(15, 23, 42, 0.12);
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+    box-shadow: var(--md-surface-shadow);
     display: none;
     z-index: 1040;
 }
@@ -1040,7 +1090,7 @@ body.student-area .card {
 }
 
 body.student-area .card.shadow-sm {
-    box-shadow: var(--bs-box-shadow-sm) !important;
+    box-shadow: var(--md-surface-shadow) !important;
 }
 
 body.student-area .card-body {

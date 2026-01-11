@@ -22,7 +22,7 @@
     }
 
     body.front-page .brand-banner {
-        box-shadow: var(--bs-box-shadow-sm);
+        box-shadow: var(--md-surface-shadow);
     }
 
     body.front-page .content-card {
@@ -42,7 +42,7 @@
         border: 1px solid var(--bs-border-color);
         border-radius: 1rem;
         padding: 1.25rem;
-        box-shadow: var(--bs-box-shadow-sm);
+        box-shadow: var(--md-surface-shadow);
     }
 
     body.front-page .home-hero::before {
@@ -72,7 +72,7 @@
     }
 
     body.front-page .home-hero .home-vision {
-        box-shadow: var(--bs-box-shadow-sm);
+        box-shadow: var(--md-surface-shadow);
     }
 
     body.front-page .home-hero .text-uppercase {
@@ -92,7 +92,7 @@
     }
 
     body.front-page .post-card:hover {
-        box-shadow: var(--bs-box-shadow-sm);
+        box-shadow: var(--md-surface-shadow);
         transform: translateY(-1px);
     }
 
@@ -173,7 +173,7 @@
 
     body.front-page.daftar-isi .toc-card:hover {
         transform: translateY(-1px);
-        box-shadow: var(--bs-box-shadow-sm);
+        box-shadow: var(--md-surface-shadow);
         border-color: color-mix(in srgb, var(--bs-border-color) 60%, var(--bs-primary));
     }
 
@@ -224,7 +224,7 @@
     }
 
     body.front-page.daftar-isi .toc-filters:focus-within {
-        box-shadow: var(--bs-box-shadow-sm);
+        box-shadow: var(--md-surface-shadow);
     }
 
     body.front-page.daftar-isi .toc-filters .form-label {
