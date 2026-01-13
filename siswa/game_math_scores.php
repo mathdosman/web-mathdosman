@@ -84,7 +84,6 @@ include __DIR__ . '/../includes/header.php';
                                 <tr>
                                     <th style="width:64px;">No</th>
                                     <th>Nama</th>
-                                    <th style="width:140px;">Kelas</th>
                                     <th style="width:120px;">Skor</th>
                                 </tr>
                             </thead>
@@ -107,13 +106,18 @@ include __DIR__ . '/../includes/header.php';
                                         }
                                         $colorIndex = ($hash % 5) + 1;
                                         $nameColorClass = 'mini-name-color-' . $colorIndex;
+                                        $kelasRombel = trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''));
                                     ?>
                                     <tr class="<?php echo htmlspecialchars($rankClass); ?>">
                                         <td>
                                             <span class="mini-rank-badge">#<?php echo $rank; ?></span>
                                         </td>
-                                        <td><span class="<?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span></td>
-                                        <td><?php echo htmlspecialchars(trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''))); ?></td>
+                                        <td>
+                                            <span class="<?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
+                                            <?php if ($kelasRombel !== ''): ?>
+                                                <span class="text-muted small ms-1"><?php echo htmlspecialchars('(' . $kelasRombel . ')'); ?></span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="fw-semibold text-primary"><?php echo (int)($row['score'] ?? 0); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -133,7 +137,6 @@ include __DIR__ . '/../includes/header.php';
                                 <tr>
                                     <th style="width:64px;">No</th>
                                     <th>Nama</th>
-                                    <th style="width:140px;">Kelas</th>
                                     <th style="width:120px;">Skor</th>
                                 </tr>
                             </thead>
@@ -156,13 +159,18 @@ include __DIR__ . '/../includes/header.php';
                                         }
                                         $colorIndex = ($hash % 5) + 1;
                                         $nameColorClass = 'mini-name-color-' . $colorIndex;
+                                        $kelasRombel = trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''));
                                     ?>
                                     <tr class="<?php echo htmlspecialchars($rankClass); ?>">
                                         <td>
                                             <span class="mini-rank-badge">#<?php echo $rank; ?></span>
                                         </td>
-                                        <td><span class="<?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span></td>
-                                        <td><?php echo htmlspecialchars(trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''))); ?></td>
+                                        <td>
+                                            <span class="<?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
+                                            <?php if ($kelasRombel !== ''): ?>
+                                                <span class="text-muted small ms-1"><?php echo htmlspecialchars('(' . $kelasRombel . ')'); ?></span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="fw-semibold text-primary"><?php echo (int)($row['score'] ?? 0); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
