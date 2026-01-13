@@ -80,6 +80,7 @@ if (!function_exists('app_render_comments')) {
     function app_render_comments(string $pageIdentifier, string $pageUrl): void
     {
         global $pdo;
+        global $base_url;
 
         // Prevent duplicate rendering when footer auto-includes comments.
         $GLOBALS['app_comments_rendered'] = true;
@@ -99,108 +100,40 @@ if (!function_exists('app_render_comments')) {
         $studentName = $isStudent ? trim((string)($_SESSION['student']['nama_siswa'] ?? '')) : '';
         $studentId = $isStudent ? (int)($_SESSION['student']['id'] ?? 0) : 0;
 
-        $errors = [];
-        $successMsg = '';
-
+        // Flash message dari handler submit (PRG) untuk menghindari header already sent.
+        $flashType = '';
+        $flashMsg = '';
         $postedName = '';
         $postedEmail = '';
         $postedBody = '';
+        try {
+            if (!empty($_SESSION['comment_flash']) && is_array($_SESSION['comment_flash'])) {
+                $flash = $_SESSION['comment_flash'];
+                unset($_SESSION['comment_flash']);
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $action = trim((string)($_POST['comment_action'] ?? ''));
-            $pid = trim((string)($_POST['comment_page_identifier'] ?? ''));
-
-            if ($action === 'add' && $pid === $pageIdentifier) {
-                require_csrf_valid();
-
-                $honeypot = trim((string)($_POST['comment_website'] ?? ''));
-                if ($honeypot !== '') {
-                    $errors[] = 'Pengiriman terdeteksi tidak valid.';
-                }
-
-                if (app_comments_rate_limited()) {
-                    $errors[] = 'Terlalu banyak komentar dalam waktu singkat. Coba lagi beberapa menit.';
-                }
-
-                if ($isStudent) {
-                    $postedName = $studentName;
-                } else {
-                    $postedName = app_comments_normalize_name((string)($_POST['comment_name'] ?? ''));
-                }
-
-                $postedEmail = trim((string)($_POST['comment_email'] ?? ''));
-                $postedBody = trim((string)($_POST['comment_body'] ?? ''));
-
-                if ($postedName === '' || !app_comments_is_valid_name($postedName)) {
-                    $errors[] = 'Nama tidak valid. Gunakan 2-60 karakter.';
-                }
-
-                if (!$isStudent && !app_comments_is_valid_email($postedEmail)) {
-                    $errors[] = 'Email tidak valid.';
-                }
-
-                if ($postedBody === '') {
-                    $errors[] = 'Komentar tidak boleh kosong.';
-                } elseif (mb_strlen($postedBody) > 2000) {
-                    $errors[] = 'Komentar maksimal 2000 karakter.';
-                }
-
-                if (!$errors) {
-                    $ipBin = null;
-                    try {
-                        $ip = trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
-                        if ($ip !== '') {
-                            $packed = @inet_pton($ip);
-                            if ($packed !== false) {
-                                $ipBin = $packed;
-                            }
-                        }
-                    } catch (Throwable $e) {
-                        $ipBin = null;
-                    }
-
-                    $ua = '';
-                    try {
-                        $ua = trim((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
-                    } catch (Throwable $e) {
-                        $ua = '';
-                    }
-
-                    try {
-                        if (!isset($pdo) || !($pdo instanceof PDO)) {
-                            throw new RuntimeException('Koneksi DB tidak tersedia.');
-                        }
-
-                        $stmt = $pdo->prepare('INSERT INTO site_comments
-                            (page_identifier, page_url, page_title, author_name, author_email, author_student_id, body, status, user_agent, ip_address, created_at)
-                            VALUES
-                            (:pid, :purl, :ptitle, :name, :email, :sid, :body, "approved", :ua, :ip, NOW())');
-                        $stmt->execute([
-                            ':pid' => $pageIdentifier,
-                            ':purl' => $pageUrl,
-                            ':ptitle' => $pageTitle !== '' ? $pageTitle : null,
-                            ':name' => $postedName,
-                            ':email' => (!$isStudent && $postedEmail !== '') ? $postedEmail : null,
-                            ':sid' => $studentId > 0 ? $studentId : null,
-                            ':body' => $postedBody,
-                            ':ua' => $ua !== '' ? mb_substr($ua, 0, 255) : null,
-                            ':ip' => $ipBin,
-                        ]);
-
-                        app_comments_mark_posted();
-
-                        $redir = $pageUrl;
-                        if (!str_contains($redir, '#comments')) {
-                            $redir .= '#comments';
-                        }
-                        header('Location: ' . $redir);
-                        exit;
-                    } catch (Throwable $e) {
-                        // Jika tabel belum dimigrasi, jangan bikin halaman fatal.
-                        $errors[] = 'Komentar belum siap. Silakan jalankan migrasi database.';
-                    }
+                $flashType = trim((string)($flash['type'] ?? ''));
+                $flashMsg = trim((string)($flash['msg'] ?? ''));
+                $vals = $flash['values'] ?? [];
+                if (is_array($vals)) {
+                    $postedName = trim((string)($vals['name'] ?? ''));
+                    $postedEmail = trim((string)($vals['email'] ?? ''));
+                    $postedBody = trim((string)($vals['body'] ?? ''));
                 }
             }
+        } catch (Throwable $e) {
+            $flashType = '';
+            $flashMsg = '';
+        }
+
+        $returnUri = (string)($_SERVER['REQUEST_URI'] ?? '');
+        if ($returnUri === '') {
+            $returnUri = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+        }
+        $submitAction = '';
+        try {
+            $submitAction = rtrim((string)$base_url, '/') . '/comment_submit.php';
+        } catch (Throwable $e) {
+            $submitAction = 'comment_submit.php';
         }
 
         $rows = [];
@@ -233,28 +166,27 @@ if (!function_exists('app_render_comments')) {
                     </div>
                 </div>
 
-                <?php if ($successMsg !== ''): ?>
-                    <div class="alert alert-success py-2 small"><?php echo htmlspecialchars($successMsg); ?></div>
-                <?php endif; ?>
-
-                <?php if ($errors): ?>
-                    <div class="alert alert-danger py-2 small">
-                        <ul class="mb-0">
-                            <?php foreach ($errors as $err): ?>
-                                <li><?php echo htmlspecialchars($err); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
+                <?php if ($flashMsg !== ''): ?>
+                    <?php
+                        $alertClass = 'alert-info';
+                        if ($flashType === 'success') {
+                            $alertClass = 'alert-success';
+                        } elseif ($flashType === 'error') {
+                            $alertClass = 'alert-danger';
+                        }
+                    ?>
+                    <div class="alert <?php echo htmlspecialchars($alertClass); ?> py-2 small"><?php echo htmlspecialchars($flashMsg); ?></div>
                 <?php endif; ?>
 
                 <?php if ($loadError !== ''): ?>
                     <div class="alert alert-warning py-2 small mb-2"><?php echo htmlspecialchars($loadError); ?></div>
                 <?php endif; ?>
 
-                <form method="post" class="mb-3" autocomplete="off">
+                <form method="post" action="<?php echo htmlspecialchars($submitAction); ?>" class="mb-3" autocomplete="off">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <input type="hidden" name="comment_action" value="add">
                     <input type="hidden" name="comment_page_identifier" value="<?php echo htmlspecialchars($pageIdentifier); ?>">
+                    <input type="hidden" name="comment_return_uri" value="<?php echo htmlspecialchars($returnUri); ?>">
 
                     <input type="text" name="comment_website" value="" class="d-none" tabindex="-1" autocomplete="off" aria-hidden="true">
 
