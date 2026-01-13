@@ -13,6 +13,23 @@ $status = trim((string)($_GET['status'] ?? ''));
 $qRombel = preg_replace('/\s+/', ' ', trim((string)($_GET['rombel'] ?? '')));
 $qNama = trim((string)($_GET['nama'] ?? ''));
 
+// Default: jika belum difilter, tampilkan laporan hari ini saja.
+if ($dateFrom !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+    $dateFrom = '';
+}
+if ($dateTo !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+    $dateTo = '';
+}
+if ($dateFrom === '' && $dateTo === '') {
+    try {
+        $todayStr = (new DateTimeImmutable('now'))->format('Y-m-d');
+    } catch (Throwable $e) {
+        $todayStr = date('Y-m-d');
+    }
+    $dateFrom = $todayStr;
+    $dateTo = $todayStr;
+}
+
 $exportUrl = 'attendance_export.php';
 $exportParams = [];
 if ($dateFrom !== '') {
