@@ -63,13 +63,13 @@ try {
         exit;
     }
 
-    $isStudent = !empty($_SESSION['student']) && is_array($_SESSION['student']);
+    $isStudent = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
     $studentId = 0;
     $studentName = '';
     $studentEmail = '';
     if ($isStudent) {
         $studentId = (int)($_SESSION['student']['id'] ?? 0);
-        $studentName = trim((string)($_SESSION['student']['nama'] ?? ''));
+        $studentName = trim((string)($_SESSION['student']['nama_siswa'] ?? ''));
         $studentEmail = trim((string)($_SESSION['student']['email'] ?? ''));
     }
 
