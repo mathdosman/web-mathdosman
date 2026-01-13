@@ -844,10 +844,12 @@ function render_home_sidebar_widgets(
                                 <div class="mini-sidebar-main">
                                     <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
                                     <span class="mini-sidebar-trophy"></span>
-                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
-                                    <?php if ($kelasRombel !== ''): ?>
-                                        <span class="text-muted ms-1"><?php echo htmlspecialchars('(' . $kelasRombel . ')'); ?></span>
-                                    <?php endif; ?>
+                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
+                                        <?php echo htmlspecialchars($name); ?>
+                                        <?php if ($kelasRombel !== ''): ?>
+                                            <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                        <?php endif; ?>
+                                    </span>
                                 </div>
                                 <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
                             </li>
@@ -887,10 +889,12 @@ function render_home_sidebar_widgets(
                                 <div class="mini-sidebar-main">
                                     <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
                                     <span class="mini-sidebar-trophy"></span>
-                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
-                                    <?php if ($kelasRombel !== ''): ?>
-                                        <span class="text-muted ms-1"><?php echo htmlspecialchars('(' . $kelasRombel . ')'); ?></span>
-                                    <?php endif; ?>
+                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
+                                        <?php echo htmlspecialchars($name); ?>
+                                        <?php if ($kelasRombel !== ''): ?>
+                                            <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                        <?php endif; ?>
+                                    </span>
                                 </div>
                                 <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
                             </li>

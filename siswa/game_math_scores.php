@@ -113,10 +113,12 @@ include __DIR__ . '/../includes/header.php';
                                             <span class="mini-rank-badge">#<?php echo $rank; ?></span>
                                         </td>
                                         <td>
-                                            <span class="<?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
-                                            <?php if ($kelasRombel !== ''): ?>
-                                                <span class="text-muted small ms-1"><?php echo htmlspecialchars('(' . $kelasRombel . ')'); ?></span>
-                                            <?php endif; ?>
+                                            <span class="<?php echo htmlspecialchars($nameColorClass); ?>">
+                                                <?php echo htmlspecialchars($name); ?>
+                                                <?php if ($kelasRombel !== ''): ?>
+                                                    <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                                <?php endif; ?>
+                                            </span>
                                         </td>
                                         <td class="fw-semibold text-primary"><?php echo (int)($row['score'] ?? 0); ?></td>
                                     </tr>
@@ -166,10 +168,12 @@ include __DIR__ . '/../includes/header.php';
                                             <span class="mini-rank-badge">#<?php echo $rank; ?></span>
                                         </td>
                                         <td>
-                                            <span class="<?php echo htmlspecialchars($nameColorClass); ?>"><?php echo htmlspecialchars($name); ?></span>
-                                            <?php if ($kelasRombel !== ''): ?>
-                                                <span class="text-muted small ms-1"><?php echo htmlspecialchars('(' . $kelasRombel . ')'); ?></span>
-                                            <?php endif; ?>
+                                            <span class="<?php echo htmlspecialchars($nameColorClass); ?>">
+                                                <?php echo htmlspecialchars($name); ?>
+                                                <?php if ($kelasRombel !== ''): ?>
+                                                    <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                                <?php endif; ?>
+                                            </span>
                                         </td>
                                         <td class="fw-semibold text-primary"><?php echo (int)($row['score'] ?? 0); ?></td>
                                     </tr>
