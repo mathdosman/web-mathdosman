@@ -131,6 +131,7 @@ $disable_navbar = true;
 $disable_adsense = true;
 $use_mathjax = false;
 $disable_public_footer = true;
+$disable_public_comments = true;
 $body_class = 'student-login-page';
 $extra_stylesheets = ['assets/css/student-login.css'];
 if (!$captcha_disabled && function_exists('generate_student_login_captcha')) {

@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Admin';
+$disable_public_comments = true;
 include __DIR__ . '/includes/header.php';
 ?>
 <div class="card card-login shadow-sm">
