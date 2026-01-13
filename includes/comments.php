@@ -81,6 +81,9 @@ if (!function_exists('app_render_comments')) {
     {
         global $pdo;
 
+        // Prevent duplicate rendering when footer auto-includes comments.
+        $GLOBALS['app_comments_rendered'] = true;
+
         $pageIdentifier = trim($pageIdentifier);
         $pageUrl = trim($pageUrl);
         if ($pageIdentifier === '' || $pageUrl === '') {

@@ -1,3 +1,22 @@
+<?php
+// Komentar publik (pengganti Disqus): tampil di semua halaman publik secara default,
+// kecuali halaman sudah merender komentar sendiri.
+if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer) && empty($disable_public_comments) && empty($GLOBALS['app_comments_rendered'])) {
+	require_once __DIR__ . '/comments.php';
+
+	$reqUri = (string)($_SERVER['REQUEST_URI'] ?? '');
+	if ($reqUri === '') {
+		$reqUri = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+	}
+	$identifierSeed = $reqUri !== '' ? $reqUri : 'page';
+	$commentIdentifier = 'page-' . sha1($identifierSeed);
+	$commentUrl = rtrim((string)$base_url, '/') . $reqUri;
+	if (function_exists('app_render_comments')) {
+		app_render_comments($commentIdentifier, $commentUrl);
+	}
+}
+?>
+
 <?php if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer)): ?>
 	<?php
 	$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
