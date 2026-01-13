@@ -40,6 +40,11 @@ if (!function_exists('app_comments_is_valid_email')) {
 if (!function_exists('app_comments_rate_limited')) {
     function app_comments_rate_limited(int $maxPer10Min = 3): bool
     {
+        // Untuk development lokal (XAMPP/localhost), longgarkan rate-limit agar mudah testing.
+        if (defined('APP_IS_LOCAL') && APP_IS_LOCAL) {
+            return false;
+        }
+
         if (session_status() !== PHP_SESSION_ACTIVE) {
             return false;
         }
