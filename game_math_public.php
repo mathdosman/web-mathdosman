@@ -7,39 +7,69 @@ app_session_start();
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/security.php';
 
+$student = $_SESSION['student'] ?? null;
+$isStudentLoggedIn = is_array($student) && !empty($student['id']);
+
 // Mode game: addsub (penjumlahan/pengurangan) atau muldiv (perkalian/pembagian)
 $mode = 'addsub';
 if (isset($_GET['mode']) && $_GET['mode'] === 'muldiv') {
     $mode = 'muldiv';
 }
 
-// Nama tamu acak dari istilah matematika umum, disimpan di session agar konsisten selama sesi.
-if (!function_exists('mini_game_guest_name')) {
-    function mini_game_guest_name(): string
-    {
-        $key = 'mini_game_guest_name';
-        if (!isset($_SESSION[$key]) || !is_string($_SESSION[$key]) || $_SESSION[$key] === '') {
-            $terms = [
-                'Aljabar', 'Geometri', 'Trigonometri', 'Kalkulus', 'Integral',
-                'Turunan', 'Limit', 'Peluang', 'Statistika', 'Vektor',
-                'Matriks', 'Fungsi', 'Gradien', 'Persamaan', 'Lingkaran',
-                'Segitiga', 'Logaritma', 'Eksponen', 'Deret', 'Barisan'
-            ];
-            $base = $terms[array_rand($terms)];
-            $suffix = random_int(1, 99);
-            $_SESSION[$key] = $base . ' ' . $suffix;
-        }
-        return $_SESSION[$key];
+// Jika siswa sudah login, mainkan lewat halaman siswa agar nama otomatis memakai akun.
+if ($isStudentLoggedIn) {
+    $url = rtrim((string)$base_url, '/') . '/siswa/game_math.php';
+    if ($mode === 'muldiv') {
+        $url .= '?mode=muldiv';
     }
+    header('Location: ' . $url);
+    exit;
 }
 
-$guestName = mini_game_guest_name();
+function mg_public_normalize_name(string $raw): string
+{
+    $name = trim(preg_replace('~\s+~u', ' ', $raw));
+    if ($name === '') {
+        return '';
+    }
+    // Hard cap to keep the UI tidy.
+    if (function_exists('mb_substr')) {
+        $name = (string)mb_substr($name, 0, 40, 'UTF-8');
+    } else {
+        $name = substr($name, 0, 40);
+    }
+    return $name;
+}
+
+function mg_public_is_valid_name(string $name): bool
+{
+    // Allow letters/numbers/spaces and common punctuation.
+    return (bool)preg_match("~^[\\p{L}\\p{N} .,'-]{1,40}$~u", $name);
+}
+
+$defaultName = '';
+try {
+    if (isset($_SESSION['mini_game_public_name']) && is_string($_SESSION['mini_game_public_name'])) {
+        $defaultName = mg_public_normalize_name($_SESSION['mini_game_public_name']);
+    }
+} catch (Throwable $e) {
+    $defaultName = '';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Endpoint untuk menyimpan skor game publik (dipanggil via fetch).
     header('Content-Type: application/json; charset=utf-8');
 
     require_csrf_valid();
+
+    $playerNameRaw = (string)($_POST['player_name'] ?? '');
+    $playerName = mg_public_normalize_name($playerNameRaw);
+    if ($playerName === '' || !mg_public_is_valid_name($playerName)) {
+        echo json_encode(['ok' => false, 'error' => 'Nama tidak valid. Silakan isi nama (maks 40 karakter).']);
+        exit;
+    }
+
+    $_SESSION['mini_game_public_name'] = $playerName;
 
     $score = isset($_POST['score']) ? (int)$_POST['score'] : 0;
     $questions = isset($_POST['questions']) ? (int)$_POST['questions'] : 0;
@@ -105,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             VALUES (:sid, :name, :kelas, :rombel, :mode, :score, :q, :lvl, NOW())');
         $stmt->execute([
             ':sid' => 0, // 0 untuk pemain tamu (tanpa akun)
-            ':name' => $guestName,
+            ':name' => $playerName,
             ':kelas' => '',
             ':rombel' => '',
             ':mode' => $mode,
@@ -143,7 +173,7 @@ include __DIR__ . '/includes/header.php';
         </h5>
         <p class="text-muted small mb-2">
             Mainkan game hitung cepat ini tanpa perlu login.
-            Nama kamu di papan skor akan berupa nama bunga acak.
+            Kamu bisa mengisi nama sendiri untuk ditampilkan di papan skor.
         </p>
         <p class="text-muted small mb-3">
             <?php if ($mode === 'muldiv'): ?>
@@ -155,8 +185,10 @@ include __DIR__ . '/includes/header.php';
             Semakin banyak soal yang berhasil dijawab, bilangan akan semakin besar.
         </p>
 
-        <div class="alert alert-secondary py-2 small mb-3">
-            Nama kamu untuk highscore: <span class="fw-semibold"><?php echo htmlspecialchars($guestName); ?></span>
+        <div class="mb-3">
+            <label for="gm-player-name" class="form-label small fw-semibold text-muted mb-1">Nama untuk highscore</label>
+            <input type="text" id="gm-player-name" class="form-control form-control-sm" maxlength="40" placeholder="Masukkan nama kamu" value="<?php echo htmlspecialchars($defaultName); ?>" autocomplete="name">
+            <div class="form-text small">Maksimal 40 karakter. Hindari simbol aneh.</div>
         </div>
 
         <div class="row g-2 mb-3">
@@ -222,6 +254,8 @@ include __DIR__ . '/includes/header.php';
 
         const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
         const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+        const nameInput = document.getElementById('gm-player-name');
 
         let timeLeft = 45;
         let score = 0;
@@ -364,6 +398,7 @@ include __DIR__ . '/includes/header.php';
                 body.append('score', String(score));
                 body.append('questions', String(questions));
                 body.append('max_level', String(maxLevel));
+                body.append('player_name', String((nameInput && nameInput.value) ? nameInput.value : ''));
                 body.append('csrf_token', csrfToken);
 
                 fetch(window.location.href, {
@@ -415,6 +450,12 @@ include __DIR__ . '/includes/header.php';
         startBtn.addEventListener('click', function() {
             if (!csrfToken) {
                 setStatus('CSRF token tidak tersedia. Coba refresh halaman.', 'danger');
+                return;
+            }
+            const nm = String((nameInput && nameInput.value) ? nameInput.value : '').trim();
+            if (!nm) {
+                setStatus('Isi nama dulu agar skor bisa tersimpan.', 'warning');
+                if (nameInput) nameInput.focus();
                 return;
             }
             if (!running) {

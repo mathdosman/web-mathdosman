@@ -811,8 +811,12 @@ function render_home_sidebar_widgets(
             <div class="fw-semibold">Highscore Mini Game</div>
         </div>
         <div class="card-body small mini-game-sidebar-highscore">
-            <a href="game_math_public.php" class="btn btn-primary btn-sm w-100 mb-2">Ikut Bermain</a>
-            <div class="text-muted small mb-3">Tidak perlu login, nama pemain akan dibuat acak dari istilah matematika.</div>
+            <?php
+            $isStudentLoggedIn = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
+            $gameHref = $isStudentLoggedIn ? ($base_url . '/siswa/game_math.php') : 'game_math_public.php';
+            ?>
+            <a href="<?php echo htmlspecialchars($gameHref); ?>" class="btn btn-primary btn-sm w-100 mb-2">Ikut Bermain</a>
+            <div class="text-muted small mb-3">Login: otomatis pakai nama akun. Tanpa login: isi nama sendiri.</div>
             <div class="mb-3">
                 <div class="fw-semibold small text-muted mb-1">Tambah / Kurang</div>
                 <?php if (!$miniGameAddSub): ?>
