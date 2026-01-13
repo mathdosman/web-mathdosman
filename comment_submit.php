@@ -63,6 +63,7 @@ try {
         exit;
     }
 
+    $isAdmin = !empty($_SESSION['user']) && is_array($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
     $isStudent = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
     $studentId = 0;
     $studentName = '';
@@ -75,7 +76,10 @@ try {
 
     $name = '';
     $email = '';
-    if ($isStudent) {
+    if ($isAdmin) {
+        $name = 'admin@mathdosman';
+        $email = '';
+    } elseif ($isStudent) {
         $name = $studentName;
         $email = $studentEmail;
     } else {

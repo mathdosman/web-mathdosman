@@ -100,9 +100,22 @@ if (!function_exists('app_render_comments')) {
             $pageTitle = trim((string)$GLOBALS['page_title']);
         }
 
+        $isAdmin = !empty($_SESSION['user']) && is_array($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
         $isStudent = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
         $studentName = $isStudent ? trim((string)($_SESSION['student']['nama_siswa'] ?? '')) : '';
         $studentId = $isStudent ? (int)($_SESSION['student']['id'] ?? 0) : 0;
+
+        $adminDisplayName = 'admin@mathdosman';
+        $adminLogoUrl = '';
+        try {
+            if (function_exists('asset_url') && isset($GLOBALS['base_url'])) {
+                $adminLogoUrl = asset_url('assets/img/icon.svg', (string)$GLOBALS['base_url']);
+            } elseif (isset($GLOBALS['base_url'])) {
+                $adminLogoUrl = rtrim((string)$GLOBALS['base_url'], '/') . '/assets/img/icon.svg';
+            }
+        } catch (Throwable $e) {
+            $adminLogoUrl = '';
+        }
 
         // Flash message dari handler submit (PRG) untuk menghindari header already sent.
         $flashType = '';
@@ -203,6 +216,8 @@ if (!function_exists('app_render_comments')) {
                             <label class="form-label mb-1 small">Nama</label>
                             <?php if ($isStudent): ?>
                                 <input type="text" class="form-control" value="<?php echo htmlspecialchars($studentName !== '' ? $studentName : '-'); ?>" readonly>
+                            <?php elseif ($isAdmin): ?>
+                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($adminDisplayName); ?>" readonly>
                             <?php else: ?>
                                 <input type="text" name="comment_name" class="form-control" value="<?php echo htmlspecialchars($postedName); ?>" placeholder="Nama Anda" required maxlength="60">
                             <?php endif; ?>
@@ -235,9 +250,16 @@ if (!function_exists('app_render_comments')) {
                                 if ($author !== '') {
                                     $initial = mb_strtoupper(mb_substr($author, 0, 1));
                                 }
+                                $isAdminComment = ($author !== '') && ($author === $adminDisplayName);
                             ?>
                             <div class="app-comment">
-                                <div class="app-comment-avatar" aria-hidden="true"><?php echo htmlspecialchars($initial !== '' ? $initial : '?'); ?></div>
+                                <div class="app-comment-avatar" aria-hidden="true">
+                                    <?php if ($isAdminComment && $adminLogoUrl !== ''): ?>
+                                        <img class="app-comment-avatar-img" src="<?php echo htmlspecialchars($adminLogoUrl); ?>" alt="Mathdosman">
+                                    <?php else: ?>
+                                        <?php echo htmlspecialchars($initial !== '' ? $initial : '?'); ?>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="app-comment-main">
                                     <div class="app-comment-head">
                                         <div class="app-comment-author"><?php echo htmlspecialchars($author); ?></div>

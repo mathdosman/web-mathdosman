@@ -311,6 +311,12 @@ pre {
     user-select: none;
 }
 
+.app-comment-avatar-img {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
 .app-comment-main {
     min-width: 0;
     flex: 1 1 auto;
