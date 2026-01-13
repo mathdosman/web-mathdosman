@@ -12,13 +12,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     exit;
 }
 
-$base = '';
-try {
-    $base = rtrim((string)($base_url ?? ''), '/');
-} catch (Throwable $e) {
-    $base = '';
-}
-
 $pageIdentifier = trim((string)($_POST['comment_page_identifier'] ?? ''));
 $action = trim((string)($_POST['comment_action'] ?? ''));
 $returnUri = (string)($_POST['comment_return_uri'] ?? '');
@@ -29,7 +22,7 @@ if ($returnUri === '' || $returnUri[0] !== '/' || str_starts_with($returnUri, '/
     $returnUri = '/index.php';
 }
 
-$redirectUrl = $base !== '' ? ($base . $returnUri) : $returnUri;
+$redirectUrl = $returnUri;
 // Browser tidak mengirim fragment (#...), jadi aman selalu tambahkan.
 if (!str_contains($redirectUrl, '#comments')) {
     $redirectUrl .= '#comments';
@@ -143,6 +136,12 @@ try {
     }
 
     // page_url disimpan sebagai URL halaman (tanpa fragment)
+    $base = '';
+    try {
+        $base = rtrim((string)($base_url ?? ''), '/');
+    } catch (Throwable $e) {
+        $base = '';
+    }
     $pageUrl = $base !== '' ? ($base . $returnUri) : $returnUri;
 
     $stmt = $pdo->prepare('INSERT INTO site_comments

@@ -80,7 +80,6 @@ if (!function_exists('app_render_comments')) {
     function app_render_comments(string $pageIdentifier, string $pageUrl): void
     {
         global $pdo;
-        global $base_url;
 
         // Prevent duplicate rendering when footer auto-includes comments.
         $GLOBALS['app_comments_rendered'] = true;
@@ -129,12 +128,16 @@ if (!function_exists('app_render_comments')) {
         if ($returnUri === '') {
             $returnUri = (string)($_SERVER['SCRIPT_NAME'] ?? '');
         }
-        $submitAction = '';
-        try {
-            $submitAction = rtrim((string)$base_url, '/') . '/comment_submit.php';
-        } catch (Throwable $e) {
-            $submitAction = 'comment_submit.php';
+
+        $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '/');
+        $basePath = str_replace('\\', '/', dirname($scriptName));
+        $basePath = rtrim($basePath, '/');
+        if ($basePath === '/' || $basePath === '.') {
+            $basePath = '';
         }
+
+        $submitAction = '';
+        $submitAction = ($basePath !== '' ? $basePath : '') . '/comment_submit.php';
 
         $rows = [];
         $loadError = '';
