@@ -22,7 +22,8 @@ if (!function_exists('app_comments_is_valid_name')) {
             return false;
         }
         // allow letters, numbers, spaces, and common punctuation.
-        return (bool)preg_match('/^[\p{L}\p{N} ._\-\'"()]+$/u', $name);
+        // include '@' to support admin identity (admin@mathdosman).
+        return (bool)preg_match('/^[\p{L}\p{N} ._\-\'"()@]+$/u', $name);
     }
 }
 
