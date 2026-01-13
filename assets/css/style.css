@@ -1754,6 +1754,23 @@ body.mini-game-public.mini-game-running .card.shadow-sm .card-body > *:not(#gm-h
     overflow-wrap: anywhere;
 }
 
+.mini-game-sidebar-highscore .mini-kr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    margin-left: .35rem;
+    flex: 0 0 auto;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .02em;
+    border: 1px solid currentColor;
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    line-height: 1;
+}
+
 .mini-game-sidebar-highscore .mini-sidebar-score {
     font-variant-numeric: tabular-nums;
     min-width: 2.5rem;
@@ -1906,6 +1923,23 @@ body.student-area .mini-game-highscore-table tr.mini-rank-3 {
 
 body.student-area .mini-game-highscore-table tr.mini-rank-others:hover {
     background-color: var(--bs-tertiary-bg);
+}
+
+body.student-area .mini-game-highscore-table .mini-kr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    margin-left: .45rem;
+    flex: 0 0 auto;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .02em;
+    border: 1px solid currentColor;
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    line-height: 1;
 }
 
 /* Constrain admin pages for nicer readability */

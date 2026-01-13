@@ -106,7 +106,7 @@ include __DIR__ . '/../includes/header.php';
                                         }
                                         $colorIndex = ($hash % 5) + 1;
                                         $nameColorClass = 'mini-name-color-' . $colorIndex;
-                                        $kelasRombel = trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''));
+                                        $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
                                     ?>
                                     <tr class="<?php echo htmlspecialchars($rankClass); ?>">
                                         <td>
@@ -116,7 +116,7 @@ include __DIR__ . '/../includes/header.php';
                                             <span class="<?php echo htmlspecialchars($nameColorClass); ?>">
                                                 <?php echo htmlspecialchars($name); ?>
                                                 <?php if ($kelasRombel !== ''): ?>
-                                                    <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                                    <span class="mini-kr-badge" aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
                                                 <?php endif; ?>
                                             </span>
                                         </td>
@@ -161,7 +161,7 @@ include __DIR__ . '/../includes/header.php';
                                         }
                                         $colorIndex = ($hash % 5) + 1;
                                         $nameColorClass = 'mini-name-color-' . $colorIndex;
-                                        $kelasRombel = trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''));
+                                        $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
                                     ?>
                                     <tr class="<?php echo htmlspecialchars($rankClass); ?>">
                                         <td>
@@ -171,7 +171,7 @@ include __DIR__ . '/../includes/header.php';
                                             <span class="<?php echo htmlspecialchars($nameColorClass); ?>">
                                                 <?php echo htmlspecialchars($name); ?>
                                                 <?php if ($kelasRombel !== ''): ?>
-                                                    <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                                    <span class="mini-kr-badge" aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
                                                 <?php endif; ?>
                                             </span>
                                         </td>

@@ -823,7 +823,7 @@ function render_home_sidebar_widgets(
                             <?php
                             $rank = $idx + 1;
                             $name = trim((string)($row['student_name'] ?? ''));
-                            $kelasRombel = trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''));
+                            $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
                             $score = (int)($row['score'] ?? 0);
                             $hash = (int)crc32(strtolower($name));
                             if ($hash < 0) {
@@ -847,7 +847,7 @@ function render_home_sidebar_widgets(
                                     <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
                                         <?php echo htmlspecialchars($name); ?>
                                         <?php if ($kelasRombel !== ''): ?>
-                                            <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                            <span class="mini-kr-badge" aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
                                         <?php endif; ?>
                                     </span>
                                 </div>
@@ -868,7 +868,7 @@ function render_home_sidebar_widgets(
                             <?php
                             $rank = $idx + 1;
                             $name = trim((string)($row['student_name'] ?? ''));
-                            $kelasRombel = trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''));
+                            $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
                             $score = (int)($row['score'] ?? 0);
                             $hash = (int)crc32(strtolower($name));
                             if ($hash < 0) {
@@ -892,7 +892,7 @@ function render_home_sidebar_widgets(
                                     <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
                                         <?php echo htmlspecialchars($name); ?>
                                         <?php if ($kelasRombel !== ''): ?>
-                                            <span class="text-muted fw-normal"> <?php echo htmlspecialchars('· ' . $kelasRombel); ?></span>
+                                            <span class="mini-kr-badge" aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
                                         <?php endif; ?>
                                     </span>
                                 </div>
