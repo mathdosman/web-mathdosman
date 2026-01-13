@@ -838,6 +838,7 @@ try {
             try {
                 $pdo->exec("CREATE TABLE IF NOT EXISTS site_comments (
                     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    parent_id BIGINT UNSIGNED NULL,
                     page_identifier VARCHAR(191) NOT NULL,
                     page_url VARCHAR(500) NOT NULL,
                     page_title VARCHAR(255) NULL,
@@ -851,9 +852,39 @@ try {
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
                     KEY idx_site_comments_page (page_identifier, id),
+                    KEY idx_site_comments_page_parent (page_identifier, parent_id, id),
                     KEY idx_site_comments_status (status, id),
                     KEY idx_site_comments_created (created_at)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            // Backward-compatible patch: add parent_id + index on existing installs.
+            try {
+                $hasParentCol = false;
+                try {
+                    $hasParentCol = (bool)$pdo->query("SHOW COLUMNS FROM site_comments LIKE 'parent_id'")->fetch();
+                } catch (Throwable $eCol) {
+                    $hasParentCol = false;
+                }
+
+                if (!$hasParentCol) {
+                    $pdo->exec("ALTER TABLE site_comments ADD COLUMN parent_id BIGINT UNSIGNED NULL AFTER id");
+                }
+
+                $hasIndex = false;
+                try {
+                    $q = $pdo->prepare("SHOW INDEX FROM site_comments WHERE Key_name = :k");
+                    $q->execute([':k' => 'idx_site_comments_page_parent']);
+                    $hasIndex = (bool)$q->fetch();
+                } catch (Throwable $eIdx) {
+                    $hasIndex = false;
+                }
+
+                if (!$hasIndex) {
+                    $pdo->exec("ALTER TABLE site_comments ADD KEY idx_site_comments_page_parent (page_identifier, parent_id, id)");
+                }
             } catch (Throwable $e) {
                 // ignore
             }

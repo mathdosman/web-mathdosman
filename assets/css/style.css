@@ -350,6 +350,32 @@ pre {
     word-break: break-word;
 }
 
+.app-comment-actions {
+    margin-top: .45rem;
+    display: flex;
+    gap: .5rem;
+}
+
+.app-comment-replies {
+    margin-left: 2.75rem;
+}
+
+.app-comment.is-reply {
+    padding: .7rem 0;
+}
+
+.app-comment.is-reply .app-comment-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: .85rem;
+}
+
+@media (max-width: 575.98px) {
+    .app-comment-replies {
+        margin-left: 2.25rem;
+    }
+}
+
 @media (max-width: 575.98px) {
     .app-comment {
         gap: .75rem;

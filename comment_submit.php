@@ -15,6 +15,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 $pageIdentifier = trim((string)($_POST['comment_page_identifier'] ?? ''));
 $action = trim((string)($_POST['comment_action'] ?? ''));
 $returnUri = (string)($_POST['comment_return_uri'] ?? '');
+$parentId = isset($_POST['comment_parent_id']) ? (int)$_POST['comment_parent_id'] : 0;
 
 // Validasi return URI (hanya path relatif) untuk mencegah open redirect.
 $returnUri = trim($returnUri);
@@ -35,6 +36,7 @@ $flash = [
         'name' => '',
         'email' => '',
         'body' => '',
+        'parent_id' => 0,
     ],
 ];
 
@@ -91,6 +93,7 @@ try {
     $flash['values']['name'] = $name;
     $flash['values']['email'] = $email;
     $flash['values']['body'] = $body;
+    $flash['values']['parent_id'] = $parentId;
 
     $errors = [];
 
@@ -139,6 +142,27 @@ try {
         throw new RuntimeException('Koneksi DB tidak tersedia.');
     }
 
+    // Validasi parent_id: harus komentar approved pada halaman yang sama.
+    // 1-level reply: jika parent adalah reply, balas diarahkan ke top-level parent.
+    $parentIdToSave = null;
+    if ($parentId > 0) {
+        try {
+            $stmtP = $pdo->prepare('SELECT id, parent_id FROM site_comments WHERE id = :id AND page_identifier = :pid AND status = "approved" LIMIT 1');
+            $stmtP->execute([':id' => $parentId, ':pid' => $pageIdentifier]);
+            $prow = $stmtP->fetch(PDO::FETCH_ASSOC);
+            if (is_array($prow) && !empty($prow['id'])) {
+                $pParent = isset($prow['parent_id']) ? (int)$prow['parent_id'] : 0;
+                if ($pParent > 0) {
+                    $parentIdToSave = $pParent;
+                } else {
+                    $parentIdToSave = (int)$prow['id'];
+                }
+            }
+        } catch (Throwable $e) {
+            $parentIdToSave = null;
+        }
+    }
+
     // page_url disimpan sebagai URL halaman (tanpa fragment)
     $base = '';
     try {
@@ -149,14 +173,15 @@ try {
     $pageUrl = $base !== '' ? ($base . $returnUri) : $returnUri;
 
     $stmt = $pdo->prepare('INSERT INTO site_comments
-        (page_identifier, page_url, page_title, author_name, author_email, author_student_id, body, status, user_agent, ip_address, created_at)
+        (page_identifier, page_url, page_title, parent_id, author_name, author_email, author_student_id, body, status, user_agent, ip_address, created_at)
         VALUES
-        (:pid, :purl, :ptitle, :name, :email, :sid, :body, "approved", :ua, :ip, NOW())');
+        (:pid, :purl, :ptitle, :parent_id, :name, :email, :sid, :body, "approved", :ua, :ip, NOW())');
 
     $stmt->execute([
         ':pid' => $pageIdentifier,
         ':purl' => $pageUrl,
         ':ptitle' => null,
+        ':parent_id' => $parentIdToSave,
         ':name' => $name,
         ':email' => ($email !== '') ? $email : null,
         ':sid' => $studentId > 0 ? $studentId : null,
