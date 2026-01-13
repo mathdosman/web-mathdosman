@@ -260,16 +260,14 @@ include __DIR__ . '/../includes/header.php';
                                 $vHp = trim((string)($student['no_hp'] ?? ''));
                                 $vHpOrtu = trim((string)($student['no_hp_ortu'] ?? ''));
                                 $vUser = trim((string)($student['username'] ?? ''));
+                                $vKelasRombel = trim($vKelas . ' ' . $vRombel);
                             ?>
                             <div class="row g-1 small">
                                 <div class="col-4 text-muted">Nama</div>
                                 <div class="col-8 fw-semibold text-truncate"><?php echo htmlspecialchars($vNama !== '' ? $vNama : '-'); ?></div>
 
                                 <div class="col-4 text-muted">Kelas</div>
-                                <div class="col-8"><?php echo htmlspecialchars($vKelas !== '' ? $vKelas : '-'); ?></div>
-
-                                <div class="col-4 text-muted">Rombel</div>
-                                <div class="col-8"><?php echo htmlspecialchars($vRombel !== '' ? $vRombel : '-'); ?></div>
+                                <div class="col-8"><?php echo htmlspecialchars($vKelasRombel !== '' ? $vKelasRombel : '-'); ?></div>
 
                                 <div class="col-4 text-muted">No HP</div>
                                 <div class="col-8"><?php echo htmlspecialchars($vHp !== '' ? $vHp : '-'); ?></div>
