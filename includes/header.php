@@ -665,6 +665,7 @@ if ($useAdminSidebar) {
                         'post_add.php',
                         'home_carousel.php',
                         'visits.php',
+                        'comments.php',
                         'mapel.php',
                     ];
                     $webSectionActive = in_array($currentPage, $webSectionPages, true);
@@ -755,6 +756,16 @@ if ($useAdminSidebar) {
                                 <path d="M18 7v11" />
                             </svg>
                             <span>Kunjungan</span>
+                        </a>
+
+                        <?php $isActive = ($currentPage === 'comments.php'); ?>
+                        <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/comments.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                                <path d="M7 8h10" />
+                                <path d="M7 12h7" />
+                            </svg>
+                            <span>Komentar</span>
                         </a>
 
                         <?php $isActive = ($currentPage === 'home_carousel.php'); ?>

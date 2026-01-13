@@ -96,6 +96,11 @@ if (!function_exists('app_ensure_kelas_rombels_schema')) {
     exit(1);
 }
 
+if (!function_exists('app_ensure_site_comments_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_site_comments_schema).\n");
+    exit(1);
+}
+
 $argv = $_SERVER['argv'] ?? [];
 if (!is_array($argv)) {
     $argv = [];
@@ -223,6 +228,9 @@ try {
 
     echo "Menjalankan migrasi skema (Master kelas/rombel)...\n";
     app_ensure_kelas_rombels_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Komentar publik)...\n";
+    app_ensure_site_comments_schema($pdo);
 
     if ($withIndexes) {
         echo "Menjalankan patch index...\n";

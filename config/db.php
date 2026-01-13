@@ -832,6 +832,34 @@ try {
         }
     }
 
+    if (!function_exists('app_ensure_site_comments_schema')) {
+        function app_ensure_site_comments_schema(PDO $pdo): void
+        {
+            try {
+                $pdo->exec("CREATE TABLE IF NOT EXISTS site_comments (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    page_identifier VARCHAR(191) NOT NULL,
+                    page_url VARCHAR(500) NOT NULL,
+                    page_title VARCHAR(255) NULL,
+                    author_name VARCHAR(100) NOT NULL,
+                    author_email VARCHAR(190) NULL,
+                    author_student_id INT UNSIGNED NULL,
+                    body TEXT NOT NULL,
+                    status ENUM('approved','hidden','deleted') NOT NULL DEFAULT 'approved',
+                    user_agent VARCHAR(255) NULL,
+                    ip_address VARBINARY(16) NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+                    KEY idx_site_comments_page (page_identifier, id),
+                    KEY idx_site_comments_status (status, id),
+                    KEY idx_site_comments_created (created_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
     // Runtime migrations are allowed only when explicitly enabled AND only on CLI.
     // This avoids web requests hanging due to metadata locks.
     if (app_runtime_migrations_enabled() && PHP_SAPI === 'cli') {
@@ -851,6 +879,7 @@ try {
                     app_ensure_student_assignments_shuffle_schema($pdo);
                     app_ensure_student_attendance_schema($pdo);
                     app_ensure_kelas_rombels_schema($pdo);
+                    app_ensure_site_comments_schema($pdo);
                 }
             } catch (Throwable $e) {
                 // ignore

@@ -361,3 +361,23 @@ CREATE TABLE IF NOT EXISTS student_attendance_change_requests (
     KEY idx_att_change_student (student_id),
     KEY idx_att_change_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Komentar publik (pengganti Disqus)
+CREATE TABLE IF NOT EXISTS site_comments (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    page_identifier VARCHAR(191) NOT NULL,
+    page_url VARCHAR(500) NOT NULL,
+    page_title VARCHAR(255) NULL,
+    author_name VARCHAR(100) NOT NULL,
+    author_email VARCHAR(190) NULL,
+    author_student_id INT UNSIGNED NULL,
+    body TEXT NOT NULL,
+    status ENUM('approved','hidden','deleted') NOT NULL DEFAULT 'approved',
+    user_agent VARCHAR(255) NULL,
+    ip_address VARBINARY(16) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_site_comments_page (page_identifier, id),
+    KEY idx_site_comments_status (status, id),
+    KEY idx_site_comments_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
