@@ -13,6 +13,29 @@
 
     body.front-page .app-container {
         max-width: 1140px;
+        padding-left: 1.75rem;
+        padding-right: 1.75rem;
+    }
+
+    @media (min-width: 768px) {
+        body.front-page .app-container {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        body.front-page .app-container {
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+    }
+
+    @media (min-width: 1400px) {
+        body.front-page .app-container {
+            padding-left: 3.5rem;
+            padding-right: 3.5rem;
+        }
     }
 
     body.front-page h1,
@@ -29,6 +52,21 @@
         background: transparent;
         border: 0;
         padding: 0;
+    }
+
+    /* The homepage layout starts with a `.row` directly under `.app-container`.
+       Neutralize Bootstrap's negative margins so blocks don't feel glued to
+       the viewport edge on small screens. */
+    body.front-page .app-container > .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Prevent the Bootstrap `.row` negative margins from making the first/last
+       cards feel too close to the viewport edge (especially on small screens). */
+    body.front-page .package-grid {
+        margin-left: 0;
+        margin-right: 0;
     }
 
     body.front-page .home-hero {
@@ -285,10 +323,47 @@
     body.front-page .section-heading {
         padding-bottom: .5rem;
         border-bottom: 1px solid var(--bs-border-color);
+        /* Match package card inner padding so heading text doesn't feel flush-left */
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+        body.front-page .section-heading {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        body.front-page .section-heading {
+            padding-left: 1.75rem;
+            padding-right: 1.75rem;
+        }
     }
 
     body.front-page .section-heading h2 {
         margin-bottom: .25rem;
+    }
+
+    /* Homepage comments card (Disqus) spacing: match package card inner padding */
+    body.front-page .card.mt-4.d-print-none .card-body {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+        body.front-page .card.mt-4.d-print-none .card-body {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        body.front-page .card.mt-4.d-print-none .card-body {
+            padding-left: 1.75rem;
+            padding-right: 1.75rem;
+        }
     }
 
     body.front-page .post-detail {

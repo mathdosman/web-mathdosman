@@ -1,8 +1,22 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/security.php';
 
 require_role('admin');
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    require_csrf_valid();
+    $action = (string)($_POST['action'] ?? '');
+    if ($action === 'reset_scores') {
+        try {
+            $pdo->exec('TRUNCATE TABLE math_game_scores');
+            redirect_to('siswa/admin/math_game_scores.php?flash=reset_ok');
+        } catch (Throwable $e) {
+            redirect_to('siswa/admin/math_game_scores.php?flash=reset_failed');
+        }
+    }
+}
 
 $rows = [];
 
@@ -31,6 +45,15 @@ include __DIR__ . '/../../includes/header.php';
 ?>
 <div class="card shadow-sm">
     <div class="card-body">
+        <?php
+            $flash = (string)($_GET['flash'] ?? '');
+        ?>
+        <?php if ($flash === 'reset_ok'): ?>
+            <div class="alert alert-success small">Data highscore mini game berhasil di-reset.</div>
+        <?php elseif ($flash === 'reset_failed'): ?>
+            <div class="alert alert-danger small">Gagal me-reset data highscore mini game.</div>
+        <?php endif; ?>
+
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
             <div>
                 <h5 class="mb-1">Highscore Mini Game</h5>
@@ -40,6 +63,11 @@ include __DIR__ . '/../../includes/header.php';
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-primary btn-sm" href="math_game_scores_export.php">Download XLS</a>
+                <form method="post" class="d-inline" onsubmit="return confirm('Reset semua data highscore mini game? Tindakan ini tidak bisa dibatalkan.');">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                    <input type="hidden" name="action" value="reset_scores">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Reset Data</button>
+                </form>
             </div>
         </div>
 

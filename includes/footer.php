@@ -3,7 +3,7 @@
 	$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
 	$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
 	?>
-	<footer class="mt-4 pt-3 border-top">
+	<footer class="mt-4 py-3 border-top px-3">
 		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
 			<div>
 				<?php if ($isHomePage): ?>

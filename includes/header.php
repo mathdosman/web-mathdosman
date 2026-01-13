@@ -14,7 +14,15 @@ if (!function_exists('asset_url')) {
         $v = '';
         try {
             if (is_file($fsPath)) {
-                $v = (string)@filemtime($fsPath);
+                $mtime = @filemtime($fsPath);
+                $size = @filesize($fsPath);
+                // Use both mtime and size so version changes even when edits happen
+                // within the same second (common on Windows).
+                if ($mtime !== false && $size !== false) {
+                    $v = (string)((int)$mtime) . '-' . (string)((int)$size);
+                } elseif ($mtime !== false) {
+                    $v = (string)((int)$mtime);
+                }
             }
         } catch (Throwable $e) {
             $v = '';

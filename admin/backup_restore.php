@@ -137,6 +137,136 @@ function br_importSqlFile(PDO $pdo, string $dbName, string $sqlFilePath): void
     }
 }
 
+function br_exportDatabaseSql(PDO $pdo, string $dbName): void
+{
+    // Stream SQL output (no mysqldump/proc_open) for restrictive hosting.
+    @set_time_limit(0);
+
+    $filename = 'backup_' . date('Ymd_His') . '.sql';
+    header('Content-Type: application/sql; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    echo "-- Database backup (PDO)\n";
+    echo "-- Generated at: " . date('c') . "\n\n";
+    echo "SET NAMES utf8mb4;\n";
+    echo "SET FOREIGN_KEY_CHECKS=0;\n\n";
+
+    $tables = [];
+    try {
+        $rows = $pdo->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_NUM);
+        foreach ($rows as $r) {
+            if (is_array($r) && isset($r[0]) && is_string($r[0]) && $r[0] !== '') {
+                $tables[] = $r[0];
+            }
+        }
+    } catch (Throwable $e) {
+        $tables = [];
+    }
+
+    foreach ($tables as $t) {
+        $tSafe = str_replace('`', '``', $t);
+
+        // Schema
+        try {
+            $stmtCreate = $pdo->query('SHOW CREATE TABLE `' . $tSafe . '`');
+            $rowCreate = $stmtCreate ? $stmtCreate->fetch(PDO::FETCH_ASSOC) : false;
+            $createSql = '';
+            if (is_array($rowCreate)) {
+                foreach ($rowCreate as $k => $v) {
+                    if (is_string($k) && stripos($k, 'create table') !== false) {
+                        $createSql = (string)$v;
+                        break;
+                    }
+                }
+            }
+
+            echo "-- ----------------------------\n";
+            echo "-- Table structure for `" . $tSafe . "`\n";
+            echo "-- ----------------------------\n";
+            echo 'DROP TABLE IF EXISTS `' . $tSafe . '`;' . "\n";
+            if ($createSql !== '') {
+                echo $createSql . ";\n\n";
+            } else {
+                echo "-- WARNING: Could not read CREATE TABLE for `" . $tSafe . "`\n\n";
+            }
+        } catch (Throwable $e) {
+            echo "-- WARNING: Failed exporting schema for `" . $tSafe . "`: " . $e->getMessage() . "\n\n";
+            continue;
+        }
+
+        // Columns (stable order)
+        $cols = [];
+        try {
+            $stmtCols = $pdo->query('SHOW COLUMNS FROM `' . $tSafe . '`');
+            $colsRows = $stmtCols ? ($stmtCols->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+            foreach ($colsRows as $cr) {
+                if (is_array($cr) && isset($cr['Field']) && is_string($cr['Field']) && $cr['Field'] !== '') {
+                    $cols[] = $cr['Field'];
+                }
+            }
+        } catch (Throwable $e) {
+            $cols = [];
+        }
+
+        // Data
+        echo "-- ----------------------------\n";
+        echo "-- Data for table `" . $tSafe . "`\n";
+        echo "-- ----------------------------\n";
+
+        if (!$cols) {
+            echo "-- (skipped: could not determine columns)\n\n";
+            continue;
+        }
+
+        $colList = [];
+        foreach ($cols as $c) {
+            $colList[] = '`' . str_replace('`', '``', $c) . '`';
+        }
+        $colListSql = implode(', ', $colList);
+
+        try {
+            $stmt = $pdo->query('SELECT * FROM `' . $tSafe . '`');
+            if (!$stmt) {
+                echo "-- (skipped: SELECT failed)\n\n";
+                continue;
+            }
+
+            $batch = [];
+            $batchSize = 100;
+            while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $vals = [];
+                foreach ($cols as $c) {
+                    $v = $row[$c] ?? null;
+                    if ($v === null) {
+                        $vals[] = 'NULL';
+                    } else {
+                        $vals[] = $pdo->quote((string)$v);
+                    }
+                }
+                $batch[] = '(' . implode(', ', $vals) . ')';
+
+                if (count($batch) >= $batchSize) {
+                    echo 'INSERT INTO `' . $tSafe . '` (' . $colListSql . ") VALUES\n";
+                    echo implode(",\n", $batch) . ";\n\n";
+                    $batch = [];
+                }
+            }
+
+            if ($batch) {
+                echo 'INSERT INTO `' . $tSafe . '` (' . $colListSql . ") VALUES\n";
+                echo implode(",\n", $batch) . ";\n\n";
+            } else {
+                echo "\n";
+            }
+        } catch (Throwable $e) {
+            echo "-- WARNING: Failed exporting data for `" . $tSafe . "`: " . $e->getMessage() . "\n\n";
+        }
+    }
+
+    echo "SET FOREIGN_KEY_CHECKS=1;\n";
+    exit;
+}
+
 function br_dropAllTables(PDO $pdo, string $dbName): void
 {
     $pdo->exec('USE `'.$dbName.'`');
@@ -188,6 +318,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dbUser = defined('DB_USER') ? (string)DB_USER : 'root';
         $dbPass = defined('DB_PASS') ? (string)DB_PASS : '';
         $dbName = defined('DB_NAME') ? (string)DB_NAME : '';
+
+        // Some shared hosting disables proc_open/exec for security.
+        // Fallback to a pure-PDO SQL export instead of fatal error.
+        if (!function_exists('proc_open')) {
+            br_exportDatabaseSql($pdo, $dbName);
+        }
 
         $findMysqldump = static function (): ?string {
             $candidates = [];
