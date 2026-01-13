@@ -165,7 +165,7 @@ if (!function_exists('app_render_comments')) {
 
         $count = count($rows);
         ?>
-        <div id="comments" class="card shadow-sm mt-4 comments-widget" data-no-swal="1">
+        <div id="comments" class="card shadow-sm mt-4 comments-widget app-comments" data-no-swal="1">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <div>
@@ -225,21 +225,25 @@ if (!function_exists('app_render_comments')) {
                 <?php if (!$rows): ?>
                     <div class="text-muted small">Belum ada komentar. Jadilah yang pertama.</div>
                 <?php else: ?>
-                    <div class="list-group list-group-flush">
+                    <div class="app-comments-list">
                         <?php foreach ($rows as $c): ?>
                             <?php
                                 $when = (string)($c['created_at'] ?? '');
                                 $whenLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($when) : $when;
+                                $author = trim((string)($c['author_name'] ?? ''));
+                                $initial = '';
+                                if ($author !== '') {
+                                    $initial = mb_strtoupper(mb_substr($author, 0, 1));
+                                }
                             ?>
-                            <div class="list-group-item px-0">
-                                <div class="d-flex align-items-start justify-content-between gap-2">
-                                    <div class="fw-semibold"><?php echo htmlspecialchars((string)($c['author_name'] ?? '')); ?></div>
-                                    <div class="text-muted small" style="white-space:nowrap;">
-                                        <?php echo htmlspecialchars($whenLabel); ?>
+                            <div class="app-comment">
+                                <div class="app-comment-avatar" aria-hidden="true"><?php echo htmlspecialchars($initial !== '' ? $initial : '?'); ?></div>
+                                <div class="app-comment-main">
+                                    <div class="app-comment-head">
+                                        <div class="app-comment-author"><?php echo htmlspecialchars($author); ?></div>
+                                        <div class="app-comment-time"><?php echo htmlspecialchars($whenLabel); ?></div>
                                     </div>
-                                </div>
-                                <div class="small mt-1" style="white-space:pre-wrap; word-break:break-word;">
-                                    <?php echo htmlspecialchars((string)($c['body'] ?? '')); ?>
+                                    <div class="app-comment-body"><?php echo htmlspecialchars((string)($c['body'] ?? '')); ?></div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
