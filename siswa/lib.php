@@ -374,14 +374,17 @@ function siswa_upload_attendance_evidence(array $file): array
         return [null, 'Upload bukti tidak valid.'];
     }
 
-    $maxBytes = 2 * 1024 * 1024; // 2MB
+    $maxBytes = 5 * 1024 * 1024; // 5MB
     $size = (int)($file['size'] ?? 0);
     if ($size <= 0 || $size > $maxBytes) {
-        return [null, 'Ukuran bukti maksimal 2MB.'];
+        return [null, 'Ukuran bukti maksimal 5MB.'];
     }
 
     $ext = '';
     $mime = '';
+    $origName = trim((string)($file['name'] ?? ''));
+    $extFromName = strtolower((string)pathinfo($origName, PATHINFO_EXTENSION));
+
     try {
         if (class_exists('finfo')) {
             $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -421,6 +424,8 @@ function siswa_upload_attendance_evidence(array $file): array
         'image/x-png' => 'png',
         'image/webp' => 'webp',
         'application/pdf' => 'pdf',
+        'application/x-pdf' => 'pdf',
+        'application/acrobat' => 'pdf',
         'image/gif' => 'gif',
         'image/bmp' => 'bmp',
         'image/x-ms-bmp' => 'bmp',
@@ -428,11 +433,45 @@ function siswa_upload_attendance_evidence(array $file): array
         'image/heif' => 'heif',
     ];
 
-    if (!isset($allowed[$mime])) {
-        return [null, 'Format bukti harus JPG/PNG/WEBP atau PDF.'];
-    }
+    if (isset($allowed[$mime])) {
+        $ext = $allowed[$mime];
+    } else {
+        // Fallback: beberapa browser/server mengirim application/octet-stream.
+        // Terima berdasarkan ekstensi nama file, dengan validasi isi dasar.
+        $fallbackAllowedExt = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+        if (!in_array($extFromName, $fallbackAllowedExt, true)) {
+            return [null, 'Format bukti harus gambar (JPG/PNG/WEBP) atau PDF.'];
+        }
 
-    $ext = $allowed[$mime];
+        if ($extFromName === 'pdf') {
+            // Validasi magic header %PDF
+            $hdr = '';
+            try {
+                $fh = @fopen($tmp, 'rb');
+                if ($fh !== false) {
+                    $hdr = (string)@fread($fh, 4);
+                    @fclose($fh);
+                }
+            } catch (Throwable $e) {
+                $hdr = '';
+            }
+            if ($hdr !== '%PDF') {
+                return [null, 'File PDF tidak valid.'];
+            }
+            $ext = 'pdf';
+        } else {
+            // Validasi minimal untuk gambar
+            $imgType = function_exists('exif_imagetype') ? @exif_imagetype($tmp) : false;
+            if ($imgType === false) {
+                return [null, 'File gambar tidak valid.'];
+            }
+            if ($extFromName === 'jpeg') {
+                $ext = 'jpg';
+            } else {
+                $ext = $extFromName;
+            }
+        }
+    }
 
     try {
         $rand = bin2hex(random_bytes(10));

@@ -412,8 +412,8 @@ $now = new DateTimeImmutable('now');
 
                     <div class="mb-2">
                         <label class="form-label small fw-semibold" for="attReqEvidence">Bukti (foto / PDF, opsional)</label>
-                        <input type="file" name="evidence" id="attReqEvidence" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp,application/pdf">
-                        <div class="form-text small">Ukuran maksimal 2MB.</div>
+                        <input type="file" name="evidence" id="attReqEvidence" class="form-control form-control-sm" accept="image/*,application/pdf">
+                        <div class="form-text small">Ukuran maksimal 5MB.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
