@@ -159,6 +159,11 @@ if ($mode === 'muldiv') {
     $page_title = 'Game Hitung Cepat (+ / -)';
 }
 include __DIR__ . '/../includes/header.php';
+echo '<div class="mini-game-mode-tabs mb-3 d-flex justify-content-center gap-2">';
+echo '<a href="game_math.php" class="btn btn-outline-primary' . ($mode === 'addsub' ? ' active' : '') . '">+ / -</a>';
+echo '<a href="game_math.php?mode=muldiv" class="btn btn-outline-primary' . ($mode === 'muldiv' ? ' active' : '') . '">× / ÷</a>';
+echo '<a href="game_math_scores.php" class="btn btn-outline-secondary">Skor</a>';
+echo '</div>';
 ?>
 <div class="card shadow-sm">
     <div class="card-body">
