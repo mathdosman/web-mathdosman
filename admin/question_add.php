@@ -17,14 +17,19 @@ $errors = [];
 // Skema web-mathdosman butuh subject_id; pakai subject pertama atau buat default.
 $subjectIdDefault = 0;
 $subjects = [];
-try {
-    $subjectIdDefault = (int)$pdo->query('SELECT id FROM subjects ORDER BY id ASC LIMIT 1')->fetchColumn();
-    if ($subjectIdDefault <= 0) {
-        $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
-        $stmt->execute([':n' => 'Umum']);
-        $subjectIdDefault = (int)$pdo->lastInsertId();
-    }
 
+try {
+    // Cari ID mapel "Matematika" terlebih dahulu
+    $subjectIdDefault = (int)$pdo->query("SELECT id FROM subjects WHERE name LIKE '%Matematika%' ORDER BY id ASC LIMIT 1")->fetchColumn();
+    if ($subjectIdDefault <= 0) {
+        // Jika tidak ada, fallback ke subject pertama
+        $subjectIdDefault = (int)$pdo->query('SELECT id FROM subjects ORDER BY id ASC LIMIT 1')->fetchColumn();
+        if ($subjectIdDefault <= 0) {
+            $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
+            $stmt->execute([':n' => 'Umum']);
+            $subjectIdDefault = (int)$pdo->lastInsertId();
+        }
+    }
     $subjects = $pdo->query('SELECT id, name FROM subjects ORDER BY name ASC')->fetchAll();
 } catch (Throwable $e) {
     $subjectIdDefault = 0;

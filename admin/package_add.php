@@ -74,7 +74,16 @@ try {
 } catch (Throwable $e) {
 }
 
+// Default subject: Matematika jika ada
 $subjectId = 0;
+try {
+    $subjectId = (int)$pdo->query("SELECT id FROM subjects WHERE name LIKE '%Matematika%' ORDER BY id ASC LIMIT 1")->fetchColumn();
+    if ($subjectId <= 0 && !empty($subjects)) {
+        $subjectId = (int)$subjects[0]['id'];
+    }
+} catch (Throwable $e) {
+    $subjectId = 0;
+}
 $materi = '';
 $submateri = '';
 $introContentId = 0;
@@ -84,7 +93,7 @@ $materials = [];
 $submaterials = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $subjectId = (int)($_POST['subject_id'] ?? 0);
+    $subjectId = (int)($_POST['subject_id'] ?? $subjectId);
     $materi = trim((string)($_POST['materi'] ?? ''));
     $submateri = trim((string)($_POST['submateri'] ?? ''));
     $introContentId = (int)($_POST['intro_content_id'] ?? 0);
