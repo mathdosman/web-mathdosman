@@ -216,12 +216,20 @@ try {
     $faviconPath = null;
 }
 
+// Load SEO helper functions
+require_once __DIR__ . '/seo.php';
+
 // SEO defaults (override per page by setting variables before include header.php)
 $meta_description = isset($meta_description) && is_string($meta_description) ? trim($meta_description) : '';
 $meta_og_title = isset($meta_og_title) && is_string($meta_og_title) ? trim($meta_og_title) : '';
 $meta_og_description = isset($meta_og_description) && is_string($meta_og_description) ? trim($meta_og_description) : '';
 $meta_og_image = isset($meta_og_image) && is_string($meta_og_image) ? trim($meta_og_image) : '';
 $meta_og_type = isset($meta_og_type) && is_string($meta_og_type) ? trim($meta_og_type) : '';
+$meta_keywords = isset($meta_keywords) && is_string($meta_keywords) ? trim($meta_keywords) : '';
+$meta_author = isset($meta_author) && is_string($meta_author) ? trim($meta_author) : 'MATHDOSMAN';
+$meta_robots = isset($meta_robots) && is_string($meta_robots) ? trim($meta_robots) : 'index, follow';
+$schema_markup = isset($schema_markup) && is_string($schema_markup) ? trim($schema_markup) : '';
+$breadcrumb_items = isset($breadcrumb_items) && is_array($breadcrumb_items) ? $breadcrumb_items : [];
 
 $baseForMeta = rtrim((string)$base_url, '/');
 $meta_default_description = 'Portal Materi & Bank Soal MATHDOSMAN — belajar ringkas, latihan terarah, dan siap cetak.';
@@ -245,6 +253,8 @@ $meta_url = '';
 try {
     $req = (string)($_SERVER['REQUEST_URI'] ?? '');
     if ($req !== '') {
+        // Remove query string for canonical URL
+        $req = strtok($req, '?');
         $meta_url = $baseForMeta . $req;
     }
 } catch (Throwable $e) {
@@ -282,17 +292,45 @@ try {
     <?php endif; ?>
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <meta name="description" content="<?php echo htmlspecialchars($meta_description); ?>">
+    <?php if ($meta_keywords !== ''): ?>
+        <meta name="keywords" content="<?php echo htmlspecialchars($meta_keywords); ?>">
+    <?php endif; ?>
+    <meta name="author" content="<?php echo htmlspecialchars($meta_author); ?>">
+    <meta name="robots" content="<?php echo htmlspecialchars($meta_robots); ?>">
+    <meta name="language" content="Indonesian">
+    <meta name="revisit-after" content="7 days">
 
+    <!-- Open Graph / Facebook -->
     <meta property="og:site_name" content="MATHDOSMAN">
     <meta property="og:title" content="<?php echo htmlspecialchars($meta_og_title); ?>">
     <meta property="og:description" content="<?php echo htmlspecialchars($meta_og_description); ?>">
     <meta property="og:type" content="<?php echo htmlspecialchars($meta_og_type); ?>">
+    <meta property="og:locale" content="id_ID">
     <?php if ($meta_url !== ''): ?>
         <meta property="og:url" content="<?php echo htmlspecialchars($meta_url); ?>">
         <link rel="canonical" href="<?php echo htmlspecialchars($meta_url); ?>">
     <?php endif; ?>
     <?php if ($meta_og_image !== ''): ?>
         <meta property="og:image" content="<?php echo htmlspecialchars($meta_og_image); ?>">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:alt" content="<?php echo htmlspecialchars($meta_og_title); ?>">
+    <?php endif; ?>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($meta_og_title); ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($meta_og_description); ?>">
+    <?php if ($meta_og_image !== ''): ?>
+        <meta name="twitter:image" content="<?php echo htmlspecialchars($meta_og_image); ?>">
+    <?php endif; ?>
+
+    <!-- Schema.org JSON-LD -->
+    <?php if ($schema_markup !== ''): ?>
+        <?php echo $schema_markup; ?>
+    <?php endif; ?>
+    <?php if (!empty($breadcrumb_items)): ?>
+        <?php echo seo_render_breadcrumb_schema($breadcrumb_items, (string)$base_url); ?>
     <?php endif; ?>
 
     <?php if (!$disable_adsense): ?>

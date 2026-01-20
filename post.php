@@ -33,39 +33,14 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 	session_start();
 }
 
+require_once __DIR__ . '/includes/analytics.php';
+
 $slug = trim((string)($_GET['slug'] ?? ''));
 
-// --- Analytics: Catat kunjungan unique IP per minggu (seperti index.php) ---
+// Track weekly visit
 $dbPreflightOk = isset($pdo) && $pdo instanceof PDO;
-$getClientIp = static function (): string {
-	return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
-};
 if ($dbPreflightOk) {
-	try {
-		$stmt1 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visits'");
-		$hasVisits = $stmt1 && $stmt1->fetch(PDO::FETCH_NUM);
-		$stmt2 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visit_ips'");
-		$hasIps = $stmt2 && $stmt2->fetch(PDO::FETCH_NUM);
-		if ($hasVisits && $hasIps) {
-			$ip = $getClientIp();
-			if ($ip !== '') {
-				$ipHash = hash('sha256', $ip);
-				$weekStartSql = 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
-				$pdo->beginTransaction();
-				$stmt = $pdo->prepare('INSERT IGNORE INTO site_weekly_visit_ips (week_start, ip_hash) VALUES (' . $weekStartSql . ', :h)');
-				$stmt->execute([':h' => $ipHash]);
-				$pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
-				$pdo->commit();
-			}
-		}
-	} catch (Throwable $e) {
-		try {
-			if ($pdo instanceof PDO && $pdo->inTransaction()) {
-				$pdo->rollBack();
-			}
-		} catch (Throwable $e2) {
-		}
-	}
+	app_track_weekly_visit($pdo);
 }
 $content = null;
 $errorMessage = null;
@@ -128,15 +103,8 @@ if ($slug === '') {
 				$linkedIntroPackage = null;
 			}
 
-			// Track views (best-effort).
-			try {
-				$stmt2 = $pdo->prepare('INSERT INTO page_views (kind, item_id, views, last_viewed_at)
-					VALUES ("content", :id, 1, NOW())
-					ON DUPLICATE KEY UPDATE views = views + 1, last_viewed_at = NOW()');
-				$stmt2->execute([':id' => (int)($content['id'] ?? 0)]);
-			} catch (Throwable $e2) {
-				// ignore
-			}
+			// Track page view
+			app_track_page_view($pdo, 'content', (int)($content['id'] ?? 0));
 
 			// Sidebar: 3 list konten (gabungan materi + paket), semua published.
 			try {
@@ -370,6 +338,8 @@ if ($slug === '') {
 	}
 }
 
+require_once __DIR__ . '/includes/seo.php';
+
 $page_title = $content ? ((string)($content['title'] ?? 'Konten')) : 'Konten';
 $use_print_soal_css = true;
 $body_class = 'front-page paket-preview paket-dock content-page';
@@ -388,8 +358,40 @@ if ($content) {
 	if (mb_strlen((string)$rawDesc) > 180) {
 		$meta_description .= '...';
 	}
+	
+	// Generate keywords
+	$materi = trim((string)($content['materi'] ?? ''));
+	$submateri = trim((string)($content['submateri'] ?? ''));
+	$meta_keywords = seo_generate_keywords($meta_og_title, $materi, $submateri);
+	
+	// Generate clean URL
+	$currentSlug = (string)($content['slug'] ?? '');
+	$canonicalUrl = seo_post_url($currentSlug, (string)$base_url);
+	
+	// Schema.org BlogPosting
+	$publishedDate = (string)($content['published_at'] ?? '');
+	if ($publishedDate === '') {
+		$publishedDate = (string)($content['created_at'] ?? date('Y-m-d'));
+	}
+	$schema_markup = seo_render_blog_posting_schema(
+		$canonicalUrl,
+		$meta_og_title,
+		$meta_description,
+		$publishedDate,
+		null,
+		'MATHDOSMAN',
+		rtrim((string)$base_url, '/') . '/assets/img/icon.svg'
+	);
+	
+	// Breadcrumb
+	$breadcrumb_items = [
+		['name' => 'Beranda', 'url' => rtrim((string)$base_url, '/') . '/'],
+		['name' => $meta_og_title, 'url' => $canonicalUrl]
+	];
 } else {
 	$meta_description = 'Konten MATHDOSMAN: materi dan berita terbaru.';
+	$meta_keywords = 'matematika, soal, latihan, materi';
+	$canonicalUrl = rtrim((string)$base_url, '/') . '/post.php';
 }
 $meta_og_image = rtrim((string)$base_url, '/') . '/assets/img/icon.svg';
 
@@ -432,10 +434,10 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 				$href = '';
 				$badge = '';
 				if ($kind === 'package' && !empty($row['code'])) {
-					$href = 'paket.php?code=' . urlencode((string)$row['code']);
+					$href = seo_package_url((string)$row['code'], (string)$base_url);
 					$badge = 'Paket';
 				} elseif ($kind === 'content' && !empty($row['slug'])) {
-					$href = 'post.php?slug=' . urlencode((string)$row['slug']);
+					$href = seo_post_url((string)$row['slug'], (string)$base_url);
 					$ctype = (string)($row['ctype'] ?? 'materi');
 					$badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
 				}
@@ -606,9 +608,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 									$prevKind = (string)($navPrev['kind'] ?? '');
 									$prevHref = '';
 									if ($prevKind === 'package' && !empty($navPrev['code'])) {
-										$prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
+										$prevHref = seo_package_url((string)$navPrev['code'], (string)$base_url);
 									} elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
-										$prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
+										$prevHref = seo_post_url((string)$navPrev['slug'], (string)$base_url);
 									}
 									?>
 									<?php if ($prevHref !== ''): ?>
@@ -644,9 +646,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 									$nextKind = (string)($navNext['kind'] ?? '');
 									$nextHref = '';
 									if ($nextKind === 'package' && !empty($navNext['code'])) {
-										$nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
+										$nextHref = seo_package_url((string)$navNext['code'], (string)$base_url);
 									} elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
-										$nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
+										$nextHref = seo_post_url((string)$navNext['slug'], (string)$base_url);
 									}
 									?>
 									<?php if ($nextHref !== ''): ?>

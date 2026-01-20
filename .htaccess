@@ -1,8 +1,65 @@
-# Custom 404 page
-ErrorDocument 404 /404.php
+# MATHDOSMAN - Clean URL Rewriting
+# Enable rewrite engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
 
-# Custom 403 page
-ErrorDocument 403 /403.php
+    # Prevent directory listing
+    Options -Indexes
 
-# Custom 500 page
-ErrorDocument 500 /500.php
+    # Redirect trailing slashes (except for directories)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [R=301,L]
+
+    # Clean URL for posts: /post/slug-name
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^post/([a-z0-9\-]+)/?$ post.php?slug=$1 [L,QSA]
+
+    # Clean URL for packages: /paket/slug-name
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^paket/([a-z0-9\-]+)/?$ paket.php?slug=$1 [L,QSA]
+
+    # Fallback: if slug not found, try code lookup
+    # This will be handled in paket.php itself
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Browser Caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/json "access plus 0 seconds"
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# Prevent access to sensitive files
+<FilesMatch "^(\.htaccess|\.git|composer\.(json|lock)|README|\.env|config\.php)$">
+    Require all denied
+</FilesMatch>
