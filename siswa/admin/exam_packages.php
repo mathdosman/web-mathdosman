@@ -299,7 +299,6 @@ include __DIR__ . '/../../includes/header.php';
                                 <?php
                                     $isExam = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false;
                                     $pid = (int)($p['id'] ?? 0);
-                                    $kelasList = ($pid > 0 && isset($kelasByPackageId[$pid])) ? (string)$kelasByPackageId[$pid] : '';
                                     $packageCode = (string)($p['code'] ?? '');
                                     $viewUrl = $packageCode !== '' ? ('../../paket.php?code=' . rawurlencode($packageCode) . '&preview=1') : '';
                                 ?>
