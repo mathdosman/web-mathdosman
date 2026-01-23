@@ -283,6 +283,8 @@ function render_attendance_change_requests_table(array $rows, string $base): voi
                             $labelReq = 'Sakit (S)';
                         } elseif ($reqStatus === 'dispen') {
                             $labelReq = 'Dispen (D)';
+                        } elseif ($reqStatus === 'lupa') {
+                            $labelReq = 'Lupa Absen (H)';
                         } else {
                             $labelReq = strtoupper($reqStatus);
                         }

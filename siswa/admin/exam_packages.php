@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/security.php';
+require_once __DIR__ . '/../lib.php';
 
 require_role('admin');
 
@@ -153,32 +154,56 @@ try {
     $errors[] = 'Gagal memuat data paket.';
 }
 
-// Build map: package_id => list of distinct kelas values that already received assignments for this package.
+// Build map: package_id => array of distinct kelas+rombel combinations that already received assignments for this package.
 $kelasByPackageId = [];
 try {
     $packageIds = array_values(array_filter(array_map(static fn($r) => (int)($r['id'] ?? 0), $rows), static fn($id) => $id > 0));
     if ($packageIds) {
         $placeholders = implode(',', array_fill(0, count($packageIds), '?'));
         $stmt = $pdo->prepare(
-            'SELECT sa.package_id, GROUP_CONCAT(DISTINCT s.kelas ORDER BY s.kelas SEPARATOR ", ") AS kelas_list\n'
-            . 'FROM student_assignments sa\n'
-            . 'JOIN students s ON s.id = sa.student_id\n'
-            . 'WHERE sa.package_id IN (' . $placeholders . ')\n'
-            . 'GROUP BY sa.package_id'
+            'SELECT sa.package_id, s.kelas, s.rombel
+            FROM student_assignments sa
+            JOIN students s ON s.id = sa.student_id
+            WHERE sa.package_id IN (' . $placeholders . ')
+            GROUP BY sa.package_id, s.kelas, s.rombel
+            ORDER BY sa.package_id, s.kelas, s.rombel'
         );
         $stmt->execute($packageIds);
         $rowsKelas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($rowsKelas as $r) {
             $pid = (int)($r['package_id'] ?? 0);
-            $kelasList = trim((string)($r['kelas_list'] ?? ''));
-            if ($pid > 0 && $kelasList !== '') {
-                $kelasByPackageId[$pid] = $kelasList;
+            $kelas = trim((string)($r['kelas'] ?? ''));
+            $rombel = trim((string)($r['rombel'] ?? ''));
+            if ($pid > 0 && $kelas !== '') {
+                if (!isset($kelasByPackageId[$pid])) {
+                    $kelasByPackageId[$pid] = [];
+                }
+                $display = strtoupper($kelas . $rombel);
+                $kelasByPackageId[$pid][$display] = true;
             }
         }
     }
 } catch (Throwable $e) {
     // Best effort: if tables/columns don't exist yet, keep empty.
     $kelasByPackageId = [];
+}
+
+// Build color map for each unique kelas+rombel for consistency
+$kelasRombelColorMap = [];
+try {
+    $allKelasRombel = [];
+    foreach ($kelasByPackageId as $packageId => $kelasRombelSet) {
+        foreach (array_keys($kelasRombelSet) as $kr) {
+            $allKelasRombel[$kr] = true;  // Use as set with key as unique value
+        }
+    }
+    $allKelasRombel = array_keys($allKelasRombel);  // Extract unique values
+    sort($allKelasRombel);
+    foreach ($allKelasRombel as $kr) {
+        $kelasRombelColorMap[$kr] = siswa_get_kelas_rombel_badge_color($kr);
+    }
+} catch (Throwable $e) {
+    $kelasRombelColorMap = [];
 }
 
 $page_title = 'Paket';
@@ -283,8 +308,12 @@ include __DIR__ . '/../../includes/header.php';
                                         <div class="fw-semibold"><?php echo htmlspecialchars((string)($p['name'] ?? '')); ?></div>
                                     </td>
                                     <td>
-                                        <?php if ($kelasList !== ''): ?>
-                                            <span class="fw-semibold"><?php echo htmlspecialchars($kelasList); ?></span>
+                                        <?php if ($pid > 0 && isset($kelasByPackageId[$pid]) && count($kelasByPackageId[$pid]) > 0): ?>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                <?php foreach (array_keys($kelasByPackageId[$pid]) as $kelasRombel): ?>
+                                                    <span class="badge <?php echo htmlspecialchars(siswa_get_kelas_rombel_badge_color($kelasRombel)); ?>"><?php echo htmlspecialchars((string)$kelasRombel); ?></span>
+                                                <?php endforeach; ?>
+                                            </div>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
@@ -298,17 +327,16 @@ include __DIR__ . '/../../includes/header.php';
                                         </span>
                                     </td>
                                     <td class="text-end packages-col-actions">
-                                        <div class="d-flex justify-content-end">
-                                            <div class="packages-actions">
-                                                <?php if ($viewUrl !== ''): ?>
-                                                    <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($viewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
-                                                            <circle cx="12" cy="12" r="3"></circle>
-                                                        </svg>
-                                                        <span class="visually-hidden">Lihat Paket</span>
-                                                    </a>
-                                                <?php endif; ?>
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <?php if ($viewUrl !== ''): ?>
+                                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($viewUrl); ?>" target="_blank" rel="noopener" title="Lihat Paket" aria-label="Lihat Paket">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                                                        <circle cx="12" cy="12" r="3"></circle>
+                                                    </svg>
+                                                    <span class="visually-hidden">Lihat Paket</span>
+                                                </a>
+                                            <?php endif; ?>
 
                                             <a class="btn btn-outline-primary btn-sm" href="../../admin/package_edit.php?id=<?php echo (int)($p['id'] ?? 0); ?>&return=<?php echo urlencode('../siswa/admin/exam_packages.php'); ?>" title="Edit Paket" aria-label="Edit Paket">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -338,7 +366,6 @@ include __DIR__ . '/../../includes/header.php';
                                                 </button>
                                             </form>
                                         </div>
-                                    </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -349,4 +376,10 @@ include __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
+<style>
+.badge-purple {
+    background-color: #a855f7;
+    color: white;
+}
+</style>
 <?php include __DIR__ . '/../../includes/footer.php';

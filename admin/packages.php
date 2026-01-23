@@ -532,16 +532,9 @@ include __DIR__ . '/../includes/header.php';
 
                 <div class="collapse" id="importPaketCollapse">
                     <div class="p-2 pt-0">
-                        <form action="questions_import.php" method="post" enctype="multipart/form-data" class="m-0">
-                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                            <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
-                                <div class="input-group input-group-sm">
-                                    <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
-                                    <button type="submit" class="btn btn-outline-primary">Upload</button>
-                                </div>
-                                <a class="btn btn-outline-secondary btn-sm" href="<?php echo $base_url; ?>/assets/contoh-import-paket-soal.xlsx" download>Contoh File XLSX</a>
-                            </div>
-                        </form>
+                        <div class="alert alert-info py-2 small mb-0">
+                            Upload fitur hanya mendukung format <strong>TXT</strong>. Silakan gunakan menu <a href="questions_import_txt.php">Upload TXT</a> di halaman <strong>Upload</strong>.
+                        </div>
                     </div>
                 </div>
             </div>

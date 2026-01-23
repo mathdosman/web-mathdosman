@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 $errors = [];
@@ -178,6 +179,7 @@ if ($subjectId > 0 && $materi !== '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_valid();
     $formAction = $_POST['form_action'] ?? 'save';
     if (!in_array($formAction, ['save', 'change_mapel', 'change_materi'], true)) {
         $formAction = 'save';

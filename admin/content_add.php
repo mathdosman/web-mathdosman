@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/richtext.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 $errors = [];
@@ -161,6 +162,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $status = 'draft';
     }
 
+    require_csrf_valid();
     $publishedAtLocal = trim((string)($_POST['published_at'] ?? ''));
 
     if ($title === '') {

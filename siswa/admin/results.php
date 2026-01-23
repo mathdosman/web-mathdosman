@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../lib.php';
 
 require_role('admin');
 
@@ -35,6 +36,116 @@ if (!in_array($tab, ['ujian', 'tugas'], true)) {
 $qNama = trim((string)($_GET['nama'] ?? ''));
 $qKelasRombel = trim((string)($_GET['kelas'] ?? ''));
 $qPaket = trim((string)($_GET['paket'] ?? ''));
+
+// Sort parameters
+$sortBy = strtolower(trim((string)($_GET['sort_by'] ?? 'latest')));
+$sortDir = strtolower(trim((string)($_GET['sort_dir'] ?? 'desc')));
+if (!in_array($sortBy, ['nama', 'paket', 'kelas', 'nilai', 'latest'], true)) {
+    $sortBy = 'latest';
+}
+if (!in_array($sortDir, ['asc', 'desc'], true)) {
+    $sortDir = 'desc';
+}
+
+// Function untuk toggle arah sort
+$getToggleSortDir = function($currentDir) {
+    return ($currentDir === 'asc') ? 'desc' : 'asc';
+};
+
+// Function untuk build sort link
+$buildSortLink = function($column, $label) use ($tab, $qNama, $qKelasRombel, $qPaket, $sortBy, $sortDir, $getToggleSortDir) {
+    $newDir = ($sortBy === $column) ? $getToggleSortDir($sortDir) : 'asc';
+    $arrow = '';
+    if ($sortBy === $column) {
+        $arrow = ($sortDir === 'asc') ? ' ▲' : ' ▼';
+    }
+    $href = 'results.php?' . http_build_query([
+        'tab' => $tab,
+        'nama' => $qNama ?: null,
+        'kelas' => $qKelasRombel ?: null,
+        'paket' => $qPaket ?: null,
+        'sort_by' => $column,
+        'sort_dir' => $newDir,
+    ]);
+    return '<a href="' . htmlspecialchars($href) . '" style="color: inherit; text-decoration: none;">' . htmlspecialchars($label) . $arrow . '</a>';
+};
+
+// Options dropdown kelas+rombel
+$kelasRombelOptions = [];
+try {
+    $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
+    if ($hasKelasRombelsTable) {
+        $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rowsKr as $kr) {
+            $k = trim((string)($kr['kelas'] ?? ''));
+            $r = trim((string)($kr['rombel'] ?? ''));
+            if ($k === '' || $r === '') continue;
+            $display = strtoupper($k . $r);
+            $kelasRombelOptions[$display] = ['kelas' => $k, 'rombel' => $r];
+        }
+        ksort($kelasRombelOptions);
+    } else {
+        $rowsKr = $pdo->query('SELECT DISTINCT kelas, rombel FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" AND rombel IS NOT NULL AND TRIM(rombel) <> "" ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rowsKr as $kr) {
+            $k = trim((string)($kr['kelas'] ?? ''));
+            $r = trim((string)($kr['rombel'] ?? ''));
+            if ($k === '' || $r === '') continue;
+            $display = strtoupper($k . $r);
+            $kelasRombelOptions[$display] = ['kelas' => $k, 'rombel' => $r];
+        }
+        ksort($kelasRombelOptions);
+    }
+    if (!is_array($kelasRombelOptions)) $kelasRombelOptions = [];
+} catch (Throwable $e) {
+    $kelasRombelOptions = [];
+}
+
+// Options dropdown paket: all or filtered by kelas+rombel
+$paketOptions = [];
+try {
+    $sqlPaket = 'SELECT DISTINCT p.id, p.code, p.name
+        FROM packages p
+        WHERE EXISTS (
+            SELECT 1 FROM student_assignments sa
+            WHERE sa.package_id = p.id';
+    
+    if ($qKelasRombel !== '' && isset($kelasRombelOptions[$qKelasRombel])) {
+        $kr = $kelasRombelOptions[$qKelasRombel];
+        $sqlPaket .= ' AND EXISTS (
+                SELECT 1 FROM students s
+                WHERE s.id = sa.student_id AND s.kelas = :pkelas AND s.rombel = :prombel
+            )';
+        $sqlPaket .= '
+        )
+        ORDER BY p.code ASC, p.name ASC';
+        $stmtPaket = $pdo->prepare($sqlPaket);
+        $stmtPaket->execute([':pkelas' => $kr['kelas'], ':prombel' => $kr['rombel']]);
+    } else {
+        $sqlPaket .= '
+        )
+        ORDER BY p.code ASC, p.name ASC';
+        $stmtPaket = $pdo->prepare($sqlPaket);
+        $stmtPaket->execute();
+    }
+    
+    $rowsPaket = $stmtPaket->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rowsPaket as $p) {
+        $pid = (int)($p['id'] ?? 0);
+        $name = trim((string)($p['name'] ?? ''));
+        if ($name !== '') {
+            $display = $name;
+        } else {
+            $code = trim((string)($p['code'] ?? ''));
+            $display = $code !== '' ? $code : 'Package #' . $pid;
+        }
+        $paketOptions[$pid] = $display;
+    }
+    asort($paketOptions);
+    
+    if (!is_array($paketOptions)) $paketOptions = [];
+} catch (Throwable $e) {
+    $paketOptions = [];
+}
 
 $rows = [];
 try {
@@ -84,21 +195,43 @@ try {
     }
 
     if ($qKelasRombel !== '') {
-        $norm = strtoupper(str_replace(' ', '', $qKelasRombel));
-        $select .= ' AND UPPER(CONCAT(TRIM(s.kelas), TRIM(s.rombel))) LIKE :qKr';
-        $params[':qKr'] = '%' . $norm . '%';
+        if (isset($kelasRombelOptions[$qKelasRombel])) {
+            $kr = $kelasRombelOptions[$qKelasRombel];
+            $select .= ' AND s.kelas = :qKelas AND s.rombel = :qRombel';
+            $params[':qKelas'] = $kr['kelas'];
+            $params[':qRombel'] = $kr['rombel'];
+        }
     }
 
     if ($qPaket !== '') {
-        $select .= ' AND (' . $titleExpr . ' LIKE :qPaket OR p.code LIKE :qPaket2 OR p.name LIKE :qPaket3)';
-        $params[':qPaket'] = '%' . $qPaket . '%';
-        $params[':qPaket2'] = '%' . $qPaket . '%';
-        $params[':qPaket3'] = '%' . $qPaket . '%';
+        $pkgId = (int)$qPaket;
+        if ($pkgId > 0) {
+            $select .= ' AND p.id = :qPkgId';
+            $params[':qPkgId'] = $pkgId;
+        }
     }
 
-    $select .= '
-        ORDER BY latest_at DESC, sa.id DESC
-        LIMIT 1500';
+    // Build ORDER BY based on sort parameters
+    $orderClause = 'ORDER BY ';
+    switch ($sortBy) {
+        case 'nama':
+            $orderClause .= 's.nama_siswa ' . strtoupper($sortDir);
+            break;
+        case 'paket':
+            $orderClause .= 'p.name ' . strtoupper($sortDir);
+            break;
+        case 'kelas':
+            $orderClause .= 's.kelas ' . strtoupper($sortDir) . ', s.rombel ' . strtoupper($sortDir);
+            break;
+        case 'nilai':
+            $orderClause .= 'sa.score ' . strtoupper($sortDir);
+            break;
+        case 'latest':
+        default:
+            $orderClause .= 'latest_at ' . strtoupper($sortDir) . ', sa.id DESC';
+            break;
+    }
+    $select .= ' ' . $orderClause . ' LIMIT 1500';
 
     $stmt = $pdo->prepare($select);
     $stmt->execute($params);
@@ -115,6 +248,20 @@ $scoreBadgeClass = function ($scoreVal): string {
     if ($n < 75) return 'text-bg-warning';
     if ($n <= 90) return 'text-bg-primary';
     return 'text-bg-success';
+};
+
+// Function untuk format nilai: hilangkan desimal .00, tapi pertahankan desimal lainnya
+$formatScore = function ($scoreVal) {
+    if ($scoreVal === null || $scoreVal === '') {
+        return '-';
+    }
+    $n = (float)$scoreVal;
+    // Jika nilai adalah bilangan bulat (misal 100.00), tampilkan tanpa desimal
+    if ($n === floor($n)) {
+        return (string)(int)$n;
+    }
+    // Jika ada desimal, tampilkan dengan desimal (misal 86.67)
+    return number_format($n, 2, ',', '.');
 };
 
 $page_title = 'Hasil';
@@ -169,11 +316,21 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Kelas/Rombel</label>
-                    <input type="text" class="form-control" name="kelas" value="<?php echo htmlspecialchars($qKelasRombel); ?>" placeholder="Contoh: XA">
+                    <select class="form-select" name="kelas">
+                        <option value="">-- semua --</option>
+                        <?php foreach ($kelasRombelOptions as $display => $kr): ?>
+                            <option value="<?php echo htmlspecialchars($display); ?>"<?php echo $qKelasRombel === $display ? ' selected' : ''; ?>><?php echo htmlspecialchars($display); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Paket Soal</label>
-                    <input type="text" class="form-control" name="paket" value="<?php echo htmlspecialchars($qPaket); ?>" placeholder="Judul / nama / kode">
+                    <select class="form-select" name="paket">
+                        <option value="">-- semua --</option>
+                        <?php foreach ($paketOptions as $pid => $display): ?>
+                            <option value="<?php echo (int)$pid; ?>"<?php echo $qPaket === (string)$pid ? ' selected' : ''; ?>><?php echo htmlspecialchars($display); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100">Cari</button>
@@ -185,10 +342,10 @@ include __DIR__ . '/../../includes/header.php';
                 <table class="table table-striped table-hover table-compact align-middle">
                     <thead>
                         <tr>
-                            <th>Nama</th>
-                            <th>Judul Paket</th>
-                            <th style="width:120px">Kelas</th>
-                            <th style="width:120px">Nilai</th>
+                            <th style="cursor: pointer;"><?php echo $buildSortLink('nama', 'Nama'); ?></th>
+                            <th style="cursor: pointer;"><?php echo $buildSortLink('paket', 'Judul Paket'); ?></th>
+                            <th style="width:120px; cursor: pointer;"><?php echo $buildSortLink('kelas', 'Kelas'); ?></th>
+                            <th style="width:120px; cursor: pointer;"><?php echo $buildSortLink('nilai', 'Nilai'); ?></th>
                             <?php if ($tab === 'ujian' && $hasFocusSecondsColumn): ?>
                                 <th style="width:110px">Aktif (menit)</th>
                             <?php endif; ?>
@@ -229,10 +386,10 @@ include __DIR__ . '/../../includes/header.php';
                                         <?php echo htmlspecialchars((string)($r['package_code'] ?? '')); ?>
                                     </div>
                                 </td>
-                                <td><span class="badge text-bg-secondary"><?php echo htmlspecialchars($kelasRombel !== '' ? $kelasRombel : '-'); ?></span></td>
+                                <td><span class="badge <?php echo htmlspecialchars(siswa_get_kelas_rombel_badge_color($kelasRombel)); ?>"><?php echo htmlspecialchars($kelasRombel !== '' ? $kelasRombel : '-'); ?></span></td>
                                 <td>
                                     <?php if ($hasScoreColumn && $score !== null && $score !== ''): ?>
-                                        <span class="badge <?php echo htmlspecialchars($scoreBadgeClass($score)); ?>"><?php echo htmlspecialchars((string)$score); ?></span>
+                                        <span class="badge <?php echo htmlspecialchars($scoreBadgeClass($score)); ?>"><?php echo htmlspecialchars($formatScore($score)); ?></span>
                                     <?php else: ?>
                                         <span class="small text-muted">-</span>
                                     <?php endif; ?>
@@ -268,4 +425,21 @@ include __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
+<script>
+// Auto-submit form when kelas/rombel is changed
+document.addEventListener('DOMContentLoaded', function() {
+    const kelasSelect = document.querySelector('select[name="kelas"]');
+    if (kelasSelect) {
+        kelasSelect.addEventListener('change', function() {
+            // Reset paket filter when kelas changes
+            const paketSelect = document.querySelector('select[name="paket"]');
+            if (paketSelect) {
+                paketSelect.value = '';
+            }
+            // Submit form to reload with new kelas
+            this.closest('form').submit();
+        });
+    }
+});
+</script>
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

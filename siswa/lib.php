@@ -520,3 +520,88 @@ function siswa_delete_photo(string $storedPath): void
     } catch (Throwable $e) {
     }
 }
+
+/**
+ * Get consistent color/badge class for a kelas+rombel combination.
+ * Color is consistent across the application for the same kelas+rombel value.
+ *
+ * @param string $kelasRombel The kelas+rombel value (e.g., "XIA", "XIB5")
+ * @return string CSS class name for the badge (e.g., "text-bg-primary", "badge-purple")
+ */
+function siswa_get_kelas_rombel_badge_color(string $kelasRombel): string
+{
+    $kelasRombel = strtoupper(trim($kelasRombel));
+    
+    // Hardcoded custom colors for specific kelas+rombel - Konsisten dan terstruktur
+    $customColorMap = [
+        // Kelas X - Batch 1
+        'XA' => 'text-bg-primary',
+        'XB' => 'text-bg-success',
+        'XC' => 'text-bg-danger',
+        'XD' => 'text-bg-warning',
+        'XE' => 'text-bg-info',
+        
+        // Kelas X dengan Rombel
+        'XA1' => 'text-bg-primary',
+        'XA2' => 'text-bg-primary',
+        'XB1' => 'text-bg-success',
+        'XB2' => 'text-bg-success',
+        'XC1' => 'text-bg-danger',
+        'XC2' => 'text-bg-danger',
+        'XD1' => 'text-bg-warning',
+        'XD2' => 'text-bg-warning',
+        'XE1' => 'text-bg-info',
+        'XE2' => 'text-bg-info',
+        
+        // Kelas XI - Batch 2
+        'XIA' => 'text-bg-primary',
+        'XIB' => 'text-bg-success',
+        'XIC' => 'text-bg-danger',
+        'XID' => 'text-bg-warning',
+        'XIE' => 'text-bg-info',
+        
+        // Kelas XI dengan Rombel - Variasi warna
+        'XIA1' => 'text-bg-primary',
+        'XIA2' => 'text-bg-primary',
+        'XIB1' => 'text-bg-danger',      // Warna merah
+        'XIB2' => 'text-bg-warning',     // Warna kuning
+        'XIB3' => 'text-bg-success',
+        'XIB4' => 'text-bg-info',        // Warna biru
+        'XIB5' => 'text-bg-dark',        // Warna hitam
+        'XIC1' => 'text-bg-danger',
+        'XIC2' => 'text-bg-danger',
+        'XID1' => 'text-bg-warning',
+        'XID2' => 'text-bg-warning',
+        'XIE1' => 'text-bg-info',
+        'XIE2' => 'text-bg-info',
+        
+        // Kelas XII - Batch 3
+        'XIIA' => 'text-bg-primary',
+        'XIIB' => 'text-bg-success',
+        'XIIC' => 'text-bg-danger',
+        'XIID' => 'text-bg-warning',
+        'XIIE' => 'text-bg-info',
+        
+        // Kelas XII dengan Rombel
+        'XIIA1' => 'text-bg-primary',
+        'XIIA2' => 'text-bg-primary',
+        'XIIB1' => 'text-bg-success',
+        'XIIB2' => 'text-bg-success',
+        'XIIC1' => 'text-bg-danger',
+        'XIIC2' => 'text-bg-danger',
+        'XIID1' => 'text-bg-warning',
+        'XIID2' => 'text-bg-warning',
+        'XIIE1' => 'text-bg-info',
+        'XIIE2' => 'text-bg-info',
+    ];
+    
+    if (isset($customColorMap[$kelasRombel])) {
+        return $customColorMap[$kelasRombel];
+    }
+    
+    // Default: generate color based on hash for consistency
+    $colors = ['text-bg-primary', 'text-bg-success', 'text-bg-info', 'text-bg-warning', 'text-bg-danger', 'text-bg-secondary', 'text-bg-dark'];
+    $hash = crc32($kelasRombel);
+    $index = abs($hash) % count($colors);
+    return $colors[$index];
+}

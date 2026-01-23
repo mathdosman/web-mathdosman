@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../lib.php';
 
 require_role('admin');
 
@@ -186,6 +187,9 @@ $ended = $endObj && $endObj < $now;
                                 if ($baseStatus === 'present') {
                                     $effectiveLabel = 'Hadir';
                                     $badgeClass = 'text-bg-success';
+                                } elseif ($baseStatus === 'lupa') {
+                                    $effectiveLabel = 'Lupa Absen (H)';
+                                    $badgeClass = 'text-bg-warning text-dark';
                                 } elseif (in_array($baseStatus, ['izin', 'sakit', 'dispen'], true)) {
                                     if ($baseStatus === 'izin') {
                                         $effectiveLabel = 'Izin (I)';
@@ -214,7 +218,8 @@ $ended = $endObj && $endObj < $now;
                                     <div class="fw-semibold"><?php echo htmlspecialchars((string)($row['nama_siswa'] ?? '')); ?></div>
                                 </td>
                                 <td>
-                                    <span class="badge text-bg-light border text-dark"><?php echo htmlspecialchars(trim((string)($row['kelas'] ?? '') . ' ' . (string)($row['rombel'] ?? ''))); ?></span>
+                                    <?php $kr = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? '')); ?>
+                                    <span class="badge <?php echo htmlspecialchars(siswa_get_kelas_rombel_badge_color($kr)); ?>"><?php echo htmlspecialchars($kr !== '' ? $kr : '-'); ?></span>
                                 </td>
                                 <td>
                                     <span class="badge <?php echo htmlspecialchars($badgeClass); ?>"><?php echo htmlspecialchars($effectiveLabel); ?></span>
@@ -234,6 +239,8 @@ $ended = $endObj && $endObj < $now;
                                                 $label = 'Sakit (S)';
                                             } elseif ($crRequested === 'dispen') {
                                                 $label = 'Dispen (D)';
+                                            } elseif ($crRequested === 'lupa') {
+                                                $label = 'Lupa Absen (H)';
                                             } else {
                                                 $label = strtoupper($crRequested);
                                             }

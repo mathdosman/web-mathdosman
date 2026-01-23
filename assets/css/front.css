@@ -420,6 +420,17 @@
     body.front-page .list-group-item.active {
         background-color: var(--bs-dark);
         border-color: var(--bs-dark);
+        color: #fff;
+    }
+
+    body.front-page .list-group-item.active .badge.text-bg-light {
+        background-color: var(--bs-light) !important;
+        color: var(--bs-dark) !important;
+    }
+
+    body.front-page .list-group-item.active .badge.text-bg-secondary {
+        background-color: var(--bs-light) !important;
+        color: var(--bs-dark) !important;
     }
 
     body.front-page .badge.text-bg-secondary {

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/richtext.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 $errors = [];
@@ -172,6 +173,7 @@ function parse_created_at_txt($v): ?string
 
 $previewMode = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_valid();
     if (!isset($_FILES['txt_file']) || ($_FILES['txt_file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
         $errors[] = 'Tidak ada file .txt yang diunggah.';
     } else {

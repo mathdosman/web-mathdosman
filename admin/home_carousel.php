@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 $page_title = 'Carousel Beranda';
@@ -31,6 +32,7 @@ function find_carousel_slide_url(string $uploadDir, string $uploadUrlBase, int $
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    require_csrf_valid();
     if (!is_dir($uploadDir)) {
         @mkdir($uploadDir, 0755, true);
     }

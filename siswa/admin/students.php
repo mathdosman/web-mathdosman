@@ -61,11 +61,11 @@ $errors = [];
 
 // Filter query (GET)
 $filterNama = trim((string)($_GET['nama'] ?? ''));
-$filterKelas = trim((string)($_GET['kelas'] ?? ''));
+$filterKelasRombel = trim((string)($_GET['kelas'] ?? ''));
 $filterUsername = trim((string)($_GET['username'] ?? ''));
 
-// Options dropdown kelas
-$kelasOptions = [];
+// Options dropdown kelas+rombel
+$kelasRombelOptions = [];
 try {
     $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
     if ($hasKelasRombelsTable) {
@@ -91,14 +91,29 @@ try {
             }
         }
 
-        $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM kelas_rombels WHERE TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($rowsKr as $kr) {
+            $k = trim((string)($kr['kelas'] ?? ''));
+            $r = trim((string)($kr['rombel'] ?? ''));
+            if ($k === '' || $r === '') continue;
+            $display = strtoupper($k . $r);
+            $kelasRombelOptions[$display] = ['kelas' => $k, 'rombel' => $r];
+        }
+        ksort($kelasRombelOptions);
     } else {
-        $kelasOptions = $pdo->query('SELECT DISTINCT kelas FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" ORDER BY kelas ASC')->fetchAll(PDO::FETCH_COLUMN);
+        $rowsKr = $pdo->query('SELECT DISTINCT kelas, rombel FROM students WHERE kelas IS NOT NULL AND TRIM(kelas) <> "" AND rombel IS NOT NULL AND TRIM(rombel) <> "" ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rowsKr as $kr) {
+            $k = trim((string)($kr['kelas'] ?? ''));
+            $r = trim((string)($kr['rombel'] ?? ''));
+            if ($k === '' || $r === '') continue;
+            $display = strtoupper($k . $r);
+            $kelasRombelOptions[$display] = ['kelas' => $k, 'rombel' => $r];
+        }
+        ksort($kelasRombelOptions);
     }
 
-    if (!is_array($kelasOptions)) $kelasOptions = [];
+    if (!is_array($kelasRombelOptions)) $kelasRombelOptions = [];
 } catch (Throwable $e) {
-    $kelasOptions = [];
+    $kelasRombelOptions = [];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -153,9 +168,13 @@ try {
         $sql .= ' AND nama_siswa LIKE :fn';
         $paramsList[':fn'] = '%' . $filterNama . '%';
     }
-    if ($filterKelas !== '') {
-        $sql .= ' AND kelas = :fk';
-        $paramsList[':fk'] = $filterKelas;
+    if ($filterKelasRombel !== '') {
+        if (isset($kelasRombelOptions[$filterKelasRombel])) {
+            $kr = $kelasRombelOptions[$filterKelasRombel];
+            $sql .= ' AND kelas = :fk AND rombel = :fr';
+            $paramsList[':fk'] = $kr['kelas'];
+            $paramsList[':fr'] = $kr['rombel'];
+        }
     }
     if ($filterUsername !== '') {
         $sql .= ' AND username LIKE :fu';
@@ -218,11 +237,11 @@ include __DIR__ . '/../../includes/header.php';
                     <input type="text" class="form-control" name="nama" value="<?php echo htmlspecialchars($filterNama); ?>" placeholder="Cari nama siswa">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Kelas</label>
+                    <label class="form-label">Kelas / Rombel</label>
                     <select class="form-select" name="kelas">
-                        <option value="">-- semua kelas --</option>
-                        <?php foreach ($kelasOptions as $k): $k = (string)$k; ?>
-                            <option value="<?php echo htmlspecialchars($k); ?>"<?php echo $filterKelas === $k ? ' selected' : ''; ?>><?php echo htmlspecialchars($k); ?></option>
+                        <option value="">-- semua --</option>
+                        <?php foreach ($kelasRombelOptions as $display => $kr): ?>
+                            <option value="<?php echo htmlspecialchars($display); ?>"<?php echo $filterKelasRombel === $display ? ' selected' : ''; ?>><?php echo htmlspecialchars($display); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -285,9 +304,9 @@ include __DIR__ . '/../../includes/header.php';
                                     <div class="fw-semibold"><?php echo htmlspecialchars((string)$r['nama_siswa']); ?></div>
                                 </td>
                                 <td>
-                                    <span class="badge text-bg-light border text-dark">
-                                        <?php echo htmlspecialchars((string)$r['kelas']); ?>
-                                        <?php echo htmlspecialchars((string)$r['rombel']); ?>
+                                    <?php $kr = strtoupper((string)$r['kelas'] . (string)$r['rombel']); ?>
+                                    <span class="badge <?php echo htmlspecialchars(siswa_get_kelas_rombel_badge_color($kr)); ?>">
+                                        <?php echo htmlspecialchars($kr !== '' ? $kr : '-'); ?>
                                     </span>
                                 </td>
                                 <td><?php echo htmlspecialchars((string)$r['no_hp']); ?></td>

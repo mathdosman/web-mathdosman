@@ -456,7 +456,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'File SQL belum dipilih.';
         } else {
             $file = $_FILES['sql_file'];
-            if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            $uploadErr = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+            
+            // Map upload errors dengan user-friendly messages
+            $uploadErrorMap = [
+                UPLOAD_ERR_INI_SIZE => 'Ukuran file melebihi batas upload server (upload_max_filesize di php.ini). Hubungi administrator untuk menaikkan limit atau split file SQL menjadi bagian kecil.',
+                UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas form. Silakan upload file yang lebih kecil.',
+                UPLOAD_ERR_PARTIAL => 'File terunggah sebagian. Silakan coba lagi.',
+                UPLOAD_ERR_NO_FILE => 'File SQL belum dipilih.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary server tidak tersedia. Hubungi administrator.',
+                UPLOAD_ERR_CANT_WRITE => 'Gagal menulis file ke server. Hubungi administrator.',
+                UPLOAD_ERR_EXTENSION => 'Upload dihentikan oleh ekstensi PHP. Hubungi administrator.',
+            ];
+            
+            if ($uploadErr !== UPLOAD_ERR_OK) {
+                $errors[] = $uploadErrorMap[$uploadErr] ?? 'Upload file gagal dengan kode error: ' . $uploadErr;
+            } elseif (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
                 $errors[] = 'Upload file SQL tidak valid.';
             } else {
                 $tmpPath = $file['tmp_name'];
@@ -527,6 +542,11 @@ include __DIR__ . '/../includes/header.php';
                 <div class="card-body">
                     <h5 class="card-title">Restore Database</h5>
                     <p class="card-text small mb-2">Menghapus seluruh tabel di database lalu mengimpor isi dari file SQL yang Anda upload. <strong>Tidak bisa dibatalkan</strong>. Pastikan Anda sudah memiliki backup terbaru sebelum menjalankan restore.</p>
+                    <div class="alert alert-info py-2 small mb-3">
+                        <strong>Batas upload server:</strong> <?php echo ini_get('upload_max_filesize'); ?> 
+                        <br><strong>Max POST:</strong> <?php echo ini_get('post_max_size'); ?>
+                        <br>Jika file SQL Anda lebih besar, split menjadi beberapa bagian atau hubungi administrator.
+                    </div>
                     <form method="post" enctype="multipart/form-data" onsubmit="return confirm('Restore akan MENGHAPUS dan MENGGANTI seluruh isi database. Lanjutkan?');">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                         <input type="hidden" name="action" value="restore">

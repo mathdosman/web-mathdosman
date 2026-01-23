@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/richtext.php';
 require_once __DIR__ . '/../includes/logger.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 $questionId = (int)($_GET['id'] ?? 0);
@@ -194,6 +195,7 @@ $normalizeTipeSoal = function (string $v): string {
 };
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_valid();
     $formAction = trim((string)($_POST['form_action'] ?? 'save'));
     if ($formAction === '') {
         $formAction = 'save';

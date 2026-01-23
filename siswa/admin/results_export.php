@@ -95,16 +95,37 @@ try {
     }
 
     if ($qKelasRombel !== '') {
-        $norm = strtoupper(str_replace(' ', '', $qKelasRombel));
-        $select .= ' AND UPPER(CONCAT(TRIM(s.kelas), TRIM(s.rombel))) LIKE :qKr';
-        $params[':qKr'] = '%' . $norm . '%';
+        // Need to rebuild kelasRombelOptions for export
+        $kelasRombelOptions = [];
+        try {
+            $hasKelasRombelsTable = (bool)$pdo->query("SHOW TABLES LIKE 'kelas_rombels'")->fetchColumn();
+            if ($hasKelasRombelsTable) {
+                $rowsKr = $pdo->query('SELECT kelas, rombel FROM kelas_rombels ORDER BY kelas ASC, rombel ASC')->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($rowsKr as $kr) {
+                    $k = trim((string)($kr['kelas'] ?? ''));
+                    $r = trim((string)($kr['rombel'] ?? ''));
+                    if ($k === '' || $r === '') continue;
+                    $display = strtoupper($k . $r);
+                    $kelasRombelOptions[$display] = ['kelas' => $k, 'rombel' => $r];
+                }
+            }
+        } catch (Throwable $e) {
+        }
+        
+        if (isset($kelasRombelOptions[$qKelasRombel])) {
+            $kr = $kelasRombelOptions[$qKelasRombel];
+            $select .= ' AND s.kelas = :qKelas AND s.rombel = :qRombel';
+            $params[':qKelas'] = $kr['kelas'];
+            $params[':qRombel'] = $kr['rombel'];
+        }
     }
 
     if ($qPaket !== '') {
-        $select .= ' AND (' . $titleExpr . ' LIKE :qPaket OR p.code LIKE :qPaket2 OR p.name LIKE :qPaket3)';
-        $params[':qPaket'] = '%' . $qPaket . '%';
-        $params[':qPaket2'] = '%' . $qPaket . '%';
-        $params[':qPaket3'] = '%' . $qPaket . '%';
+        $pkgId = (int)$qPaket;
+        if ($pkgId > 0) {
+            $select .= ' AND p.id = :qPkgId';
+            $params[':qPkgId'] = $pkgId;
+        }
     }
 
     $select .= '

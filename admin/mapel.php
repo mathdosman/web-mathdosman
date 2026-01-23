@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 $errors = [];
@@ -157,6 +158,7 @@ $renderPagination = function (int $total, int $perPage, int $currentPage, string
 };
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf_valid();
     $action = (string)($_POST['action'] ?? '');
 
     if ($action === 'add_subject') {

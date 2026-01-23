@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requestedStatus = trim((string)($_POST['requested_status'] ?? ''));
     $reason = trim((string)($_POST['reason'] ?? ''));
 
-    $allowedStatuses = ['izin', 'sakit', 'dispen'];
+    $allowedStatuses = ['izin', 'sakit', 'dispen', 'lupa'];
     if (!in_array($requestedStatus, $allowedStatuses, true)) {
         $errors[] = 'Status yang diminta tidak valid.';
     }
@@ -402,6 +402,7 @@ $now = new DateTimeImmutable('now');
                                 <option value="izin">Izin (I)</option>
                                 <option value="sakit">Sakit (S)</option>
                                 <option value="dispen">Dispen (D)</option>
+                                <option value="lupa">Lupa Absen (H)</option>
                             </select>
                         </div>
                         <div class="col-sm-8">
