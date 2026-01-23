@@ -14,14 +14,15 @@ $returnUrl = 'butir_soal.php';
 
 $errors = [];
 
-// Skema web-mathdosman butuh subject_id; pakai subject pertama atau buat default.
+// Skema web-mathdosman butuh subject_id; coba pakai Mapel 'Matematika' sebagai default.
 $subjectIdDefault = 0;
 $subjects = [];
 try {
-    $subjectIdDefault = (int)$pdo->query('SELECT id FROM subjects ORDER BY id ASC LIMIT 1')->fetchColumn();
+    // Cari Mapel 'Matematika' (case-insensitive). Jika tidak ada, buat.
+    $subjectIdDefault = (int)$pdo->query("SELECT id FROM subjects WHERE LOWER(name) = 'matematika' LIMIT 1")->fetchColumn();
     if ($subjectIdDefault <= 0) {
         $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
-        $stmt->execute([':n' => 'Umum']);
+        $stmt->execute([':n' => 'Matematika']);
         $subjectIdDefault = (int)$pdo->lastInsertId();
     }
 

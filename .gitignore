@@ -1,3 +1,37 @@
+# PHP / Composer
+/vendor/
+/vendor/*
+/composer.phar
+
+# Local config and secrets
+/.env
+/config/config.php
+/.env.local
+
+# Uploads, generated and runtime files
+/uploads/
+/gambar/
+/logs/
+/tmp/
+
+# Database snapshots / exports
+/*.sql
+
+# IDEs and OS
+/.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Node
+/node_modules/
+
+# Build artifacts
+/build/
+/dist/
+
+# Composer lock usually tracked — keep it unless you prefer otherwise
+# vendor directory is excluded because dependencies are installed via Composer
 # Runtime / generated
 logs/
 *.log

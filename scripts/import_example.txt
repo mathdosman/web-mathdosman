@@ -1,0 +1,37 @@
+nomer_soal: 1
+nama_paket: Barisan Aritmetika (Contoh PG)
+pertanyaan: <p>Suku ke-40 dari barisan 7, 5, 3, 1, ... adalah...</p>
+tipe_soal: pg
+pilihan_1: <p>-71</p>
+pilihan_2: <p>-73</p>
+pilihan_3: <p>-75</p>
+pilihan_4: <p>71</p>
+pilihan_5: <p>85</p>
+jawaban_benar: A
+status_soal: draft
+---
+nomer_soal: 2
+nama_paket: Barisan Aritmetika (Contoh PG)
+pertanyaan: <p>Rumus suku ke-n dari barisan 5, 8, 11, 14, ... adalah...</p>
+tipe_soal: pg
+pilihan_1: <p>Un = 3n + 2</p>
+pilihan_2: <p>Un = 3n - 2</p>
+pilihan_3: <p>Un = 2n + 3</p>
+pilihan_4: <p>Un = 5n + 3</p>
+pilihan_5: <p>Un = 3n + 5</p>
+jawaban_benar: A
+status_soal: draft
+---
+nomer_soal: 3
+nama_paket: Barisan Aritmetika (Contoh PG)
+pertanyaan: <p>Jika suku ke-n suatu barisan adalah Un = 5n - 2, maka suku ke-12 adalah...</p>
+tipe_soal: pg
+pilihan_1: <p>50</p>
+pilihan_2: <p>55</p>
+pilihan_3: <p>58</p>
+pilihan_4: <p>60</p>
+pilihan_5: <p>62</p>
+jawaban_benar: C
+status_soal: draft
+---
+# File contoh ini hanya berisi soal Pilihan Ganda (PG). Pisahkan tiap blok soal dengan baris berisi minimal 3 tanda minus (---).
