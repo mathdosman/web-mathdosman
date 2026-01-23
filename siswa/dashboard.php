@@ -226,6 +226,19 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
         <hr class="mt-3 mb-3">
+
+        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-controller text-success"></i>
+            <span>Mini Game Matematika</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a class="btn btn-outline-primary btn-sm" href="game_math.php?mode=addsub">
+                <i class="bi bi-plus-slash-minus"></i> Penjumlahan / Pengurangan
+            </a>
+            <a class="btn btn-outline-success btn-sm" href="game_math.php?mode=muldiv">
+                <i class="bi bi-x-diamond"></i> Perkalian / Pembagian
+            </a>
+        </div>
         <div class="row g-3 align-items-stretch">
             <div class="col-lg-4 col-md-5">
                 <div class="card shadow-sm border-0 h-100">

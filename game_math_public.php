@@ -159,8 +159,20 @@ if ($mode === 'muldiv') {
 }
 // Tambahkan kelas khusus untuk halaman publik mini game agar mode fokus
 // (hanya HUD & soal) bisa diaplikasikan lewat CSS seperti di area siswa.
-$body_class = 'mini-game-public';
-include __DIR__ . '/includes/header.php';
+ $body_class = 'mini-game-public';
+ include __DIR__ . '/includes/header.php';
+
+// Bottom nav khusus mini game publik (mobile)
+echo '<nav class="mini-game-bottom-nav d-md-none d-lg-none" aria-label="Navigasi mini game" style="position:sticky;bottom:0;z-index:1050;background:#fff;border-top:1px solid #dee2e6;display:flex;justify-content:space-around;align-items:center;height:54px;">';
+echo '<a href="game_math_public.php" class="mini-game-bottom-nav-item' . ($mode === 'addsub' ? ' active' : '') . '" style="flex:1;text-align:center;padding:8px 0;text-decoration:none;color:#333;font-size:1.1rem;"><i class="bi bi-plus-slash-minus" aria-hidden="true"></i><br><span style="font-size:0.85em;">+ / -</span></a>';
+echo '<a href="game_math_public.php?mode=muldiv" class="mini-game-bottom-nav-item' . ($mode === 'muldiv' ? ' active' : '') . '" style="flex:1;text-align:center;padding:8px 0;text-decoration:none;color:#333;font-size:1.1rem;"><i class="bi bi-x-diamond" aria-hidden="true"></i><br><span style="font-size:0.85em;">× / ÷</span></a>';
+echo '<a href="#gm-highscore" class="mini-game-bottom-nav-item" style="flex:1;text-align:center;padding:8px 0;text-decoration:none;color:#333;font-size:1.1rem;"><i class="bi bi-trophy" aria-hidden="true"></i><br><span style="font-size:0.85em;">Skor</span></a>';
+echo '</nav>';
+
+echo '<div class="mini-game-mode-tabs mb-3 d-flex justify-content-center gap-2">';
+echo '<a href="game_math_public.php" class="btn btn-outline-primary' . ($mode === 'addsub' ? ' active' : '') . '">+ / -</a>';
+echo '<a href="game_math_public.php?mode=muldiv" class="btn btn-outline-primary' . ($mode === 'muldiv' ? ' active' : '') . '">× / ÷</a>';
+echo '</div>';
 ?>
 <div class="card shadow-sm">
     <div class="card-body">

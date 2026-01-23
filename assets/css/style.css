@@ -1,3 +1,78 @@
+/* ===== Mini Game Mode Tabs (siswa) ===== */
+.mini-game-mode-tabs {
+    margin-bottom: 1.2rem;
+}
+.mini-game-mode-tabs .btn {
+    min-width: 110px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    border-radius: 2rem;
+    transition: background 0.13s, color 0.13s;
+}
+.mini-game-mode-tabs .btn.active,
+.mini-game-mode-tabs .btn:active,
+.mini-game-mode-tabs .btn:focus {
+    color: #fff;
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+/* ===== Mini Game Mode Tabs (public) ===== */
+.mini-game-mode-tabs {
+    margin-bottom: 1.2rem;
+}
+.mini-game-mode-tabs .btn {
+    min-width: 110px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    border-radius: 2rem;
+    transition: background 0.13s, color 0.13s;
+}
+.mini-game-mode-tabs .btn.active,
+.mini-game-mode-tabs .btn:active,
+.mini-game-mode-tabs .btn:focus {
+    color: #fff;
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+/* ===== Mini Game Bottom Nav (public, mobile) ===== */
+.mini-game-bottom-nav {
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+    background: #fff;
+    border-top: 1px solid #dee2e6;
+    position: sticky;
+    bottom: 0;
+    z-index: 1050;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 54px;
+}
+.mini-game-bottom-nav-item {
+    flex: 1;
+    text-align: center;
+    padding: 8px 0 2px 0;
+    text-decoration: none;
+    color: #333;
+    font-size: 1.1rem;
+    background: none;
+    border: none;
+    outline: none;
+    transition: background 0.12s, color 0.12s;
+}
+.mini-game-bottom-nav-item.active,
+.mini-game-bottom-nav-item:active,
+.mini-game-bottom-nav-item:focus {
+    color: #0d6efd;
+    background: #e7f1ff;
+}
+.mini-game-bottom-nav-item i {
+    display: block;
+    font-size: 1.25em;
+    margin-bottom: 2px;
+}
+@media (min-width: 768px) {
+    .mini-game-bottom-nav { display: none !important; }
+}
 @media (max-width: 575.98px) {
     body.student-area.assignment-view .md-assignment-header-title {
         font-size: 1rem;

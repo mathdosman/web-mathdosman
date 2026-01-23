@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/richtext.php';
+require_once __DIR__ . '/includes/seo.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -14,43 +15,41 @@ $isPreview = $isAdmin && ((string)($_GET['preview'] ?? '')) === '1';
 // Publik tidak bisa memaksa (ditentukan dari izin paket di DB).
 $requestedShowAnswers = ((string)($_GET['show_answers'] ?? '')) === '1';
 
+// Support both code (query string) and slug (clean URL from .htaccess)
 $code = trim((string)($_GET['code'] ?? ''));
+$slug = trim((string)($_GET['slug'] ?? ''));
+
+// If slug is provided, lookup code from slug
+if ($slug !== '' && $code === '') {
+    try {
+        // Try to find package by matching slugified code
+        $stmt = $pdo->prepare('SELECT code FROM packages WHERE status = "published" LIMIT 1000');
+        $stmt->execute();
+        $allCodes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        foreach ($allCodes as $candidateCode) {
+            $candidateSlug = seo_slugify((string)$candidateCode);
+            if ($candidateSlug === $slug) {
+                $code = (string)$candidateCode;
+                break;
+            }
+        }
+    } catch (Throwable $e) {
+        // Fallback: ignore
+    }
+}
+
 if ($code === '') {
     header('Location: index.php');
     exit;
 }
 
-// --- Analytics: Catat kunjungan unique IP per minggu (seperti index.php) ---
+require_once __DIR__ . '/includes/analytics.php';
+
+// Track weekly visit
 $dbPreflightOk = isset($pdo) && $pdo instanceof PDO;
-$getClientIp = static function (): string {
-    return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
-};
 if ($dbPreflightOk) {
-    try {
-        $stmt1 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visits'");
-        $hasVisits = $stmt1 && $stmt1->fetch(PDO::FETCH_NUM);
-        $stmt2 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visit_ips'");
-        $hasIps = $stmt2 && $stmt2->fetch(PDO::FETCH_NUM);
-        if ($hasVisits && $hasIps) {
-            $ip = $getClientIp();
-            if ($ip !== '') {
-                $ipHash = hash('sha256', $ip);
-                $weekStartSql = 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
-                $pdo->beginTransaction();
-                $stmt = $pdo->prepare('INSERT IGNORE INTO site_weekly_visit_ips (week_start, ip_hash) VALUES (' . $weekStartSql . ', :h)');
-                $stmt->execute([':h' => $ipHash]);
-                $pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
-                $pdo->commit();
-            }
-        }
-    } catch (Throwable $e) {
-        try {
-            if ($pdo instanceof PDO && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-        } catch (Throwable $e2) {
-        }
-    }
+    app_track_weekly_visit($pdo);
 }
 
 $package = null;
@@ -181,17 +180,9 @@ if (!$isAdmin && !$isPreview) {
     }
 }
 
-// Track views (best-effort) for published packages.
-// Note: count views even when admin is logged in (this is a public page).
-try {
-    if ((string)($package['status'] ?? '') === 'published') {
-        $stmt = $pdo->prepare('INSERT INTO page_views (kind, item_id, views, last_viewed_at)
-            VALUES ("package", :id, 1, NOW())
-            ON DUPLICATE KEY UPDATE views = views + 1, last_viewed_at = NOW()');
-        $stmt->execute([':id' => (int)($package['id'] ?? 0)]);
-    }
-} catch (Throwable $e) {
-    // ignore
+// Track page view for published packages (even when admin is logged in, this is a public page)
+if ((string)($package['status'] ?? '') === 'published') {
+    app_track_page_view($pdo, 'package', (int)($package['id'] ?? 0));
 }
 
 $showAnswersPublic = ((int)($package['show_answers_public'] ?? 0)) === 1;
@@ -421,6 +412,40 @@ $meta_description = (string)mb_substr((string)$rawDesc, 0, 180);
 if (mb_strlen((string)$rawDesc) > 180) {
     $meta_description .= '...';
 }
+
+// Generate keywords
+$materi = trim((string)($package['materi'] ?? ''));
+$submateri = trim((string)($package['submateri'] ?? ''));
+$subjectName = trim((string)($package['subject_name'] ?? ''));
+$meta_keywords = seo_generate_keywords($page_title, $materi, $submateri, $subjectName);
+
+// Generate clean URL
+$canonicalUrl = seo_package_url($code, (string)$base_url);
+
+// Count questions
+$questionCount = count($items);
+
+// Schema.org Article/Quiz
+$publishedDate = (string)($package['published_at'] ?? '');
+if ($publishedDate === '') {
+    $publishedDate = (string)($package['created_at'] ?? date('Y-m-d'));
+}
+$schema_markup = seo_render_package_schema(
+    $canonicalUrl,
+    $meta_og_title,
+    $meta_description,
+    $publishedDate,
+    $questionCount,
+    $subjectName !== '' ? $subjectName : null,
+    $materi !== '' ? $materi : null
+);
+
+// Breadcrumb
+$breadcrumb_items = [
+    ['name' => 'Beranda', 'url' => rtrim((string)$base_url, '/') . '/'],
+    ['name' => $page_title, 'url' => $canonicalUrl]
+];
+
 $meta_og_image = rtrim((string)$base_url, '/') . '/assets/img/icon.svg';
 include __DIR__ . '/includes/header.php';
 
@@ -647,11 +672,11 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                 $isActive = false;
                 if ($kind === 'package' && !empty($row['code'])) {
                     $pkgCode = (string)$row['code'];
-                    $href = 'paket.php?code=' . urlencode($pkgCode);
+                    $href = seo_package_url($pkgCode, (string)$base_url);
                     $badge = 'Paket';
                     $isActive = ($pkgCode === $currentCode);
                 } elseif ($kind === 'content' && !empty($row['slug'])) {
-                    $href = 'post.php?slug=' . urlencode((string)$row['slug']);
+                    $href = seo_post_url((string)$row['slug'], (string)$base_url);
                     $ctype = (string)($row['ctype'] ?? 'materi');
                     $badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
                 }
@@ -1184,9 +1209,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                 $prevKind = (string)($navPrev['kind'] ?? '');
                                 $prevHref = '';
                                 if ($prevKind === 'package' && !empty($navPrev['code'])) {
-                                    $prevHref = 'paket.php?code=' . urlencode((string)$navPrev['code']);
+                                    $prevHref = seo_package_url((string)$navPrev['code'], (string)$base_url);
                                 } elseif ($prevKind === 'content' && !empty($navPrev['slug'])) {
-                                    $prevHref = 'post.php?slug=' . urlencode((string)$navPrev['slug']);
+                                    $prevHref = seo_post_url((string)$navPrev['slug'], (string)$base_url);
                                 }
                                 ?>
                                 <?php if ($prevHref !== ''): ?>
@@ -1222,9 +1247,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                 $nextKind = (string)($navNext['kind'] ?? '');
                                 $nextHref = '';
                                 if ($nextKind === 'package' && !empty($navNext['code'])) {
-                                    $nextHref = 'paket.php?code=' . urlencode((string)$navNext['code']);
+                                    $nextHref = seo_package_url((string)$navNext['code'], (string)$base_url);
                                 } elseif ($nextKind === 'content' && !empty($navNext['slug'])) {
-                                    $nextHref = 'post.php?slug=' . urlencode((string)$navNext['slug']);
+                                    $nextHref = seo_post_url((string)$navNext['slug'], (string)$base_url);
                                 }
                                 ?>
                                 <?php if ($nextHref !== ''): ?>

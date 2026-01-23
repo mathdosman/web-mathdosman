@@ -18,8 +18,10 @@ $errors = [];
 $subjectIdDefault = 0;
 $subjects = [];
 try {
-    // Cari Mapel 'Matematika' (case-insensitive). Jika tidak ada, buat.
-    $subjectIdDefault = (int)$pdo->query("SELECT id FROM subjects WHERE LOWER(name) = 'matematika' LIMIT 1")->fetchColumn();
+    // Preferensi: cari subject 'Matematika' (case-insensitive), jika tidak ada buat.
+    $stmt = $pdo->prepare("SELECT id FROM subjects WHERE LOWER(name) = LOWER(:n) LIMIT 1");
+    $stmt->execute([':n' => 'Matematika']);
+    $subjectIdDefault = (int)$stmt->fetchColumn();
     if ($subjectIdDefault <= 0) {
         $stmt = $pdo->prepare('INSERT INTO subjects (name) VALUES (:n)');
         $stmt->execute([':n' => 'Matematika']);
@@ -447,7 +449,7 @@ if ($mapelMasterOk && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="mb-3">
                         <label class="form-label">Pertanyaan</label>
-                        <textarea class="form-control" id="pertanyaan" name="pertanyaan" rows="6" required><?php echo htmlspecialchars((string)($_POST['pertanyaan'] ?? '')); ?></textarea>
+                        <textarea class="form-control" id="pertanyaan" name="pertanyaan" rows="6"><?php echo htmlspecialchars((string)($_POST['pertanyaan'] ?? '')); ?></textarea>
                     </div>
 
                     <div id="pilihan-ganda-fields" class="d-none">

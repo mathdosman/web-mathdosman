@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/includes/seo.php';
 
 header('Content-Type: application/xml; charset=UTF-8');
 
@@ -80,7 +81,9 @@ try {
                 $lastmod = '';
             }
         }
-        $addUrl($base . '/paket.php?code=' . rawurlencode($code), $lastmod !== '' ? $lastmod : null, 'weekly', '0.8');
+        // Use clean URL for packages
+        $cleanUrl = seo_package_url($code, $base);
+        $addUrl($cleanUrl, $lastmod !== '' ? $lastmod : null, 'weekly', '0.8');
     }
 } catch (Throwable $e) {
     // Jika tabel packages belum ada, abaikan bagian ini
@@ -108,7 +111,9 @@ try {
                 $lastmod = '';
             }
         }
-        $addUrl($base . '/post.php?slug=' . rawurlencode($slug), $lastmod !== '' ? $lastmod : null, 'weekly', '0.7');
+        // Use clean URL for posts
+        $cleanUrl = seo_post_url($slug, $base);
+        $addUrl($cleanUrl, $lastmod !== '' ? $lastmod : null, 'weekly', '0.7');
     }
 } catch (Throwable $e) {
     // Jika tabel contents belum ada, abaikan

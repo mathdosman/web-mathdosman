@@ -15,4 +15,5 @@ Disallow: /vendor/
 # Google akan otomatis membaca ads.txt di akar domain
 
 # Lokasi sitemap (dinamis via sitemap.php)
+# Gunakan base URL lengkap jika perlu
 Sitemap: /sitemap.php

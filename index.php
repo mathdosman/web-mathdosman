@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/config/bootstrap.php';
+require_once __DIR__ . '/includes/seo.php';
+require_once __DIR__ . '/includes/analytics.php';
 
 // Fail-fast: allow the page shell to load even when MySQL is down.
 $dbPreflightOk = false;
@@ -32,47 +34,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Catat kunjungan mingguan beranda (unique per REMOTE_ADDR per minggu; IP disimpan sebagai hash).
-$getClientIp = static function (): string {
-    return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
-};
-
+// Analytics (best-effort)
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
-    try {
-        $stmt1 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visits'");
-        $hasVisits = $stmt1 && $stmt1->fetch(PDO::FETCH_NUM);
-        $stmt2 = $pdo->query("SHOW TABLES LIKE 'site_weekly_visit_ips'");
-        $hasIps = $stmt2 && $stmt2->fetch(PDO::FETCH_NUM);
-
-        if ($hasVisits && $hasIps) {
-            $ip = $getClientIp();
-            if ($ip !== '') {
-                $ipHash = hash('sha256', $ip);
-
-                // Mulai minggu dari Senin.
-                $weekStartSql = 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
-
-                $pdo->beginTransaction();
-
-                $stmt = $pdo->prepare('INSERT IGNORE INTO site_weekly_visit_ips (week_start, ip_hash) VALUES (' . $weekStartSql . ', :h)');
-                $stmt->execute([':h' => $ipHash]);
-
-                // Hitung setiap kunjungan (page view) sebagai 1, tetap simpan IP unik terpisah.
-                $pdo->exec('INSERT INTO site_weekly_visits (week_start, visits, updated_at) VALUES (' . $weekStartSql . ', 1, NOW()) ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()');
-
-                $pdo->commit();
-            }
-        }
-    } catch (Throwable $e) {
-        try {
-            if ($pdo instanceof PDO && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-        } catch (Throwable $e2) {
-            // ignore
-        }
-        // ignore
-    }
+    app_track_weekly_visit($pdo);
 }
 
 $page_title = 'Beranda';
@@ -82,6 +46,11 @@ $meta_description = 'MATHDOSMAN: portal materi & bank soal matematika. Belajar r
 $meta_og_title = 'MATHDOSMAN — Portal Materi & Bank Soal';
 $meta_og_type = 'website';
 $meta_og_image = rtrim((string)$base_url, '/') . '/assets/img/icon.svg';
+$meta_keywords = 'matematika, soal, latihan, materi, bank soal, paket soal, belajar matematika';
+
+// Schema.org WebSite
+require_once __DIR__ . '/includes/seo.php';
+$schema_markup = seo_render_website_schema((string)$base_url);
 
 $use_print_soal_css = true;
 $body_class = 'front-page';
@@ -345,29 +314,29 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
         $popularItems = [];
         foreach ($popularPackages as $p) {
-            $popularItems[] = [
-                'kind' => 'package',
-                'id' => (int)($p['id'] ?? 0),
-                'title' => (string)($p['name'] ?? ''),
-                'href' => 'paket.php?code=' . urlencode((string)($p['code'] ?? '')),
-                'badge' => 'Paket',
-                'views' => (int)($p['views'] ?? 0),
-                'date' => (string)($p['published_at'] ?? ''),
-            ];
-        }
-        foreach ($popularContents as $c) {
-            $t = (string)($c['type'] ?? 'materi');
-            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
-            $popularItems[] = [
-                'kind' => 'content',
-                'id' => (int)($c['id'] ?? 0),
-                'title' => (string)($c['title'] ?? ''),
-                'href' => 'post.php?slug=' . urlencode((string)($c['slug'] ?? '')),
-                'badge' => $badge,
-                'views' => (int)($c['views'] ?? 0),
-                'date' => (string)($c['published_at'] ?? ''),
-            ];
-        }
+        $popularItems[] = [
+            'kind' => 'package',
+            'id' => (int)($p['id'] ?? 0),
+            'title' => (string)($p['name'] ?? ''),
+            'href' => seo_package_url((string)($p['code'] ?? ''), (string)$base_url),
+            'badge' => 'Paket',
+            'views' => (int)($p['views'] ?? 0),
+            'date' => (string)($p['published_at'] ?? ''),
+        ];
+    }
+    foreach ($popularContents as $c) {
+        $t = (string)($c['type'] ?? 'materi');
+        $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+        $popularItems[] = [
+            'kind' => 'content',
+            'id' => (int)($c['id'] ?? 0),
+            'title' => (string)($c['title'] ?? ''),
+            'href' => seo_post_url((string)($c['slug'] ?? ''), (string)$base_url),
+            'badge' => $badge,
+            'views' => (int)($c['views'] ?? 0),
+            'date' => (string)($c['published_at'] ?? ''),
+        ];
+    }
 
         usort($popularItems, function (array $a, array $b): int {
             $va = (int)($a['views'] ?? 0);
@@ -1071,7 +1040,7 @@ function get_home_carousel_slides(): array
                         $badge = ($t === 'berita') ? 'Berita' : 'Materi';
                         $titlePrefix = $badge . ' - ';
                         $cardTitle = $titlePrefix . (string)($row['title'] ?? '');
-                        $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
+                        $href = seo_post_url((string)($row['slug'] ?? ''), (string)$base_url);
                         $metaLeft = $badge;
                         $rawExcerpt = strip_tags((string)($row['excerpt'] ?? ''));
                         $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
@@ -1080,7 +1049,7 @@ function get_home_carousel_slides(): array
                     } else {
                         $titlePrefix = 'Paket Soal - ';
                         $cardTitle = $titlePrefix . (string)($row['name'] ?? '');
-                        $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
+                        $href = seo_package_url((string)($row['code'] ?? ''), (string)$base_url);
                         $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
                         $raw = strip_tags((string)($row['description'] ?? ''));
                         $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
