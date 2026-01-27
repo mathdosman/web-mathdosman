@@ -414,6 +414,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Gagal mengubah status soal.';
             }
         }
+    } elseif ($action === 'set_status_paket') {
+        $statusPaket = trim((string)($_POST['status_paket'] ?? ''));
+
+        if (!in_array($statusPaket, ['draft', 'published'], true)) {
+            $errors[] = 'Status paket tidak valid.';
+        } else {
+            try {
+                $stmt = $pdo->prepare('UPDATE packages SET status = :st WHERE id = :id');
+                $stmt->execute([':st' => $statusPaket, ':id' => $packageId]);
+                header('Location: ' . $returnUrl);
+                exit;
+            } catch (Throwable $e) {
+                $errors[] = 'Gagal mengubah status paket.';
+            }
+        }
+    } elseif ($action === 'bulk_set_status_soal') {
+        $questionIds = trim((string)($_POST['question_ids'] ?? ''));
+        $bulkStatus = trim((string)($_POST['bulk_status'] ?? ''));
+
+        if ($questionIds === '') {
+            $errors[] = 'Pilih butir soal.';
+        } elseif (!in_array($bulkStatus, ['draft', 'published'], true)) {
+            $errors[] = 'Status soal tidak valid.';
+        } else {
+            $ids = array_map('intval', explode(',', $questionIds));
+            $ids = array_filter($ids, fn($id) => $id > 0);
+            if (empty($ids)) {
+                $errors[] = 'Tidak ada butir soal valid.';
+            } else {
+                try {
+                    // Safety: only allow toggling questions that are in this package.
+                    $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                    $stmt = $pdo->prepare("SELECT question_id FROM package_questions WHERE package_id = ? AND question_id IN ($placeholders)");
+                    $stmt->execute(array_merge([$packageId], $ids));
+                    $validIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                    if (count($validIds) !== count($ids)) {
+                        $errors[] = 'Beberapa butir soal tidak ditemukan dalam paket ini.';
+                    } else {
+                        $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                        $stmt = $pdo->prepare("UPDATE questions SET status_soal = ? WHERE id IN ($placeholders)");
+                        $stmt->execute(array_merge([$bulkStatus], $ids));
+                        header('Location: ' . $returnUrl);
+                        exit;
+                    }
+                } catch (Throwable $e) {
+                    $errors[] = 'Gagal mengubah status soal secara bulk.';
+                }
+            }
+        }
     } elseif ($action === 'add_question') {
         $questionId = (int)($_POST['question_id'] ?? 0);
         if ($questionId <= 0) {
@@ -929,6 +978,7 @@ include __DIR__ . '/../includes/header.php';
             <table class="table table-sm table-striped align-middle mb-0 table-fit small">
                 <thead>
                     <tr>
+                        <th style="width: 40px;"><input type="checkbox" id="selectAll" title="Pilih Semua"></th>
                         <th style="width: 130px;">No Soal</th>
                         <th>Soal</th>
                         <th style="width: 160px;">Aksi</th>
@@ -936,7 +986,7 @@ include __DIR__ . '/../includes/header.php';
                 </thead>
                 <tbody>
                 <?php if (!$items): ?>
-                    <tr><td colspan="3" class="text-center">Belum ada butir soal dalam paket ini.</td></tr>
+                    <tr><td colspan="4" class="text-center">Belum ada butir soal dalam paket ini.</td></tr>
                 <?php else: ?>
                     <?php
                         $iconYes = '<span class="text-success fw-semibold" title="Ada" aria-label="Ada">✓</span>';
@@ -944,6 +994,7 @@ include __DIR__ . '/../includes/header.php';
                     ?>
                     <?php foreach ($items as $it): ?>
                         <tr>
+                            <td><input type="checkbox" class="question-checkbox" value="<?php echo (int)$it['id']; ?>"></td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <input
@@ -1065,8 +1116,49 @@ include __DIR__ . '/../includes/header.php';
                 </tbody>
             </table>
 
-            <div class="d-flex justify-content-end mt-2">
-                <button type="submit" form="updateOrderForm" class="btn btn-primary btn-sm" <?php echo !$items ? 'disabled' : ''; ?>>Simpan Urutan</button>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                    <form method="post" class="d-inline" id="bulkActionForm">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                        <input type="hidden" name="action" value="bulk_set_status_soal">
+                        <input type="hidden" name="bulk_status" id="bulkStatus">
+                        <input type="hidden" name="question_ids" id="bulkQuestionIds">
+                        <button type="button" class="btn btn-outline-success btn-sm" id="bulkPublishBtn" disabled>Terbitkan Terpilih</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="bulkDraftBtn" disabled>Draft Terpilih</button>
+                    </form>
+                </div>
+                <div>
+                    <button type="submit" form="updateOrderForm" class="btn btn-primary btn-sm" <?php echo !$items ? 'disabled' : ''; ?>>Simpan Urutan</button>
+                    <?php
+                        $pkgStatus = (string)($package['status'] ?? 'draft');
+                        $isPkgPublished = ($pkgStatus === 'published');
+                        $targetPkgStatus = $isPkgPublished ? 'draft' : 'published';
+                        $publishPkgTitle = $isPkgPublished ? 'Batalkan Terbit Paket' : 'Terbitkan Paket';
+                        $publishPkgConfirmTitle = $isPkgPublished ? 'Batalkan Terbit Paket?' : 'Terbitkan Paket?';
+                        $publishPkgConfirmText = $isPkgPublished
+                            ? 'Ubah status paket menjadi draft? Paket tidak akan tampil di halaman publik.'
+                            : 'Ubah status paket menjadi published? Paket akan tampil di halaman publik.';
+                    ?>
+                    <form method="post" class="d-inline ms-2" data-swal-confirm data-swal-title="<?php echo htmlspecialchars($publishPkgConfirmTitle); ?>" data-swal-text="<?php echo htmlspecialchars($publishPkgConfirmText); ?>" data-swal-confirm-text="Simpan" data-swal-cancel-text="Batal">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                        <input type="hidden" name="action" value="set_status_paket">
+                        <input type="hidden" name="status_paket" value="<?php echo htmlspecialchars($targetPkgStatus); ?>">
+                        <button type="submit" class="btn btn-sm <?php echo $isPkgPublished ? 'btn-outline-secondary' : 'btn-outline-success'; ?>" title="<?php echo htmlspecialchars($publishPkgTitle); ?>" aria-label="<?php echo htmlspecialchars($publishPkgTitle); ?>">
+                            <?php if ($isPkgPublished): ?>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M8 12h8" />
+                                </svg>
+                            <?php else: ?>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                    <polyline points="22 4 12 14.01 9 11.01" />
+                                </svg>
+                            <?php endif; ?>
+                            <?php echo htmlspecialchars($publishPkgTitle); ?>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -1133,6 +1225,61 @@ include __DIR__ . '/../includes/header.php';
 
             // Initial state: reflect current ordering without auto-saving.
             updateButtons();
+        })();
+
+        // Bulk actions for questions
+        (function () {
+            var selectAll = document.getElementById('selectAll');
+            var checkboxes = document.querySelectorAll('.question-checkbox');
+            var bulkPublishBtn = document.getElementById('bulkPublishBtn');
+            var bulkDraftBtn = document.getElementById('bulkDraftBtn');
+            var bulkForm = document.getElementById('bulkActionForm');
+            var bulkStatus = document.getElementById('bulkStatus');
+            var bulkQuestionIds = document.getElementById('bulkQuestionIds');
+
+            function updateBulkButtons() {
+                var checked = document.querySelectorAll('.question-checkbox:checked');
+                var hasChecked = checked.length > 0;
+                bulkPublishBtn.disabled = !hasChecked;
+                bulkDraftBtn.disabled = !hasChecked;
+            }
+
+            selectAll.addEventListener('change', function () {
+                checkboxes.forEach(function (cb) {
+                    cb.checked = selectAll.checked;
+                });
+                updateBulkButtons();
+            });
+
+            checkboxes.forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    var allChecked = Array.from(checkboxes).every(function (c) { return c.checked; });
+                    var noneChecked = Array.from(checkboxes).every(function (c) { return !c.checked; });
+                    selectAll.checked = allChecked;
+                    selectAll.indeterminate = !allChecked && !noneChecked;
+                    updateBulkButtons();
+                });
+            });
+
+            bulkPublishBtn.addEventListener('click', function () {
+                var checked = document.querySelectorAll('.question-checkbox:checked');
+                if (checked.length === 0) return;
+                var ids = Array.from(checked).map(function (cb) { return cb.value; }).join(',');
+                bulkStatus.value = 'published';
+                bulkQuestionIds.value = ids;
+                bulkForm.submit();
+            });
+
+            bulkDraftBtn.addEventListener('click', function () {
+                var checked = document.querySelectorAll('.question-checkbox:checked');
+                if (checked.length === 0) return;
+                var ids = Array.from(checked).map(function (cb) { return cb.value; }).join(',');
+                bulkStatus.value = 'draft';
+                bulkQuestionIds.value = ids;
+                bulkForm.submit();
+            });
+
+            updateBulkButtons();
         })();
         </script>
         </div>
