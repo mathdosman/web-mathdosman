@@ -1350,7 +1350,7 @@ include __DIR__ . '/../includes/header.php';
                                 ];
                                 $hasAny = false;
                                 foreach ($opts as $v) {
-                                    if (trim(strip_tags($v)) !== '') {
+                                    if (trim($v) !== '') {
                                         $hasAny = true;
                                         break;
                                     }
@@ -1365,7 +1365,7 @@ include __DIR__ . '/../includes/header.php';
                                     // Only shuffle visible options (non-empty HTML).
                                     $optOrder = array_values(array_filter($optOrder, static function ($label) use ($opts) {
                                         $optHtml = (string)($opts[$label] ?? '');
-                                        return trim(strip_tags($optHtml)) !== '';
+                                        return trim($optHtml) !== '';
                                     }));
                                     $optOrder = $stableShuffle($optOrder, 'shuffle_options|' . (string)$id . '|' . (string)$studentId . '|' . (string)$qid, static fn($label) => (string)$label);
                                 }
@@ -1380,7 +1380,7 @@ include __DIR__ . '/../includes/header.php';
                                     ?>
                                     <?php foreach ($sequence as $label): ?>
                                         <?php $optHtml = (string)($opts[$label] ?? ''); ?>
-                                        <?php if (trim(strip_tags($optHtml)) === '') continue; ?>
+                                        <?php if (trim($optHtml) === '') continue; ?>
                                         <?php
                                             $optIdx = ['A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5][$label] ?? null;
                                             $val = $optIdx ? ('pilihan_' . $optIdx) : '';
