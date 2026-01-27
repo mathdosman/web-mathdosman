@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/config/bootstrap.php';
 
+// Ensure $base_url is available
+global $base_url;
+if (!isset($base_url) || !is_string($base_url) || trim($base_url) === '') {
+    $base_url = 'http://localhost/web-mathdosman';
+}
+
 // Fail-fast: allow the page shell to load even when MySQL is down.
 $dbPreflightOk = false;
 try {

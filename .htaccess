@@ -2,7 +2,7 @@
 # Enable rewrite engine
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    RewriteBase /web-mathdosman/
 
     # Prevent directory listing
     Options -Indexes

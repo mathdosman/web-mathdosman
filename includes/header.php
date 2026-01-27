@@ -4,6 +4,11 @@ if (!isset($page_title)) {
 }
 require_once __DIR__ . '/../config/bootstrap.php';
 
+// Fallback if $base_url not set
+if (!isset($base_url) || !is_string($base_url) || trim($base_url) === '') {
+    $base_url = 'http://localhost/web-mathdosman';
+}
+
 require_once __DIR__ . '/session.php';
 
 if (!function_exists('asset_url')) {

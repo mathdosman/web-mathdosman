@@ -360,16 +360,16 @@ include __DIR__ . '/includes/header.php';
                 <div class="text-muted small">Seluruh konten materi &amp; paket soal (16 item per halaman).</div>
             </div>
             <?php
-                $buildTopHref = function (string $nextMode) use ($page, $materiFilter, $submateriFilter, $qFilter): string {
-                    $qs = http_build_query([
-                        'mode' => $nextMode,
-                        'page' => (int)$page,
-                        'materi' => $materiFilter,
-                        'submateri' => $submateriFilter,
-                        'q' => $qFilter,
-                    ]);
-                    return 'daftar-isi.php?' . $qs;
-                };
+            $buildTopHref = function (string $nextMode) use ($page, $materiFilter, $submateriFilter, $qFilter): string {
+                $qs = http_build_query([
+                    'mode' => $nextMode,
+                    'page' => (int)$page,
+                    'materi' => $materiFilter,
+                    'submateri' => $submateriFilter,
+                    'q' => $qFilter,
+                ]);
+                return 'daftar-isi.php?' . $qs;
+            };
             ?>
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <div class="btn-group btn-group-sm" role="group" aria-label="Mode tampilan">
@@ -417,21 +417,21 @@ include __DIR__ . '/includes/header.php';
             <div class="alert alert-info">Belum ada konten atau paket soal yang tersedia.</div>
         <?php else: ?>
             <?php
-                $buildHref = function (int $p) use ($mode, $materiFilter, $submateriFilter, $qFilter): string {
-                    $p = max(1, $p);
-                    $qs = http_build_query([
-                        'page' => $p,
-                        'mode' => $mode,
-                        'materi' => $materiFilter,
-                        'submateri' => $submateriFilter,
-                        'q' => $qFilter,
-                    ]);
-                    return 'daftar-isi.php?' . $qs;
-                };
-                $startNumber = (($page - 1) * $perPage) + 1;
-                if ($startNumber < 1) {
-                    $startNumber = 1;
-                }
+            $buildHref = function (int $p) use ($mode, $materiFilter, $submateriFilter, $qFilter): string {
+                $p = max(1, $p);
+                $qs = http_build_query([
+                    'page' => $p,
+                    'mode' => $mode,
+                    'materi' => $materiFilter,
+                    'submateri' => $submateriFilter,
+                    'q' => $qFilter,
+                ]);
+                return 'daftar-isi.php?' . $qs;
+            };
+            $startNumber = (($page - 1) * $perPage) + 1;
+            if ($startNumber < 1) {
+                $startNumber = 1;
+            }
             ?>
 
             <?php if ($mode === 'list'): ?>
@@ -439,17 +439,17 @@ include __DIR__ . '/includes/header.php';
                     <ol class="toc-list" start="<?php echo (int)$startNumber; ?>">
                         <?php foreach ($feedItems as $row): ?>
                             <?php
-                                $kind = (string)($row['kind'] ?? '');
-                                $href = '#';
-                                if ($kind === 'content') {
-                                    $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
-                                } else {
-                                    $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
-                                }
-                                $titleOnly = trim((string)($row['title'] ?? ''));
-                                if ($titleOnly === '') {
-                                    $titleOnly = 'Tanpa judul';
-                                }
+                            $kind = (string)($row['kind'] ?? '');
+                            $href = '#';
+                            if ($kind === 'content') {
+                                $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
+                            } else {
+                                $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
+                            }
+                            $titleOnly = trim((string)($row['title'] ?? ''));
+                            if ($titleOnly === '') {
+                                $titleOnly = 'Tanpa judul';
+                            }
                             ?>
                             <li class="toc-list-item">
                                 <a class="toc-list-link" href="<?php echo htmlspecialchars($href); ?>"><?php echo htmlspecialchars($titleOnly); ?></a>
@@ -461,39 +461,39 @@ include __DIR__ . '/includes/header.php';
                 <div class="row g-3 justify-content-center toc-grid">
                     <?php foreach ($feedItems as $row): ?>
                         <?php
-                            $kind = (string)($row['kind'] ?? '');
+                        $kind = (string)($row['kind'] ?? '');
 
-                            $publishedAt = (string)($row['published_at'] ?? '');
-                            if ($publishedAt === '') {
-                                $publishedAt = (string)($row['created_at'] ?? '');
-                            }
+                        $publishedAt = (string)($row['published_at'] ?? '');
+                        if ($publishedAt === '') {
+                            $publishedAt = (string)($row['created_at'] ?? '');
+                        }
 
-                            $cardTitle = '';
-                            $href = '#';
-                            $metaLeft = '';
-                            $excerpt = '';
-                            $needsEllipsis = false;
-                            $accentKey = '';
+                        $cardTitle = '';
+                        $href = '#';
+                        $metaLeft = '';
+                        $excerpt = '';
+                        $needsEllipsis = false;
+                        $accentKey = '';
 
-                            if ($kind === 'content') {
-                                $t = (string)($row['type'] ?? 'materi');
-                                $badge = ($t === 'berita') ? 'Berita' : 'Materi';
-                                $cardTitle = $badge . ' - ' . (string)($row['title'] ?? '');
-                                $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
-                                $metaLeft = $badge;
-                                $rawExcerpt = strip_tags((string)($row['excerpt'] ?? ''));
-                                $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
-                                $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
-                                $needsEllipsis = mb_strlen((string)$rawExcerpt) > 160;
-                            } else {
-                                $cardTitle = 'Paket Soal - ' . (string)($row['title'] ?? '');
-                                $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
-                                $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
-                                $raw = strip_tags((string)($row['description'] ?? ''));
-                                $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
-                                $excerpt = (string)mb_substr($raw, 0, 160);
-                                $needsEllipsis = mb_strlen((string)$raw) > 160;
-                            }
+                        if ($kind === 'content') {
+                            $t = (string)($row['type'] ?? 'materi');
+                            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+                            $cardTitle = $badge . ' - ' . (string)($row['title'] ?? '');
+                            $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
+                            $metaLeft = $badge;
+                            $rawExcerpt = strip_tags((string)($row['excerpt'] ?? ''));
+                            $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
+                            $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
+                            $needsEllipsis = mb_strlen((string)$rawExcerpt) > 160;
+                        } else {
+                            $cardTitle = 'Paket Soal - ' . (string)($row['title'] ?? '');
+                            $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
+                            $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
+                            $raw = strip_tags((string)($row['description'] ?? ''));
+                            $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
+                            $excerpt = (string)mb_substr($raw, 0, 160);
+                            $needsEllipsis = mb_strlen((string)$raw) > 160;
+                        }
                         ?>
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="card h-100 post-card package-card">
@@ -528,17 +528,17 @@ include __DIR__ . '/includes/header.php';
             <nav class="mt-4" aria-label="Pagination">
                 <ul class="pagination justify-content-center flex-wrap">
                     <?php
-                        $prev = max(1, $page - 1);
-                        $next = min($totalPages, $page + 1);
+                    $prev = max(1, $page - 1);
+                    $next = min($totalPages, $page + 1);
 
-                        $start = max(1, $page - 3);
-                        $end = min($totalPages, $page + 3);
+                    $start = max(1, $page - 3);
+                    $end = min($totalPages, $page + 3);
 
-                        $prevDisabled = ($page <= 1);
-                        $nextDisabled = ($page >= $totalPages);
+                    $prevDisabled = ($page <= 1);
+                    $nextDisabled = ($page >= $totalPages);
                     ?>
                     <li class="page-item<?php echo $prevDisabled ? ' disabled' : ''; ?>">
-                        <a class="page-link" href="<?php echo $prevDisabled ? '#' : htmlspecialchars($buildHref($prev)); ?>" aria-label="Sebelumnya"<?php echo $prevDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&laquo;</a>
+                        <a class="page-link" href="<?php echo $prevDisabled ? '#' : htmlspecialchars($buildHref($prev)); ?>" aria-label="Sebelumnya" <?php echo $prevDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&laquo;</a>
                     </li>
 
                     <?php for ($i = $start; $i <= $end; $i++): ?>
@@ -548,7 +548,7 @@ include __DIR__ . '/includes/header.php';
                     <?php endfor; ?>
 
                     <li class="page-item<?php echo $nextDisabled ? ' disabled' : ''; ?>">
-                        <a class="page-link" href="<?php echo $nextDisabled ? '#' : htmlspecialchars($buildHref($next)); ?>" aria-label="Berikutnya"<?php echo $nextDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&raquo;</a>
+                        <a class="page-link" href="<?php echo $nextDisabled ? '#' : htmlspecialchars($buildHref($next)); ?>" aria-label="Berikutnya" <?php echo $nextDisabled ? ' aria-disabled="true" tabindex="-1"' : ''; ?>>&raquo;</a>
                     </li>
                 </ul>
             </nav>

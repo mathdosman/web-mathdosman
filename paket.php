@@ -3,6 +3,12 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/richtext.php';
 require_once __DIR__ . '/includes/seo.php';
 
+// Ensure $base_url is available
+global $base_url;
+if (!isset($base_url) || !is_string($base_url) || trim($base_url) === '') {
+    $base_url = 'http://localhost/web-mathdosman';
+}
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -26,7 +32,7 @@ if ($slug !== '' && $code === '') {
         $stmt = $pdo->prepare('SELECT code FROM packages WHERE status = "published" LIMIT 1000');
         $stmt->execute();
         $allCodes = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         foreach ($allCodes as $candidateCode) {
             $candidateSlug = seo_slugify((string)$candidateCode);
             if ($candidateSlug === $slug) {
@@ -653,7 +659,7 @@ $renderJawaban = function (array $q) use ($renderHtml): string {
     return '<strong>' . htmlspecialchars($jawabanRaw) . '</strong>';
 };
 
-$renderSidebarKonten = function (string $title, array $list, string $currentCode): void {
+$renderSidebarKonten = function (string $title, array $list, string $currentCode) use ($base_url): void {
     ?>
     <div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
     <?php if (!$list): ?>

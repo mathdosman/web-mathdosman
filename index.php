@@ -3,6 +3,12 @@ require_once __DIR__ . '/config/bootstrap.php';
 require_once __DIR__ . '/includes/seo.php';
 require_once __DIR__ . '/includes/analytics.php';
 
+// Ensure $base_url is available
+global $base_url;
+if (!isset($base_url) || !is_string($base_url) || trim($base_url) === '') {
+    $base_url = 'http://localhost/web-mathdosman';
+}
+
 // Fail-fast: allow the page shell to load even when MySQL is down.
 $dbPreflightOk = false;
 try {
@@ -314,29 +320,29 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
 
         $popularItems = [];
         foreach ($popularPackages as $p) {
-        $popularItems[] = [
-            'kind' => 'package',
-            'id' => (int)($p['id'] ?? 0),
-            'title' => (string)($p['name'] ?? ''),
-            'href' => seo_package_url((string)($p['code'] ?? ''), (string)$base_url),
-            'badge' => 'Paket',
-            'views' => (int)($p['views'] ?? 0),
-            'date' => (string)($p['published_at'] ?? ''),
-        ];
-    }
-    foreach ($popularContents as $c) {
-        $t = (string)($c['type'] ?? 'materi');
-        $badge = ($t === 'berita') ? 'Berita' : 'Materi';
-        $popularItems[] = [
-            'kind' => 'content',
-            'id' => (int)($c['id'] ?? 0),
-            'title' => (string)($c['title'] ?? ''),
-            'href' => seo_post_url((string)($c['slug'] ?? ''), (string)$base_url),
-            'badge' => $badge,
-            'views' => (int)($c['views'] ?? 0),
-            'date' => (string)($c['published_at'] ?? ''),
-        ];
-    }
+            $popularItems[] = [
+                'kind' => 'package',
+                'id' => (int)($p['id'] ?? 0),
+                'title' => (string)($p['name'] ?? ''),
+                'href' => seo_package_url((string)($p['code'] ?? ''), (string)$base_url),
+                'badge' => 'Paket',
+                'views' => (int)($p['views'] ?? 0),
+                'date' => (string)($p['published_at'] ?? ''),
+            ];
+        }
+        foreach ($popularContents as $c) {
+            $t = (string)($c['type'] ?? 'materi');
+            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+            $popularItems[] = [
+                'kind' => 'content',
+                'id' => (int)($c['id'] ?? 0),
+                'title' => (string)($c['title'] ?? ''),
+                'href' => seo_post_url((string)($c['slug'] ?? ''), (string)$base_url),
+                'badge' => $badge,
+                'views' => (int)($c['views'] ?? 0),
+                'date' => (string)($c['published_at'] ?? ''),
+            ];
+        }
 
         usort($popularItems, function (array $a, array $b): int {
             $va = (int)($a['views'] ?? 0);
