@@ -40,7 +40,7 @@ function seo_slugify(string $text): string
 }
 
 /**
- * Generate clean URL for post (content)
+ * Generate URL for post (content) (using query string for compatibility)
  */
 function seo_post_url(string $slug, string $base_url): string
 {
@@ -49,12 +49,12 @@ function seo_post_url(string $slug, string $base_url): string
         return rtrim($base_url, '/') . '/post.php';
     }
     
-    // Clean URL format: /post/slug-name
-    return rtrim($base_url, '/') . '/post/' . rawurlencode($slug);
+    // Use query string format for broader server compatibility
+    return rtrim($base_url, '/') . '/post.php?slug=' . rawurlencode($slug);
 }
 
 /**
- * Generate clean URL for package
+ * Generate URL for package (using query string for compatibility)
  */
 function seo_package_url(string $code, string $base_url): string
 {
@@ -63,14 +63,8 @@ function seo_package_url(string $code, string $base_url): string
         return rtrim($base_url, '/') . '/paket.php';
     }
     
-    // Generate slug from code for clean URL
-    $slug = seo_slugify($code);
-    if ($slug === '') {
-        $slug = 'paket-' . substr(md5($code), 0, 8);
-    }
-    
-    // Clean URL format: /paket/slug-name
-    return rtrim($base_url, '/') . '/paket/' . rawurlencode($slug);
+    // Use query string format for broader server compatibility
+    return rtrim($base_url, '/') . '/paket.php?code=' . rawurlencode($code);
 }
 
 /**
