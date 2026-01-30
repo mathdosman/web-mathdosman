@@ -1,7 +1,11 @@
 <?php
 // Komentar publik (pengganti Disqus): tampil di semua halaman publik secara default,
-// kecuali halaman sudah merender komentar sendiri.
-if (empty($useAdminSidebar) && empty($useStudentSidebar) && empty($disable_public_footer) && empty($disable_public_comments) && empty($GLOBALS['app_comments_rendered'])) {
+// kecuali halaman sudah merender komentar sendiri. Jangan tampilkan komentar di
+// area siswa (folder `/siswa/`) walau sidebar dinonaktifkan untuk halaman ujian.
+$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+$isStudentArea = (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+
+if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_public_comments) && empty($GLOBALS['app_comments_rendered']) && !$isStudentArea) {
 	require_once __DIR__ . '/comments.php';
 
 	$reqUri = (string)($_SERVER['REQUEST_URI'] ?? '');

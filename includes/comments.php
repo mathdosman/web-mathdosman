@@ -155,8 +155,14 @@ if (!function_exists('app_render_comments')) {
             $basePath = '';
         }
 
-        $submitAction = '';
-        $submitAction = ($basePath !== '' ? $basePath : '') . '/comment_submit.php';
+        // Use absolute URL to comment_submit to avoid incorrect relative paths
+        // when pages are served from subdirectories (e.g. /siswa/...). Prefer
+        // configured `$base_url` when available, otherwise fall back to root.
+        if (isset($GLOBALS['base_url']) && is_string($GLOBALS['base_url']) && trim($GLOBALS['base_url']) !== '') {
+            $submitAction = rtrim((string)$GLOBALS['base_url'], '/') . '/comment_submit.php';
+        } else {
+            $submitAction = '/comment_submit.php';
+        }
 
         $rows = [];
         $loadError = '';
