@@ -839,6 +839,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return '';
     };
 
+        // Auto-finalize when server-side computed exam time is expired.
+        try {
+            $nowTs = time();
+            $startedAtTs = null;
+            $dueAtTs = null;
+            if (!empty($assignment['started_at'])) {
+                $startedAtTs = strtotime($assignment['started_at']);
+            }
+            if (!empty($assignment['due_at'])) {
+                $dueAtTs = strtotime($assignment['due_at']);
+            }
+            $durMin = isset($assignment['duration_minutes']) ? (int)$assignment['duration_minutes'] : 0;
+            $endTs = null;
+            if ($startedAtTs !== null && $durMin > 0) {
+                $endTs = $startedAtTs + ($durMin * 60);
+            }
+            if ($dueAtTs !== null) {
+                $endTs = ($endTs === null) ? $dueAtTs : min($endTs, $dueAtTs);
+            }
+
+            if ($endTs !== null && $nowTs > $endTs) {
+                $statusNow = (string)($assignment['status'] ?? 'assigned');
+                if ($statusNow !== 'done') {
+                    // Perform finalize using existing grading logic.
+                    try {
+                        $err = $saveAnswersAndMaybeGrade(true);
+                        if ($err === '') {
+                            // Log auto-finalize
+                            try { if (function_exists('app_log')) app_log('INFO', 'auto_finalize', ['assignment_id'=>$id,'student_id'=>$studentId]); } catch (Throwable $e) {}
+                            siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=time_expired&submitted=1');
+                        } else {
+                            // If grading failed, fall back to marking done and redirect.
+                            try {
+                                $stmtF = $pdo->prepare('UPDATE student_assignments SET status = "done", updated_at = NOW() WHERE id = :id AND student_id = :sid');
+                                $stmtF->execute([':id'=>$id,':sid'=>$studentId]);
+                            } catch (Throwable $e) {}
+                            siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=time_expired');
+                        }
+                    } catch (Throwable $e) {
+                        try {
+                            $stmtF = $pdo->prepare('UPDATE student_assignments SET status = "done", updated_at = NOW() WHERE id = :id AND student_id = :sid');
+                            $stmtF->execute([':id'=>$id,':sid'=>$studentId]);
+                        } catch (Throwable $e2) {}
+                        siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=time_expired');
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
+
     if (!$stopAction && $action === 'start_exam' && $assignment) {
         if ($isLocked) {
             $actionError = $lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.';
