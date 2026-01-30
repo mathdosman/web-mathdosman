@@ -413,12 +413,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($jenisNow === 'ujian' && $statusNow !== 'done' && $startedNow !== '') {
             // Jika waktu ujian sudah habis, jangan ubah menjadi "terkunci".
             // Ini penting karena saat countdown habis kita melakukan redirect internal untuk submit/konfirmasi.
-            if (!$isLocked) {
+                if (!$isLocked) {
                 try {
                     $stmt = $pdo->prepare('UPDATE student_assignments
                         SET exam_revoked_at = NOW(), updated_at = NOW()
                         WHERE id = :id AND student_id = :sid AND (exam_revoked_at IS NULL OR exam_revoked_at = "")');
                     $stmt->execute([':id' => $id, ':sid' => $studentId]);
+                        // Audit log for leave_exam causing revoke
+                        try {
+                            if (function_exists('app_log')) {
+                                app_log('WARN', 'leave_exam_revoke', ['student_id' => $studentId, 'assignment_id' => $id]);
+                            }
+                        } catch (Throwable $e) {
+                            // ignore
+                        }
                 } catch (Throwable $e) {
                     // best-effort
                 }
@@ -454,6 +462,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         SET exam_focus_seconds = exam_focus_seconds + :d, updated_at = NOW()
                         WHERE id = :id AND student_id = :sid');
                     $stmt->execute([':d' => $delta, ':id' => $id, ':sid' => $studentId]);
+                    // Audit log for focus tick
+                    try {
+                        if (function_exists('app_log')) {
+                            app_log('DEBUG', 'focus_tick', ['student_id' => $studentId, 'assignment_id' => $id, 'delta' => $delta]);
+                        }
+                    } catch (Throwable $e) {
+                        // ignore
+                    }
                 } catch (Throwable $e) {
                     // best-effort
                 }
@@ -474,6 +490,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         http_response_code(204);
         exit;
+    }
+
+    // Server-side safety: if exam time already expired, prevent further actions.
+    // Compute end time = min(due_at (if set), started_at + duration_minutes)
+    try {
+        $nowTs = time();
+        $startedAtTs = null;
+        $dueAtTs = null;
+        if (!empty($assignment['started_at'])) {
+            $startedAtTs = strtotime($assignment['started_at']);
+        }
+        if (!empty($assignment['due_at'])) {
+            $dueAtTs = strtotime($assignment['due_at']);
+        }
+        $durMin = isset($assignment['duration_minutes']) ? (int)$assignment['duration_minutes'] : 0;
+        $endTs = null;
+        if ($startedAtTs !== null && $durMin > 0) {
+            $endTs = $startedAtTs + ($durMin * 60);
+        }
+        if ($dueAtTs !== null) {
+            $endTs = ($endTs === null) ? $dueAtTs : min($endTs, $dueAtTs);
+        }
+        if ($endTs !== null && $nowTs > $endTs) {
+            // If exam time passed, prevent mutating actions and guide student to results.
+            if (in_array($action, ['verify_token', 'touch_started', 'focus_tick', 'leave_exam', 'submit_answers', 'save_answers'], true)) {
+                // Best-effort mark assignment done to avoid further modifications.
+                try {
+                    $stmtDone = $pdo->prepare('UPDATE student_assignments SET status = "done", updated_at = NOW() WHERE id = :id AND student_id = :sid AND status <> "done"');
+                    $stmtDone->execute([':id' => $id, ':sid' => $studentId]);
+                } catch (Throwable $e) {
+                    // ignore
+                }
+                siswa_redirect_to('siswa/result_view.php?id=' . $id . '&flash=time_expired');
+            }
+        }
+    } catch (Throwable $e) {
+        // best-effort, do not block exam on errors here
     }
 
     $stopAction = false;
@@ -518,6 +571,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             // best-effort; fallback to start button if this fails.
                         }
                     }
+                }
+
+                // Log token verification attempt
+                try {
+                    if (function_exists('app_log')) {
+                        app_log('INFO', 'token_verify', ['student_id' => $studentId, 'assignment_id' => $id, 'result' => 'ok', 'resume' => $resumeAttempt ? 1 : 0]);
+                    }
+                } catch (Throwable $e) {
+                    // ignore
                 }
 
                 if (!isset($_SESSION['assignment_token_ok']) || !is_array($_SESSION['assignment_token_ok'])) {
