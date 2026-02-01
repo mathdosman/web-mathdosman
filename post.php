@@ -422,7 +422,7 @@ $renderHtml = function (?string $html): string {
 	return nl2br(htmlspecialchars($text));
 };
 
-$renderSidebarKonten = function (string $title, array $list, string $currentKind, int $currentId, string $currentSlug, string $currentCode): void {
+$renderSidebarKonten = function (string $title, array $list, string $currentKind, int $currentId, string $currentSlug, string $currentCode) use ($base_url): void {
 ?>
 	<div class="small text-white-50 mb-2"><?php echo htmlspecialchars($title); ?></div>
 	<?php if (!$list): ?>
@@ -439,11 +439,11 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 				$qCount = (int)($row['question_count'] ?? 0);
 				$href = '';
 				$badge = '';
-				if ($kind === 'package' && !empty($row['code'])) {
-					$href = seo_package_url((string)$row['code'], (string)$base_url);
-					$badge = 'Paket';
-				} elseif ($kind === 'content' && !empty($row['slug'])) {
-					$href = seo_post_url((string)$row['slug'], (string)$base_url);
+			if ($kind === 'package' && !empty($row['code'])) {
+				$href = seo_package_url((string)$row['code'], (string)$base_url);
+				$badge = 'Paket';
+			} elseif ($kind === 'content' && !empty($row['slug'])) {
+				$href = seo_post_url((string)$row['slug'], (string)$base_url);
 					$ctype = (string)($row['ctype'] ?? 'materi');
 					$badge = ($ctype === 'berita') ? 'Berita' : 'Materi';
 				}

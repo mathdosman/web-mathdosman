@@ -657,39 +657,40 @@ function render_home_sidebar_widgets(
     }
 
 ?>
-    <div class="card mb-3 sidebar-widget">
-        <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Search</div>
-        </div>
-        <div class="card-body">
-            <form method="get" class="mb-0">
-                <?php if ($filterMateri !== ''): ?>
-                    <input type="hidden" name="materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
-                <?php endif; ?>
-                <?php if ($filterSubmateri !== ''): ?>
-                    <input type="hidden" name="submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
-                <?php endif; ?>
-                <div class="input-group">
-                    <input type="text" name="q" class="form-control" placeholder="Cari paket (nama/deskripsi)..." value="<?php echo htmlspecialchars($q); ?>">
-                    <button class="btn btn-outline-secondary" type="submit">Cari</button>
-                </div>
-            </form>
-        </div>
+<div class="card mb-3 sidebar-widget">
+    <div class="card-header bg-body-secondary">
+        <div class="fw-semibold">Search</div>
     </div>
+    <div class="card-body">
+        <form method="get" class="mb-0">
+            <?php if ($filterMateri !== ''): ?>
+            <input type="hidden" name="materi" value="<?php echo htmlspecialchars($filterMateri); ?>">
+            <?php endif; ?>
+            <?php if ($filterSubmateri !== ''): ?>
+            <input type="hidden" name="submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
+            <?php endif; ?>
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Cari paket (nama/deskripsi)..."
+                    value="<?php echo htmlspecialchars($q); ?>">
+                <button class="btn btn-outline-secondary" type="submit">Cari</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-    <div class="card mb-3 sidebar-widget">
-        <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Kategori</div>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <div class="fw-semibold small text-muted mb-2">Materi</div>
-                <?php if (!$materiCategories): ?>
-                    <div class="text-muted small">Belum ada materi.</div>
-                <?php else: ?>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($materiCategories as $m): ?>
-                            <?php
+<div class="card mb-3 sidebar-widget">
+    <div class="card-header bg-body-secondary">
+        <div class="fw-semibold">Kategori</div>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <div class="fw-semibold small text-muted mb-2">Materi</div>
+            <?php if (!$materiCategories): ?>
+            <div class="text-muted small">Belum ada materi.</div>
+            <?php else: ?>
+            <div class="list-group list-group-flush">
+                <?php foreach ($materiCategories as $m): ?>
+                <?php
                             $label = trim((string)($m['materi'] ?? ''));
                             if ($label === '') {
                                 continue;
@@ -703,25 +704,27 @@ function render_home_sidebar_widgets(
                             ]);
                             $active = ($filterMateri === $label);
                             ?>
-                            <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
-                                <span><?php echo htmlspecialchars($label); ?></span>
-                                <span class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>"
+                    href="<?php echo htmlspecialchars($href); ?>">
+                    <span><?php echo htmlspecialchars($label); ?></span>
+                    <span
+                        class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
+                </a>
+                <?php endforeach; ?>
             </div>
+            <?php endif; ?>
+        </div>
 
-            <div>
-                <div class="fw-semibold small text-muted mb-2">Submateri</div>
-                <?php if ($filterMateri === ''): ?>
-                    <div class="text-muted small">Pilih materi untuk melihat submateri.</div>
-                <?php elseif (!$submateriCategories): ?>
-                    <div class="text-muted small">Belum ada submateri.</div>
-                <?php else: ?>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($submateriCategories as $sm): ?>
-                            <?php
+        <div>
+            <div class="fw-semibold small text-muted mb-2">Submateri</div>
+            <?php if ($filterMateri === ''): ?>
+            <div class="text-muted small">Pilih materi untuk melihat submateri.</div>
+            <?php elseif (!$submateriCategories): ?>
+            <div class="text-muted small">Belum ada submateri.</div>
+            <?php else: ?>
+            <div class="list-group list-group-flush">
+                <?php foreach ($submateriCategories as $sm): ?>
+                <?php
                             $label = trim((string)($sm['submateri'] ?? ''));
                             if ($label === '') {
                                 continue;
@@ -735,154 +738,160 @@ function render_home_sidebar_widgets(
                             ]);
                             $active = ($filterSubmateri === $label);
                             ?>
-                            <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($href); ?>">
-                                <span><?php echo htmlspecialchars($label); ?></span>
-                                <span class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>"
+                    href="<?php echo htmlspecialchars($href); ?>">
+                    <span><?php echo htmlspecialchars($label); ?></span>
+                    <span
+                        class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
+                </a>
+                <?php endforeach; ?>
             </div>
+            <?php endif; ?>
         </div>
     </div>
+</div>
 
-    <div class="card sidebar-widget">
-        <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Popular Post</div>
-        </div>
-        <div class="card-body">
-            <?php if (!$popularItems): ?>
-                <div class="text-muted small">Belum ada data populer.</div>
-            <?php else: ?>
-                <div class="list-group list-group-flush">
-                    <?php foreach ($popularItems as $it): ?>
-                        <?php
+<div class="card sidebar-widget">
+    <div class="card-header bg-body-secondary">
+        <div class="fw-semibold">Popular Post</div>
+    </div>
+    <div class="card-body">
+        <?php if (!$popularItems): ?>
+        <div class="text-muted small">Belum ada data populer.</div>
+        <?php else: ?>
+        <div class="list-group list-group-flush">
+            <?php foreach ($popularItems as $it): ?>
+            <?php
                         $title = (string)($it['title'] ?? '');
                         $href = (string)($it['href'] ?? '#');
                         $badge = (string)($it['badge'] ?? '');
                         $date = (string)($it['date'] ?? '');
                         ?>
-                        <a class="list-group-item list-group-item-action" href="<?php echo htmlspecialchars($href); ?>">
-                            <div class="d-flex align-items-start justify-content-between gap-2">
-                                <div class="fw-semibold text-truncate" style="max-width: 70%;"><?php echo htmlspecialchars($title); ?></div>
-                                <div class="d-flex gap-1 flex-shrink-0">
-                                    <?php if ($badge !== ''): ?>
-                                        <span class="badge text-bg-light border"><?php echo htmlspecialchars($badge); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <?php if ($date !== ''): ?>
-                                <div class="small text-muted"><?php echo htmlspecialchars(format_id_date($date)); ?></div>
-                            <?php endif; ?>
-                        </a>
-                    <?php endforeach; ?>
+            <a class="list-group-item list-group-item-action" href="<?php echo htmlspecialchars($href); ?>">
+                <div class="d-flex align-items-start justify-content-between gap-2">
+                    <div class="fw-semibold text-truncate" style="max-width: 70%;">
+                        <?php echo htmlspecialchars($title); ?></div>
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <?php if ($badge !== ''): ?>
+                        <span class="badge text-bg-light border"><?php echo htmlspecialchars($badge); ?></span>
+                        <?php endif; ?>
+                    </div>
                 </div>
+                <?php if ($date !== ''): ?>
+                <div class="small text-muted"><?php echo htmlspecialchars(format_id_date($date)); ?></div>
+                <?php endif; ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="card mt-3 sidebar-widget">
+    <div class="card-header bg-body-secondary">
+        <div class="fw-semibold">Highscore Mini Game</div>
+    </div>
+    <div class="card-body small mini-game-sidebar-highscore">
+        <?php
+            global $base_url;
+            $isStudentLoggedIn = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
+            $gameHref = (string)($isStudentLoggedIn ? ($base_url . '/siswa/game_math.php') : 'game_math_public.php');
+            ?>
+        <a href="<?php echo htmlspecialchars($gameHref); ?>" class="btn btn-primary btn-sm w-100 mb-2">Ikut Bermain</a>
+        <div class="text-muted small mb-3">Login: otomatis pakai nama akun. Tanpa login: isi nama sendiri.</div>
+        <div class="mb-3">
+            <div class="fw-semibold small text-muted mb-1">Tambah / Kurang</div>
+            <?php if (!$miniGameAddSub): ?>
+            <div class="text-muted small">Belum ada data.</div>
+            <?php else: ?>
+            <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
+                <?php foreach ($miniGameAddSub as $idx => $row): ?>
+                <?php
+                            $rank = $idx + 1;
+                            $name = trim((string)($row['student_name'] ?? ''));
+                            $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
+                            $score = (int)($row['score'] ?? 0);
+                            $hash = (int)crc32(strtolower($name));
+                            if ($hash < 0) {
+                                $hash = -$hash;
+                            }
+                            $colorIndex = ($hash % 5) + 1;
+                            $nameColorClass = 'mini-name-color-' . $colorIndex;
+                            $rankClass = 'mini-sidebar-rank-other';
+                            if ($rank === 1) {
+                                $rankClass = 'mini-sidebar-rank-1';
+                            } elseif ($rank === 2) {
+                                $rankClass = 'mini-sidebar-rank-2';
+                            } elseif ($rank === 3) {
+                                $rankClass = 'mini-sidebar-rank-3';
+                            }
+                            ?>
+                <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
+                    <div class="mini-sidebar-main">
+                        <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
+                        <span class="mini-sidebar-trophy"></span>
+                        <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
+                            <?php echo htmlspecialchars($name); ?>
+                            <?php if ($kelasRombel !== ''): ?>
+                            <span class="mini-kr-badge"
+                                aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
+                </li>
+                <?php endforeach; ?>
+            </ol>
+            <?php endif; ?>
+        </div>
+
+        <div>
+            <div class="fw-semibold small text-muted mb-1">Kali / Bagi</div>
+            <?php if (!$miniGameMulDiv): ?>
+            <div class="text-muted small">Belum ada data.</div>
+            <?php else: ?>
+            <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
+                <?php foreach ($miniGameMulDiv as $idx => $row): ?>
+                <?php
+                            $rank = $idx + 1;
+                            $name = trim((string)($row['student_name'] ?? ''));
+                            $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
+                            $score = (int)($row['score'] ?? 0);
+                            $hash = (int)crc32(strtolower($name));
+                            if ($hash < 0) {
+                                $hash = -$hash;
+                            }
+                            $colorIndex = ($hash % 5) + 1;
+                            $nameColorClass = 'mini-name-color-' . $colorIndex;
+                            $rankClass = 'mini-sidebar-rank-other';
+                            if ($rank === 1) {
+                                $rankClass = 'mini-sidebar-rank-1';
+                            } elseif ($rank === 2) {
+                                $rankClass = 'mini-sidebar-rank-2';
+                            } elseif ($rank === 3) {
+                                $rankClass = 'mini-sidebar-rank-3';
+                            }
+                            ?>
+                <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
+                    <div class="mini-sidebar-main">
+                        <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
+                        <span class="mini-sidebar-trophy"></span>
+                        <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
+                            <?php echo htmlspecialchars($name); ?>
+                            <?php if ($kelasRombel !== ''): ?>
+                            <span class="mini-kr-badge"
+                                aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
+                </li>
+                <?php endforeach; ?>
+            </ol>
             <?php endif; ?>
         </div>
     </div>
-
-    <div class="card mt-3 sidebar-widget">
-        <div class="card-header bg-body-secondary">
-            <div class="fw-semibold">Highscore Mini Game</div>
-        </div>
-        <div class="card-body small mini-game-sidebar-highscore">
-            <?php
-            $isStudentLoggedIn = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
-            $gameHref = $isStudentLoggedIn ? ($base_url . '/siswa/game_math.php') : 'game_math_public.php';
-            ?>
-            <a href="<?php echo htmlspecialchars($gameHref); ?>" class="btn btn-primary btn-sm w-100 mb-2">Ikut Bermain</a>
-            <div class="text-muted small mb-3">Login: otomatis pakai nama akun. Tanpa login: isi nama sendiri.</div>
-            <div class="mb-3">
-                <div class="fw-semibold small text-muted mb-1">Tambah / Kurang</div>
-                <?php if (!$miniGameAddSub): ?>
-                    <div class="text-muted small">Belum ada data.</div>
-                <?php else: ?>
-                    <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
-                        <?php foreach ($miniGameAddSub as $idx => $row): ?>
-                            <?php
-                            $rank = $idx + 1;
-                            $name = trim((string)($row['student_name'] ?? ''));
-                            $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
-                            $score = (int)($row['score'] ?? 0);
-                            $hash = (int)crc32(strtolower($name));
-                            if ($hash < 0) {
-                                $hash = -$hash;
-                            }
-                            $colorIndex = ($hash % 5) + 1;
-                            $nameColorClass = 'mini-name-color-' . $colorIndex;
-                            $rankClass = 'mini-sidebar-rank-other';
-                            if ($rank === 1) {
-                                $rankClass = 'mini-sidebar-rank-1';
-                            } elseif ($rank === 2) {
-                                $rankClass = 'mini-sidebar-rank-2';
-                            } elseif ($rank === 3) {
-                                $rankClass = 'mini-sidebar-rank-3';
-                            }
-                            ?>
-                            <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
-                                <div class="mini-sidebar-main">
-                                    <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
-                                    <span class="mini-sidebar-trophy"></span>
-                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
-                                        <?php echo htmlspecialchars($name); ?>
-                                        <?php if ($kelasRombel !== ''): ?>
-                                            <span class="mini-kr-badge" aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
-                                        <?php endif; ?>
-                                    </span>
-                                </div>
-                                <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                <?php endif; ?>
-            </div>
-
-            <div>
-                <div class="fw-semibold small text-muted mb-1">Kali / Bagi</div>
-                <?php if (!$miniGameMulDiv): ?>
-                    <div class="text-muted small">Belum ada data.</div>
-                <?php else: ?>
-                    <ol class="list-unstyled small mb-0 mini-game-sidebar-list">
-                        <?php foreach ($miniGameMulDiv as $idx => $row): ?>
-                            <?php
-                            $rank = $idx + 1;
-                            $name = trim((string)($row['student_name'] ?? ''));
-                            $kelasRombel = trim((string)($row['kelas'] ?? '') . (string)($row['rombel'] ?? ''));
-                            $score = (int)($row['score'] ?? 0);
-                            $hash = (int)crc32(strtolower($name));
-                            if ($hash < 0) {
-                                $hash = -$hash;
-                            }
-                            $colorIndex = ($hash % 5) + 1;
-                            $nameColorClass = 'mini-name-color-' . $colorIndex;
-                            $rankClass = 'mini-sidebar-rank-other';
-                            if ($rank === 1) {
-                                $rankClass = 'mini-sidebar-rank-1';
-                            } elseif ($rank === 2) {
-                                $rankClass = 'mini-sidebar-rank-2';
-                            } elseif ($rank === 3) {
-                                $rankClass = 'mini-sidebar-rank-3';
-                            }
-                            ?>
-                            <li class="mini-game-sidebar-item border-bottom border-light-subtle <?php echo $rankClass; ?>">
-                                <div class="mini-sidebar-main">
-                                    <span class="mini-sidebar-rank-badge"><?php echo $rank; ?></span>
-                                    <span class="mini-sidebar-trophy"></span>
-                                    <span class="mini-sidebar-name fw-semibold <?php echo htmlspecialchars($nameColorClass); ?>">
-                                        <?php echo htmlspecialchars($name); ?>
-                                        <?php if ($kelasRombel !== ''): ?>
-                                            <span class="mini-kr-badge" aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
-                                        <?php endif; ?>
-                                    </span>
-                                </div>
-                                <div class="mini-sidebar-score text-muted"><?php echo $score; ?></div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
+</div>
 <?php
 }
 
@@ -910,126 +919,124 @@ function get_home_carousel_slides(): array
 }
 ?>
 
-<button
-    class="btn btn-primary btn-sm d-lg-none position-fixed end-0 me-3 d-inline-flex align-items-center gap-2"
-    style="z-index: 1040; top: 120px;"
-    type="button"
-    data-bs-toggle="offcanvas"
-    data-bs-target="#homeSidebar"
+<button class="btn btn-primary btn-sm d-lg-none position-fixed end-0 me-3 d-inline-flex align-items-center gap-2"
+    style="z-index: 1040; top: 120px;" type="button" data-bs-toggle="offcanvas" data-bs-target="#homeSidebar"
     aria-controls="homeSidebar">
-    <img src="assets/img/icon.svg" width="18" height="18" alt="" aria-hidden="true" style="filter: brightness(0) invert(1);" />
+    <img src="assets/img/icon.svg" width="18" height="18" alt="" aria-hidden="true"
+        style="filter: brightness(0) invert(1);" />
     <span>Sidebar</span>
 </button>
 
 <div class="row g-3 g-lg-4">
     <div class="col-12 col-lg-8">
         <?php if ($page === 1): ?>
-            <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner">
-                <?php $slides = get_home_carousel_slides(); ?>
-                <?php if ($slides): ?>
-                    <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
-                        <div class="carousel-inner">
-                            <?php foreach ($slides as $idx => $s): ?>
-                                <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
-                                    <div class="ratio ratio-21x9">
-                                        <img
-                                            src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
-                                            class="w-100 h-100 object-fit-contain"
-                                            alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>"
-                                            loading="lazy">
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
+        <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner">
+            <?php $slides = get_home_carousel_slides(); ?>
+            <?php if ($slides): ?>
+            <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    <?php foreach ($slides as $idx => $s): ?>
+                    <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
+                        <div class="ratio ratio-21x9">
+                            <img src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
+                                class="w-100 h-100 object-fit-contain"
+                                alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>" loading="lazy">
                         </div>
                     </div>
-                <?php else: ?>
-                    <div class="ratio ratio-21x9">
-                        <img
-                            src="assets/img/icon.svg"
-                            class="w-100 h-100 object-fit-contain"
-                            alt="Logo MATHDOSMAN"
-                            loading="lazy">
-                    </div>
-                <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
             </div>
+            <?php else: ?>
+            <div class="ratio ratio-21x9">
+                <img src="assets/img/icon.svg" class="w-100 h-100 object-fit-contain" alt="Logo MATHDOSMAN"
+                    loading="lazy">
+            </div>
+            <?php endif; ?>
+        </div>
 
-            <div class="home-hero mb-3 mb-lg-4">
-                <div class="row g-4 align-items-center position-relative">
-                    <div class="col-12 col-lg-7">
-                        <div class="text-uppercase small text-muted mb-2">Portal Materi &amp; Bank Soal</div>
-                        <h1 class="display-6 fw-bold mb-2">Selamat datang di MATHDOSMAN</h1>
-                        <p class="lead mb-3">Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.</p>
-                        <div class="home-slogan mb-3">
-                            <span class="badge text-bg-light border">Slogan</span>
-                            <span class="ms-2 fw-semibold">Belajar Matematika, Gaskeun!</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <span class="badge text-bg-light border">Materi ringkas</span>
-                            <span class="badge text-bg-light border">Bank soal siap latihan</span>
-                            <span class="badge text-bg-light border">Preview &amp; cetak mudah</span>
-                        </div>
-                        <div class="mt-3 d-flex flex-wrap gap-2">
-                            <a href="daftar-isi.php" class="btn btn-primary btn-sm">Jelajahi Daftar Isi</a>
-                            <a href="index.php#konten-paket" class="btn btn-outline-secondary btn-sm">Lihat Konten &amp; Paket Terbaru</a>
-                        </div>
+        <div class="home-hero mb-3 mb-lg-4">
+            <div class="row g-4 align-items-center position-relative">
+                <div class="col-12 col-lg-7">
+                    <div class="text-uppercase small text-muted mb-2">Portal Materi &amp; Bank Soal</div>
+                    <h1 class="display-6 fw-bold mb-2">Selamat datang di MATHDOSMAN</h1>
+                    <p class="lead mb-3">Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.
+                    </p>
+                    <div class="home-slogan mb-3">
+                        <span class="badge text-bg-light border">Slogan</span>
+                        <span class="ms-2 fw-semibold">Belajar Matematika, Gaskeun!</span>
                     </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge text-bg-light border">Materi ringkas</span>
+                        <span class="badge text-bg-light border">Bank soal siap latihan</span>
+                        <span class="badge text-bg-light border">Preview &amp; cetak mudah</span>
+                    </div>
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <a href="daftar-isi.php" class="btn btn-primary btn-sm">Jelajahi Daftar Isi</a>
+                        <a href="index.php#konten-paket" class="btn btn-outline-secondary btn-sm">Lihat Konten &amp;
+                            Paket Terbaru</a>
+                    </div>
+                </div>
 
-                    <div class="col-12 col-lg-5">
-                        <div class="home-vision border rounded-4 bg-body-tertiary p-3 p-lg-4">
-                            <div class="fw-semibold mb-2">Visi</div>
-                            <div class="text-muted">Menjadi portal belajar matematika yang simpel, rapi, dan mudah diakses untuk semua.</div>
-                            <div class="fw-semibold mt-3 mb-2">Misi</div>
-                            <ul class="mb-0 text-muted small ps-3">
-                                <li>Menyajikan materi yang jelas dan mudah dipahami.</li>
-                                <li>Menyediakan paket soal untuk latihan dan evaluasi.</li>
-                                <li>Membantu belajar lebih konsisten lewat latihan terarah.</li>
-                            </ul>
-                        </div>
+                <div class="col-12 col-lg-5">
+                    <div class="home-vision border rounded-4 bg-body-tertiary p-3 p-lg-4">
+                        <div class="fw-semibold mb-2">Visi</div>
+                        <div class="text-muted">Menjadi portal belajar matematika yang simpel, rapi, dan mudah diakses
+                            untuk semua.</div>
+                        <div class="fw-semibold mt-3 mb-2">Misi</div>
+                        <ul class="mb-0 text-muted small ps-3">
+                            <li>Menyajikan materi yang jelas dan mudah dipahami.</li>
+                            <li>Menyediakan paket soal untuk latihan dan evaluasi.</li>
+                            <li>Membantu belajar lebih konsisten lewat latihan terarah.</li>
+                        </ul>
                     </div>
                 </div>
             </div>
+        </div>
         <?php endif; ?>
 
         <div id="konten-paket" class="d-flex align-items-end justify-content-between gap-2 mb-2 section-heading">
             <div>
                 <h2 class="h5 mb-1">Konten & Paket Soal</h2>
-                <div class="text-muted small">Urutan berdasarkan waktu publish (atau waktu dibuat jika belum ada publish).</div>
+                <div class="text-muted small">Urutan berdasarkan waktu publish (atau waktu dibuat jika belum ada
+                    publish).</div>
             </div>
         </div>
 
         <?php if ($q !== '' || $filterSubjectId > 0 || $filterMateri !== '' || $filterSubmateri !== ''): ?>
-            <div class="alert alert-light border py-2 small d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                <div>
-                    Filter aktif:
-                    <?php if ($q !== ''): ?>
-                        <span class="badge text-bg-secondary">Cari: <?php echo htmlspecialchars($q); ?></span>
-                    <?php endif; ?>
-                    <?php if ($filterSubjectId > 0): ?>
-                        <span class="badge text-bg-secondary">Mapel ID: <?php echo (int)$filterSubjectId; ?></span>
-                    <?php endif; ?>
-                    <?php if ($filterMateri !== ''): ?>
-                        <span class="badge text-bg-secondary">Materi: <?php echo htmlspecialchars($filterMateri); ?></span>
-                    <?php endif; ?>
-                    <?php if ($filterSubmateri !== ''): ?>
-                        <span class="badge text-bg-secondary">Submateri: <?php echo htmlspecialchars($filterSubmateri); ?></span>
-                    <?php endif; ?>
-                </div>
-                <a class="btn btn-outline-secondary btn-sm" href="index.php">Reset</a>
+        <div
+            class="alert alert-light border py-2 small d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+            <div>
+                Filter aktif:
+                <?php if ($q !== ''): ?>
+                <span class="badge text-bg-secondary">Cari: <?php echo htmlspecialchars($q); ?></span>
+                <?php endif; ?>
+                <?php if ($filterSubjectId > 0): ?>
+                <span class="badge text-bg-secondary">Mapel ID: <?php echo (int)$filterSubjectId; ?></span>
+                <?php endif; ?>
+                <?php if ($filterMateri !== ''): ?>
+                <span class="badge text-bg-secondary">Materi: <?php echo htmlspecialchars($filterMateri); ?></span>
+                <?php endif; ?>
+                <?php if ($filterSubmateri !== ''): ?>
+                <span class="badge text-bg-secondary">Submateri:
+                    <?php echo htmlspecialchars($filterSubmateri); ?></span>
+                <?php endif; ?>
             </div>
+            <a class="btn btn-outline-secondary btn-sm" href="index.php">Reset</a>
+        </div>
         <?php endif; ?>
 
         <?php if (!$feedItems): ?>
-            <?php if (!$dbPreflightOk): ?>
-                <div class="alert alert-warning mb-0">
-                    Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.
-                </div>
-            <?php else: ?>
-                <div class="alert alert-info mb-0">Belum ada konten atau paket soal yang tersedia.</div>
-            <?php endif; ?>
+        <?php if (!$dbPreflightOk): ?>
+        <div class="alert alert-warning mb-0">
+            Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.
+        </div>
         <?php else: ?>
-            <div class="row row-cols-1 g-3 package-grid">
-                <?php foreach ($feedItems as $item): ?>
-                    <?php
+        <div class="alert alert-info mb-0">Belum ada konten atau paket soal yang tersedia.</div>
+        <?php endif; ?>
+        <?php else: ?>
+        <div class="row row-cols-1 g-3 package-grid">
+            <?php foreach ($feedItems as $item): ?>
+            <?php
                     $kind = (string)($item['kind'] ?? '');
                     $row = is_array($item['row'] ?? null) ? (array)$item['row'] : [];
                     $publishedAt = (string)($item['date'] ?? '');
@@ -1063,71 +1070,77 @@ function get_home_carousel_slides(): array
                         $needsEllipsis = mb_strlen((string)$raw) > 160;
                     }
                     ?>
-                    <div class="col">
-                        <div class="card h-100 post-card package-card">
-                            <div class="card-body">
-                                <div class="d-flex flex-column h-100">
-                                    <div class="mb-2">
-                                        <h3 class="package-card-title mb-1">
-                                            <a class="stretched-link text-decoration-none" href="<?php echo htmlspecialchars($href); ?>">
-                                                <?php echo htmlspecialchars($cardTitle); ?>
-                                            </a>
-                                        </h3>
-                                        <div class="package-card-meta text-muted small">
-                                            <?php echo htmlspecialchars($metaLeft); ?>
-                                            • Publish: <strong><?php echo htmlspecialchars(format_id_date($publishedAt)); ?></strong>
-                                        </div>
-                                    </div>
-
-                                    <?php if ($excerpt !== ''): ?>
-                                        <p class="text-muted mb-0 package-card-excerpt"><?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
-                                    <?php else: ?>
-                                        <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
-                                    <?php endif; ?>
+            <div class="col">
+                <div class="card h-100 post-card package-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column h-100">
+                            <div class="mb-2">
+                                <h3 class="package-card-title mb-1">
+                                    <a class="stretched-link text-decoration-none"
+                                        href="<?php echo htmlspecialchars($href); ?>">
+                                        <?php echo htmlspecialchars($cardTitle); ?>
+                                    </a>
+                                </h3>
+                                <div class="package-card-meta text-muted small">
+                                    <?php echo htmlspecialchars($metaLeft); ?>
+                                    • Publish:
+                                    <strong><?php echo htmlspecialchars(format_id_date($publishedAt)); ?></strong>
                                 </div>
                             </div>
+
+                            <?php if ($excerpt !== ''): ?>
+                            <p class="text-muted mb-0 package-card-excerpt">
+                                <?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
+                            <?php else: ?>
+                            <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                </div>
             </div>
+            <?php endforeach; ?>
+        </div>
 
-            <?php if ($totalPages > 1): ?>
-                <nav class="mt-4" aria-label="Pagination">
-                    <ul class="pagination justify-content-center flex-wrap">
-                        <?php
+        <?php if ($totalPages > 1): ?>
+        <nav class="mt-4" aria-label="Pagination">
+            <ul class="pagination justify-content-center flex-wrap">
+                <?php
                         $prev = $page - 1;
                         $next = $page + 1;
                         $start = max(1, $page - 3);
                         $end = min($totalPages, $page + 3);
                         ?>
 
-                        <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
-                            <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>" aria-label="Sebelumnya">&laquo;</a>
-                        </li>
+                <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
+                    <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>"
+                        aria-label="Sebelumnya">&laquo;</a>
+                </li>
 
-                        <?php for ($i = $start; $i <= $end; $i++): ?>
-                            <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
-                                <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $i])); ?>"><?php echo (int)$i; ?></a>
-                            </li>
-                        <?php endfor; ?>
+                <?php for ($i = $start; $i <= $end; $i++): ?>
+                <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
+                    <a class="page-link"
+                        href="index.php?<?php echo htmlspecialchars($qs(['page' => $i])); ?>"><?php echo (int)$i; ?></a>
+                </li>
+                <?php endfor; ?>
 
-                        <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
-                            <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>" aria-label="Berikutnya">&raquo;</a>
-                        </li>
-                    </ul>
-                </nav>
-            <?php endif; ?>
+                <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
+                    <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>"
+                        aria-label="Berikutnya">&raquo;</a>
+                </li>
+            </ul>
+        </nav>
+        <?php endif; ?>
 
-            <?php
+        <?php
             require_once __DIR__ . '/includes/disqus.php';
             $disqusUrl = rtrim((string)$base_url, '/') . '/index.php';
             ?>
-            <div class="card mt-4 d-print-none">
-                <div class="card-body">
-                    <div class="fw-semibold mb-2">Komentar</div>
-                    <?php app_render_disqus('home', $disqusUrl); ?>
-                </div>
+        <div class="card mt-4 d-print-none">
+            <div class="card-body">
+                <div class="fw-semibold mb-2">Komentar</div>
+                <?php app_render_disqus('home', $disqusUrl); ?>
             </div>
+        </div>
         <?php endif; ?>
     </div>
 
@@ -1139,7 +1152,8 @@ function get_home_carousel_slides(): array
 <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="homeSidebar" aria-labelledby="homeSidebarLabel">
     <div class="offcanvas-header justify-content-center position-relative">
         <h5 class="offcanvas-title text-center" id="homeSidebarLabel">Sidebar</h5>
-        <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="offcanvas"
+            aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
         <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q); ?>

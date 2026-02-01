@@ -216,7 +216,7 @@ if (!function_exists('app_render_comments')) {
         }
 
         rsort($topLevelIds);
-        ?>
+?>
         <div id="comments" class="card shadow-sm mt-4 comments-widget app-comments" data-no-swal="1">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
@@ -228,12 +228,12 @@ if (!function_exists('app_render_comments')) {
 
                 <?php if ($flashMsg !== ''): ?>
                     <?php
-                        $alertClass = 'alert-info';
-                        if ($flashType === 'success') {
-                            $alertClass = 'alert-success';
-                        } elseif ($flashType === 'error') {
-                            $alertClass = 'alert-danger';
-                        }
+                    $alertClass = 'alert-info';
+                    if ($flashType === 'success') {
+                        $alertClass = 'alert-success';
+                    } elseif ($flashType === 'error') {
+                        $alertClass = 'alert-danger';
+                    }
                     ?>
                     <div class="alert <?php echo htmlspecialchars($alertClass); ?> py-2 small"><?php echo htmlspecialchars($flashMsg); ?></div>
                 <?php endif; ?>
@@ -282,20 +282,20 @@ if (!function_exists('app_render_comments')) {
                     <div class="app-comments-list">
                         <?php foreach ($topLevelIds as $cid): ?>
                             <?php
-                                $c = $itemsById[$cid] ?? null;
-                                if (!is_array($c)) {
-                                    continue;
-                                }
-                                $when = (string)($c['created_at'] ?? '');
-                                $whenLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($when) : $when;
-                                $author = trim((string)($c['author_name'] ?? ''));
-                                $initial = '';
-                                if ($author !== '') {
-                                    $initial = mb_strtoupper(mb_substr($author, 0, 1));
-                                }
-                                $isAdminComment = ($author !== '') && ($author === $adminDisplayName);
-                                $replyTargetId = (int)($c['id'] ?? 0);
-                                $collapseId = 'replyForm-' . $replyTargetId;
+                            $c = $itemsById[$cid] ?? null;
+                            if (!is_array($c)) {
+                                continue;
+                            }
+                            $when = (string)($c['created_at'] ?? '');
+                            $whenLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($when) : $when;
+                            $author = trim((string)($c['author_name'] ?? ''));
+                            $initial = '';
+                            if ($author !== '') {
+                                $initial = mb_strtoupper(mb_substr($author, 0, 1));
+                            }
+                            $isAdminComment = ($author !== '') && ($author === $adminDisplayName);
+                            $replyTargetId = (int)($c['id'] ?? 0);
+                            $collapseId = 'replyForm-' . $replyTargetId;
                             ?>
                             <div class="app-comment">
                                 <div class="app-comment-avatar" aria-hidden="true">
@@ -354,25 +354,25 @@ if (!function_exists('app_render_comments')) {
                             </div>
 
                             <?php
-                                $replyIds = $repliesByParent[$replyTargetId] ?? [];
-                                // replies already in ascending id order from query
+                            $replyIds = $repliesByParent[$replyTargetId] ?? [];
+                            // replies already in ascending id order from query
                             ?>
                             <?php if (!empty($replyIds)): ?>
                                 <div class="app-comment-replies">
                                     <?php foreach ($replyIds as $rid): ?>
                                         <?php
-                                            $rc = $itemsById[(int)$rid] ?? null;
-                                            if (!is_array($rc)) {
-                                                continue;
-                                            }
-                                            $rwhen = (string)($rc['created_at'] ?? '');
-                                            $rwhenLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($rwhen) : $rwhen;
-                                            $rauthor = trim((string)($rc['author_name'] ?? ''));
-                                            $rinitial = '';
-                                            if ($rauthor !== '') {
-                                                $rinitial = mb_strtoupper(mb_substr($rauthor, 0, 1));
-                                            }
-                                            $isAdminReply = ($rauthor !== '') && ($rauthor === $adminDisplayName);
+                                        $rc = $itemsById[(int)$rid] ?? null;
+                                        if (!is_array($rc)) {
+                                            continue;
+                                        }
+                                        $rwhen = (string)($rc['created_at'] ?? '');
+                                        $rwhenLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($rwhen) : $rwhen;
+                                        $rauthor = trim((string)($rc['author_name'] ?? ''));
+                                        $rinitial = '';
+                                        if ($rauthor !== '') {
+                                            $rinitial = mb_strtoupper(mb_substr($rauthor, 0, 1));
+                                        }
+                                        $isAdminReply = ($rauthor !== '') && ($rauthor === $adminDisplayName);
                                         ?>
                                         <div class="app-comment is-reply">
                                             <div class="app-comment-avatar" aria-hidden="true">
@@ -398,6 +398,6 @@ if (!function_exists('app_render_comments')) {
                 <?php endif; ?>
             </div>
         </div>
-        <?php
+<?php
     }
 }

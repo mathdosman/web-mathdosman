@@ -115,15 +115,17 @@ include __DIR__ . '/../includes/header.php';
                 <div class="col-12 col-md-3">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
-                        <option value=""<?php echo $status === '' ? ' selected' : ''; ?>>Semua</option>
-                        <option value="approved"<?php echo $status === 'approved' ? ' selected' : ''; ?>>Approved</option>
-                        <option value="hidden"<?php echo $status === 'hidden' ? ' selected' : ''; ?>>Hidden</option>
-                        <option value="deleted"<?php echo $status === 'deleted' ? ' selected' : ''; ?>>Deleted</option>
+                        <option value="" <?php echo $status === '' ? ' selected' : ''; ?>>Semua</option>
+                        <option value="approved" <?php echo $status === 'approved' ? ' selected' : ''; ?>>Approved
+                        </option>
+                        <option value="hidden" <?php echo $status === 'hidden' ? ' selected' : ''; ?>>Hidden</option>
+                        <option value="deleted" <?php echo $status === 'deleted' ? ' selected' : ''; ?>>Deleted</option>
                     </select>
                 </div>
                 <div class="col-12 col-md-7">
                     <label class="form-label">Cari</label>
-                    <input type="text" name="q" class="form-control" value="<?php echo htmlspecialchars($q); ?>" placeholder="Nama / halaman / isi komentar">
+                    <input type="text" name="q" class="form-control" value="<?php echo htmlspecialchars($q); ?>"
+                        placeholder="Nama / halaman / isi komentar">
                 </div>
                 <div class="col-12 col-md-2">
                     <label class="form-label d-none d-md-block">&nbsp;</label>
@@ -145,66 +147,88 @@ include __DIR__ . '/../includes/header.php';
                     </thead>
                     <tbody>
                         <?php if (!$rows): ?>
-                            <tr><td colspan="6" class="text-center text-muted">Belum ada komentar.</td></tr>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Belum ada komentar.</td>
+                            </tr>
                         <?php endif; ?>
                         <?php foreach ($rows as $r): ?>
                             <?php
-                                $st = (string)($r['status'] ?? 'approved');
-                                $badge = 'text-bg-success';
-                                if ($st === 'hidden') {
-                                    $badge = 'text-bg-warning text-dark';
-                                } elseif ($st === 'deleted') {
-                                    $badge = 'text-bg-secondary';
-                                }
-                                $pageLabel = trim((string)($r['page_title'] ?? ''));
-                                if ($pageLabel === '') {
-                                    $pageLabel = (string)($r['page_identifier'] ?? '');
-                                }
-                                $url = trim((string)($r['page_url'] ?? ''));
-                                $body = trim((string)($r['body'] ?? ''));
-                                if (mb_strlen($body) > 180) {
-                                    $body = mb_substr($body, 0, 180) . '…';
-                                }
+                            $st = (string)($r['status'] ?? 'approved');
+                            $badge = 'text-bg-success';
+                            if ($st === 'hidden') {
+                                $badge = 'text-bg-warning text-dark';
+                            } elseif ($st === 'deleted') {
+                                $badge = 'text-bg-secondary';
+                            }
+                            $pageLabel = trim((string)($r['page_title'] ?? ''));
+                            if ($pageLabel === '') {
+                                $pageLabel = (string)($r['page_identifier'] ?? '');
+                            }
+                            $url = trim((string)($r['page_url'] ?? ''));
+                            $body = trim((string)($r['body'] ?? ''));
+                            if (mb_strlen($body) > 180) {
+                                $body = mb_substr($body, 0, 180) . '…';
+                            }
                             ?>
                             <tr>
-                                <td><div class="small fw-semibold"><?php echo htmlspecialchars((string)($r['created_at'] ?? '')); ?></div></td>
                                 <td>
-                                    <div class="fw-semibold"><?php echo htmlspecialchars((string)($r['author_name'] ?? '')); ?></div>
+                                    <div class="small fw-semibold">
+                                        <?php echo htmlspecialchars((string)($r['created_at'] ?? '')); ?></div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">
+                                        <?php echo htmlspecialchars((string)($r['author_name'] ?? '')); ?></div>
                                     <?php if (trim((string)($r['author_email'] ?? '')) !== ''): ?>
-                                        <div class="text-muted small"><?php echo htmlspecialchars((string)($r['author_email'] ?? '')); ?></div>
+                                        <div class="text-muted small">
+                                            <?php echo htmlspecialchars((string)($r['author_email'] ?? '')); ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="fw-semibold"><?php echo htmlspecialchars($pageLabel); ?></div>
                                     <?php if ($url !== ''): ?>
-                                        <a class="small" href="<?php echo htmlspecialchars($url); ?>" target="_blank"><?php echo htmlspecialchars($url); ?></a>
+                                        <a class="small" href="<?php echo htmlspecialchars($url); ?>"
+                                            target="_blank"><?php echo htmlspecialchars($url); ?></a>
                                     <?php else: ?>
-                                        <div class="small text-muted"><?php echo htmlspecialchars((string)($r['page_identifier'] ?? '')); ?></div>
+                                        <div class="small text-muted">
+                                            <?php echo htmlspecialchars((string)($r['page_identifier'] ?? '')); ?></div>
                                     <?php endif; ?>
                                 </td>
-                                <td><div class="small" style="white-space:normal; word-break:break-word;"><?php echo htmlspecialchars($body); ?></div></td>
-                                <td><span class="badge <?php echo htmlspecialchars($badge); ?>"><?php echo htmlspecialchars($st); ?></span></td>
+                                <td>
+                                    <div class="small" style="white-space:normal; word-break:break-word;">
+                                        <?php echo htmlspecialchars($body); ?></div>
+                                </td>
+                                <td><span
+                                        class="badge <?php echo htmlspecialchars($badge); ?>"><?php echo htmlspecialchars($st); ?></span>
+                                </td>
                                 <td>
                                     <div class="d-flex gap-1 flex-wrap">
                                         <?php if ($st !== 'approved'): ?>
                                             <form method="post" class="m-0">
-                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="csrf_token"
+                                                    value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                                <button type="submit" name="action" value="approve" class="btn btn-outline-success btn-sm">Tampilkan</button>
+                                                <button type="submit" name="action" value="approve"
+                                                    class="btn btn-outline-success btn-sm">Tampilkan</button>
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($st === 'approved'): ?>
                                             <form method="post" class="m-0">
-                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="csrf_token"
+                                                    value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                                <button type="submit" name="action" value="hide" class="btn btn-outline-warning btn-sm">Sembunyikan</button>
+                                                <button type="submit" name="action" value="hide"
+                                                    class="btn btn-outline-warning btn-sm">Sembunyikan</button>
                                             </form>
                                         <?php endif; ?>
                                         <?php if ($st !== 'deleted'): ?>
-                                            <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus komentar?" data-swal-text="Komentar akan ditandai deleted." data-swal-confirm-text="Hapus" data-swal-cancel-text="Batal">
-                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                            <form method="post" class="m-0" data-swal-confirm data-swal-title="Hapus komentar?"
+                                                data-swal-text="Komentar akan ditandai deleted." data-swal-confirm-text="Hapus"
+                                                data-swal-cancel-text="Batal">
+                                                <input type="hidden" name="csrf_token"
+                                                    value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
-                                                <button type="submit" name="action" value="delete" class="btn btn-outline-danger btn-sm">Hapus</button>
+                                                <button type="submit" name="action" value="delete"
+                                                    class="btn btn-outline-danger btn-sm">Hapus</button>
                                             </form>
                                         <?php endif; ?>
                                     </div>

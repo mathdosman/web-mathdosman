@@ -217,41 +217,41 @@ if ($assignment && $isExamAssignment && $hasExamRevokedColumn && $examRevokedAt 
     $disable_navbar = true;
     include __DIR__ . '/../includes/header.php';
     ?>
-    <div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
-        <div class="card shadow-sm border-0" style="max-width:520px;width:100%;">
-            <div class="card-body text-center p-4 p-md-5">
-                <div class="mb-3">
-                    <svg width="80" height="80" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-                        <defs>
-                            <linearGradient id="lockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#ffc107"/>
-                                <stop offset="100%" stop-color="#ff9800"/>
-                            </linearGradient>
-                        </defs>
-                        <rect x="8" y="24" width="48" height="32" rx="6" fill="url(#lockGradient)" opacity="0.9"/>
-                        <rect x="18" y="14" width="28" height="22" rx="10" fill="none" stroke="#ffc107" stroke-width="3"/>
-                        <circle cx="32" cy="40" r="5" fill="#ffffff"/>
-                        <path d="M32 45 L32 52" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <h5 class="fw-semibold mb-2">Ujian terkunci</h5>
-                <p class="text-muted mb-3">
-                    Kamu sudah keluar dari halaman ujian. Untuk bisa masuk kembali ke ujian ini,
-                    hubungi admin atau guru agar melakukan reset ujian terlebih dahulu.
-                </p>
-                <div class="d-grid d-sm-inline-flex gap-2 justify-content-sm-center">
-                    <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-primary">
-                        Kembali ke Dashboard
-                    </a>
-                </div>
-                <p class="small text-muted mt-3 mb-0">
-                    Jika kamu merasa ini terjadi karena kendala teknis (misalnya koneksi terputus),
-                    jelaskan kronologinya ke guru saat meminta reset.
-                </p>
+<div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+    <div class="card shadow-sm border-0" style="max-width:520px;width:100%;">
+        <div class="card-body text-center p-4 p-md-5">
+            <div class="mb-3">
+                <svg width="80" height="80" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                    <defs>
+                        <linearGradient id="lockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffc107" />
+                            <stop offset="100%" stop-color="#ff9800" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="8" y="24" width="48" height="32" rx="6" fill="url(#lockGradient)" opacity="0.9" />
+                    <rect x="18" y="14" width="28" height="22" rx="10" fill="none" stroke="#ffc107" stroke-width="3" />
+                    <circle cx="32" cy="40" r="5" fill="#ffffff" />
+                    <path d="M32 45 L32 52" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+                </svg>
             </div>
+            <h5 class="fw-semibold mb-2">Ujian terkunci</h5>
+            <p class="text-muted mb-3">
+                Kamu sudah keluar dari halaman ujian. Untuk bisa masuk kembali ke ujian ini,
+                hubungi admin atau guru agar melakukan reset ujian terlebih dahulu.
+            </p>
+            <div class="d-grid d-sm-inline-flex gap-2 justify-content-sm-center">
+                <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-primary">
+                    Kembali ke Dashboard
+                </a>
+            </div>
+            <p class="small text-muted mt-3 mb-0">
+                Jika kamu merasa ini terjadi karena kendala teknis (misalnya koneksi terputus),
+                jelaskan kronologinya ke guru saat meminta reset.
+            </p>
         </div>
     </div>
-    <?php
+</div>
+<?php
     include __DIR__ . '/../includes/footer.php';
     exit;
 }
@@ -972,9 +972,10 @@ if (!$assignment) {
     $disable_navbar = true;
     include __DIR__ . '/../includes/header.php';
     ?>
-    <div class="alert alert-warning">Penugasan tidak ditemukan.</div>
-    <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali</a>
-    <?php
+<div class="alert alert-warning">Penugasan tidak ditemukan.</div>
+<a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php"
+    class="btn btn-outline-secondary btn-sm">Kembali</a>
+<?php
     include __DIR__ . '/../includes/footer.php';
     exit;
 }
@@ -1047,8 +1048,11 @@ include __DIR__ . '/../includes/header.php';
         <div class="md-assignment-header bg-secondary bg-gradient text-white rounded-4 px-3 py-2 mb-3">
             <div class="md-assignment-header-grid">
                 <div class="md-assignment-header-left d-flex align-items-center">
-                    <span class="md-assignment-logo-wrap bg-white rounded-3 d-inline-flex align-items-center justify-content-center" aria-hidden="true">
-                        <img class="md-assignment-header-logo" src="<?php echo htmlspecialchars((string)$logoPath); ?>" width="32" height="32" alt="" loading="eager" decoding="async">
+                    <span
+                        class="md-assignment-logo-wrap bg-white rounded-3 d-inline-flex align-items-center justify-content-center"
+                        aria-hidden="true">
+                        <img class="md-assignment-header-logo" src="<?php echo htmlspecialchars((string)$logoPath); ?>"
+                            width="32" height="32" alt="" loading="eager" decoding="async">
                     </span>
                 </div>
 
@@ -1064,118 +1068,118 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <?php if ($actionError !== ''): ?>
-            <div class="alert alert-danger mt-3 mb-0"><?php echo htmlspecialchars($actionError); ?></div>
+        <div class="alert alert-danger mt-3 mb-0"><?php echo htmlspecialchars($actionError); ?></div>
         <?php endif; ?>
 
         <?php if ($isLocked): ?>
-            <?php $timeOverSubmitted = isset($_GET['submitted']) && $_GET['submitted'] !== ''; ?>
-            <div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
-                <div class="card shadow-sm border-0" style="max-width:520px;width:100%;">
-                    <div class="card-body text-center p-4 p-md-5">
-                        <div class="mb-3">
-                            <svg width="80" height="80" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-                                <defs>
-                                    <linearGradient id="examTimeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#0d6efd"/>
-                                        <stop offset="100%" stop-color="#6610f2"/>
-                                    </linearGradient>
-                                </defs>
-                                <circle cx="32" cy="32" r="24" fill="url(#examTimeGradient)" opacity="0.9"/>
-                                <circle cx="32" cy="32" r="20" fill="#ffffff"/>
-                                <line x1="32" y1="32" x2="32" y2="18" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
-                                <line x1="32" y1="32" x2="44" y2="32" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
-                                <circle cx="32" cy="32" r="2" fill="#0d6efd"/>
-                            </svg>
-                        </div>
-                        <h5 class="fw-semibold mb-2">Waktu ujian sudah habis</h5>
-                        <p class="text-muted mb-3">
-                            Batas waktu ujian untuk akun kamu sudah berakhir.
-                            Kamu tidak dapat lagi mengerjakan atau mengubah jawaban untuk ujian ini.
-                        </p>
-                        <?php
+        <?php $timeOverSubmitted = isset($_GET['submitted']) && $_GET['submitted'] !== ''; ?>
+        <div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+            <div class="card shadow-sm border-0" style="max-width:520px;width:100%;">
+                <div class="card-body text-center p-4 p-md-5">
+                    <div class="mb-3">
+                        <svg width="80" height="80" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                            <defs>
+                                <linearGradient id="examTimeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#0d6efd" />
+                                    <stop offset="100%" stop-color="#6610f2" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="32" cy="32" r="24" fill="url(#examTimeGradient)" opacity="0.9" />
+                            <circle cx="32" cy="32" r="20" fill="#ffffff" />
+                            <line x1="32" y1="32" x2="32" y2="18" stroke="#0d6efd" stroke-width="3"
+                                stroke-linecap="round" />
+                            <line x1="32" y1="32" x2="44" y2="32" stroke="#0d6efd" stroke-width="3"
+                                stroke-linecap="round" />
+                            <circle cx="32" cy="32" r="2" fill="#0d6efd" />
+                        </svg>
+                    </div>
+                    <h5 class="fw-semibold mb-2">Waktu ujian sudah habis</h5>
+                    <p class="text-muted mb-3">
+                        Batas waktu ujian untuk akun kamu sudah berakhir.
+                        Kamu tidak dapat lagi mengerjakan atau mengubah jawaban untuk ujian ini.
+                    </p>
+                    <?php
                             $statusLocked = (string)($assignment['status'] ?? 'assigned');
                             // Tampilkan tombol submit untuk ujian yang belum selesai, meski siswa belum sempat klik "Mulai".
                             // (Untuk ujian yang sudah time-over, submit diproses sebagai auto_submit agar tidak ditolak oleh guard isLocked.)
                             $canSubmitAfterTimeOver = ($isExamAssignment && $statusLocked !== 'done');
                         ?>
-                        <div class="d-grid d-sm-inline-flex gap-2 justify-content-sm-center">
-                            <?php if ($canSubmitAfterTimeOver): ?>
-                                <form method="post" class="d-inline" id="timeOverSubmitForm">
-                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                                    <input type="hidden" name="action" value="mark_done">
-                                    <input type="hidden" name="auto_submit" value="1">
-                                    <button type="submit" class="btn btn-primary">Submit Jawaban Ujian</button>
-                                </form>
-                            <?php endif; ?>
-                            <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary">
-                                Kembali ke Dashboard
-                            </a>
-                        </div>
-
+                    <div class="d-grid d-sm-inline-flex gap-2 justify-content-sm-center">
                         <?php if ($canSubmitAfterTimeOver): ?>
-                            <div class="small text-muted mt-3" id="timeOverAutoText">
-                                <?php if ($timeOverSubmitted): ?>
-                                    Jawaban kamu sudah diproses. Jika ada kendala, kamu bisa klik <b>Submit Jawaban Ujian</b>.
-                                <?php else: ?>
-                                    Mengirim jawaban secara otomatis… Jika tidak berhasil, klik tombol <b>Submit Jawaban Ujian</b>.
-                                <?php endif; ?>
-                            </div>
-                            <?php if (!$timeOverSubmitted): ?>
-                                <script>
-                                (function() {
-                                    var form = document.getElementById('timeOverSubmitForm');
-                                    if (!form) return;
-                                    // Best-effort auto submit after time over.
-                                    setTimeout(function() {
-                                        try { form.submit(); } catch (e) {}
-                                    }, 800);
-                                })();
-                                </script>
-                            <?php endif; ?>
+                        <form method="post" class="d-inline" id="timeOverSubmitForm">
+                            <input type="hidden" name="csrf_token"
+                                value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                            <input type="hidden" name="action" value="mark_done">
+                            <input type="hidden" name="auto_submit" value="1">
+                            <button type="submit" class="btn btn-primary">Submit Jawaban Ujian</button>
+                        </form>
                         <?php endif; ?>
-                        <p class="small text-muted mt-3 mb-0">
-                            Jika menurutmu ini terjadi karena kesalahan jadwal atau kendala teknis,
-                            silakan hubungi guru/admin untuk klarifikasi.
-                        </p>
+                        <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php"
+                            class="btn btn-outline-secondary">
+                            Kembali ke Dashboard
+                        </a>
                     </div>
+
+                    <?php if ($canSubmitAfterTimeOver): ?>
+                    <div class="small text-muted mt-3" id="timeOverAutoText">
+                        <?php if ($timeOverSubmitted): ?>
+                        Jawaban kamu sudah diproses. Jika ada kendala, kamu bisa klik <b>Submit Jawaban Ujian</b>.
+                        <?php else: ?>
+                        Mengirim jawaban secara otomatis… Jika tidak berhasil, klik tombol <b>Submit Jawaban Ujian</b>.
+                        <?php endif; ?>
+                    </div>
+                    <?php if (!$timeOverSubmitted): ?>
+                    <script>
+                    (function() {
+                        var form = document.getElementById('timeOverSubmitForm');
+                        if (!form) return;
+                        // Best-effort auto submit after time over.
+                        setTimeout(function() {
+                            try {
+                                form.submit();
+                            } catch (e) {}
+                        }, 800);
+                    })();
+                    </script>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                    <p class="small text-muted mt-3 mb-0">
+                        Jika menurutmu ini terjadi karena kesalahan jadwal atau kendala teknis,
+                        silakan hubungi guru/admin untuk klarifikasi.
+                    </p>
                 </div>
             </div>
-            <?php include __DIR__ . '/../includes/footer.php'; ?>
-            <?php exit; ?>
+        </div>
+        <?php include __DIR__ . '/../includes/footer.php'; ?>
+        <?php exit; ?>
         <?php endif; ?>
 
         <?php if ($requiresToken && !$tokenOk): ?>
-            <?php if ($isExamAssignment && !$tokenAvailable): ?>
-                <div class="alert alert-warning mt-3 mb-0">
-                    <div class="fw-semibold mb-1">Token ujian belum tersedia</div>
-                    <div class="small">Minta admin untuk generate token sebelum kamu bisa mulai ujian.</div>
+        <?php if ($isExamAssignment && !$tokenAvailable): ?>
+        <div class="alert alert-warning mt-3 mb-0">
+            <div class="fw-semibold mb-1">Token ujian belum tersedia</div>
+            <div class="small">Minta admin untuk generate token sebelum kamu bisa mulai ujian.</div>
+        </div>
+        <?php else: ?>
+        <div class="alert alert-info mt-3 mb-0">
+            <div class="fw-semibold mb-1">Token diperlukan</div>
+            <div class="small">
+                <?php echo $isExamAssignment ? 'Masukkan token 6 digit sebelum mulai ujian.' : 'Masukkan token 6 digit sebelum mulai.'; ?>
+            </div>
+            <form method="post" class="mt-2" style="max-width: 360px;">
+                <input type="hidden" name="csrf_token"
+                    value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                <input type="hidden" name="action" value="verify_token">
+                <div class="input-group">
+                    <input type="text" name="token_code" class="form-control" inputmode="numeric" pattern="[0-9]{6}"
+                        maxlength="6" placeholder="Token 6 digit" autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary">Lanjut</button>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-info mt-3 mb-0">
-                    <div class="fw-semibold mb-1">Token diperlukan</div>
-                    <div class="small"><?php echo $isExamAssignment ? 'Masukkan token 6 digit sebelum mulai ujian.' : 'Masukkan token 6 digit sebelum mulai.'; ?></div>
-                    <form method="post" class="mt-2" style="max-width: 360px;">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                        <input type="hidden" name="action" value="verify_token">
-                        <div class="input-group">
-                            <input
-                                type="text"
-                                name="token_code"
-                                class="form-control"
-                                inputmode="numeric"
-                                pattern="[0-9]{6}"
-                                maxlength="6"
-                                placeholder="Token 6 digit"
-                                autocomplete="off"
-                                required
-                            >
-                            <button type="submit" class="btn btn-primary">Lanjut</button>
-                        </div>
-                    </form>
-                </div>
-            <?php endif; ?>
-            <?php include __DIR__ . '/../includes/footer.php'; ?>
-            <?php exit; ?>
+            </form>
+        </div>
+        <?php endif; ?>
+        <?php include __DIR__ . '/../includes/footer.php'; ?>
+        <?php exit; ?>
         <?php endif; ?>
 
         <?php
@@ -1205,31 +1209,26 @@ include __DIR__ . '/../includes/header.php';
         ?>
 
         <?php if ($requiresStart && $startedNow === ''): ?>
-            <div class="alert alert-info mt-3 mb-0">
-                <div class="fw-semibold mb-1">Mode Ujian</div>
-                <div class="small">Klik <b>Mulai Ujian</b> untuk memulai timer. Setelah dimulai, waktu berjalan terus.</div>
-                <div class="mt-2">
-                    <form method="post" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                        <input type="hidden" name="action" value="start_exam">
-                        <button
-                            type="submit"
-                            class="btn btn-primary btn-sm"
-                            data-swal-confirm="1"
-                            data-swal-title="Mulai ujian?"
-                            data-swal-text="Mulai ujian sekarang? Timer akan berjalan terus."
-                            data-swal-confirm-text="Mulai"
-                            data-swal-cancel-text="Batal"
-                        >Mulai Ujian</button>
-                    </form>
-                </div>
+        <div class="alert alert-info mt-3 mb-0">
+            <div class="fw-semibold mb-1">Mode Ujian</div>
+            <div class="small">Klik <b>Mulai Ujian</b> untuk memulai timer. Setelah dimulai, waktu berjalan terus.</div>
+            <div class="mt-2">
+                <form method="post" class="d-inline">
+                    <input type="hidden" name="csrf_token"
+                        value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                    <input type="hidden" name="action" value="start_exam">
+                    <button type="submit" class="btn btn-primary btn-sm" data-swal-confirm="1"
+                        data-swal-title="Mulai ujian?" data-swal-text="Mulai ujian sekarang? Timer akan berjalan terus."
+                        data-swal-confirm-text="Mulai" data-swal-cancel-text="Batal">Mulai Ujian</button>
+                </form>
             </div>
-            <?php include __DIR__ . '/../includes/footer.php'; ?>
-            <?php exit; ?>
+        </div>
+        <?php include __DIR__ . '/../includes/footer.php'; ?>
+        <?php exit; ?>
         <?php endif; ?>
 
         <?php if ($requiresStart && $startedNow !== '' && $startedAtTs !== null): ?>
-            <?php
+        <?php
                 $now = $serverNowTs;
                 $dueRaw = trim((string)($assignment['due_at'] ?? ''));
                 $d = ($dueRaw !== '') ? strtotime($dueRaw) : false;
@@ -1270,114 +1269,121 @@ include __DIR__ . '/../includes/header.php';
                 $currentTimeStr = date('H:i:s', $now);
                 $lockTimeStr = date('H:i:s', $lockTs);
             ?>
-            <div class="alert alert-secondary mt-3 mb-0">
-                <div class="small text-center">
-                    Server <b id="mdCurrentTime"><?php echo htmlspecialchars($currentTimeStr); ?></b>
-                    <span class="text-muted">|</span>
-                    Batas <b><?php echo htmlspecialchars($dueTimeStr); ?></b>
-                </div>
-                <div class="small mt-1 text-center">Sisa <b id="mdCountdownTimer"><?php echo htmlspecialchars($remainFmt); ?></b></div>
+        <div class="alert alert-secondary mt-3 mb-0">
+            <div class="small text-center">
+                Server <b id="mdCurrentTime"><?php echo htmlspecialchars($currentTimeStr); ?></b>
+                <span class="text-muted">|</span>
+                Batas <b><?php echo htmlspecialchars($dueTimeStr); ?></b>
             </div>
-            <script>
-            // Aturan:
-            // - Jika siswa klik Selesai, submit manual (status selesai)
-            // - Jika countdown habis (karena durasi ATAU due_at lebih cepat), auto submit
-            // - Countdown dihitung dari waktu tersingkat antara durasi dan due_at
-            (function() {
-                var remain = <?php echo (int)$remain; ?>;
-                var serverNow = <?php echo (int)$now; ?>;
-                var serverTzOffsetSec = <?php echo (int)date('Z'); ?>;
-                var timerEl = document.getElementById('mdCountdownTimer');
-                var currentEl = document.getElementById('mdCurrentTime');
-                var timeOverUrl = '<?php echo addslashes($base_url); ?>/siswa/assignment_view.php?id=<?php echo (int)$id; ?>&flash=time_over&submitted=1';
-                function pad(n) { return n < 10 ? '0' + n : String(n); }
-                function updateTimer() {
-                    if (!timerEl) return;
-                    if (remain <= 0) {
-                        timerEl.textContent = '00:00';
-                        return;
+            <div class="small mt-1 text-center">Sisa <b
+                    id="mdCountdownTimer"><?php echo htmlspecialchars($remainFmt); ?></b></div>
+        </div>
+        <script>
+        // Aturan:
+        // - Jika siswa klik Selesai, submit manual (status selesai)
+        // - Jika countdown habis (karena durasi ATAU due_at lebih cepat), auto submit
+        // - Countdown dihitung dari waktu tersingkat antara durasi dan due_at
+        (function() {
+            var remain = <?php echo (int)$remain; ?>;
+            var serverNow = <?php echo (int)$now; ?>;
+            var serverTzOffsetSec = <?php echo (int)date('Z'); ?>;
+            var timerEl = document.getElementById('mdCountdownTimer');
+            var currentEl = document.getElementById('mdCurrentTime');
+            var timeOverUrl =
+                '<?php echo addslashes($base_url); ?>/siswa/assignment_view.php?id=<?php echo (int)$id; ?>&flash=time_over&submitted=1';
+
+            function pad(n) {
+                return n < 10 ? '0' + n : String(n);
+            }
+
+            function updateTimer() {
+                if (!timerEl) return;
+                if (remain <= 0) {
+                    timerEl.textContent = '00:00';
+                    return;
+                }
+                var h = Math.floor(remain / 3600);
+                var m = Math.floor((remain % 3600) / 60);
+                var s = remain % 60;
+                if (h > 0) {
+                    timerEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+                } else {
+                    timerEl.textContent = pad(m) + ':' + pad(s);
+                }
+            }
+
+            function updateCurrentTime() {
+                if (!currentEl) return;
+                // Tampilkan JAM SERVER (bukan jam device).
+                // Gunakan offset timezone dari server (PHP) agar konsisten meski timezone HP berbeda.
+                var d = new Date((serverNow + serverTzOffsetSec) * 1000);
+                var h = pad(d.getUTCHours());
+                var m = pad(d.getUTCMinutes());
+                var s = pad(d.getUTCSeconds());
+                currentEl.textContent = h + ':' + m + ':' + s;
+            }
+            updateTimer();
+            updateCurrentTime();
+
+            function disableInputs() {
+                var form = document.getElementById('answerForm');
+                if (!form) return;
+                try {
+                    var els = form.querySelectorAll('input, textarea, select, button');
+                    for (var i = 0; i < els.length; i++) {
+                        var el = els[i];
+                        // Biarkan tombol submit berjalan jika diperlukan.
+                        if (el && el.type === 'submit') continue;
+                        if (el) el.disabled = true;
                     }
-                    var h = Math.floor(remain / 3600);
-                    var m = Math.floor((remain % 3600) / 60);
-                    var s = remain % 60;
-                    if (h > 0) {
-                        timerEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
-                    } else {
-                        timerEl.textContent = pad(m) + ':' + pad(s);
-                    }
-                }
-                function updateCurrentTime() {
-                    if (!currentEl) return;
-                    // Tampilkan JAM SERVER (bukan jam device).
-                    // Gunakan offset timezone dari server (PHP) agar konsisten meski timezone HP berbeda.
-                    var d = new Date((serverNow + serverTzOffsetSec) * 1000);
-                    var h = pad(d.getUTCHours());
-                    var m = pad(d.getUTCMinutes());
-                    var s = pad(d.getUTCSeconds());
-                    currentEl.textContent = h + ':' + m + ':' + s;
-                }
-                updateTimer();
-                updateCurrentTime();
+                } catch (e) {}
+            }
 
-                function disableInputs() {
-                    var form = document.getElementById('answerForm');
-                    if (!form) return;
-                    try {
-                        var els = form.querySelectorAll('input, textarea, select, button');
-                        for (var i = 0; i < els.length; i++) {
-                            var el = els[i];
-                            // Biarkan tombol submit berjalan jika diperlukan.
-                            if (el && el.type === 'submit') continue;
-                            if (el) el.disabled = true;
-                        }
-                    } catch (e) {}
+            function handleTimeOver() {
+                disableInputs();
+
+                var form = document.getElementById('answerForm');
+                if (!form || form.classList.contains('md-form-done')) {
+                    window.location.href = timeOverUrl;
+                    return;
                 }
 
-                function handleTimeOver() {
-                    disableInputs();
+                form.classList.add('md-form-done'); // prevent double submit
 
-                    var form = document.getElementById('answerForm');
-                    if (!form || form.classList.contains('md-form-done')) {
+                // Best-effort: kirim jawaban via fetch, lalu tetap arahkan ke halaman "waktu habis".
+                try {
+                    var fd = new FormData(form);
+                    fd.set('auto_submit', '1');
+                    fd.set('action', 'mark_done');
+
+                    fetch(form.getAttribute('action') || window.location.href, {
+                        method: 'POST',
+                        body: fd,
+                        credentials: 'same-origin'
+                    }).then(function() {
                         window.location.href = timeOverUrl;
-                        return;
-                    }
-
-                    form.classList.add('md-form-done'); // prevent double submit
-
-                    // Best-effort: kirim jawaban via fetch, lalu tetap arahkan ke halaman "waktu habis".
-                    try {
-                        var fd = new FormData(form);
-                        fd.set('auto_submit', '1');
-                        fd.set('action', 'mark_done');
-
-                        fetch(form.getAttribute('action') || window.location.href, {
-                            method: 'POST',
-                            body: fd,
-                            credentials: 'same-origin'
-                        }).then(function() {
-                            window.location.href = timeOverUrl;
-                        }).catch(function() {
-                            window.location.href = timeOverUrl;
-                        });
-                    } catch (e) {
+                    }).catch(function() {
                         window.location.href = timeOverUrl;
-                    }
+                    });
+                } catch (e) {
+                    window.location.href = timeOverUrl;
                 }
+            }
 
-                var interval = setInterval(function() {
-                    remain--;
-                    serverNow++;
-                    if (remain <= 0) {
-                        clearInterval(interval);
-                        if (timerEl) timerEl.textContent = '00:00';
-                        handleTimeOver();
-                    } else {
-                        updateTimer();
-                        updateCurrentTime();
-                    }
-                }, 1000);
-            })();
-            </script>
+            var interval = setInterval(function() {
+                remain--;
+                serverNow++;
+                if (remain <= 0) {
+                    clearInterval(interval);
+                    if (timerEl) timerEl.textContent = '00:00';
+                    handleTimeOver();
+                } else {
+                    updateTimer();
+                    updateCurrentTime();
+                }
+            }, 1000);
+        })();
+        </script>
         <?php endif; ?>
 
         <div id="mdIntroWrap" class="mt-3">
@@ -1393,14 +1399,14 @@ include __DIR__ . '/../includes/header.php';
                     <div class="d-flex align-items-center justify-content-between gap-2">
                         <div class="fw-semibold"><?php echo htmlspecialchars($introTitle); ?></div>
                         <?php if ($introCount > 0): ?>
-                            <div class="small text-muted"><?php echo (int)$introCount; ?> soal</div>
+                        <div class="small text-muted"><?php echo (int)$introCount; ?> soal</div>
                         <?php endif; ?>
                     </div>
 
                     <div class="small text-muted mt-1">
                         Klik tombol <b>Mulai</b> untuk menampilkan soal.
                         <?php if ($introIsExam): ?>
-                            Waktu akan berjalan dan otomatis terkunci saat habis.
+                        Waktu akan berjalan dan otomatis terkunci saat habis.
                         <?php endif; ?>
                     </div>
 
@@ -1408,31 +1414,32 @@ include __DIR__ . '/../includes/header.php';
                         <li>Pastikan koneksi stabil.</li>
                         <li>Jawaban disimpan otomatis saat kamu memilih opsi.</li>
                         <?php if ($introIsExam && $introDurMin > 0): ?>
-                            <li>Durasi: <?php echo (int)$introDurMin; ?> menit.</li>
+                        <li>Durasi: <?php echo (int)$introDurMin; ?> menit.</li>
                         <?php endif; ?>
                         <li>Jika waktu habis, jawaban akan diproses otomatis.</li>
                     </ul>
 
                     <?php if (!empty($assignment['catatan'])): ?>
-                        <div class="small mt-3 p-2 bg-body-tertiary rounded-3">
-                            <div class="fw-semibold mb-1">Catatan</div>
-                            <div><?php echo nl2br(htmlspecialchars((string)$assignment['catatan'])); ?></div>
-                        </div>
+                    <div class="small mt-3 p-2 bg-body-tertiary rounded-3">
+                        <div class="fw-semibold mb-1">Catatan</div>
+                        <div><?php echo nl2br(htmlspecialchars((string)$assignment['catatan'])); ?></div>
+                    </div>
                     <?php endif; ?>
 
                     <?php if ($requiresToken && $tokenOk && $tokenAvailable): ?>
-                        <div class="small mt-3">Token: <b><?php echo htmlspecialchars($tokenCode); ?></b></div>
+                    <div class="small mt-3">Token: <b><?php echo htmlspecialchars($tokenCode); ?></b></div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
 
-            <form id="answerForm" method="post">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                <input type="hidden" name="default_action" value="save_answers">
+        <form id="answerForm" method="post">
+            <input type="hidden" name="csrf_token"
+                value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+            <input type="hidden" name="default_action" value="save_answers">
 
-                <?php foreach ($items as $idx => $q): ?>
-                    <?php
+            <?php foreach ($items as $idx => $q): ?>
+            <?php
                         $no = $shuffleQuestions ? ($idx + 1) : (int)($q['question_number'] ?? 0);
                         if ($no <= 0) $no = $idx + 1;
                         $qid = (int)($q['id'] ?? 0);
@@ -1443,17 +1450,17 @@ include __DIR__ . '/../includes/header.php';
                         $saved = (string)($savedAnswers[$qid] ?? '');
                         $isDone = ((string)($assignment['status'] ?? '') === 'done');
                     ?>
-                    <div class="mb-3 md-question" data-md-index="<?php echo (int)$idx; ?>" data-md-no="<?php echo (int)$no; ?>">
-                        <div class="d-flex align-items-start justify-content-between gap-2">
-                            <div class="fw-semibold">Soal <?php echo $no; ?></div>
-                            <div class="text-muted small"></div>
-                        </div>
-                        <div class="mt-2 richtext-content">
-                            <?php echo $renderHtml((string)($q['pertanyaan'] ?? '')); ?>
-                        </div>
+            <div class="mb-3 md-question" data-md-index="<?php echo (int)$idx; ?>" data-md-no="<?php echo (int)$no; ?>">
+                <div class="d-flex align-items-start justify-content-between gap-2">
+                    <div class="fw-semibold">Soal <?php echo $no; ?></div>
+                    <div class="text-muted small"></div>
+                </div>
+                <div class="mt-2 richtext-content">
+                    <?php echo $renderHtml((string)($q['pertanyaan'] ?? '')); ?>
+                </div>
 
-                        <?php if ($isPg || $isPgKompleks): ?>
-                            <?php
+                <?php if ($isPg || $isPgKompleks): ?>
+                <?php
                                 $opts = [
                                     'A' => (string)($q['pilihan_1'] ?? ''),
                                     'B' => (string)($q['pilihan_2'] ?? ''),
@@ -1483,39 +1490,46 @@ include __DIR__ . '/../includes/header.php';
                                     $optOrder = $stableShuffle($optOrder, 'shuffle_options|' . (string)$id . '|' . (string)$studentId . '|' . (string)$qid, static fn($label) => (string)$label);
                                 }
                             ?>
-                            <?php if ($hasAny): ?>
-                                <div class="mt-2">
-                                    <div class="small text-muted mb-2">Jawaban:</div>
-                                    <?php
+                <?php if ($hasAny): ?>
+                <div class="mt-2">
+                    <div class="small text-muted mb-2">Jawaban:</div>
+                    <?php
                                         $displayLetters = ['A', 'B', 'C', 'D', 'E'];
                                         $sequence = $shuffleOptions ? $optOrder : array_keys($opts);
                                         $seqIdx = 0;
                                     ?>
-                                    <?php foreach ($sequence as $label): ?>
-                                        <?php $optHtml = (string)($opts[$label] ?? ''); ?>
-                                        <?php if (trim($optHtml) === '') continue; ?>
-                                        <?php
+                    <?php foreach ($sequence as $label): ?>
+                    <?php $optHtml = (string)($opts[$label] ?? ''); ?>
+                    <?php if (trim($optHtml) === '') continue; ?>
+                    <?php
                                             $optIdx = ['A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5][$label] ?? null;
                                             $val = $optIdx ? ('pilihan_' . $optIdx) : '';
                                             $displayLabel = $displayLetters[$seqIdx] ?? $label;
                                             $seqIdx++;
                                         ?>
-                                        <label class="md-answer-box d-flex gap-2 align-items-start mb-2">
-                                            <?php if ($isPgKompleks): ?>
-                                                <input class="form-check-input mt-1" type="checkbox" name="ans_multi[<?php echo (int)$qid; ?>][]" value="<?php echo htmlspecialchars($val); ?>" <?php echo in_array($val, $selectedMulti, true) ? 'checked' : ''; ?> <?php echo $isDone ? 'disabled' : ''; ?>>
-                                            <?php else: ?>
-                                                <input class="form-check-input mt-1" type="radio" name="ans[<?php echo (int)$qid; ?>]" value="<?php echo htmlspecialchars($val); ?>" <?php echo ($saved !== '' && $saved === $val) ? 'checked' : ''; ?> <?php echo $isDone ? 'disabled' : ''; ?>>
-                                            <?php endif; ?>
-                                            <span class="d-flex gap-2 align-items-start" style="flex:1;">
-                                                <span class="fw-semibold" style="min-width: 22px;"><?php echo htmlspecialchars($displayLabel); ?>.</span>
-                                                <span class="richtext-content"><?php echo $renderHtml($optHtml); ?></span>
-                                            </span>
-                                        </label>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                        <?php elseif ($isBs): ?>
-                            <?php
+                    <label class="md-answer-box d-flex gap-2 align-items-start mb-2">
+                        <?php if ($isPgKompleks): ?>
+                        <input class="form-check-input mt-1" type="checkbox"
+                            name="ans_multi[<?php echo (int)$qid; ?>][]" value="<?php echo htmlspecialchars($val); ?>"
+                            <?php echo in_array($val, $selectedMulti, true) ? 'checked' : ''; ?>
+                            <?php echo $isDone ? 'disabled' : ''; ?>>
+                        <?php else: ?>
+                        <input class="form-check-input mt-1" type="radio" name="ans[<?php echo (int)$qid; ?>]"
+                            value="<?php echo htmlspecialchars($val); ?>"
+                            <?php echo ($saved !== '' && $saved === $val) ? 'checked' : ''; ?>
+                            <?php echo $isDone ? 'disabled' : ''; ?>>
+                        <?php endif; ?>
+                        <span class="d-flex gap-2 align-items-start" style="flex:1;">
+                            <span class="fw-semibold"
+                                style="min-width: 22px;"><?php echo htmlspecialchars($displayLabel); ?>.</span>
+                            <span class="richtext-content"><?php echo $renderHtml($optHtml); ?></span>
+                        </span>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <?php elseif ($isBs): ?>
+                <?php
                                 $statements = [
                                     1 => (string)($q['pilihan_1'] ?? ''),
                                     2 => (string)($q['pilihan_2'] ?? ''),
@@ -1524,830 +1538,900 @@ include __DIR__ . '/../includes/header.php';
                                 ];
                                 $picked = array_map('trim', explode('|', $saved));
                             ?>
-                            <div class="mt-2">
-                                <?php for ($i = 1; $i <= 4; $i++): ?>
-                                    <div class="border rounded p-2 mb-2">
-                                        <div class="fw-semibold mb-1">Pernyataan <?php echo (int)$i; ?></div>
-                                        <div class="richtext-content mb-2"><?php echo $renderHtml((string)($statements[$i] ?? '')); ?></div>
-                                        <?php $pickedVal = (string)($picked[$i - 1] ?? ''); ?>
-                                        <div class="d-flex gap-2 flex-wrap">
-                                            <label class="md-answer-box d-flex gap-2 align-items-center mb-0" style="min-width: 140px;">
-                                                <input class="form-check-input" type="radio" name="ans_bs[<?php echo (int)$qid; ?>][<?php echo (int)$i; ?>]" value="Benar" <?php echo ($pickedVal === 'Benar') ? 'checked' : ''; ?> <?php echo $isDone ? 'disabled' : ''; ?>>
-                                                <span class="fw-semibold">Benar</span>
-                                            </label>
-                                            <label class="md-answer-box d-flex gap-2 align-items-center mb-0" style="min-width: 140px;">
-                                                <input class="form-check-input" type="radio" name="ans_bs[<?php echo (int)$qid; ?>][<?php echo (int)$i; ?>]" value="Salah" <?php echo ($pickedVal === 'Salah') ? 'checked' : ''; ?> <?php echo $isDone ? 'disabled' : ''; ?>>
-                                                <span class="fw-semibold">Salah</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                <?php endfor; ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="text-muted small mt-2">Tipe soal ini belum didukung untuk input jawaban otomatis.</div>
+                <div class="mt-2">
+                    <?php for ($i = 1; $i <= 4; $i++): ?>
+                    <div class="border rounded p-2 mb-2">
+                        <div class="fw-semibold mb-1">Pernyataan <?php echo (int)$i; ?></div>
+                        <div class="richtext-content mb-2"><?php echo $renderHtml((string)($statements[$i] ?? '')); ?>
+                        </div>
+                        <?php $pickedVal = (string)($picked[$i - 1] ?? ''); ?>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <label class="md-answer-box d-flex gap-2 align-items-center mb-0" style="min-width: 140px;">
+                                <input class="form-check-input" type="radio"
+                                    name="ans_bs[<?php echo (int)$qid; ?>][<?php echo (int)$i; ?>]" value="Benar"
+                                    <?php echo ($pickedVal === 'Benar') ? 'checked' : ''; ?>
+                                    <?php echo $isDone ? 'disabled' : ''; ?>>
+                                <span class="fw-semibold">Benar</span>
+                            </label>
+                            <label class="md-answer-box d-flex gap-2 align-items-center mb-0" style="min-width: 140px;">
+                                <input class="form-check-input" type="radio"
+                                    name="ans_bs[<?php echo (int)$qid; ?>][<?php echo (int)$i; ?>]" value="Salah"
+                                    <?php echo ($pickedVal === 'Salah') ? 'checked' : ''; ?>
+                                    <?php echo $isDone ? 'disabled' : ''; ?>>
+                                <span class="fw-semibold">Salah</span>
+                            </label>
+                        </div>
+                    </div>
+                    <?php endfor; ?>
+                </div>
+                <?php else: ?>
+                <div class="text-muted small mt-2">Tipe soal ini belum didukung untuk input jawaban otomatis.</div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+
+            <div id="mdNavBar" class="md-nav-grid mt-3 pt-3 border-top">
+                <div class="md-nav-left d-flex align-items-center gap-2">
+                    <a id="mdBackBtn" class="btn btn-outline-secondary md-nav-btn"
+                        href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Kembali</a>
+                    <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdPrevBtn"
+                        title="Sebelumnya">
+                        <i class="bi bi-arrow-left"></i><span>Prev</span>
+                    </button>
+                </div>
+
+                <div class="md-nav-center d-flex align-items-center justify-content-center">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn"
+                            data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal"
+                            title="Daftar Soal">
+                            <i class="bi bi-list-ol"></i><span>Daftar Soal</span>
+                        </button>
+                        <?php if ($showCalculator): ?>
+                        <button type="button" id="mdCalcBtn" class="btn btn-outline-secondary md-nav-btn"
+                            data-bs-toggle="modal" data-bs-target="#mdCalcModal" aria-controls="mdCalcModal"
+                            title="Kalkulator">
+                            <i class="bi bi-calculator"></i><span>Kalkulator</span>
+                        </button>
                         <?php endif; ?>
                     </div>
-                <?php endforeach; ?>
-
-                <div id="mdNavBar" class="md-nav-grid mt-3 pt-3 border-top">
-                    <div class="md-nav-left d-flex align-items-center gap-2">
-                        <a id="mdBackBtn" class="btn btn-outline-secondary md-nav-btn" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Kembali</a>
-                                                <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdPrevBtn" title="Sebelumnya">
-                                                    <i class="bi bi-arrow-left"></i><span>Prev</span>
-                                                </button>
-                    </div>
-
-                    <div class="md-nav-center d-flex align-items-center justify-content-center">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                                        <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal" title="Daftar Soal">
-                                                            <i class="bi bi-list-ol"></i><span>Daftar Soal</span>
-                                                        </button>
-                            <?php if ($showCalculator): ?>
-                                                                <button type="button" id="mdCalcBtn" class="btn btn-outline-secondary md-nav-btn" data-bs-toggle="modal" data-bs-target="#mdCalcModal" aria-controls="mdCalcModal" title="Kalkulator">
-                                                                    <i class="bi bi-calculator"></i><span>Kalkulator</span>
-                                                                </button>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <div class="md-nav-right d-flex align-items-center justify-content-end gap-2">
-                                                <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdNextBtn" title="Berikutnya">
-                                                    <i class="bi bi-arrow-right"></i><span>Next</span>
-                                                </button>
-<!-- Bootstrap Icons CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-                        <?php $jenisLabel = strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))); ?>
-                        <button type="button" class="btn btn-primary md-nav-btn" id="mdStartBtn">Mulai <?php echo $jenisLabel === 'ujian' ? 'Ujian' : 'Mengerjakan'; ?></button>
-
-                        <button
-                            form="answerForm"
-                            type="submit"
-                            name="action"
-                            value="mark_done"
-                            class="btn btn-success md-nav-btn"
-                            id="mdFinishBtn"
-                            data-swal-confirm="1"
-                            data-swal-title="Selesai?"
-                            data-swal-text="Akhiri <?php echo $jenisLabel === 'ujian' ? 'ujian' : 'tugas'; ?> sekarang? Setelah selesai, jawaban akan terkunci."
-                            data-swal-confirm-text="Selesai"
-                            data-swal-cancel-text="Batal"
-                            <?php if ($jenisLabel === 'ujian'): ?>
-                                data-swal-require-check="1"
-                                data-swal-check-text="Saya yakin ingin mengakhiri ujian ini."
-                                data-swal-check-error="Centang dulu sebelum mengakhiri ujian."
-                            <?php endif; ?>
-                        >Selesai</button>
-                    </div>
                 </div>
-            </form>
 
-            <div class="modal fade" id="mdSoalModal" tabindex="-1" aria-labelledby="mdSoalModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="mdSoalModalLabel">Daftar Soal</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="md-soal-grid" id="mdSoalList">
-                                <?php foreach ($items as $idx => $q): ?>
-                                    <?php
+                <div class="md-nav-right d-flex align-items-center justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdNextBtn"
+                        title="Berikutnya">
+                        <i class="bi bi-arrow-right"></i><span>Next</span>
+                    </button>
+                    <!-- Bootstrap Icons CDN -->
+                    <link rel="stylesheet"
+                        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+                    <?php $jenisLabel = strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))); ?>
+                    <button type="button" class="btn btn-primary md-nav-btn" id="mdStartBtn">Mulai
+                        <?php echo $jenisLabel === 'ujian' ? 'Ujian' : 'Mengerjakan'; ?></button>
+
+                    <button form="answerForm" type="submit" name="action" value="mark_done"
+                        class="btn btn-success md-nav-btn" id="mdFinishBtn" data-swal-confirm="1"
+                        data-swal-title="Selesai?"
+                        data-swal-text="Akhiri <?php echo $jenisLabel === 'ujian' ? 'ujian' : 'tugas'; ?> sekarang? Setelah selesai, jawaban akan terkunci."
+                        data-swal-confirm-text="Selesai" data-swal-cancel-text="Batal"
+                        <?php if ($jenisLabel === 'ujian'): ?> data-swal-require-check="1"
+                        data-swal-check-text="Saya yakin ingin mengakhiri ujian ini."
+                        data-swal-check-error="Centang dulu sebelum mengakhiri ujian." <?php endif; ?>>Selesai</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="modal fade" id="mdSoalModal" tabindex="-1" aria-labelledby="mdSoalModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="mdSoalModalLabel">Daftar Soal</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="md-soal-grid" id="mdSoalList">
+                            <?php foreach ($items as $idx => $q): ?>
+                            <?php
                                         $no = $shuffleQuestions ? ($idx + 1) : (int)($q['question_number'] ?? 0);
                                         if ($no <= 0) $no = $idx + 1;
                                     ?>
-                                    <button type="button" class="btn btn-outline-secondary md-soal-num-btn" data-md-go="<?php echo (int)$idx; ?>" data-bs-dismiss="modal">
-                                        <?php echo (int)$no; ?>
-                                    </button>
-                                <?php endforeach; ?>
-                            </div>
+                            <button type="button" class="btn btn-outline-secondary md-soal-num-btn"
+                                data-md-go="<?php echo (int)$idx; ?>" data-bs-dismiss="modal">
+                                <?php echo (int)$no; ?>
+                            </button>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <?php if ($showCalculator): ?>
-            <div class="modal fade" id="mdCalcModal" tabindex="-1" aria-labelledby="mdCalcModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="mdCalcModalLabel">Kalkulator</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <?php if ($showCalculator): ?>
+        <div class="modal fade" id="mdCalcModal" tabindex="-1" aria-labelledby="mdCalcModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="mdCalcModalLabel">Kalkulator</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" class="form-control mb-3 text-end" id="mdCalcDisplay" value="" readonly>
+
+                        <div class="row g-2">
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="C">C</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="BS">⌫</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="/">/</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="*">*</button></div>
+
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="7">7</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="8">8</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="9">9</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="-">-</button></div>
+
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="4">4</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="5">5</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="6">6</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="+">+</button></div>
+
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="1">1</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="2">2</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="3">3</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-primary w-100"
+                                    data-calc="=">=</button></div>
+
+                            <div class="col-6"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc="0">0</button></div>
+                            <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100"
+                                    data-calc=".">.</button></div>
+                            <div class="col-3"></div>
                         </div>
-                        <div class="modal-body">
-                            <input type="text" class="form-control mb-3 text-end" id="mdCalcDisplay" value="" readonly>
-
-                            <div class="row g-2">
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="C">C</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="BS">⌫</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="/">/</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="*">*</button></div>
-
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="7">7</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="8">8</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="9">9</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="-">-</button></div>
-
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="4">4</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="5">5</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="6">6</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="+">+</button></div>
-
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="1">1</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="2">2</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc="3">3</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-primary w-100" data-calc="=">=</button></div>
-
-                                <div class="col-6"><button type="button" class="btn btn-outline-secondary w-100" data-calc="0">0</button></div>
-                                <div class="col-3"><button type="button" class="btn btn-outline-secondary w-100" data-calc=".">.</button></div>
-                                <div class="col-3"></div>
-                            </div>
-                            <div class="form-text mt-2">Gunakan tombol untuk menghitung. Kalkulator tidak menyimpan riwayat.</div>
+                        <div class="form-text mt-2">Gunakan tombol untuk menghitung. Kalkulator tidak menyimpan riwayat.
                         </div>
                     </div>
                 </div>
             </div>
-            <?php endif; ?>
+        </div>
+        <?php endif; ?>
 
-            <script>
-                (function () {
-                    function ready(fn) {
-                        if (document.readyState !== 'loading') fn();
-                        else document.addEventListener('DOMContentLoaded', fn);
+        <script>
+        (function() {
+            function ready(fn) {
+                if (document.readyState !== 'loading') fn();
+                else document.addEventListener('DOMContentLoaded', fn);
+            }
+
+            ready(function() {
+                var questions = Array.prototype.slice.call(document.querySelectorAll('.md-question'));
+                if (!questions.length) return;
+
+                // Ensure modal sits directly under <body> so it isn't affected by any parent stacking context.
+                var soalModalEl = document.getElementById('mdSoalModal');
+                if (soalModalEl && soalModalEl.parentElement !== document.body) {
+                    document.body.appendChild(soalModalEl);
+                }
+
+                var calcModalEl = document.getElementById('mdCalcModal');
+                if (calcModalEl && calcModalEl.parentElement !== document.body) {
+                    document.body.appendChild(calcModalEl);
+                }
+
+                var prevBtn = document.getElementById('mdPrevBtn');
+                var nextBtn = document.getElementById('mdNextBtn');
+                var startBtn = document.getElementById('mdStartBtn');
+                var finishBtn = document.getElementById('mdFinishBtn');
+                var listEl = document.getElementById('mdSoalList');
+                var listBtn = document.getElementById('mdListBtn');
+                var backBtn = document.getElementById('mdBackBtn');
+                var introWrap = document.getElementById('mdIntroWrap');
+                var introBox = document.getElementById('mdIntroBox');
+                var navBar = document.getElementById('mdNavBar');
+
+                // Kalkulator (opsional)
+                (function initCalculator() {
+                    var display = document.getElementById('mdCalcDisplay');
+                    var modal = document.getElementById('mdCalcModal');
+                    if (!display || !modal) return;
+
+                    function getExpr() {
+                        return String(display.value || '');
                     }
 
-                    ready(function () {
-                        var questions = Array.prototype.slice.call(document.querySelectorAll('.md-question'));
-                        if (!questions.length) return;
+                    function setExpr(v) {
+                        display.value = String(v || '');
+                    }
 
-                        // Ensure modal sits directly under <body> so it isn't affected by any parent stacking context.
-                        var soalModalEl = document.getElementById('mdSoalModal');
-                        if (soalModalEl && soalModalEl.parentElement !== document.body) {
-                            document.body.appendChild(soalModalEl);
+                    function append(ch) {
+                        setExpr(getExpr() + String(ch));
+                    }
+
+                    function backspace() {
+                        var v = getExpr();
+                        setExpr(v.slice(0, Math.max(0, v.length - 1)));
+                    }
+
+                    function clearAll() {
+                        setExpr('');
+                    }
+
+                    function safeEval(expr) {
+                        var clean = String(expr || '').replace(/\s+/g, '');
+                        if (!clean) return '';
+                        // allow only digits, operators, dot, parentheses
+                        if (!/^[0-9+\-*/().]+$/.test(clean)) return 'Err';
+                        try {
+                            // eslint-disable-next-line no-new-func
+                            var result = Function('"use strict";return (' + clean + ')')();
+                            if (typeof result !== 'number' || !isFinite(result)) return 'Err';
+                            // trim floating noise
+                            var s = String(result);
+                            return s;
+                        } catch (e) {
+                            return 'Err';
+                        }
+                    }
+
+                    modal.addEventListener('click', function(ev) {
+                        var btn = ev.target && ev.target.closest ? ev.target.closest(
+                            '[data-calc]') : null;
+                        if (!btn) return;
+                        var key = String(btn.getAttribute('data-calc') || '');
+                        if (!key) return;
+
+                        if (key === 'C') {
+                            clearAll();
+                            return;
+                        }
+                        if (key === 'BS') {
+                            backspace();
+                            return;
+                        }
+                        if (key === '=') {
+                            setExpr(safeEval(getExpr()));
+                            return;
                         }
 
-                        var calcModalEl = document.getElementById('mdCalcModal');
-                        if (calcModalEl && calcModalEl.parentElement !== document.body) {
-                            document.body.appendChild(calcModalEl);
-                        }
+                        append(key);
+                    });
+                })();
 
-                        var prevBtn = document.getElementById('mdPrevBtn');
-                        var nextBtn = document.getElementById('mdNextBtn');
-                        var startBtn = document.getElementById('mdStartBtn');
-                        var finishBtn = document.getElementById('mdFinishBtn');
-                        var listEl = document.getElementById('mdSoalList');
-                        var listBtn = document.getElementById('mdListBtn');
-                        var backBtn = document.getElementById('mdBackBtn');
-                        var introWrap = document.getElementById('mdIntroWrap');
-                        var introBox = document.getElementById('mdIntroBox');
-                        var navBar = document.getElementById('mdNavBar');
+                var currentIndex = 0;
 
-                        // Kalkulator (opsional)
-                        (function initCalculator() {
-                            var display = document.getElementById('mdCalcDisplay');
-                            var modal = document.getElementById('mdCalcModal');
-                            if (!display || !modal) return;
+                var storageKey = 'md_ans_' + String(<?php echo (int)$id; ?>);
+                var violationKey = 'md_exam_violation_' + String(<?php echo (int)$id; ?>);
 
-                            function getExpr() {
-                                return String(display.value || '');
-                            }
+                function loadDraft() {
+                    try {
+                        var raw = localStorage.getItem(storageKey);
+                        if (!raw) return;
+                        var draft = JSON.parse(raw);
+                        if (!draft || typeof draft !== 'object') return;
+                        var formEl = document.getElementById('answerForm');
+                        if (!formEl) return;
 
-                            function setExpr(v) {
-                                display.value = String(v || '');
-                            }
+                        Object.keys(draft).forEach(function(name) {
+                            var val = draft[name];
+                            // Attribute selector inside quotes allows brackets safely.
+                            var safeName = String(name).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                            var els = formEl.querySelectorAll('[name="' + safeName + '"]');
+                            if (!els || !els.length) return;
 
-                            function append(ch) {
-                                setExpr(getExpr() + String(ch));
-                            }
-
-                            function backspace() {
-                                var v = getExpr();
-                                setExpr(v.slice(0, Math.max(0, v.length - 1)));
-                            }
-
-                            function clearAll() {
-                                setExpr('');
-                            }
-
-                            function safeEval(expr) {
-                                var clean = String(expr || '').replace(/\s+/g, '');
-                                if (!clean) return '';
-                                // allow only digits, operators, dot, parentheses
-                                if (!/^[0-9+\-*/().]+$/.test(clean)) return 'Err';
-                                try {
-                                    // eslint-disable-next-line no-new-func
-                                    var result = Function('"use strict";return (' + clean + ')')();
-                                    if (typeof result !== 'number' || !isFinite(result)) return 'Err';
-                                    // trim floating noise
-                                    var s = String(result);
-                                    return s;
-                                } catch (e) {
-                                    return 'Err';
-                                }
-                            }
-
-                            modal.addEventListener('click', function (ev) {
-                                var btn = ev.target && ev.target.closest ? ev.target.closest('[data-calc]') : null;
-                                if (!btn) return;
-                                var key = String(btn.getAttribute('data-calc') || '');
-                                if (!key) return;
-
-                                if (key === 'C') {
-                                    clearAll();
-                                    return;
-                                }
-                                if (key === 'BS') {
-                                    backspace();
-                                    return;
-                                }
-                                if (key === '=') {
-                                    setExpr(safeEval(getExpr()));
-                                    return;
-                                }
-
-                                append(key);
-                            });
-                        })();
-
-                        var currentIndex = 0;
-
-                        var storageKey = 'md_ans_' + String(<?php echo (int)$id; ?>);
-                        var violationKey = 'md_exam_violation_' + String(<?php echo (int)$id; ?>);
-
-                        function loadDraft() {
-                            try {
-                                var raw = localStorage.getItem(storageKey);
-                                if (!raw) return;
-                                var draft = JSON.parse(raw);
-                                if (!draft || typeof draft !== 'object') return;
-                                var formEl = document.getElementById('answerForm');
-                                if (!formEl) return;
-
-                                Object.keys(draft).forEach(function (name) {
-                                    var val = draft[name];
-                                    // Attribute selector inside quotes allows brackets safely.
-                                    var safeName = String(name).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-                                    var els = formEl.querySelectorAll('[name="' + safeName + '"]');
-                                    if (!els || !els.length) return;
-
-                                    // Select
-                                    if (els.length === 1 && els[0].tagName === 'SELECT') {
-                                        els[0].value = String(val);
-                                        return;
-                                    }
-
-                                    // Radio/checkbox group
-                                    var values = Array.isArray(val) ? val.map(String) : [String(val)];
-                                    els.forEach(function (el) {
-                                        if (!el || !('type' in el)) return;
-                                        var t = (el.type || '').toLowerCase();
-                                        if (t === 'radio' || t === 'checkbox') {
-                                            el.checked = values.indexOf(String(el.value)) !== -1;
-                                        }
-                                    });
-                                });
-                            } catch (e) {
-                                // ignore
-                            }
-                        }
-
-                        function saveDraft() {
-                            try {
-                                var formEl = document.getElementById('answerForm');
-                                if (!formEl) return;
-                                var fd = new FormData(formEl);
-                                var obj = {};
-                                fd.forEach(function (value, key) {
-                                    if (obj[key] === undefined) {
-                                        obj[key] = value;
-                                    } else if (Array.isArray(obj[key])) {
-                                        obj[key].push(value);
-                                    } else {
-                                        obj[key] = [obj[key], value];
-                                    }
-                                });
-                                localStorage.setItem(storageKey, JSON.stringify(obj));
-                            } catch (e) {
-                                // ignore
-                            }
-                        }
-
-                        function setNavVisibilityForIntro() {
-                            if (prevBtn) prevBtn.classList.add('d-none');
-                            if (nextBtn) nextBtn.classList.add('d-none');
-                            if (finishBtn) finishBtn.classList.add('d-none');
-                            if (startBtn) startBtn.classList.remove('d-none');
-                            if (listBtn) listBtn.classList.add('d-none');
-                            if (backBtn) backBtn.classList.remove('d-none');
-                            if (introWrap) introWrap.classList.remove('d-none');
-                            if (introBox) introBox.classList.remove('d-none');
-                        }
-
-                        function setNavVisibilityForQuestion() {
-                            if (startBtn) startBtn.classList.add('d-none');
-                            if (prevBtn) prevBtn.classList.remove('d-none');
-                            if (nextBtn) nextBtn.classList.remove('d-none');
-                            if (finishBtn) finishBtn.classList.add('d-none');
-                            if (listBtn) listBtn.classList.remove('d-none');
-                            if (backBtn) backBtn.classList.add('d-none');
-                            if (introWrap) introWrap.classList.add('d-none');
-                            if (introBox) introBox.classList.add('d-none');
-                        }
-
-                        function setActiveList(index) {
-                            if (!listEl) return;
-                            var btns = listEl.querySelectorAll('[data-md-go]');
-                            btns.forEach(function (b) {
-                                var i = parseInt(b.getAttribute('data-md-go') || '0', 10);
-                                var isActive = (index >= 0 && i === index);
-                                if (isActive) {
-                                    b.classList.add('active');
-                                    b.classList.add('btn-primary');
-                                    b.classList.remove('btn-success');
-                                    b.classList.remove('btn-outline-secondary');
-                                    b.setAttribute('aria-current', 'true');
-                                } else {
-                                    b.classList.remove('active');
-                                    b.classList.remove('btn-primary');
-                                    b.removeAttribute('aria-current');
-                                }
-                            });
-                        }
-
-                        function refreshAnsweredStyles() {
-                            if (!listEl) return;
-                            var btns = listEl.querySelectorAll('[data-md-go]');
-                            btns.forEach(function (b) {
-                                var i = parseInt(b.getAttribute('data-md-go') || '0', 10);
-                                var isActive = (currentIndex >= 0 && i === currentIndex);
-                                var qEl = questions[i];
-                                var answered = (qEl && isAnswered(qEl));
-
-                                // Active should be blue regardless of answered status.
-                                if (isActive) {
-                                    b.classList.add('btn-primary');
-                                    b.classList.remove('btn-success');
-                                    b.classList.remove('btn-outline-secondary');
-                                    return;
-                                }
-
-                                if (answered) {
-                                    b.classList.add('btn-success');
-                                    b.classList.remove('btn-outline-secondary');
-                                    b.classList.remove('btn-primary');
-                                } else {
-                                    b.classList.add('btn-outline-secondary');
-                                    b.classList.remove('btn-success');
-                                    b.classList.remove('btn-primary');
-                                }
-                            });
-                        }
-
-                        function refreshAnswerBoxStyles() {
-                            var boxes = document.querySelectorAll('.md-answer-box');
-                            boxes.forEach(function (box) {
-                                var checked = box.querySelector('input[type="radio"]:checked, input[type="checkbox"]:checked');
-                                box.classList.toggle('md-answer-checked', !!checked);
-                                var anyInput = box.querySelector('input');
-                                box.classList.toggle('md-answer-disabled', !!(anyInput && anyInput.disabled));
-                            });
-                        }
-
-                        function show(index) {
-                            // index = -1 means "intro" (no question visible).
-                            if (index === -1) {
-                                try {
-                                    window.__mdOnSoal = false;
-                                } catch (e) {}
-                                currentIndex = -1;
-                                questions.forEach(function (el) {
-                                    el.classList.add('d-none');
-                                });
-                                setNavVisibilityForIntro();
-                                setActiveList(-1);
-                                refreshAnsweredStyles();
-                                try {
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                } catch (e) {
-                                    window.scrollTo(0, 0);
-                                }
+                            // Select
+                            if (els.length === 1 && els[0].tagName === 'SELECT') {
+                                els[0].value = String(val);
                                 return;
                             }
 
-                            if (index < 0) index = 0;
-                            if (index >= questions.length) index = questions.length - 1;
-                            currentIndex = index;
-
-                            try {
-                                window.__mdOnSoal = true;
-                            } catch (e) {}
-
-                            setNavVisibilityForQuestion();
-
-                            questions.forEach(function (el, i) {
-                                if (i === currentIndex) el.classList.remove('d-none');
-                                else el.classList.add('d-none');
+                            // Radio/checkbox group
+                            var values = Array.isArray(val) ? val.map(String) : [String(val)];
+                            els.forEach(function(el) {
+                                if (!el || !('type' in el)) return;
+                                var t = (el.type || '').toLowerCase();
+                                if (t === 'radio' || t === 'checkbox') {
+                                    el.checked = values.indexOf(String(el.value)) !== -1;
+                                }
                             });
+                        });
+                    } catch (e) {
+                        // ignore
+                    }
+                }
 
-                            var no = questions[currentIndex].getAttribute('data-md-no') || String(currentIndex + 1);
-                            // no is used only for internal state
-
-                            var isFirst = (currentIndex <= 0);
-                            var isLast = (currentIndex >= questions.length - 1);
-
-                            if (prevBtn) {
-                                if (isFirst) prevBtn.classList.add('d-none');
-                                else prevBtn.classList.remove('d-none');
-                            }
-
-                            if (isLast) {
-                                if (nextBtn) nextBtn.classList.add('d-none');
-                                if (finishBtn) finishBtn.classList.remove('d-none');
+                function saveDraft() {
+                    try {
+                        var formEl = document.getElementById('answerForm');
+                        if (!formEl) return;
+                        var fd = new FormData(formEl);
+                        var obj = {};
+                        fd.forEach(function(value, key) {
+                            if (obj[key] === undefined) {
+                                obj[key] = value;
+                            } else if (Array.isArray(obj[key])) {
+                                obj[key].push(value);
                             } else {
-                                if (nextBtn) nextBtn.classList.remove('d-none');
-                                if (finishBtn) finishBtn.classList.add('d-none');
+                                obj[key] = [obj[key], value];
                             }
+                        });
+                        localStorage.setItem(storageKey, JSON.stringify(obj));
+                    } catch (e) {
+                        // ignore
+                    }
+                }
 
-                            if (listBtn) listBtn.classList.remove('d-none');
+                function setNavVisibilityForIntro() {
+                    if (prevBtn) prevBtn.classList.add('d-none');
+                    if (nextBtn) nextBtn.classList.add('d-none');
+                    if (finishBtn) finishBtn.classList.add('d-none');
+                    if (startBtn) startBtn.classList.remove('d-none');
+                    if (listBtn) listBtn.classList.add('d-none');
+                    if (backBtn) backBtn.classList.remove('d-none');
+                    if (introWrap) introWrap.classList.remove('d-none');
+                    if (introBox) introBox.classList.remove('d-none');
+                }
 
-                            setActiveList(currentIndex);
-                            refreshAnsweredStyles();
+                function setNavVisibilityForQuestion() {
+                    if (startBtn) startBtn.classList.add('d-none');
+                    if (prevBtn) prevBtn.classList.remove('d-none');
+                    if (nextBtn) nextBtn.classList.remove('d-none');
+                    if (finishBtn) finishBtn.classList.add('d-none');
+                    if (listBtn) listBtn.classList.remove('d-none');
+                    if (backBtn) backBtn.classList.add('d-none');
+                    if (introWrap) introWrap.classList.add('d-none');
+                    if (introBox) introBox.classList.add('d-none');
+                }
 
+                function setActiveList(index) {
+                    if (!listEl) return;
+                    var btns = listEl.querySelectorAll('[data-md-go]');
+                    btns.forEach(function(b) {
+                        var i = parseInt(b.getAttribute('data-md-go') || '0', 10);
+                        var isActive = (index >= 0 && i === index);
+                        if (isActive) {
+                            b.classList.add('active');
+                            b.classList.add('btn-primary');
+                            b.classList.remove('btn-success');
+                            b.classList.remove('btn-outline-secondary');
+                            b.setAttribute('aria-current', 'true');
+                        } else {
+                            b.classList.remove('active');
+                            b.classList.remove('btn-primary');
+                            b.removeAttribute('aria-current');
+                        }
+                    });
+                }
+
+                function refreshAnsweredStyles() {
+                    if (!listEl) return;
+                    var btns = listEl.querySelectorAll('[data-md-go]');
+                    btns.forEach(function(b) {
+                        var i = parseInt(b.getAttribute('data-md-go') || '0', 10);
+                        var isActive = (currentIndex >= 0 && i === currentIndex);
+                        var qEl = questions[i];
+                        var answered = (qEl && isAnswered(qEl));
+
+                        // Active should be blue regardless of answered status.
+                        if (isActive) {
+                            b.classList.add('btn-primary');
+                            b.classList.remove('btn-success');
+                            b.classList.remove('btn-outline-secondary');
+                            return;
+                        }
+
+                        if (answered) {
+                            b.classList.add('btn-success');
+                            b.classList.remove('btn-outline-secondary');
+                            b.classList.remove('btn-primary');
+                        } else {
+                            b.classList.add('btn-outline-secondary');
+                            b.classList.remove('btn-success');
+                            b.classList.remove('btn-primary');
+                        }
+                    });
+                }
+
+                function refreshAnswerBoxStyles() {
+                    var boxes = document.querySelectorAll('.md-answer-box');
+                    boxes.forEach(function(box) {
+                        var checked = box.querySelector(
+                            'input[type="radio"]:checked, input[type="checkbox"]:checked');
+                        box.classList.toggle('md-answer-checked', !!checked);
+                        var anyInput = box.querySelector('input');
+                        box.classList.toggle('md-answer-disabled', !!(anyInput && anyInput
+                            .disabled));
+                    });
+                }
+
+                function show(index) {
+                    // index = -1 means "intro" (no question visible).
+                    if (index === -1) {
+                        try {
+                            window.__mdOnSoal = false;
+                        } catch (e) {}
+                        currentIndex = -1;
+                        questions.forEach(function(el) {
+                            el.classList.add('d-none');
+                        });
+                        setNavVisibilityForIntro();
+                        setActiveList(-1);
+                        refreshAnsweredStyles();
+                        try {
+                            window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                            });
+                        } catch (e) {
+                            window.scrollTo(0, 0);
+                        }
+                        return;
+                    }
+
+                    if (index < 0) index = 0;
+                    if (index >= questions.length) index = questions.length - 1;
+                    currentIndex = index;
+
+                    try {
+                        window.__mdOnSoal = true;
+                    } catch (e) {}
+
+                    setNavVisibilityForQuestion();
+
+                    questions.forEach(function(el, i) {
+                        if (i === currentIndex) el.classList.remove('d-none');
+                        else el.classList.add('d-none');
+                    });
+
+                    var no = questions[currentIndex].getAttribute('data-md-no') || String(currentIndex + 1);
+                    // no is used only for internal state
+
+                    var isFirst = (currentIndex <= 0);
+                    var isLast = (currentIndex >= questions.length - 1);
+
+                    if (prevBtn) {
+                        if (isFirst) prevBtn.classList.add('d-none');
+                        else prevBtn.classList.remove('d-none');
+                    }
+
+                    if (isLast) {
+                        if (nextBtn) nextBtn.classList.add('d-none');
+                        if (finishBtn) finishBtn.classList.remove('d-none');
+                    } else {
+                        if (nextBtn) nextBtn.classList.remove('d-none');
+                        if (finishBtn) finishBtn.classList.add('d-none');
+                    }
+
+                    if (listBtn) listBtn.classList.remove('d-none');
+
+                    setActiveList(currentIndex);
+                    refreshAnsweredStyles();
+
+                    try {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    } catch (e) {
+                        window.scrollTo(0, 0);
+                    }
+                }
+
+                function isAnswered(questionEl) {
+                    if (!questionEl) return false;
+                    // Radio/checkbox
+                    var checked = questionEl.querySelector(
+                        'input[type="radio"]:checked, input[type="checkbox"]:checked');
+                    if (checked) return true;
+
+                    // Select (Benar/Salah)
+                    var selects = questionEl.querySelectorAll('select');
+                    for (var i = 0; i < selects.length; i++) {
+                        var v = (selects[i].value || '').trim();
+                        if (v !== '') return true;
+                    }
+                    return false;
+                }
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', function() {
+                        if (currentIndex > 0) show(currentIndex - 1);
+                    });
+                }
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', function() {
+                        if (currentIndex >= 0) show(currentIndex + 1);
+                    });
+                }
+
+                // Exam/session helpers (shared for initial load + after token re-entry).
+                var isExam =
+                    <?php echo json_encode(strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian'); ?>;
+                var statusNotDone =
+                    <?php echo json_encode(strtolower(trim((string)($assignment['status'] ?? 'assigned'))) !== 'done'); ?>;
+                var hasRevokedCol = <?php echo json_encode((bool)$hasExamRevokedColumn); ?>;
+                var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
+                var url = window.location.href;
+
+                var focusAccum = 0;
+                var focusIntervalMs = 5000;
+                var focusMinSend = 15;
+                var focusTimerStarted = false;
+
+                function sendFocusDelta(force) {
+                    if (!isExam || !statusNotDone || !csrf) return;
+                    var delta = focusAccum;
+                    if (!force && delta < focusMinSend) return;
+                    if (delta <= 0) return;
+                    focusAccum = 0;
+                    try {
+                        var fd = new FormData();
+                        fd.append('csrf_token', csrf);
+                        fd.append('action', 'focus_tick');
+                        fd.append('delta', String(delta));
+                        if (navigator.sendBeacon) {
+                            navigator.sendBeacon(url, fd);
+                        } else {
+                            fetch(url, {
+                                method: 'POST',
+                                body: fd,
+                                credentials: 'same-origin',
+                                keepalive: true
+                            });
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                function startFocusTimer() {
+                    if (!isExam || !statusNotDone || focusTimerStarted) return;
+                    focusTimerStarted = true;
+                    try {
+                        setInterval(function() {
+                            if (document.hidden) return;
+                            focusAccum += focusIntervalMs / 1000;
+                            if (focusAccum >= focusMinSend) {
+                                sendFocusDelta(false);
+                            }
+                        }, focusIntervalMs);
+                        window.addEventListener('pagehide', function() {
+                            sendFocusDelta(true);
+                        });
+                        window.addEventListener('beforeunload', function() {
+                            sendFocusDelta(true);
+                        });
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                function installLeaveLock() {
+                    if (!hasRevokedCol || !isExam || !statusNotDone) return;
+                    if (window.__mdLeaveLockInstalled) return;
+                    window.__mdLeaveLockInstalled = true;
+
+                    var allowLeave = true;
+                    var sent = false;
+                    var maxViolations = 3;
+                    var violationCount = 0;
+
+                    try {
+                        var storedV = localStorage.getItem(violationKey);
+                        if (storedV) {
+                            var parsedV = parseInt(storedV, 10);
+                            if (!isNaN(parsedV) && parsedV > 0) {
+                                violationCount = parsedV;
+                            }
+                        }
+                    } catch (e) {}
+
+                    var formEl3 = document.getElementById('answerForm');
+                    if (formEl3) {
+                        formEl3.addEventListener('submit', function() {
+                            allowLeave = false;
+                        });
+                    }
+
+                    function persistViolationCount() {
+                        try {
+                            localStorage.setItem(violationKey, String(violationCount));
+                        } catch (e) {}
+                    }
+
+                    function sendLeave() {
+                        if (!allowLeave || sent) return;
+                        sent = true;
+                        try {
+                            var fd = new FormData();
+                            fd.append('csrf_token', csrf);
+                            fd.append('action', 'leave_exam');
+
+                            if (navigator.sendBeacon) {
+                                navigator.sendBeacon(url, fd);
+                            } else {
+                                fetch(url, {
+                                    method: 'POST',
+                                    body: fd,
+                                    credentials: 'same-origin',
+                                    keepalive: true
+                                });
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+
+                    function registerSuspiciousLeave() {
+                        if (!allowLeave || sent) return;
+                        violationCount++;
+                        persistViolationCount();
+                        if (violationCount >= maxViolations) {
+                            sendLeave();
+                        }
+                    }
+
+                    document.addEventListener('visibilitychange', function() {
+                        if (document.hidden) {
+                            registerSuspiciousLeave();
+                        }
+                    });
+                    window.addEventListener('blur', function() {
+                        registerSuspiciousLeave();
+                    });
+                }
+
+                function touchStarted() {
+                    if (!isExam || !statusNotDone || !csrf) return;
+                    try {
+                        var fd2 = new FormData();
+                        fd2.append('csrf_token', csrf);
+                        fd2.append('action', 'touch_started');
+                        if (navigator.sendBeacon) {
+                            navigator.sendBeacon(url, fd2);
+                        } else {
+                            fetch(url, {
+                                method: 'POST',
+                                body: fd2,
+                                credentials: 'same-origin',
+                                keepalive: true
+                            });
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                if (startBtn) {
+                    startBtn.addEventListener('click', function() {
+                        // Record started_at (best-effort) and enable monitoring.
+                        touchStarted();
+                        installLeaveLock();
+                        startFocusTimer();
+
+                        // Remember UI start so refresh goes back to soal.
+                        try {
+                            localStorage.setItem('md_ui_started_' + String(<?php echo (int)$id; ?>),
+                                '1');
+                        } catch (e) {}
+
+                        // Requirement: start goes to question no 1
+                        show(0);
+                    });
+                }
+
+                // Clear draft local cache when finishing (best-effort)
+                var formEl2 = document.getElementById('answerForm');
+                if (formEl2) {
+                    formEl2.addEventListener('submit', function() {
+                        try {
+                            localStorage.removeItem('md_ans_' + String(<?php echo (int)$id; ?>));
+                        } catch (e) {}
+                    });
+                }
+                if (listEl) {
+                    listEl.addEventListener('click', function(e) {
+                        var t = e.target;
+                        if (!t) return;
+                        var btn = t.closest('[data-md-go]');
+                        if (!btn) return;
+                        var idx = parseInt(btn.getAttribute('data-md-go') || '0', 10);
+                        if (!isNaN(idx)) show(idx);
+                    });
+                }
+
+                // Update answered styles in real-time.
+                var formEl = document.getElementById('answerForm');
+                if (formEl) {
+                    formEl.addEventListener('change', function() {
+                        saveDraft();
+                        refreshAnswerBoxStyles();
+                        refreshAnsweredStyles();
+                    });
+                }
+
+                // Restore saved answers (best-effort) so answers don't disappear on refresh.
+                loadDraft();
+                refreshAnswerBoxStyles();
+
+                // Init rules:
+                // - New exam should land on intro.
+                // - Re-auth token (resume=1) should return to soal without restarting UI.
+                // - Refresh during an already-started exam should return to soal if the student previously clicked Mulai.
+                var examStarted =
+                    <?php echo json_encode((bool)($assignment && $isExamAssignment && $startedAtTs !== null && (string)($assignment['status'] ?? 'assigned') !== 'done')); ?>;
+                var resume = false;
+                try {
+                    var params = new URLSearchParams(window.location.search || '');
+                    resume = String(params.get('resume') || '') === '1';
+                    if (resume) {
+                        params.delete('resume');
+                        var qs = params.toString();
+                        var nextUrl = window.location.pathname + (qs ? ('?' + qs) : '') + (window.location
+                            .hash || '');
+                        window.history.replaceState({}, '', nextUrl);
+                    }
+                } catch (e) {}
+
+                var uiStarted = false;
+                try {
+                    uiStarted = localStorage.getItem('md_ui_started_' + String(<?php echo (int)$id; ?>)) ===
+                        '1';
+                } catch (e) {}
+
+                if (examStarted && (resume || uiStarted)) {
+                    installLeaveLock();
+                    startFocusTimer();
+                    show(0);
+                } else {
+                    show(-1);
+                }
+
+                // Exam focus rule: if the student leaves the question screen for > 5 seconds,
+                // require token re-entry.
+                (function() {
+                    try {
+                        var enableReauth =
+                            <?php echo json_encode((bool)($assignment && $isExamAssignment && $requiresToken && $tokenAvailable && $tokenOk)); ?>;
+                        if (!enableReauth) return;
+
+                        // Ensure default state on initial load.
+                        window.__mdOnSoal = false;
+
+                        var hiddenAt = null;
+                        var thresholdMs = 5000;
+
+                        function getForceUrl() {
                             try {
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                var u = new URL(window.location.href);
+                                u.searchParams.set('force_token', '1');
+                                u.searchParams.set('flash', 'token_required');
+                                return u.toString();
                             } catch (e) {
-                                window.scrollTo(0, 0);
+                                var href = window.location.href;
+                                if (href.indexOf('force_token=') >= 0) return href;
+                                return href + (href.indexOf('?') >= 0 ? '&' : '?') +
+                                    'force_token=1&flash=token_required';
                             }
                         }
 
-                        function isAnswered(questionEl) {
-                            if (!questionEl) return false;
-                            // Radio/checkbox
-                            var checked = questionEl.querySelector('input[type="radio"]:checked, input[type="checkbox"]:checked');
-                            if (checked) return true;
+                        function forceReauth() {
+                            if (window.__mdForcingToken) return;
+                            window.__mdForcingToken = true;
 
-                            // Select (Benar/Salah)
-                            var selects = questionEl.querySelectorAll('select');
-                            for (var i = 0; i < selects.length; i++) {
-                                var v = (selects[i].value || '').trim();
-                                if (v !== '') return true;
-                            }
-                            return false;
-                        }
-
-                        if (prevBtn) {
-                            prevBtn.addEventListener('click', function () {
-                                if (currentIndex > 0) show(currentIndex - 1);
-                            });
-                        }
-                        if (nextBtn) {
-                            nextBtn.addEventListener('click', function () {
-                                if (currentIndex >= 0) show(currentIndex + 1);
-                            });
-                        }
-
-                        // Exam/session helpers (shared for initial load + after token re-entry).
-                        var isExam = <?php echo json_encode(strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian'); ?>;
-                        var statusNotDone = <?php echo json_encode(strtolower(trim((string)($assignment['status'] ?? 'assigned'))) !== 'done'); ?>;
-                        var hasRevokedCol = <?php echo json_encode((bool)$hasExamRevokedColumn); ?>;
-                        var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
-                        var url = window.location.href;
-
-                        var focusAccum = 0;
-                        var focusIntervalMs = 5000;
-                        var focusMinSend = 15;
-                        var focusTimerStarted = false;
-
-                        function sendFocusDelta(force) {
-                            if (!isExam || !statusNotDone || !csrf) return;
-                            var delta = focusAccum;
-                            if (!force && delta < focusMinSend) return;
-                            if (delta <= 0) return;
-                            focusAccum = 0;
+                            // Best-effort: clear via POST (CSRF protected), then navigate with GET fallback.
                             try {
                                 var fd = new FormData();
-                                fd.append('csrf_token', csrf);
-                                fd.append('action', 'focus_tick');
-                                fd.append('delta', String(delta));
-                                if (navigator.sendBeacon) {
-                                    navigator.sendBeacon(url, fd);
-                                } else {
-                                    fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
-                                }
-                            } catch (e) {
-                                // ignore
-                            }
-                        }
+                                fd.append('csrf_token',
+                                    <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>
+                                    );
+                                fd.append('action', 'clear_token_ok');
 
-                        function startFocusTimer() {
-                            if (!isExam || !statusNotDone || focusTimerStarted) return;
-                            focusTimerStarted = true;
-                            try {
-                                setInterval(function () {
-                                    if (document.hidden) return;
-                                    focusAccum += focusIntervalMs / 1000;
-                                    if (focusAccum >= focusMinSend) {
-                                        sendFocusDelta(false);
-                                    }
-                                }, focusIntervalMs);
-                                window.addEventListener('pagehide', function () { sendFocusDelta(true); });
-                                window.addEventListener('beforeunload', function () { sendFocusDelta(true); });
-                            } catch (e) {
-                                // ignore
-                            }
-                        }
-
-                        function installLeaveLock() {
-                            if (!hasRevokedCol || !isExam || !statusNotDone) return;
-                            if (window.__mdLeaveLockInstalled) return;
-                            window.__mdLeaveLockInstalled = true;
-
-                            var allowLeave = true;
-                            var sent = false;
-                            var maxViolations = 3;
-                            var violationCount = 0;
-
-                            try {
-                                var storedV = localStorage.getItem(violationKey);
-                                if (storedV) {
-                                    var parsedV = parseInt(storedV, 10);
-                                    if (!isNaN(parsedV) && parsedV > 0) {
-                                        violationCount = parsedV;
-                                    }
-                                }
-                            } catch (e) {}
-
-                            var formEl3 = document.getElementById('answerForm');
-                            if (formEl3) {
-                                formEl3.addEventListener('submit', function () {
-                                    allowLeave = false;
+                                fetch(window.location.href, {
+                                    method: 'POST',
+                                    body: fd,
+                                    credentials: 'same-origin'
+                                }).catch(function() {}).finally(function() {
+                                    window.location.href = getForceUrl();
                                 });
-                            }
-
-                            function persistViolationCount() {
-                                try {
-                                    localStorage.setItem(violationKey, String(violationCount));
-                                } catch (e) {}
-                            }
-
-                            function sendLeave() {
-                                if (!allowLeave || sent) return;
-                                sent = true;
-                                try {
-                                    var fd = new FormData();
-                                    fd.append('csrf_token', csrf);
-                                    fd.append('action', 'leave_exam');
-
-                                    if (navigator.sendBeacon) {
-                                        navigator.sendBeacon(url, fd);
-                                    } else {
-                                        fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
-                                    }
-                                } catch (e) {
-                                    // ignore
-                                }
-                            }
-
-                            function registerSuspiciousLeave() {
-                                if (!allowLeave || sent) return;
-                                violationCount++;
-                                persistViolationCount();
-                                if (violationCount >= maxViolations) {
-                                    sendLeave();
-                                }
-                            }
-
-                            document.addEventListener('visibilitychange', function () {
-                                if (document.hidden) {
-                                    registerSuspiciousLeave();
-                                }
-                            });
-                            window.addEventListener('blur', function () {
-                                registerSuspiciousLeave();
-                            });
-                        }
-
-                        function touchStarted() {
-                            if (!isExam || !statusNotDone || !csrf) return;
-                            try {
-                                var fd2 = new FormData();
-                                fd2.append('csrf_token', csrf);
-                                fd2.append('action', 'touch_started');
-                                if (navigator.sendBeacon) {
-                                    navigator.sendBeacon(url, fd2);
-                                } else {
-                                    fetch(url, { method: 'POST', body: fd2, credentials: 'same-origin', keepalive: true });
-                                }
                             } catch (e) {
-                                // ignore
+                                window.location.href = getForceUrl();
                             }
                         }
 
-                        if (startBtn) {
-                            startBtn.addEventListener('click', function () {
-                                // Record started_at (best-effort) and enable monitoring.
-                                touchStarted();
-                                installLeaveLock();
-                                startFocusTimer();
-
-                                // Remember UI start so refresh goes back to soal.
-                                try {
-                                    localStorage.setItem('md_ui_started_' + String(<?php echo (int)$id; ?>), '1');
-                                } catch (e) {}
-
-                                // Requirement: start goes to question no 1
-                                show(0);
-                            });
+                        function markHidden() {
+                            if (!window.__mdOnSoal) return;
+                            hiddenAt = Date.now();
                         }
 
-                        // Clear draft local cache when finishing (best-effort)
-                        var formEl2 = document.getElementById('answerForm');
-                        if (formEl2) {
-                            formEl2.addEventListener('submit', function () {
-                                try {
-                                    localStorage.removeItem('md_ans_' + String(<?php echo (int)$id; ?>));
-                                } catch (e) {}
-                            });
-                        }
-                        if (listEl) {
-                            listEl.addEventListener('click', function (e) {
-                                var t = e.target;
-                                if (!t) return;
-                                var btn = t.closest('[data-md-go]');
-                                if (!btn) return;
-                                var idx = parseInt(btn.getAttribute('data-md-go') || '0', 10);
-                                if (!isNaN(idx)) show(idx);
-                            });
-                        }
-
-                        // Update answered styles in real-time.
-                        var formEl = document.getElementById('answerForm');
-                        if (formEl) {
-                            formEl.addEventListener('change', function () {
-                                saveDraft();
-                                refreshAnswerBoxStyles();
-                                refreshAnsweredStyles();
-                            });
-                        }
-
-                        // Restore saved answers (best-effort) so answers don't disappear on refresh.
-                        loadDraft();
-                        refreshAnswerBoxStyles();
-
-                        // Init rules:
-                        // - New exam should land on intro.
-                        // - Re-auth token (resume=1) should return to soal without restarting UI.
-                        // - Refresh during an already-started exam should return to soal if the student previously clicked Mulai.
-                        var examStarted = <?php echo json_encode((bool)($assignment && $isExamAssignment && $startedAtTs !== null && (string)($assignment['status'] ?? 'assigned') !== 'done')); ?>;
-                        var resume = false;
-                        try {
-                            var params = new URLSearchParams(window.location.search || '');
-                            resume = String(params.get('resume') || '') === '1';
-                            if (resume) {
-                                params.delete('resume');
-                                var qs = params.toString();
-                                var nextUrl = window.location.pathname + (qs ? ('?' + qs) : '') + (window.location.hash || '');
-                                window.history.replaceState({}, '', nextUrl);
+                        function markVisible() {
+                            if (!window.__mdOnSoal) return;
+                            if (!hiddenAt) return;
+                            var awayMs = Date.now() - hiddenAt;
+                            hiddenAt = null;
+                            if (awayMs > thresholdMs) {
+                                forceReauth();
                             }
-                        } catch (e) {}
-
-                        var uiStarted = false;
-                        try {
-                            uiStarted = localStorage.getItem('md_ui_started_' + String(<?php echo (int)$id; ?>)) === '1';
-                        } catch (e) {}
-
-                        if (examStarted && (resume || uiStarted)) {
-                            installLeaveLock();
-                            startFocusTimer();
-                            show(0);
-                        } else {
-                            show(-1);
                         }
 
-                        // Exam focus rule: if the student leaves the question screen for > 5 seconds,
-                        // require token re-entry.
-                        (function () {
-                            try {
-                                var enableReauth = <?php echo json_encode((bool)($assignment && $isExamAssignment && $requiresToken && $tokenAvailable && $tokenOk)); ?>;
-                                if (!enableReauth) return;
-
-                                // Ensure default state on initial load.
-                                window.__mdOnSoal = false;
-
-                                var hiddenAt = null;
-                                var thresholdMs = 5000;
-
-                                function getForceUrl() {
-                                    try {
-                                        var u = new URL(window.location.href);
-                                        u.searchParams.set('force_token', '1');
-                                        u.searchParams.set('flash', 'token_required');
-                                        return u.toString();
-                                    } catch (e) {
-                                        var href = window.location.href;
-                                        if (href.indexOf('force_token=') >= 0) return href;
-                                        return href + (href.indexOf('?') >= 0 ? '&' : '?') + 'force_token=1&flash=token_required';
-                                    }
-                                }
-
-                                function forceReauth() {
-                                    if (window.__mdForcingToken) return;
-                                    window.__mdForcingToken = true;
-
-                                    // Best-effort: clear via POST (CSRF protected), then navigate with GET fallback.
-                                    try {
-                                        var fd = new FormData();
-                                        fd.append('csrf_token', <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>);
-                                        fd.append('action', 'clear_token_ok');
-
-                                        fetch(window.location.href, {
-                                            method: 'POST',
-                                            body: fd,
-                                            credentials: 'same-origin'
-                                        }).catch(function () {}).finally(function () {
-                                            window.location.href = getForceUrl();
-                                        });
-                                    } catch (e) {
-                                        window.location.href = getForceUrl();
-                                    }
-                                }
-
-                                function markHidden() {
-                                    if (!window.__mdOnSoal) return;
-                                    hiddenAt = Date.now();
-                                }
-
-                                function markVisible() {
-                                    if (!window.__mdOnSoal) return;
-                                    if (!hiddenAt) return;
-                                    var awayMs = Date.now() - hiddenAt;
-                                    hiddenAt = null;
-                                    if (awayMs > thresholdMs) {
-                                        forceReauth();
-                                    }
-                                }
-
-                                document.addEventListener('visibilitychange', function () {
-                                    if (document.hidden) {
-                                        markHidden();
-                                    } else {
-                                        markVisible();
-                                    }
-                                });
-
-                                // Also cover app switching where visibilitychange isn't reliable.
-                                window.addEventListener('blur', markHidden);
-                                window.addEventListener('focus', markVisible);
-                            } catch (e) {
-                                // ignore
+                        document.addEventListener('visibilitychange', function() {
+                            if (document.hidden) {
+                                markHidden();
+                            } else {
+                                markVisible();
                             }
-                        })();
+                        });
 
-                        // One-time exam access: if this exam page is left after starting, lock it.
-                        <?php
+                        // Also cover app switching where visibilitychange isn't reliable.
+                        window.addEventListener('blur', markHidden);
+                        window.addEventListener('focus', markVisible);
+                    } catch (e) {
+                        // ignore
+                    }
+                })();
+
+                // One-time exam access: if this exam page is left after starting, lock it.
+                <?php
                             $statusNow = (string)($assignment['status'] ?? 'assigned');
                             $startedNow = trim((string)($assignment['started_at'] ?? ''));
                             $shouldLockOnLeave = ($hasExamRevokedColumn && strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))) === 'ujian' && $statusNow !== 'done' && $startedNow !== '');
                         ?>
-                        <?php if ($shouldLockOnLeave): ?>
-                            (function () {
-                                var allowLeave = true;
-                                var sent = false;
-                                var url = window.location.href;
-                                var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
+                <?php if ($shouldLockOnLeave): ?>
+                    (function() {
+                        var allowLeave = true;
+                        var sent = false;
+                        var url = window.location.href;
+                        var csrf = <?php echo json_encode((string)($_SESSION['csrf_token'] ?? '')); ?>;
 
-                                var formEl3 = document.getElementById('answerForm');
-                                if (formEl3) {
-                                    formEl3.addEventListener('submit', function () {
-                                        allowLeave = false;
+                        var formEl3 = document.getElementById('answerForm');
+                        if (formEl3) {
+                            formEl3.addEventListener('submit', function() {
+                                allowLeave = false;
+                            });
+                        }
+
+                        function sendLeave() {
+                            if (!allowLeave || sent) return;
+                            sent = true;
+                            try {
+                                var fd = new FormData();
+                                fd.append('csrf_token', csrf);
+                                fd.append('action', 'leave_exam');
+
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon(url, fd);
+                                } else {
+                                    fetch(url, {
+                                        method: 'POST',
+                                        body: fd,
+                                        credentials: 'same-origin',
+                                        keepalive: true
                                     });
                                 }
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
 
-                                function sendLeave() {
-                                    if (!allowLeave || sent) return;
-                                    sent = true;
-                                    try {
-                                        var fd = new FormData();
-                                        fd.append('csrf_token', csrf);
-                                        fd.append('action', 'leave_exam');
-
-                                        if (navigator.sendBeacon) {
-                                            navigator.sendBeacon(url, fd);
-                                        } else {
-                                            fetch(url, { method: 'POST', body: fd, credentials: 'same-origin', keepalive: true });
-                                        }
-                                    } catch (e) {
-                                        // ignore
-                                    }
-                                }
-
-                                window.addEventListener('pagehide', sendLeave);
-                                window.addEventListener('beforeunload', sendLeave);
-                            })();
-                        <?php endif; ?>
-                    });
-                })();
-            </script>
+                        window.addEventListener('pagehide', sendLeave);
+                        window.addEventListener('beforeunload', sendLeave);
+                    })();
+                <?php endif; ?>
+            });
+        })();
+        </script>
     </div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
