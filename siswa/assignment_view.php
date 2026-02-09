@@ -330,6 +330,7 @@ $flash = strtolower(trim((string)($_GET['flash'] ?? '')));
 
 $ensureAnswersTable = function () use ($pdo): void {
     try {
+        // Ensure table exists with correct unique constraint including student_id.
         $pdo->exec('CREATE TABLE IF NOT EXISTS student_assignment_answers (
             id INT AUTO_INCREMENT PRIMARY KEY,
             assignment_id INT NOT NULL,
@@ -339,11 +340,23 @@ $ensureAnswersTable = function () use ($pdo): void {
             is_correct TINYINT(1) NULL,
             answered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP NULL DEFAULT NULL,
-            UNIQUE KEY uniq_saa (assignment_id, question_id),
+            UNIQUE KEY uniq_saa (assignment_id, student_id, question_id),
             KEY idx_saa_student (student_id),
             KEY idx_saa_assignment (assignment_id),
             KEY idx_saa_question (question_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+
+        // Migrate old index if present: drop old uniq_saa (assignment_id, question_id) and recreate with student_id
+        try {
+            $pdo->exec('ALTER TABLE student_assignment_answers DROP INDEX uniq_saa');
+        } catch (Throwable $e) {
+            // ignore if index does not exist or cannot be dropped
+        }
+        try {
+            $pdo->exec('ALTER TABLE student_assignment_answers ADD UNIQUE KEY uniq_saa (assignment_id, student_id, question_id)');
+        } catch (Throwable $e) {
+            // ignore if add fails
+        }
     } catch (Throwable $e) {
         // best-effort
     }
@@ -833,6 +846,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (Throwable $e) {
             try { $pdo->rollBack(); } catch (Throwable $e2) {}
+            try {
+                if (function_exists('app_log')) {
+                    app_log('ERROR', 'save_answers_failed', ['assignment_id' => $id, 'student_id' => $studentId, 'err' => $e->getMessage()]);
+                }
+            } catch (Throwable $e2) {
+                // ignore logging failures
+            }
             return $finalize ? 'Gagal menyimpan jawaban/nilai.' : 'Gagal menyimpan jawaban.';
         }
 
@@ -2125,7 +2145,7 @@ include __DIR__ . '/../includes/header.php';
 
                     var allowLeave = true;
                     var sent = false;
-                    var maxViolations = 3;
+                    var maxViolations = 6;
                     var violationCount = 0;
 
                     try {
@@ -2311,7 +2331,7 @@ include __DIR__ . '/../includes/header.php';
                         window.__mdOnSoal = false;
 
                         var hiddenAt = null;
-                        var thresholdMs = 5000;
+                        var thresholdMs = 15000;
 
                         function getForceUrl() {
                             try {
@@ -2424,6 +2444,35 @@ include __DIR__ . '/../includes/header.php';
                                 // ignore
                             }
                         }
+
+                    // Detect split-screen by checking window width vs screen width.
+                    // If window becomes significantly narrower than the available screen (e.g. < 60%),
+                    // treat as split-screen and immediately send leave_exam to lock the exam.
+                    function isSplitScreen() {
+                        try {
+                            var w = window.innerWidth || document.documentElement.clientWidth || 0;
+                            var s = (window.screen && window.screen.width) ? window.screen.width : 0;
+                            if (!s) return false;
+                            return (w / s) < 0.6;
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+
+                    function checkSplitAndLeave() {
+                        try {
+                            if (isSplitScreen()) {
+                                sendLeave();
+                            }
+                        } catch (e) {}
+                    }
+
+                    // Monitor resize and orientation changes; also do an initial check shortly after load.
+                    try {
+                        window.addEventListener('resize', function () { checkSplitAndLeave(); });
+                        window.addEventListener('orientationchange', checkSplitAndLeave);
+                        setTimeout(checkSplitAndLeave, 500);
+                    } catch (e) {}
 
                         window.addEventListener('pagehide', sendLeave);
                         window.addEventListener('beforeunload', sendLeave);

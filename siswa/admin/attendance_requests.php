@@ -331,7 +331,22 @@ function render_attendance_change_requests_table(array $rows, string $base): voi
                         $evidencePath = trim((string)($r['evidence_path'] ?? ''));
                         $evidenceUrl = '';
                         if ($evidencePath !== '') {
-                            $evidenceUrl = $base . '/' . ltrim($evidencePath, '/');
+                            $trimmed = ltrim($evidencePath, '/');
+                            $parts = explode('/', $trimmed);
+                            $encParts = array_map('rawurlencode', $parts);
+                            $candidate = $base . '/' . implode('/', $encParts);
+
+                            $rootDir = realpath(__DIR__ . '/../../');
+                            if ($rootDir === false) {
+                                $rootDir = __DIR__ . '/../../';
+                            }
+                            $fs = rtrim($rootDir, DIRECTORY_SEPARATOR) . '/' . str_replace('/', DIRECTORY_SEPARATOR, $trimmed);
+
+                            if (is_file($fs)) {
+                                $evidenceUrl = $candidate;
+                            } else {
+                                $evidenceUrl = '';
+                            }
                         }
                     ?>
                     <tr>

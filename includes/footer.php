@@ -119,32 +119,80 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 			if (attr === 'dark' || attr === 'light') return attr;
 			try {
 				const stored = String(window.localStorage.getItem(key) || '');
-				if (stored === 'dark' || stored === 'light') return stored;
+				if (stored === 'dark' || stored === 'light' || stored === 'system') return stored;
 			} catch (e) {}
-			return getPreferred();
+			return 'system';
 		};
 
 		const apply = (theme) => {
-			document.documentElement.setAttribute('data-bs-theme', theme);
-			const isDark = theme === 'dark';
-			btn.setAttribute('aria-label', isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap');
-			btn.setAttribute('title', isDark ? 'Mode terang' : 'Mode gelap');
+			// theme may be 'dark'|'light'|'system'
+			const resolved = (theme === 'system') ? getPreferred() : theme;
+			document.documentElement.setAttribute('data-bs-theme', resolved);
+			const isDark = resolved === 'dark';
+			// UI labels reflect the current stored preference (not resolved)
+			if (theme === 'system') {
+				btn.setAttribute('aria-label', 'Ikuti pengaturan sistem');
+				btn.setAttribute('title', 'Ikuti pengaturan sistem');
+			} else {
+				btn.setAttribute('aria-label', isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap');
+				btn.setAttribute('title', isDark ? 'Mode terang' : 'Mode gelap');
+			}
 			if (icon) {
 				icon.classList.toggle('bi-moon-stars-fill', !isDark);
 				icon.classList.toggle('bi-sun-fill', isDark);
 			}
 		};
 
+		// Initialize: prefer stored value, fallback to system
 		apply(getCurrent());
 
 		btn.addEventListener('click', () => {
 			const current = getCurrent();
-			const next = current === 'dark' ? 'light' : 'dark';
+			// cycle: dark -> light -> system -> dark
+			let next = 'dark';
+			if (current === 'dark') next = 'light';
+			else if (current === 'light') next = 'system';
+			else next = 'dark';
+
 			try {
+				// store explicit 'system' or theme
 				window.localStorage.setItem(key, next);
 			} catch (e) {}
 			apply(next);
 		});
+		// Update any visible indicators (multiple placements possible)
+		const updateIndicators = (storedTheme) => {
+			const elems = document.querySelectorAll('.theme-indicator');
+			elems.forEach(el => {
+				let txt = '-';
+				if (storedTheme === 'system') txt = 'Sistem';
+				else if (storedTheme === 'dark') txt = 'Gelap';
+				else if (storedTheme === 'light') txt = 'Terang';
+				el.textContent = txt;
+			});
+		};
+
+		// initial indicator
+		updateIndicators(getCurrent());
+
+		// watch for system preference changes and refresh resolved theme display
+		if (window.matchMedia) {
+			try {
+				window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+					// re-apply to update resolved theme and indicator
+					apply(getCurrent());
+					updateIndicators(getCurrent());
+				});
+			} catch (e) {
+				// older browsers: fallback to onchange
+				try {
+					window.matchMedia('(prefers-color-scheme: dark)').onchange = function () {
+						apply(getCurrent());
+						updateIndicators(getCurrent());
+					};
+				} catch (e2) {}
+			}
+		}
 	})();
 </script>
 

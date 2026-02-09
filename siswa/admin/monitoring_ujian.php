@@ -730,7 +730,7 @@ include __DIR__ . '/../../includes/header.php';
                         <thead>
                             <tr>
                                 <th style="width:44px">Pilih</th>
-                                <th style="width:64px">No</th>
+                                <th style="width:120px">Menit</th>
                                 <th>Nama Siswa</th>
                                 <th>Judul Paket</th>
                                 <?php if ($hasFocusSeconds): ?>
@@ -770,7 +770,42 @@ include __DIR__ . '/../../includes/header.php';
                                             <span class="text-muted" title="<?php echo $isLocked && $timeExpired ? 'Waktu ujian sudah habis; reset dinonaktifkan' : 'Reset hanya untuk ujian yang terkunci'; ?>">-</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="text-muted"><?php echo $no; ?></td>
+                                    <td>
+                                        <?php
+                                            $remainingLabel = '<span class="text-muted">-</span>';
+                                            $endTs = null;
+                                            // Prefer due_at if available
+                                            if ($hasDueAt) {
+                                                $dueRawRow = trim((string)($r['due_at'] ?? ''));
+                                                if ($dueRawRow !== '') {
+                                                    $t = strtotime($dueRawRow);
+                                                    if ($t !== false) $endTs = $t;
+                                                }
+                                            }
+                                            // Fallback to started_at + duration
+                                            if ($endTs === null && $hasStartedAt && $hasDuration) {
+                                                $startedRawRow = trim((string)($r['started_at'] ?? ''));
+                                                $durMinRow = (int)($r['duration_minutes'] ?? 0);
+                                                if ($startedRawRow !== '' && $durMinRow > 0) {
+                                                    $st = strtotime($startedRawRow);
+                                                    if ($st !== false) {
+                                                        $endTs = $st + ($durMinRow * 60);
+                                                    }
+                                                }
+                                            }
+
+                                            if ($endTs !== null) {
+                                                $secs = $endTs - (int)$serverNowTs;
+                                                if ($secs <= 0) {
+                                                    $remainingLabel = '0';
+                                                } else {
+                                                    $mins = (int)ceil($secs / 60);
+                                                    $remainingLabel = (string)$mins;
+                                                }
+                                            }
+                                            echo htmlspecialchars($remainingLabel);
+                                        ?>
+                                    </td>
                                     <td>
                                         <?php echo htmlspecialchars((string)($r['nama_siswa'] ?? '')); ?>
                                     </td>

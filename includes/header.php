@@ -287,7 +287,14 @@ try {
             const preferred = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ?
                 'dark' :
                 'light';
-            const theme = (stored === 'dark' || stored === 'light') ? stored : preferred;
+            let theme;
+            if (stored === 'dark' || stored === 'light') {
+                theme = stored;
+            } else if (stored === 'system') {
+                theme = preferred;
+            } else {
+                theme = preferred;
+            }
             document.documentElement.setAttribute('data-bs-theme', theme);
         })();
     </script>
@@ -454,6 +461,7 @@ if ($useAdminSidebar) {
                 title="Dark/Light">
                 <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
             </button>
+            <span class="theme-indicator small text-muted ms-2 d-none d-sm-inline">-</span>
         </div>
     <?php endif; ?>
     <?php if (!$disable_navbar): ?>
@@ -490,6 +498,7 @@ if ($useAdminSidebar) {
                             title="Dark/Light">
                             <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
                         </button>
+                        <span class="theme-indicator small text-muted ms-2 d-none d-sm-inline">-</span>
                     <?php endif; ?>
 
                     <?php if ($isStudentArea && $isStudent && $studentHasPhoto && $studentPhotoUrl !== ''): ?>
@@ -553,6 +562,7 @@ if ($useAdminSidebar) {
                                     title="Dark/Light">
                                     <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
                                 </button>
+                                    <span class="theme-indicator small text-muted ms-2 d-none d-sm-inline">-</span>
                             </li>
                         </ul>
                     <?php endif; ?>
