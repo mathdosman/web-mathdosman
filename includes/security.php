@@ -66,6 +66,33 @@ function require_csrf_valid(): void
         return;
     }
 
+    // Log details for debugging invalid CSRF in a safe manner.
+    if (function_exists('app_log')) {
+        $mask = static function ($t) {
+            if (!is_string($t) || $t === '') {
+                return '';
+            }
+            $len = strlen($t);
+            if ($len <= 12) {
+                return 'len=' . $len;
+            }
+            return substr($t, 0, 6) . '...' . substr($t, -6) . ' (len=' . $len . ')';
+        };
+
+        $cookieHeader = $_SERVER['HTTP_COOKIE'] ?? '';
+        app_log('WARN', 'csrf_invalid', [
+            'sid' => session_id(),
+            'session_csrf' => $mask($sessionToken),
+            'request_csrf' => $mask($requestToken),
+            'cookie_present' => $cookieHeader !== '',
+            'host' => $_SERVER['HTTP_HOST'] ?? '',
+            'referer' => $_SERVER['HTTP_REFERER'] ?? '',
+            'ua' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'xfp' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '',
+            'cf' => $_SERVER['HTTP_CF_VISITOR'] ?? '',
+        ]);
+    }
+
     // 419 is commonly used for CSRF/session issues.
     http_response_code(419);
     if (app_request_expects_json()) {
