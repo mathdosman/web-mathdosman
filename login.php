@@ -75,6 +75,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Untuk timeout session: catat waktu login admin.
                     $_SESSION['admin_login_at'] = time();
                     throttle_clear($throttleKey);
+                    if (function_exists('app_log')) {
+                        app_log('INFO', 'login_success', [
+                            'username' => $user['username'],
+                            'user_id' => $user['id'],
+                            'sid' => session_id(),
+                            'host' => $_SERVER['HTTP_HOST'] ?? '',
+                            'xfp' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '',
+                        ]);
+                    }
                     header('Location: dashboard.php');
                     exit;
                 }

@@ -76,4 +76,26 @@ function app_session_start(): void
             $_SESSION['csrf_token'] = bin2hex((string)microtime(true));
         }
     }
+
+    // Re-emit session cookie with the chosen params to ensure attributes
+    // (domain/secure/samesite) are present on responses even after redirects.
+    try {
+        $cookieParams = session_get_cookie_params();
+        $cookieOptions = [
+            'expires' => 0,
+            'path' => $cookieParams['path'] ?? '/',
+            'domain' => $cookieParams['domain'] ?? '',
+            'secure' => $cookieParams['secure'] ?? $secure,
+            'httponly' => $cookieParams['httponly'] ?? true,
+        ];
+        if (PHP_VERSION_ID >= 70300) {
+            $cookieOptions['samesite'] = $cookieParams['samesite'] ?? 'Lax';
+            setcookie(session_name(), session_id(), $cookieOptions);
+        } else {
+            // Fallback for older PHP: build header manually (unlikely here).
+            setcookie(session_name(), session_id(), 0, $cookieOptions['path'], $cookieOptions['domain'], $cookieOptions['secure'], $cookieOptions['httponly']);
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
 }
