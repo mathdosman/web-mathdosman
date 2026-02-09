@@ -9,9 +9,8 @@ if (!isset($base_url) || !is_string($base_url) || trim($base_url) === '') {
     $base_url = 'http://localhost/web-mathdosman';
 }
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session.php';
+app_session_start();
 
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
 

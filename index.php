@@ -36,9 +36,8 @@ if ($dbPreflightOk) {
     require_once __DIR__ . '/config/db.php';
 }
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session.php';
+app_session_start();
 
 // Analytics (best-effort)
 if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {

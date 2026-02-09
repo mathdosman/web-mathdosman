@@ -28,9 +28,8 @@ if ($dbPreflightOk) {
     require_once __DIR__ . '/config/db.php';
 }
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session.php';
+app_session_start();
 
 $page_title = 'Daftar Isi';
 $body_class = 'front-page daftar-isi';
