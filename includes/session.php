@@ -41,9 +41,19 @@ function app_session_start(): void
         } else {
             $host = $_SERVER['HTTP_HOST'] ?? '';
         }
+
+        // Remove optional port (e.g. ":2026") if present.
+        $host = preg_replace('/:\\d+$/', '', (string)$host);
+
         if (!empty($host) && strtolower($host) !== 'localhost') {
-            // prefix with dot to cover subdomains
-            $cookie_domain = '.' . preg_replace('/^:\/\//', '', $host);
+            // If host is an IP address, do not prefix with dot; browsers treat
+            // domain attributes with IPs inconsistently. For DNS names, prefix
+            // with a leading dot to allow subdomain cookies.
+            if (filter_var($host, FILTER_VALIDATE_IP)) {
+                $cookie_domain = $host;
+            } else {
+                $cookie_domain = '.' . $host;
+            }
         }
     } catch (Throwable $e) {
         $cookie_domain = '';
