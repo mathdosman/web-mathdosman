@@ -32,15 +32,36 @@ function app_session_start(): void
 
     $secure = app_is_https();
 
-    // PHP 7.3+ supports array cookie params.
+    // Derive cookie domain from configured base URL if available, otherwise use Host header.
+    $cookie_domain = '';
     try {
-        session_set_cookie_params([
+        // Use global $base_url when available (set in config/bootstrap.php).
+        if (isset($base_url) && is_string($base_url) && $base_url !== '') {
+            $host = parse_url($base_url, PHP_URL_HOST);
+        } else {
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+        }
+        if (!empty($host) && strtolower($host) !== 'localhost') {
+            // prefix with dot to cover subdomains
+            $cookie_domain = '.' . preg_replace('/^:\/\//', '', $host);
+        }
+    } catch (Throwable $e) {
+        $cookie_domain = '';
+    }
+
+    // PHP 7.3+ supports array cookie params. Include domain and respect HTTPS behind proxies.
+    try {
+        $params = [
             'lifetime' => 0,
             'path' => '/',
             'secure' => $secure,
             'httponly' => true,
             'samesite' => 'Lax',
-        ]);
+        ];
+        if ($cookie_domain !== '') {
+            $params['domain'] = $cookie_domain;
+        }
+        session_set_cookie_params($params);
     } catch (Throwable $e) {
         // Ignore; fallback to defaults.
     }
