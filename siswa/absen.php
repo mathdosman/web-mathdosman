@@ -625,14 +625,55 @@ include __DIR__ . '/../includes/header.php';
             if (streamRef) {
                 return;
             }
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }).then(function (stream) {
+            startBtn.disabled = true;
+            if (submitStatusEl) {
+                submitStatusEl.textContent = 'Mengakses kamera...';
+                submitStatusEl.className = 'small text-muted';
+            }
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            }).then(function (stream) {
                 streamRef = stream;
                 video.srcObject = stream;
-                video.play();
+                video.onloadedmetadata = function () {
+                    video.play().catch(function (e) {
+                        if (submitStatusEl) {
+                            submitStatusEl.textContent = 'Kamera aktif tapi gagal play: ' + e.message;
+                            submitStatusEl.className = 'small text-warning';
+                        }
+                    });
+                };
+                startBtn.textContent = 'Kamera Aktif';
+                startBtn.disabled = false;
                 captureBtn.disabled = false;
-            }).catch(function () {
-                startBtn.textContent = 'Gagal mengakses kamera';
+                if (submitStatusEl) {
+                    submitStatusEl.textContent = 'Kamera siap. Silakan ambil foto.';
+                    submitStatusEl.className = 'small text-success';
+                }
+            }).catch(function (err) {
+                startBtn.disabled = false;
+                var errMsg = 'Kamera tidak didukung atau akses ditolak';
+                if (err.name === 'NotAllowedError') {
+                    errMsg = 'Izin akses kamera ditolak. Buka settings browser dan izinkan kamera.';
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    errMsg = 'Kamera tidak ditemukan pada perangkat.';
+                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                    errMsg = 'Kamera sedang digunakan aplikasi lain atau ada masalah hardware.';
+                } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+                    errMsg = 'Perangkat kamera tidak memenuhi persyaratan. Coba browser lain.';
+                } else if (err.name === 'TypeError') {
+                    errMsg = 'Parameter getUserMedia tidak valid.';
+                }
+                startBtn.textContent = '❌ ' + errMsg;
                 startBtn.classList.add('btn-danger');
+                if (submitStatusEl) {
+                    submitStatusEl.textContent = errMsg;
+                    submitStatusEl.className = 'small text-danger';
+                }
             });
         });
 
@@ -660,38 +701,96 @@ include __DIR__ . '/../includes/header.php';
                 return;
             }
 
-            // Gunakan rasio asli kamera untuk menghindari distorsi; batasi lebar agar file tetap ringan.
-            var vw = video.videoWidth || 640;
-            var vh = video.videoHeight || 480;
-            var maxW = 720;
-            var scale = (vw > maxW) ? (maxW / vw) : 1;
-            var width = Math.max(1, Math.round(vw * scale));
-            var height = Math.max(1, Math.round(vh * scale));
-            canvas.width = width;
-            canvas.height = height;
-
-            var ctx = canvas.getContext('2d');
-            if (!ctx) return;
-            // Unmirror output so hasil foto tidak terbalik (kamera depan biasanya mirror).
-            ctx.save();
-            ctx.translate(width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, width, height);
-            ctx.restore();
-
-            captureBtn.disabled = true;
-            if (submitStatusEl) {
-                submitStatusEl.textContent = 'Mengirim data absen...';
-                submitStatusEl.className = 'small text-muted';
-            }
-
-            canvas.toBlob(function (blob) {
-                if (!blob) {
+            // Tunggu video stream siap sebelum capture
+            var maxRetries = 10;
+            var retryCount = 0;
+            
+            function doCapture() {
+                if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        setTimeout(doCapture, 100);
+                        return;
+                    }
                     if (submitStatusEl) {
-                        submitStatusEl.textContent = 'Gagal mengambil gambar dari kamera.';
+                        submitStatusEl.textContent = 'Video stream belum siap setelah ' + maxRetries + ' kali coba. Coba di peranti yang lain atau browser lain.';
                         submitStatusEl.className = 'small text-danger';
                     } else {
-                        alert('Gagal mengambil gambar dari kamera.');
+                        alert('Video stream belum siap. Coba capture lagi.');
+                    }
+                    captureBtn.disabled = false;
+                    return;
+                }
+                
+                // Video ready, proceed dengan capture
+                captureBtn.disabled = true;
+                if (submitStatusEl) {
+                    submitStatusEl.textContent = 'Menangkap foto...';
+                    submitStatusEl.className = 'small text-muted';
+                }
+
+                // Gunakan rasio asli kamera untuk menghindari distorsi; batasi lebar agar file tetap ringan.
+                var vw = video.videoWidth || 640;
+                var vh = video.videoHeight || 480;
+                var maxW = 720;
+                var scale = (vw > maxW) ? (maxW / vw) : 1;
+                var width = Math.max(1, Math.round(vw * scale));
+                var height = Math.max(1, Math.round(vh * scale));
+                canvas.width = width;
+                canvas.height = height;
+
+                var ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    if (submitStatusEl) {
+                        submitStatusEl.textContent = 'Gagal mendapatkan canvas context.';
+                        submitStatusEl.className = 'small text-danger';
+                    }
+                    captureBtn.disabled = false;
+                    return;
+                }
+                
+                // Unmirror output so hasil foto tidak terbalik (kamera depan biasanya mirror).
+                ctx.save();
+                ctx.translate(width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, width, height);
+                ctx.restore();
+
+                if (submitStatusEl) {
+                    submitStatusEl.textContent = 'Mengkompres foto...';
+                    submitStatusEl.className = 'small text-muted';
+                }
+
+                canvas.toBlob(function (blob) {
+                if (!blob) {
+                    // Fallback: toBlob failed, gunakan toDataURL
+                    try {
+                        var dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                        var byteString = atob(dataUrl.split(',')[1]);
+                        var ab = new ArrayBuffer(byteString.length);
+                        var ia = new Uint8Array(ab);
+                        for (var i = 0; i < byteString.length; i++) {
+                            ia[i] = byteString.charCodeAt(i);
+                        }
+                        blob = new Blob([ab], { type: 'image/jpeg' });
+                    } catch (e) {
+                        if (submitStatusEl) {
+                            submitStatusEl.textContent = 'Gagal mengambil gambar dari kamera (toBlob dan toDataURL gagal).';
+                            submitStatusEl.className = 'small text-danger';
+                        } else {
+                            alert('Gagal mengambil gambar dari kamera.');
+                        }
+                        captureBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                if (!blob || blob.size === 0) {
+                    if (submitStatusEl) {
+                        submitStatusEl.textContent = 'Gambar dari kamera kosong atau tidak valid.';
+                        submitStatusEl.className = 'small text-danger';
+                    } else {
+                        alert('Gambar dari kamera kosong atau tidak valid.');
                     }
                     captureBtn.disabled = false;
                     return;
@@ -712,18 +811,33 @@ include __DIR__ . '/../includes/header.php';
                     },
                     body: formData
                 }).then(function (resp) {
+                    if (!resp.ok && resp.status !== 200) {
+                        return { ok: false, error: 'Server error: HTTP ' + resp.status };
+                    }
                     return resp.json().catch(function () {
-                        return { ok: false, error: 'Respon server tidak valid.' };
+                        return { ok: false, error: 'Respon server tidak valid (bukan JSON).' };
                     });
                 }).then(function (data) {
+                    // Stop video stream after submission
+                    if (streamRef) {
+                        streamRef.getTracks().forEach(function (track) {
+                            if (track.readyState === 'live') {
+                                track.stop();
+                            }
+                        });
+                        streamRef = null;
+                    }
+                    video.srcObject = null;
+                    
                     if (!data || !data.ok) {
-                        var err = data && data.error ? data.error : 'Gagal merekam absen.';
+                        var err = data && data.error ? data.error : 'Gagal merekam absen (respons tidak jelas).';
                         if (submitStatusEl) {
                             submitStatusEl.textContent = err;
                             submitStatusEl.className = 'small text-danger';
                         } else {
                             alert(err);
                         }
+                        captureBtn.disabled = false;
                         return;
                     }
 
@@ -751,18 +865,31 @@ include __DIR__ . '/../includes/header.php';
                         }
                         window.location.href = 'dashboard.php';
                     }
-                }).catch(function () {
+                }).catch(function (err) {
+                    // Stop video stream on error
+                    if (streamRef) {
+                        streamRef.getTracks().forEach(function (track) {
+                            if (track.readyState === 'live') {
+                                track.stop();
+                            }
+                        });
+                        streamRef = null;
+                    }
+                    video.srcObject = null;
+                    
                     if (submitStatusEl) {
-                        submitStatusEl.textContent = 'Gagal mengirim data absen. Periksa koneksi internet.';
+                        submitStatusEl.textContent = 'Gagal mengirim data absen: ' + err.message + '. Periksa koneksi internet.';
                         submitStatusEl.className = 'small text-danger';
                     } else {
-                        alert('Gagal mengirim data absen.');
+                        alert('Gagal mengirim data absen: ' + err.message);
                     }
-                }).finally(function () {
                     captureBtn.disabled = false;
                 });
             }, 'image/jpeg', 0.6);
-        });
+                } // end of doCapture function
+            
+            // Panggil doCapture() saat tombol Capture diklik
+            doCapture();
     }
 
     if (continueBtn) {
@@ -771,6 +898,17 @@ include __DIR__ . '/../includes/header.php';
             window.location.href = baseUrl + '?step=foto';
         });
     }
+
+    // Cleanup: stop camera stream jika user meninggalkan halaman atau navigasi
+    window.addEventListener('beforeunload', function () {
+        if (typeof streamRef !== 'undefined' && streamRef) {
+            streamRef.getTracks().forEach(function (track) {
+                if (track.readyState === 'live') {
+                    track.stop();
+                }
+            });
+        }
+    });
 
     initGeolocation();
     if (attendanceStep === 'foto') {

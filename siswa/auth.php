@@ -5,12 +5,6 @@ require_once __DIR__ . '/../includes/session.php';
 
 app_session_start();
 
-// Max umur session login siswa (detik): 3 jam.
-// Catatan: ini adalah absolute timeout sejak login (bukan idle timeout).
-if (!defined('STUDENT_SESSION_MAX_AGE_SECONDS')) {
-    define('STUDENT_SESSION_MAX_AGE_SECONDS', 3 * 60 * 60);
-}
-
 function siswa_redirect_to(string $path): void
 {
     global $base_url;
@@ -40,7 +34,7 @@ function siswa_require_login(): void
         return;
     }
 
-    if (time() - $loginAt > (int)STUDENT_SESSION_MAX_AGE_SECONDS) {
+    if (time() - $loginAt > (int)STUDENT_SESSION_TIMEOUT_SECONDS) {
         unset($_SESSION['student']);
         unset($_SESSION['student_login_at']);
         unset($_SESSION['student_session_token']);
@@ -62,18 +56,18 @@ function siswa_require_login(): void
             global $pdo;
             require_once __DIR__ . '/../config/db.php';
 
-            static $hasTokenColumn = null;
-            if ($hasTokenColumn === null) {
+            // Cache column existence check in session (not static) to allow schema updates.
+            if (!isset($_SESSION['_student_has_token_col'])) {
                 try {
                     $stmtCol = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
                     $stmtCol->execute([':c' => 'session_token']);
-                    $hasTokenColumn = (bool)$stmtCol->fetch();
+                    $_SESSION['_student_has_token_col'] = (bool)$stmtCol->fetch();
                 } catch (Throwable $eCol) {
-                    $hasTokenColumn = false;
+                    $_SESSION['_student_has_token_col'] = false;
                 }
             }
 
-            if ($hasTokenColumn) {
+            if ($_SESSION['_student_has_token_col']) {
                 $stmt = $pdo->prepare('SELECT session_token FROM students WHERE id = :id LIMIT 1');
                 $stmt->execute([':id' => $studentId]);
                 $dbToken = (string)($stmt->fetchColumn() ?? '');
@@ -96,10 +90,19 @@ function siswa_require_login(): void
         try {
             global $pdo;
             require_once __DIR__ . '/../config/db.php';
-            $stmtCol = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
-            $stmtCol->execute([':c' => 'session_token']);
-            $hasTokenCol = (bool)$stmtCol->fetch();
-            if ($hasTokenCol) {
+            
+            // Cache column existence check in session (not static).
+            if (!isset($_SESSION['_student_has_token_col'])) {
+                try {
+                    $stmtCol = $pdo->prepare('SHOW COLUMNS FROM students LIKE :c');
+                    $stmtCol->execute([':c' => 'session_token']);
+                    $_SESSION['_student_has_token_col'] = (bool)$stmtCol->fetch();
+                } catch (Throwable $eCol) {
+                    $_SESSION['_student_has_token_col'] = false;
+                }
+            }
+            
+            if ($_SESSION['_student_has_token_col']) {
                 unset($_SESSION['student']);
                 unset($_SESSION['student_login_at']);
                 unset($_SESSION['student_session_token']);

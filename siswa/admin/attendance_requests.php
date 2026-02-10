@@ -330,22 +330,26 @@ function render_attendance_change_requests_table(array $rows, string $base): voi
 
                         $evidencePath = trim((string)($r['evidence_path'] ?? ''));
                         $evidenceUrl = '';
+                        $isPdf = false;
+                        
                         if ($evidencePath !== '') {
-                            $trimmed = ltrim($evidencePath, '/');
-                            $parts = explode('/', $trimmed);
-                            $encParts = array_map('rawurlencode', $parts);
-                            $candidate = $base . '/' . implode('/', $encParts);
-
-                            $rootDir = realpath(__DIR__ . '/../../');
-                            if ($rootDir === false) {
-                                $rootDir = __DIR__ . '/../../';
-                            }
-                            $fs = rtrim($rootDir, DIRECTORY_SEPARATOR) . '/' . str_replace('/', DIRECTORY_SEPARATOR, $trimmed);
-
-                            if (is_file($fs)) {
-                                $evidenceUrl = $candidate;
-                            } else {
-                                $evidenceUrl = '';
+                            // Normalize path
+                            $normalized = str_replace('\\', '/', $evidencePath);
+                            $normalized = ltrim($normalized, '/');
+                            
+                            // Security: only allow siswa/absen_docs paths
+                            if (str_starts_with($normalized, 'siswa/absen_docs/')) {
+                                // Build absolute file path
+                                $rootDir = realpath(__DIR__ . '/../../') ?: __DIR__ . '/../../';
+                                $fsPath = $rootDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $normalized);
+                                
+                                // Verify file exists
+                                if (is_file($fsPath) && is_readable($fsPath)) {
+                                    // Construct URL for direct access
+                                    $evidenceUrl = $base . '/' . preg_replace('/\\\\/', '/', $normalized);
+                                    $lowerPath = strtolower($normalized);
+                                    $isPdf = (str_ends_with($lowerPath, '.pdf'));
+                                }
                             }
                         }
                     ?>
@@ -369,7 +373,12 @@ function render_attendance_change_requests_table(array $rows, string $base): voi
                         </td>
                         <td>
                             <?php if ($evidenceUrl !== ''): ?>
-                                <a href="<?php echo htmlspecialchars($evidenceUrl); ?>" target="_blank" class="small">Lihat</a>
+                                <button type="button" class="btn btn-link btn-sm p-0 evidence-viewer" 
+                                        data-evidence-url="<?php echo htmlspecialchars($evidenceUrl); ?>"
+                                        data-evidence-type="<?php echo $isPdf ? 'pdf' : 'image'; ?>"
+                                        title="Lihat bukti ajuan">
+                                    <i class="bi <?php echo $isPdf ? 'bi-file-pdf' : 'bi-image'; ?>"></i> Lihat
+                                </button>
                             <?php else: ?>
                                 <span class="small text-muted">-</span>
                             <?php endif; ?>
@@ -545,5 +554,72 @@ function render_attendance_change_requests_table(array $rows, string $base): voi
             });
         });
     });
+})();
+</script>
+<!-- Modal untuk menampilkan bukti ajuan (gambar/PDF) -->
+<div class="modal fade" id="evidenceViewerModal" tabindex="-1" aria-labelledby="evidenceViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="evidenceViewerModalLabel">Bukti Ajuan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="evidenceContainer" style="min-height: 300px; display:flex; align-items:center; justify-content:center;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Memuat...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var evidenceModal = new bootstrap.Modal(document.getElementById('evidenceViewerModal'));
+    var evidenceContainer = document.getElementById('evidenceContainer');
+    
+    document.querySelectorAll('.evidence-viewer').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var url = this.getAttribute('data-evidence-url');
+            var type = this.getAttribute('data-evidence-type');
+            
+            if (!url) {
+                alert('URL bukti tidak tersedia.');
+                return;
+            }
+            
+            // Clear container and show loading
+            evidenceContainer.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Memuat...</span></div>';
+            
+            if (type === 'pdf') {
+                // Embed PDF viewer
+                evidenceContainer.innerHTML = '<iframe src="' + htmlEscape(url) + '" style="width:100%; height:500px; border:none;" title="PDF Viewer"></iframe>';
+            } else {
+                // Show image
+                var img = new Image();
+                img.onload = function() {
+                    evidenceContainer.innerHTML = '<img src="' + htmlEscape(url) + '" style="max-width:100%; max-height:500px;" alt="Bukti ajuan">';
+                };
+                img.onerror = function() {
+                    evidenceContainer.innerHTML = '<div class="alert alert-danger">Gagal memuat gambar. Mungkin file sudah dihapus.</div>';
+                };
+                img.src = url;
+            }
+            
+            evidenceModal.show();
+        });
+    });
+    
+    function htmlEscape(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 })();
 </script>

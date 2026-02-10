@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/security.php';
 require_role('admin');
 
 
@@ -12,11 +13,7 @@ $success = '';
 $currentNameValue = (string)($_SESSION['user']['name'] ?? '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $csrf = (string)($_POST['csrf_token'] ?? '');
-    $sessionCsrf = (string)($_SESSION['csrf_token'] ?? '');
-    if ($csrf === '' || $sessionCsrf === '' || !hash_equals($sessionCsrf, $csrf)) {
-        $errors[] = 'Token keamanan tidak valid. Silakan refresh halaman dan coba lagi.';
-    }
+    require_csrf_valid();
 
     $currentPassword = (string)($_POST['current_password'] ?? '');
     $newName = trim((string)($_POST['name'] ?? ''));

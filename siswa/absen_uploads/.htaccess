@@ -1,0 +1,19 @@
+# Allow direct access to attendance photo files
+# These are student attendance selfie photos taken with camera
+
+# Disable execution of PHP/scripts as security measure
+php_flag engine off
+
+# Allow image files only
+<FilesMatch "\.(jpg|jpeg|png)$">
+    Allow from all
+</FilesMatch>
+
+# Deny access to all other files for security
+<FilesMatch "^(?!.*\.(jpg|jpeg|png)$)">
+    Deny from all
+</FilesMatch>
+
+# Set proper content types
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png

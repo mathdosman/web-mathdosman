@@ -18,6 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $throttleKey = 'login:' . $ip . ':' . $normUser;
     $blockedFor = throttle_get_block_seconds($throttleKey);
     if ($blockedFor > 0) {
+        if (function_exists('app_log')) {
+            app_log('WARN', 'Login attempt while throttled', ['ip' => $ip]);
+        }
         $mins = (int)ceil($blockedFor / 60);
         $error = 'Terlalu banyak percobaan login. Coba lagi dalam ' . $mins . ' menit.';
     }
@@ -77,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throttle_clear($throttleKey);
                     if (function_exists('app_log')) {
                         app_log('INFO', 'login_success', [
-                            'username' => $user['username'],
                             'user_id' => $user['id'],
                             'sid' => session_id(),
                             'host' => $_SERVER['HTTP_HOST'] ?? '',
@@ -90,12 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $remain = throttle_register_failure($throttleKey);
                 if ($remain > 0) {
-                    app_log('WARN', 'Login throttled after failed attempts', ['username' => $username, 'ip' => $ip]);
+                    app_log('WARN', 'Login throttled after failed attempts', ['ip' => $ip]);
                     $mins = (int)ceil($remain / 60);
                     $error = 'Terlalu banyak percobaan login. Coba lagi dalam ' . $mins . ' menit.';
                 } else {
-                    app_log('WARN', 'Login failed', ['username' => $username, 'ip' => $ip]);
-                $error = 'Username atau password salah.';
+                    app_log('WARN', 'Login failed', ['ip' => $ip]);
+                    $error = 'Username atau password salah.';
                 }
             }
         } catch (PDOException $e) {

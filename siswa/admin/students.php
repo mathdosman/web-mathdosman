@@ -259,13 +259,13 @@ include __DIR__ . '/../../includes/header.php';
                     <thead>
                         <tr>
                             <th style="width:80px">Foto</th>
-                            <th>Nama</th>
-                            <th style="width:180px">Kelas / Rombel</th>
-                            <th style="width:160px">No HP</th>
+                            <th data-sort="text" class="sortable">Nama <span class="sort-indicator"></span></th>
+                            <th style="width:180px" data-sort="text" class="sortable">Kelas / Rombel <span class="sort-indicator"></span></th>
+                            <th style="width:160px" data-sort="text" class="sortable">No HP <span class="sort-indicator"></span></th>
                             <?php if ($hasParentPhoneColumn): ?>
-                                <th style="width:160px">No HP Ortu</th>
+                                <th style="width:160px" data-sort="text" class="sortable">No HP Ortu <span class="sort-indicator"></span></th>
                             <?php endif; ?>
-                            <th style="width:160px">Username</th>
+                            <th style="width:160px" data-sort="text" class="sortable">Username <span class="sort-indicator"></span></th>
                             <th style="width:170px">Aksi</th>
                         </tr>
                     </thead>
@@ -405,6 +405,57 @@ include __DIR__ . '/../../includes/header.php';
                         });
                     })();
                 </script>
+
+                <script>
+                // Table sorting for the students list
+                document.addEventListener('DOMContentLoaded', function () {
+                    const table = document.querySelector('.table.table-striped.table-hover');
+                    if (!table) return;
+
+                    const tbody = table.querySelector('tbody');
+                    const headers = table.querySelectorAll('th.sortable');
+
+                    headers.forEach(function (th, colIndex) {
+                        th.style.cursor = 'pointer';
+                        th.addEventListener('click', function () {
+                            const type = th.getAttribute('data-sort') || 'text';
+                            const current = th.getAttribute('data-order') || 'none';
+                            const order = current === 'asc' ? 'desc' : 'asc';
+                            // clear other headers
+                            headers.forEach(h => { h.removeAttribute('data-order'); h.querySelector('.sort-indicator').textContent = ''; });
+                            th.setAttribute('data-order', order);
+                            th.querySelector('.sort-indicator').textContent = order === 'asc' ? '▲' : '▼';
+
+                            const rows = Array.from(tbody.querySelectorAll('tr'));
+                            rows.sort(function (a, b) {
+                                const aCell = a.children[colIndex]?.innerText || '';
+                                const bCell = b.children[colIndex]?.innerText || '';
+
+                                if (type === 'number') {
+                                    const an = parseInt(aCell.trim()) || 0;
+                                    const bn = parseInt(bCell.trim()) || 0;
+                                    return order === 'asc' ? an - bn : bn - an;
+                                }
+
+                                // default text compare (case-insensitive)
+                                const ta = aCell.trim().toLowerCase();
+                                const tb = bCell.trim().toLowerCase();
+                                if (ta < tb) return order === 'asc' ? -1 : 1;
+                                if (ta > tb) return order === 'asc' ? 1 : -1;
+                                return 0;
+                            });
+
+                            // Re-append rows in new order
+                            rows.forEach(r => tbody.appendChild(r));
+                        });
+                    });
+                });
+                </script>
+
+                <style>
+                th.sortable { user-select: none; }
+                .sort-indicator { margin-left: 6px; font-size: 0.8em; }
+                </style>
             </div>
         </div>
     </div>

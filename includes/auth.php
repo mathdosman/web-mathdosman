@@ -5,12 +5,6 @@ require_once __DIR__ . '/security.php';
 
 app_session_start();
 
-// Max umur session login admin (detik): 24 jam.
-// Catatan: ini absolute timeout sejak login (bukan idle timeout).
-if (!defined('ADMIN_SESSION_MAX_AGE_SECONDS')) {
-    define('ADMIN_SESSION_MAX_AGE_SECONDS', 24 * 60 * 60);
-}
-
 function redirect_to(string $path): void
 {
     global $base_url;
@@ -40,7 +34,7 @@ function require_login() {
             if (!is_int($loginAt)) {
                 // Backward compatibility: if timestamp missing (older sessions), start counting now.
                 $_SESSION['admin_login_at'] = time();
-            } elseif (time() - $loginAt > (int)ADMIN_SESSION_MAX_AGE_SECONDS) {
+            } elseif (time() - $loginAt > (int)ADMIN_SESSION_TIMEOUT_SECONDS) {
                 unset($_SESSION['user']);
                 unset($_SESSION['admin_login_at']);
                 try {

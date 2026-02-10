@@ -952,6 +952,8 @@ if ($useAdminSidebar) {
                         'attendance_settings.php',
                         'attendance_windows.php',
                         'attendance_window_view.php',
+                        'attendance_report.php',
+                        'attendance_report_detail.php',
                         'attendance_reports.php',
                         'attendance_requests.php',
                     ];
@@ -1006,6 +1008,19 @@ if ($useAdminSidebar) {
                                 <path d="M9 20h4" />
                             </svg>
                             <span>Laporan Absen</span>
+                        </a>
+
+                        <?php
+                        $isActive = in_array($currentPage, ['attendance_report.php', 'attendance_report_detail.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                        ?>
+                        <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/attendance_report.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 3h18v4H3z" />
+                                <path d="M3 11h18v10H3z" />
+                                <path d="M8 3v4" />
+                                <path d="M16 3v4" />
+                            </svg>
+                            <span>Cetak Rekap Absen</span>
                         </a>
 
                         <?php
