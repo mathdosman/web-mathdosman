@@ -35,11 +35,12 @@ function app_session_start(): void
     // Derive cookie domain from configured base URL if available, otherwise use Host header.
     $cookie_domain = '';
     try {
-        // Use global $base_url when available (set in config/bootstrap.php).
-        if (isset($base_url) && is_string($base_url) && $base_url !== '') {
-            $host = parse_url($base_url, PHP_URL_HOST);
-        } else {
-            $host = $_SERVER['HTTP_HOST'] ?? '';
+        // Prefer the current request host to derive cookie domain so cookies
+        // are scoped correctly when the configured $base_url differs from
+        // the host used to access the site (common in local dev).
+        $host = (string)($_SERVER['HTTP_HOST'] ?? '');
+        if ($host === '' && isset($base_url) && is_string($base_url) && $base_url !== '') {
+            $host = (string)(parse_url($base_url, PHP_URL_HOST) ?? '');
         }
 
         // Remove optional port (e.g. ":2026") if present.
