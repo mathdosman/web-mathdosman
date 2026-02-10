@@ -79,6 +79,20 @@ function app_session_start(): void
         // Ignore; fallback to defaults.
     }
 
+    // Diagnostic logging (safe): record how we determined secure and cookie domain.
+    try {
+        if (function_exists('app_log')) {
+            app_log('DEBUG', 'session_cookie_params', [
+                'secure' => $secure,
+                'cookie_domain' => $cookie_domain,
+                'host' => $_SERVER['HTTP_HOST'] ?? '',
+                'server_port' => $_SERVER['SERVER_PORT'] ?? '',
+                'https' => $_SERVER['HTTPS'] ?? '',
+                'x_forwarded_proto' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '',
+            ]);
+        }
+    } catch (Throwable $_) {}
+
     session_start();
 
     // Ensure CSRF token exists for both admin and public pages.
