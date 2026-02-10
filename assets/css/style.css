@@ -847,8 +847,10 @@ html[data-bs-theme="light"] .app-sidebar .sidebar-link:focus {
 html[data-bs-theme="light"] .app-sidebar .sidebar-link.active,
 html[data-bs-theme="light"] .app-sidebar .sidebar-link[aria-current="page"] {
     color: #fff;
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: linear-gradient(90deg, rgba(13,110,253,0.12), rgba(255,255,255,0.18));
+    border-color: rgba(13,110,253,0.22);
+    font-weight: 600;
+    box-shadow: inset 4px 0 0 rgba(13,110,253,0.9);
 }
 
 html[data-bs-theme="light"] .app-sidebar hr {
@@ -884,8 +886,10 @@ html[data-bs-theme="dark"] .app-sidebar .sidebar-link:focus {
 html[data-bs-theme="dark"] .app-sidebar .sidebar-link.active,
 html[data-bs-theme="dark"] .app-sidebar .sidebar-link[aria-current="page"] {
     color: rgba(17, 24, 39, 0.98);
-    background: rgba(var(--bs-primary-rgb), 0.10);
-    border-color: rgba(var(--bs-primary-rgb), 0.22);
+    background: rgba(var(--bs-primary-rgb), 0.14);
+    border-color: rgba(var(--bs-primary-rgb), 0.28);
+    font-weight: 600;
+    box-shadow: inset 4px 0 0 rgba(var(--bs-primary-rgb), 0.95);
 }
 
 html[data-bs-theme="dark"] .app-sidebar hr {

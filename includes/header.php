@@ -452,10 +452,10 @@ if ($useAdminSidebar) {
 
 <body class="bg-body-tertiary<?php echo $body_layout_class; ?><?php echo $studentAreaBodyClass; ?><?php echo $studentLayoutBodyClass; ?><?php echo $siswaAdminBodyClass; ?><?php echo $body_class !== '' ? (' ' . htmlspecialchars($body_class)) : ''; ?>">
     <?php if (!empty($disable_navbar)): ?>
-        <div class="theme-toggle-floating" aria-label="Ganti tema">
+            <div class="theme-toggle-floating" aria-label="Ganti tema">
             <button
                 type="button"
-                class="btn btn-outline-secondary btn-sm shadow"
+                class="btn btn-outline-secondary btn-sm shadow md-theme-toggle"
                 id="themeToggle"
                 aria-label="Ganti tema"
                 title="Dark/Light">
@@ -492,7 +492,7 @@ if ($useAdminSidebar) {
                     <?php if ($useSidebar): ?>
                         <button
                             type="button"
-                            class="btn btn-outline-secondary btn-sm"
+                            class="btn btn-outline-secondary btn-sm md-theme-toggle"
                             id="themeToggle"
                             aria-label="Ganti tema"
                             title="Dark/Light">
@@ -556,7 +556,7 @@ if ($useAdminSidebar) {
                             <li class="nav-item ms-lg-2 d-flex align-items-center">
                                 <button
                                     type="button"
-                                    class="btn btn-outline-secondary btn-sm my-2 my-lg-0"
+                                    class="btn btn-outline-secondary btn-sm my-2 my-lg-0 md-theme-toggle"
                                     id="themeToggle"
                                     aria-label="Ganti tema"
                                     title="Dark/Light">
@@ -862,7 +862,7 @@ if ($useAdminSidebar) {
                         'students_import.php',
                         'rombels.php',
                     ];
-                    $ujianSectionActive = (strpos($scriptName, '/siswa/admin/') !== false) && in_array($currentPage, $ujianSectionPages, true);
+                    $ujianSectionActive = ((strpos($scriptName, '/siswa/admin/') !== false) && in_array($currentPage, $ujianSectionPages, true)) || ($currentPage === 'rekap_nilai.php');
                     // Default collapsed, auto-expand when a child is active.
                     $ujianSectionExpanded = $ujianSectionActive;
                     ?>
@@ -873,7 +873,7 @@ if ($useAdminSidebar) {
                     <div class="collapse<?php echo $ujianSectionExpanded ? ' show' : ''; ?>" id="adminSidebarUjian">
 
                         <?php
-                        $isActive = ($currentPage === 'exam_packages.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                        $isActive = ($currentPage === 'exam_packages.php');
                         ?>
                         <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/exam_packages.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -883,8 +883,10 @@ if ($useAdminSidebar) {
                             <span>Paket Ujian</span>
                         </a>
 
+                        
+
                         <?php
-                        $isActive = in_array($currentPage, ['assignments.php', 'assignment_add.php', 'assignment_edit.php', 'assignment_students.php', 'assignment_batch_edit.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                        $isActive = in_array($currentPage, ['assignments.php', 'assignment_add.php', 'assignment_edit.php', 'assignment_students.php', 'assignment_batch_edit.php'], true);
                         ?>
                         <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/assignments.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -895,7 +897,7 @@ if ($useAdminSidebar) {
                         </a>
 
                         <?php
-                        $isActive = in_array($currentPage, ['results.php', 'results_student.php', 'result_view.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                        $isActive = in_array($currentPage, ['results.php', 'results_student.php', 'result_view.php'], true);
                         ?>
                         <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/results.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -906,7 +908,18 @@ if ($useAdminSidebar) {
                         </a>
 
                         <?php
-                        $isActive = ($currentPage === 'monitoring_ujian.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                        $isActive = ($currentPage === 'rekap_nilai.php');
+                        ?>
+                        <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/admin/rekap_nilai.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 3v18h18" />
+                                <path d="M7 14l3-3 3 2 5-6" />
+                            </svg>
+                            <span>Rekap Nilai</span>
+                        </a>
+
+                        <?php
+                        $isActive = ($currentPage === 'monitoring_ujian.php');
                         ?>
                         <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/monitoring_ujian.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -920,7 +933,7 @@ if ($useAdminSidebar) {
                         </a>
 
                         <?php
-                        $isActive = in_array($currentPage, ['students.php', 'student_add.php', 'student_edit.php', 'student_view.php', 'students_import.php'], true) && (strpos($scriptName, '/siswa/admin/') !== false);
+                        $isActive = in_array($currentPage, ['students.php', 'student_add.php', 'student_edit.php', 'student_view.php', 'students_import.php'], true);
                         ?>
                         <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/students.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -931,7 +944,7 @@ if ($useAdminSidebar) {
                         </a>
 
                         <?php
-                        $isActive = ($currentPage === 'rombels.php') && (strpos($scriptName, '/siswa/admin/') !== false);
+                        $isActive = ($currentPage === 'rombels.php');
                         ?>
                         <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/admin/rombels.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1112,6 +1125,8 @@ if ($useAdminSidebar) {
                         </svg>
                         <span>Hasil</span>
                     </a>
+
+                    
 
                     <?php $isActive = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
                     <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/profile_edit.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>

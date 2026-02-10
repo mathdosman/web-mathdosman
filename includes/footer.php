@@ -106,13 +106,10 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 	(() => {
 		// Global theme toggle (Bootstrap 5.3 color modes)
 		const key = 'md_theme';
-		const btn = document.getElementById('themeToggle');
-		if (!btn) return;
+		const btns = Array.from(document.querySelectorAll('.md-theme-toggle'));
+		if (!btns.length) return;
 
-		const icon = btn.querySelector('i');
-		const getPreferred = () => (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ?
-			'dark' :
-			'light';
+		const getPreferred = () => (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
 
 		const getCurrent = () => {
 			const attr = document.documentElement.getAttribute('data-bs-theme');
@@ -129,37 +126,40 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 			const resolved = (theme === 'system') ? getPreferred() : theme;
 			document.documentElement.setAttribute('data-bs-theme', resolved);
 			const isDark = resolved === 'dark';
-			// UI labels reflect the current stored preference (not resolved)
-			if (theme === 'system') {
-				btn.setAttribute('aria-label', 'Ikuti pengaturan sistem');
-				btn.setAttribute('title', 'Ikuti pengaturan sistem');
-			} else {
-				btn.setAttribute('aria-label', isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap');
-				btn.setAttribute('title', isDark ? 'Mode terang' : 'Mode gelap');
-			}
-			if (icon) {
-				icon.classList.toggle('bi-moon-stars-fill', !isDark);
-				icon.classList.toggle('bi-sun-fill', isDark);
-			}
+
+			// Update each toggle button (icon + aria/title)
+			btns.forEach(btn => {
+				const icon = btn.querySelector('i');
+				if (theme === 'system') {
+					btn.setAttribute('aria-label', 'Ikuti pengaturan sistem');
+					btn.setAttribute('title', 'Ikuti pengaturan sistem');
+				} else {
+					btn.setAttribute('aria-label', isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap');
+					btn.setAttribute('title', isDark ? 'Mode terang' : 'Mode gelap');
+				}
+				if (icon) {
+					icon.classList.toggle('bi-moon-stars-fill', !isDark);
+					icon.classList.toggle('bi-sun-fill', isDark);
+				}
+			});
 		};
 
 		// Initialize: prefer stored value, fallback to system
 		apply(getCurrent());
 
-		btn.addEventListener('click', () => {
-			const current = getCurrent();
-			// cycle: dark -> light -> system -> dark
-			let next = 'dark';
-			if (current === 'dark') next = 'light';
-			else if (current === 'light') next = 'system';
-			else next = 'dark';
-
-			try {
-				// store explicit 'system' or theme
-				window.localStorage.setItem(key, next);
-			} catch (e) {}
-			apply(next);
+		btns.forEach(btn => {
+			btn.addEventListener('click', () => {
+				// Toggle explicitly between dark and light for immediate feedback.
+				const current = getCurrent();
+				const resolved = (current === 'system') ? getPreferred() : current;
+				const next = (resolved === 'dark') ? 'light' : 'dark';
+				try {
+					window.localStorage.setItem(key, next);
+				} catch (e) {}
+				apply(next);
+			});
 		});
+
 		// Update any visible indicators (multiple placements possible)
 		const updateIndicators = (storedTheme) => {
 			const elems = document.querySelectorAll('.theme-indicator');
@@ -295,6 +295,9 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 				let matched = null;
 				for (const link of links) {
 					try {
+						const rawHref = String(link.getAttribute('href') || '');
+						// Ignore fragment-only toggles (e.g. "#adminSidebarWeb")
+						if (rawHref.startsWith('#')) continue;
 						const linkPath = new URL(link.href, window.location.href).pathname;
 						if (linkPath === currentPath) {
 							matched = link;
@@ -387,6 +390,8 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 				let matched = null;
 				for (const link of links) {
 					try {
+						const rawHref = String(link.getAttribute('href') || '');
+						if (rawHref.startsWith('#')) continue;
 						const linkPath = new URL(link.href, window.location.href).pathname;
 						if (linkPath === currentPath) {
 							matched = link;
