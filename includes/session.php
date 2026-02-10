@@ -69,9 +69,11 @@ function app_session_start(): void
             'httponly' => true,
             'samesite' => 'Lax',
         ];
-        if ($cookie_domain !== '') {
-            $params['domain'] = $cookie_domain;
-        }
+        // Intentionally avoid setting an explicit cookie domain so the
+        // browser will scope the session cookie to the exact request host.
+        // Setting a domain (especially a leading-dot domain) can cause the
+        // browser to ignore the Set-Cookie when the configured host and the
+        // request host differ (common in local or proxied setups).
         session_set_cookie_params($params);
     } catch (Throwable $e) {
         // Ignore; fallback to defaults.
