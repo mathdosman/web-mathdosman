@@ -506,20 +506,8 @@ include __DIR__ . '/../includes/header.php';
         console.log('[GEO] ' + msg);
         var el = document.getElementById('absenDiagnosticsAdvanced');
         if (el) {
-            el.innerHTML = '<div style="background:#fff3cd;padding:8px;border-radius:4px;max-height:200px;overflow-y:auto;">' + 
-                           debugLogs.map(function(m) { return htmlspecialchars(m); }).join('<br>') + 
-                           '</div>';
+            el.textContent = debugLogs.join('\n');
         }
-    }
-    function htmlspecialchars(str) {
-        var map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return String(str).replace(/[&<>"']/g, function(m) { return map[m]; });
     }
     
     debugLog('IIFE START');
