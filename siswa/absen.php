@@ -1060,12 +1060,86 @@ try {
         } catch (e) {}
     }
 
+    // Show a prominent permission banner with instructions when location is blocked
+    function showPermissionBanner() {
+        try {
+            var existing = document.getElementById('geoPermissionBanner');
+            if (existing) return; // already shown
+
+            var banner = document.createElement('div');
+            banner.id = 'geoPermissionBanner';
+            banner.style.position = 'fixed';
+            banner.style.left = '12px';
+            banner.style.right = '12px';
+            banner.style.bottom = '80px';
+            banner.style.zIndex = 99999;
+            banner.style.background = '#ffdddd';
+            banner.style.border = '1px solid #ff8888';
+            banner.style.padding = '12px';
+            banner.style.borderRadius = '10px';
+            banner.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+            banner.style.fontSize = '14px';
+
+            var html = '<div style="display:flex;gap:10px;align-items:center">' +
+                       '<div style="flex:1">' +
+                       '<strong>Lokasi diblokir</strong><br>Izinkan akses lokasi untuk mathdosman.my.id di pengaturan browser Anda.' +
+                       '</div>' +
+                       '<div style="display:flex;gap:8px">' +
+                       '<button id="geoOpenSettingsBtn" style="background:#007bff;color:#fff;border:none;padding:8px 10px;border-radius:6px">Buka Pengaturan</button>' +
+                       '<button id="geoOpenTabBtn" style="background:#fff;color:#007bff;border:1px solid #007bff;padding:8px 10px;border-radius:6px">Buka di Tab</button>' +
+                       '</div></div>';
+
+            banner.innerHTML = html;
+            document.body.appendChild(banner);
+
+            var btnSettings = document.getElementById('geoOpenSettingsBtn');
+            var btnOpenTab = document.getElementById('geoOpenTabBtn');
+
+            if (btnSettings) btnSettings.addEventListener('click', function () {
+                // Try to open Chrome site settings - may not work on all devices
+                try {
+                    var origin = encodeURIComponent(location.origin);
+                    // This URL may work on some Chrome versions
+                    var settingsUrl = 'chrome://settings/content/siteDetails?site=' + origin;
+                    window.open(settingsUrl, '_blank');
+                } catch (e) {
+                    alert('Buka Setelan situs di Chrome -> Site settings -> Location, lalu izinkan untuk mathdosman.my.id');
+                }
+            });
+            if (btnOpenTab) btnOpenTab.addEventListener('click', function () {
+                try { window.open(window.location.href, '_blank'); } catch (e) { /* ignore */ }
+            });
+        } catch (e) {
+            console.error('showPermissionBanner error', e);
+        }
+    }
+
     // ULTRA SIMPLE: Just call geolocation directly, no Promise logic
     function checkPermissionsAndInit() {
         debugLog('checkPermissionsAndInit() called');
-        // Langsung call geolocation
-        initGeolocation();
-        
+
+        // If Permissions API exists, check state first so we can show banner early
+        if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+            try {
+                navigator.permissions.query({ name: 'geolocation' }).then(function (res) {
+                    debugLog('permissions.geolocation=' + (res && res.state ? res.state : 'unknown'));
+                    if (res && res.state === 'denied') {
+                        showPermissionBanner();
+                    }
+                    // still try to get location (will prompt or fail)
+                    initGeolocation();
+                }).catch(function () {
+                    debugLog('permissions.query failed, calling initGeolocation');
+                    initGeolocation();
+                });
+            } catch (e) {
+                debugLog('permissions.query exception: ' + e.message);
+                initGeolocation();
+            }
+        } else {
+            initGeolocation();
+        }
+
         // Jika di step foto, init camera juga
         if (attendanceStep === 'foto') {
             initCamera();
