@@ -317,6 +317,12 @@ if ($step !== 'foto') {
 $page_title = 'Absen Kehadiran Siswa';
 include __DIR__ . '/../includes/header.php';
 ?>
+<?php if (isset($_GET['debuggeo']) && $_GET['debuggeo']): ?>
+    <div style="background:#ffe8cc;border:1px solid #ffcc99;padding:12px;border-radius:8px;margin:12px 0;">
+        <strong>DEBUG MODE:</strong> server-side banner active. Jika Anda melihat ini, file server telah diperbarui.
+        <div class="mt-2 small">Untuk mematikan, muat ulang tanpa <code>?debuggeo=1</code> di URL.</div>
+    </div>
+<?php endif; ?>
 <div class="card shadow-sm">
     <div class="card-body">
         <h5 class="mb-2 d-flex align-items-center gap-2">
