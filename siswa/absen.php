@@ -598,101 +598,71 @@ include __DIR__ . '/../includes/header.php';
         }
     }
 
-    var geoTriedFallback = false;
-
     function initGeolocation() {
         if (!navigator.geolocation) {
             showAbsenError('Browser tidak mendukung geolokasi.');
             return;
         }
-
-        updateLocationStatusText('Mengambil lokasi...', 'text-muted');
-
-        var successCount = 0;
         
-        function tryGetLocation() {
-            successCount++;
-            if (successCount > 1) {
-                updateLocationStatusText('Coba lagi (percobaan ' + successCount + ')...', 'text-muted');
-            }
-            
-            navigator.geolocation.getCurrentPosition(
-                function onSuccess(pos) {
-                    var lat = pos.coords.latitude;
-                    var lng = pos.coords.longitude;
-                    var acc = pos.coords.accuracy;
+        updateLocationStatusText('📍 Mengambil lokasi...', 'text-muted');
+        
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                // Ambil koordinat
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                var acc = pos.coords.accuracy;
+                
+                // Update UI: koordinat
+                var latEl = document.querySelector('[data-role="current-lat"]');
+                var lngEl = document.querySelector('[data-role="current-lng"]');
+                if (latEl) latEl.textContent = lat.toFixed(6);
+                if (lngEl) lngEl.textContent = lng.toFixed(6);
+                
+                // Update UI: akurasi
+                var accEl = document.querySelector('[data-role="current-accuracy"]');
+                if (accEl) accEl.textContent = acc ? '±' + Math.round(acc) + ' m' : '-';
+                
+                // Hitung & simpan jarak dari titik absen
+                if (cfg && cfg.lat && cfg.lng && cfg.radius_m) {
+                    var d = haversineDistanceMeters(cfg.lat, cfg.lng, lat, lng);
+                    currentLat = lat;
+                    currentLng = lng;
+                    currentDistance = d;
                     
-                    // Update UI elements
-                    var latEl = document.querySelector('[data-role="current-lat"]');
-                    var lngEl = document.querySelector('[data-role="current-lng"]');
                     var distEl = document.querySelector('[data-role="current-distance"]');
+                    if (distEl) distEl.textContent = Math.round(d) + ' m';
                     
-                    if (latEl) latEl.textContent = lat.toFixed(6) + (acc ? ' (±' + Math.round(acc) + 'm)' : '');
-                    if (lngEl) lngEl.textContent = lng.toFixed(6);
-                    
-                    // Calculate distance and update UI
-                    if (cfg && cfg.lat !== null && cfg.lng !== null && cfg.radius_m !== null) {
-                        var d = haversineDistanceMeters(cfg.lat, cfg.lng, lat, lng);
-                        currentLat = lat;
-                        currentLng = lng;
-                        currentDistance = d;
-                        
-                        if (distEl) distEl.textContent = formatNumber(d) + (acc ? ' (±' + Math.round(acc) + 'm)' : '');
-                        
-                        var inside = d <= cfg.radius_m;
-                        if (inside) {
-                            updateLocationStatusText('✓ Anda di dalam radius absen. Lanjut ke foto.', 'text-success fw-semibold');
-                            if (continueBtn) {
-                                continueBtn.disabled = false;
-                                continueBtn.classList.remove('btn-secondary');
-                                continueBtn.classList.add('btn-success');
-                            }
-                        } else {
-                            updateLocationStatusText('✗ Anda di luar radius (' + Math.round(d) + ' m). Pindah posisi.', 'text-danger fw-semibold');
-                            if (continueBtn) {
-                                continueBtn.disabled = true;
-                                continueBtn.classList.add('btn-secondary');
-                                continueBtn.classList.remove('btn-success');
-                            }
-                        }
-                        
-                        initMapIfNeeded();
-                        if (map && L) {
-                            if (!currentMarker) {
-                                currentMarker = L.marker([lat, lng]).addTo(map).bindPopup('Lokasi Anda');
-                            } else {
-                                currentMarker.setLatLng([lat, lng]);
-                            }
-                            if (radiusCircle) {
-                                var bounds = radiusCircle.getBounds();
-                                bounds = bounds.extend([lat, lng]);
-                                map.fitBounds(bounds, { padding: [20, 20] });
-                            } else {
-                                map.setView([lat, lng], 17);
-                            }
+                    // Update status berdasarkan jarak
+                    var inside = d <= cfg.radius_m;
+                    if (inside) {
+                        updateLocationStatusText('✓ Lokasi OK - di dalam radius absen', 'text-success fw-semibold');
+                        if (continueBtn) {
+                            continueBtn.disabled = false;
+                            continueBtn.classList.remove('btn-secondary');
+                            continueBtn.classList.add('btn-success');
                         }
                     } else {
-                        showAbsenError('Konfigurasi absen tidak lengkap.');
+                        updateLocationStatusText('✗ Lokasi diluar radius (' + Math.round(d) + ' m)', 'text-danger fw-semibold');
+                        if (continueBtn) {
+                            continueBtn.disabled = true;
+                            continueBtn.classList.add('btn-secondary');
+                            continueBtn.classList.remove('btn-success');
+                        }
                     }
-                },
-                function onError(err) {
-                    var msg = 'Error ' + err.code + ': ' + err.message;
-                    if (err.code === 1) msg = 'Izin lokasi ditolak. Buka setting browser & aktifkan lokasi.';
-                    else if (err.code === 2) msg = 'Lokasi tidak tersedia (GPS off atau sinyal lemah).';
-                    else if (err.code === 3) msg = 'Timeout mengambil lokasi. Coba lagi.';
-                    
-                    if (successCount < 3) {
-                        setTimeout(tryGetLocation, 1000);
-                    } else {
-                        showAbsenError(msg);
-                        updateLocationStatusText(msg, 'text-danger');
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-            );
-        }
-        
-        tryGetLocation();
+                }
+            },
+            function(err) {
+                var msg = 'Gagal ambil lokasi';
+                if (err.code === 1) msg = 'Izin ditolak - aktifkan di setting';
+                else if (err.code === 2) msg = 'Lokasi tidak tersedia (GPS/sinyal lemah)';
+                else if (err.code === 3) msg = 'Timeout ambil lokasi';
+                
+                showAbsenError(msg);
+                updateLocationStatusText(msg, 'text-danger');
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
     }
 
     function initCamera() {
