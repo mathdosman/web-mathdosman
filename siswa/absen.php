@@ -589,29 +589,31 @@ include __DIR__ . '/../includes/header.php';
             return;
         }
 
-        updateLocationStatusText('Mengambil lokasi dari perangkat...', 'text-muted');
+        updateLocationStatusText('Mengambil lokasi dari perangkat (mencoba beberapa kali)...', 'text-muted');
 
-        var primaryOptions = {
-            enableHighAccuracy: true,
-            timeout: 30000, // beri waktu lebih lama untuk perangkat lama lock posisi
-            maximumAge: 60000 // izinkan cache lokasi terbaru (maks 60 detik)
-        };
+        var maxSamples = 6;
+        var attempts = 0;
+        var best = null;
+        var startAt = Date.now();
+        var overallTimeout = 12000; // ms
+        var perAttemptTimeout = 5000; // ms
+        var desiredAccuracy = (cfg && cfg.radius_m) ? Math.min(cfg.radius_m, 200) : 200;
 
-        var fallbackOptions = {
-            enableHighAccuracy: false,
-            timeout: 20000,
-            maximumAge: 120000
-        };
+        function handleAccept(pos) {
+            // Reuse existing onSuccess logic by calling a local wrapper
+            onSuccess(pos);
+        }
 
         function onSuccess(pos) {
             var lat = pos.coords.latitude;
             var lng = pos.coords.longitude;
+            var acc = typeof pos.coords.accuracy === 'number' ? pos.coords.accuracy : null;
 
             var latEl = document.querySelector('[data-role="current-lat"]');
             var lngEl = document.querySelector('[data-role="current-lng"]');
             var distEl = document.querySelector('[data-role="current-distance"]');
 
-            if (latEl) latEl.textContent = lat.toFixed(6);
+            if (latEl) latEl.textContent = lat.toFixed(6) + (acc !== null ? (' (±' + Math.round(acc) + 'm)') : '');
             if (lngEl) lngEl.textContent = lng.toFixed(6);
 
             if (cfg && cfg.lat !== null && cfg.lng !== null && cfg.radius_m !== null) {
@@ -619,7 +621,7 @@ include __DIR__ . '/../includes/header.php';
                 currentLat = lat;
                 currentLng = lng;
                 currentDistance = d;
-                if (distEl) distEl.textContent = formatNumber(d);
+                if (distEl) distEl.textContent = formatNumber(d) + (acc !== null ? (' (±' + Math.round(acc) + 'm)') : '');
 
                 initMapIfNeeded();
                 if (map) {
@@ -671,24 +673,59 @@ include __DIR__ . '/../includes/header.php';
             }
         }
 
-        function onError(err) {
-            var msg = 'Gagal mengambil lokasi (' + err.code + '): ' + err.message;
+        function attemptOnce() {
+            attempts++;
+            var opts = { enableHighAccuracy: true, timeout: perAttemptTimeout, maximumAge: 0 };
+            try {
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    // pick best by accuracy
+                    if (!best) best = pos;
+                    else if (typeof pos.coords.accuracy === 'number' && typeof best.coords.accuracy === 'number' && pos.coords.accuracy < best.coords.accuracy) {
+                        best = pos;
+                    }
 
-            // Coba sekali lagi dengan opsi lebih longgar (tanpa high accuracy) untuk perangkat lama.
-            if (!geoTriedFallback) {
-                geoTriedFallback = true;
-                updateLocationStatusText('Lokasi lambat, mencoba ulang dengan mode akurasi standar...', 'text-muted');
-                navigator.geolocation.getCurrentPosition(onSuccess, function (err2) {
-                    var msg2 = 'Gagal mengambil lokasi (' + err2.code + '): ' + err2.message;
-                    updateLocationStatusText(msg2, 'text-danger');
-                }, fallbackOptions);
-                return;
+                    // If good enough accuracy, accept immediately
+                    var acc = typeof best.coords.accuracy === 'number' ? best.coords.accuracy : null;
+                    if (acc !== null && acc <= Math.max(50, Math.min(desiredAccuracy, 200))) {
+                        handleAccept(best);
+                        return;
+                    }
+
+                    // Continue trying until maxSamples or overall timeout
+                    if (attempts < maxSamples && (Date.now() - startAt) < overallTimeout) {
+                        setTimeout(attemptOnce, 400);
+                        updateLocationStatusText('Mencari lokasi dengan akurasi lebih baik... (percobaan ' + (attempts+1) + '/' + maxSamples + ')', 'text-muted');
+                    } else {
+                        // Accept best available (even if low accuracy)
+                        if (best) {
+                            handleAccept(best);
+                        } else {
+                            updateLocationStatusText('Gagal mendapatkan lokasi yang valid.', 'text-danger');
+                        }
+                    }
+                }, function (err) {
+                    if (err && err.code === 1) {
+                        updateLocationStatusText('Izin lokasi ditolak oleh pengguna.', 'text-danger');
+                        return;
+                    }
+                    // Other errors: try again until timeout
+                    if (attempts < maxSamples && (Date.now() - startAt) < overallTimeout) {
+                        setTimeout(attemptOnce, 400);
+                    } else {
+                        if (best) {
+                            handleAccept(best);
+                        } else {
+                            updateLocationStatusText('Gagal mengambil lokasi (' + (err && err.message ? err.message : 'unknown') + ').', 'text-danger');
+                        }
+                    }
+                }, opts);
+            } catch (e) {
+                updateLocationStatusText('Kesalahan saat mengakses geolokasi: ' + e.message, 'text-danger');
             }
-
-            updateLocationStatusText(msg, 'text-danger');
         }
 
-        navigator.geolocation.getCurrentPosition(onSuccess, onError, primaryOptions);
+        // Start attempts
+        attemptOnce();
     }
 
     function initCamera() {
