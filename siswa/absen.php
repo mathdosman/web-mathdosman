@@ -332,6 +332,10 @@ include __DIR__ . '/../includes/header.php';
             <strong>Diagnostik (global):</strong>
             <div id="absenDiagnostics" class="small text-monospace text-break">Memeriksa...</div>
         </div>
+        <div class="mt-2">
+            <button type="button" id="btnAbsDiagAdvanced" class="btn btn-sm btn-outline-secondary">Diagnostik Lanjutan</button>
+            <div id="absenDiagnosticsAdvanced" class="small text-monospace text-break mt-2">(tekan tombol untuk menjalankan diagnostik lanjutan)</div>
+        </div>
         <script>
         (function(){
             try {
@@ -344,6 +348,66 @@ include __DIR__ . '/../includes/header.php';
                     s.push('online:' + (navigator.onLine ? 'yes' : 'no'));
                     s.push('host:' + location.hostname);
                     d.textContent = s.join(' | ');
+
+                    var advBtn = document.getElementById('btnAbsDiagAdvanced');
+                    var advOut = document.getElementById('absenDiagnosticsAdvanced');
+                    if (!advBtn || !advOut) return;
+                    advBtn.addEventListener('click', function () {
+                        advOut.textContent = 'Menjalankan diagnostik lanjutan...';
+                        (async function () {
+                            var parts = [];
+                            parts.push('UA:' + (navigator.userAgent || 'unknown'));
+                            parts.push('geolocation API:' + (typeof navigator.geolocation !== 'undefined'));
+                            try {
+                                if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+                                    try {
+                                        var gp = await navigator.permissions.query({ name: 'geolocation' });
+                                        parts.push('permissions.geolocation:' + (gp.state || 'unknown'));
+                                    } catch (e) {
+                                        parts.push('permissions.geolocation: query-error');
+                                    }
+                                    try {
+                                        var cp = await navigator.permissions.query({ name: 'camera' });
+                                        parts.push('permissions.camera:' + (cp.state || 'unknown'));
+                                    } catch (e) {
+                                        parts.push('permissions.camera: query-error');
+                                    }
+                                } else {
+                                    parts.push('permissions-api: unavailable');
+                                }
+                            } catch (e) {
+                                parts.push('permissions-check-failed');
+                            }
+
+                            // Try to get current position (this may trigger a permission prompt)
+                            if (navigator.geolocation && typeof navigator.geolocation.getCurrentPosition === 'function') {
+                                var got = false;
+                                var done = function (txt) {
+                                    if (got) return; got = true; advOut.textContent = parts.concat([txt]).join('\n');
+                                };
+                                try {
+                                    navigator.geolocation.getCurrentPosition(function (pos) {
+                                        var txt = 'geolocation.ok: ' + pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6) + ' (acc=' + (pos.coords.accuracy||0) + 'm)';
+                                        done(txt);
+                                    }, function (err) {
+                                        var txt = 'geolocation.err: code=' + err.code + ' msg=' + err.message;
+                                        done(txt);
+                                    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                                } catch (e) {
+                                    parts.push('geolocation-call-exception');
+                                    advOut.textContent = parts.join('\n');
+                                }
+                                // Fallback timeout to ensure UI updates
+                                setTimeout(function () {
+                                    if (!got) {
+                                        advOut.textContent = parts.concat(['geolocation: no-response within timeout']).join('\n');
+                                    }
+                                }, 11000);
+                            } else {
+                                advOut.textContent = parts.concat(['geolocation: not-supported']).join('\n');
+                            }
+                        })();
+                    });
                 });
             } catch (e) {
                 try { var d = document.getElementById('absenDiagnostics'); if (d) d.textContent = 'JS init error'; } catch (e) {}
