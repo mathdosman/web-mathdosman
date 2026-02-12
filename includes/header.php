@@ -43,6 +43,18 @@ if (!function_exists('asset_url')) {
 
 app_session_start();
 
+// Ensure minimal permissions policy headers to allow geolocation and camera
+// for same-origin pages. This helps when web server does not set these
+// headers and avoids accidental blocking in some embed contexts.
+try {
+    if (!headers_sent()) {
+        header('Permissions-Policy: geolocation=(self), camera=(self)');
+        header("Feature-Policy: geolocation 'self'; camera 'self'");
+    }
+} catch (Throwable $_) {
+    // ignore; best-effort only
+}
+
 $isAdmin = !empty($_SESSION['user']) && (($_SESSION['user']['role'] ?? '') === 'admin');
 $isStudent = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
 

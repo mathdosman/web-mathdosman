@@ -910,6 +910,35 @@ include __DIR__ . '/../includes/header.php';
         }
     });
 
+    // If page is embedded inside an iframe or in-app WebView, browsers
+    // often block geolocation/camera prompts. Detect that and show a
+    // clear instruction with a one-click "Buka di Tab Baru" fallback.
+    if (window.self !== window.top) {
+        var locStatusEl = document.querySelector('[data-role="location-status-text"]');
+        if (locStatusEl) {
+            locStatusEl.textContent = 'Halaman dibuka di dalam aplikasi atau iframe. Buka langsung di browser (tab baru) untuk mengizinkan lokasi & kamera.';
+            locStatusEl.className = 'small text-danger fw-semibold';
+        }
+        try {
+            var btnWrap = document.createElement('div');
+            btnWrap.className = 'mt-3';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-primary';
+            btn.textContent = 'Buka di Tab Baru';
+            btn.addEventListener('click', function () {
+                window.open(window.location.href, '_blank');
+            });
+            btnWrap.appendChild(btn);
+            var mapEl = document.getElementById('attendanceMap');
+            if (mapEl && mapEl.parentNode) {
+                mapEl.parentNode.insertBefore(btnWrap, mapEl.nextSibling);
+            } else if (document.body) {
+                document.body.insertBefore(btnWrap, document.body.firstChild);
+            }
+        } catch (e) {}
+    }
+
     initGeolocation();
     if (attendanceStep === 'foto') {
         initCamera();

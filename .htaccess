@@ -39,6 +39,10 @@
     
     # Referrer Policy
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Allow geolocation and camera for same-origin pages (helpful for student attendance)
+    Header always set Permissions-Policy "geolocation=(self), camera=(self)"
+    Header always set Feature-Policy "geolocation 'self'; camera 'self'"
 </IfModule>
 
 # Compression
