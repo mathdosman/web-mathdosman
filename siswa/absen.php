@@ -604,10 +604,16 @@ include __DIR__ . '/../includes/header.php';
             return;
         }
         
+        // DEBUG LOG
+        console.log('[GEO] initGeolocation start', { cfg: cfg, attendanceStep: attendanceStep });
+        
         updateLocationStatusText('📍 Mengambil lokasi...', 'text-muted');
         
         navigator.geolocation.getCurrentPosition(
             function(pos) {
+                // DEBUG: Callback fire
+                console.log('[GEO] SUCCESS callback', pos);
+                
                 // Ambil koordinat
                 var lat = pos.coords.latitude;
                 var lng = pos.coords.longitude;
@@ -616,6 +622,8 @@ include __DIR__ . '/../includes/header.php';
                 // Update UI: koordinat
                 var latEl = document.querySelector('[data-role="current-lat"]');
                 var lngEl = document.querySelector('[data-role="current-lng"]');
+                console.log('[GEO] Element search:', { latEl: latEl ? 'found' : 'NOT FOUND', lngEl: lngEl ? 'found' : 'NOT FOUND' });
+                
                 if (latEl) latEl.textContent = lat.toFixed(6);
                 if (lngEl) lngEl.textContent = lng.toFixed(6);
                 
@@ -635,6 +643,8 @@ include __DIR__ . '/../includes/header.php';
                     
                     // Update status berdasarkan jarak
                     var inside = d <= cfg.radius_m;
+                    console.log('[GEO] Distance calc:', { distance: d, inside: inside, cfg_radius: cfg.radius_m });
+                    
                     if (inside) {
                         updateLocationStatusText('✓ Lokasi OK - di dalam radius absen', 'text-success fw-semibold');
                         if (continueBtn) {
@@ -650,9 +660,12 @@ include __DIR__ . '/../includes/header.php';
                             continueBtn.classList.remove('btn-success');
                         }
                     }
+                } else {
+                    console.log('[GEO] cfg incomplete', cfg);
                 }
             },
             function(err) {
+                console.log('[GEO] ERROR callback', err);
                 var msg = 'Gagal ambil lokasi';
                 if (err.code === 1) msg = 'Izin ditolak - aktifkan di setting';
                 else if (err.code === 2) msg = 'Lokasi tidak tersedia (GPS/sinyal lemah)';
