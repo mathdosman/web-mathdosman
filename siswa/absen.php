@@ -495,39 +495,53 @@ include __DIR__ . '/../includes/header.php';
     crossorigin=""
 ></script>
 <script>
-(function () {
-    // DEBUG: IIFE start
-    console.log('[GEO] IIFE START');
-    
-    // DEBUG LOG function yang visible di halaman
-    var debugLogs = [];
-    function debugLog(msg) {
-        debugLogs.push(msg);
-        console.log('[GEO] ' + msg);
-        var el = document.getElementById('absenDiagnosticsAdvanced');
-        if (el) {
-            el.textContent = debugLogs.join('\n');
+try {
+    (function () {
+        // DEBUG: IIFE start - log ke setiap place yang ada
+        var debugLogs = [];
+        function debugLog(msg) {
+            debugLogs.push('[' + new Date().toLocaleTimeString() + '] ' + msg);
+            console.log('[GEO] ' + msg);
+            
+            // Log ke absenDiagnosticsAdvanced
+            var el1 = document.getElementById('absenDiagnosticsAdvanced');
+            if (el1) {
+                el1.textContent = debugLogs.join('\n');
+                el1.style.background = '#fff3cd';
+                el1.style.padding = '8px';
+                el1.style.borderRadius = '4px';
+                el1.style.fontSize = '11px';
+                el1.style.fontFamily = 'monospace';
+                el1.style.whiteSpace = 'pre-wrap';
+                el1.style.maxHeight = '300px';
+                el1.style.overflow = 'auto';
+            }
+            
+            // Log juga ke absenErrorMessage sebagai backup
+            var el2 = document.getElementById('absenErrorMessage');
+            if (el2 && debugLogs.length <= 5) {
+                el2.textContent = debugLogs.slice(-3).join(' | ');
+            }
         }
-    }
-    
-    debugLog('IIFE START');
-    
-    const cfg = <?php echo json_encode([
-        'id' => isset($activeSetting['id']) ? (int)$activeSetting['id'] : null,
-        'lat' => isset($activeSetting['center_lat']) ? (float)$activeSetting['center_lat'] : null,
-        'lng' => isset($activeSetting['center_lng']) ? (float)$activeSetting['center_lng'] : null,
-        'radius_m' => isset($activeSetting['radius_m']) ? (int)$activeSetting['radius_m'] : null,
-    ]); ?>;
+        
+        debugLog('=== IIFE START ===');
+        
+        const cfg = <?php echo json_encode([
+            'id' => isset($activeSetting['id']) ? (int)$activeSetting['id'] : null,
+            'lat' => isset($activeSetting['center_lat']) ? (float)$activeSetting['center_lat'] : null,
+            'lng' => isset($activeSetting['center_lng']) ? (float)$activeSetting['center_lng'] : null,
+            'radius_m' => isset($activeSetting['radius_m']) ? (int)$activeSetting['radius_m'] : null,
+        ]); ?>;
 
-    var attendanceStep = <?php echo json_encode($step); ?>;
-    debugLog('attendanceStep=' + attendanceStep + ', cfg.lat=' + (cfg ? cfg.lat : 'null'));
+        var attendanceStep = <?php echo json_encode($step); ?>;
+        debugLog('step=' + attendanceStep + ', cfg.lat=' + (cfg ? cfg.lat : 'null'));
 
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
-    var currentLat = null;
-    var currentLng = null;
-    var currentDistance = null;
+        var currentLat = null;
+        var currentLng = null;
+        var currentDistance = null;
 
     var map = null;
     var centerMarker = null;
@@ -1062,7 +1076,20 @@ include __DIR__ . '/../includes/header.php';
     }
     
     debugLog('IIFE END');
-})();
+    })(); // Close IIFE
+} catch (e) {
+    // Catch outer try for entire script
+    console.error('[GEO] FATAL ERROR:', e);
+    var errEl = document.getElementById('absenErrorMessage');
+    if (errEl) {
+        errEl.textContent = 'FATAL ERROR: ' + e.message;
+        errEl.style.display = 'block';
+    }
+    var diagEl = document.getElementById('absenDiagnosticsAdvanced');
+    if (diagEl) {
+        diagEl.textContent = 'FATAL ERROR:\n' + e.message;
+    }
+}
 </script>
 <?php endif; ?>
 
