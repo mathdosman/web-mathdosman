@@ -1002,70 +1002,14 @@ include __DIR__ . '/../includes/header.php';
         } catch (e) {}
     }
 
-    // Enhanced permissions check + diagnostics before requesting geolocation.
+    // ULTRA SIMPLE: Just call geolocation directly, no Promise logic
     function checkPermissionsAndInit() {
-        var diagEl = document.getElementById('absenDiagnostics');
-        var lines = [];
-        try {
-            lines.push('isSecureContext: ' + (window.isSecureContext ? 'yes' : 'no'));
-        } catch (e) {}
-        lines.push('online: ' + (navigator.onLine ? 'yes' : 'no'));
-        lines.push('host: ' + location.hostname + (location.protocol === 'https:' ? ' (https)' : ''));
-        lines.push('inIframe: ' + (window.self !== window.top ? 'yes' : 'no'));
-
-        function renderDiagnostics(extra) {
-            var out = lines.concat(extra || []).join('\n');
-            if (diagEl) diagEl.textContent = out;
-        }
-
-        // If Permissions API available, query states for geolocation and camera.
-        if (navigator.permissions && typeof navigator.permissions.query === 'function') {
-            var geopr = navigator.permissions.query({ name: 'geolocation' }).catch(function () { return null; });
-            var campr = navigator.permissions.query({ name: 'camera' }).catch(function () { return null; });
-            Promise.all([geopr, campr]).then(function (results) {
-                var g = results[0];
-                var c = results[1];
-                var extra = [];
-                try { extra.push('geolocation: ' + (g ? g.state : 'unknown')); } catch (e) { extra.push('geolocation: unknown'); }
-                try { extra.push('camera: ' + (c ? c.state : 'unknown')); } catch (e) { extra.push('camera: unknown'); }
-                renderDiagnostics(extra);
-
-                var geoState = g ? g.state : null;
-                if (geoState === 'granted' || geoState === 'prompt' || geoState === null) {
-                    // granted or prompt -> try to obtain location (will trigger prompt if needed)
-                    initGeolocation();
-                } else if (geoState === 'denied') {
-                    // denied -> show clear instruction and an action button
-                    var locStatusEl = document.querySelector('[data-role="location-status-text"]');
-                    if (locStatusEl) {
-                        locStatusEl.innerHTML = '<span class="text-danger fw-semibold">Izin lokasi diblokir pada browser. Buka pengaturan browser, izinkan lokasi, lalu muat ulang halaman.</span>';
-                    }
-                    var diagAction = document.createElement('div');
-                    diagAction.className = 'mt-2';
-                    var btnRetry = document.createElement('button');
-                    btnRetry.type = 'button';
-                    btnRetry.className = 'btn btn-sm btn-outline-primary me-2';
-                    btnRetry.textContent = 'Coba Minta Izin Lagi';
-                    btnRetry.addEventListener('click', function () {
-                        // Some browsers unblock permissions only after user interaction; open a new tab as fallback
-                        try { window.open(window.location.href, '_blank'); } catch (e) {}
-                    });
-                    diagAction.appendChild(btnRetry);
-                    if (diagEl && diagEl.parentNode) diagEl.parentNode.appendChild(diagAction);
-                }
-
-                if (attendanceStep === 'foto') {
-                    initCamera();
-                }
-            }).catch(function () {
-                renderDiagnostics(['permissions-query-failed']);
-                initGeolocation();
-                if (attendanceStep === 'foto') initCamera();
-            });
-        } else {
-            renderDiagnostics(['permissions-api: unavailable']);
-            initGeolocation();
-            if (attendanceStep === 'foto') initCamera();
+        // Langsung call geolocation
+        initGeolocation();
+        
+        // Jika di step foto, init camera juga
+        if (attendanceStep === 'foto') {
+            initCamera();
         }
     }
 
