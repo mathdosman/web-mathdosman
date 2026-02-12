@@ -630,80 +630,96 @@ try {
     }
 
     function initGeolocation() {
+        debugLog('=== initGeolocation START ===');
+        
+        // Check API exists
         if (!navigator.geolocation) {
-            debugLog('ERROR: Browser tidak mendukung geolokasi');
-            showAbsenError('Browser tidak mendukung geolokasi.');
+            var msg = 'Browser tidak support geolocation';
+            debugLog('ERROR: ' + msg);
+            updateLocationStatusText(msg, 'text-danger');
             return;
         }
         
-        debugLog('initGeolocation() called');
-        updateLocationStatusText('📍 Mengambil lokasi...', 'text-muted');
+        debugLog('navigator.geolocation OK');
+        updateLocationStatusText('📍 Cari lokasi...', 'text-muted');
         
+        // Just call getCurrentPosition - NOTHING ELSE
         navigator.geolocation.getCurrentPosition(
             function(pos) {
-                debugLog('SUCCESS callback fired!');
-                // Ambil koordinat
+                debugLog('✓ Callback SUCCESS!');
+                
                 var lat = pos.coords.latitude;
                 var lng = pos.coords.longitude;
                 var acc = pos.coords.accuracy;
-                debugLog('Coords: ' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ' (acc=' + Math.round(acc) + 'm)');
                 
-                // Update UI: koordinat
-                var latEl = document.querySelector('[data-role="current-lat"]');
-                var lngEl = document.querySelector('[data-role="current-lng"]');
-                debugLog('latEl found=' + (latEl ? 'yes' : 'NO') + ', lngEl found=' + (lngEl ? 'yes' : 'NO'));
+                debugLog('LAT: ' + lat);
+                debugLog('LNG: ' + lng);
+                debugLog('ACC: ' + Math.round(acc) + ' m');
                 
-                if (latEl) latEl.textContent = lat.toFixed(6);
-                if (lngEl) lngEl.textContent = lng.toFixed(6);
+                // Update SEMUA elements yang mungkin ada
+                var els = document.querySelectorAll('[data-role="current-lat"]');
+                for (var i = 0; i < els.length; i++) {
+                    els[i].textContent = lat.toFixed(6);
+                }
                 
-                // Update UI: akurasi
-                var accEl = document.querySelector('[data-role="current-accuracy"]');
-                if (accEl) accEl.textContent = acc ? '±' + Math.round(acc) + ' m' : '-';
+                els = document.querySelectorAll('[data-role="current-lng"]');
+                for (var i = 0; i < els.length; i++) {
+                    els[i].textContent = lng.toFixed(6);
+                }
                 
-                // Hitung & simpan jarak dari titik absen
+                // Simpan variable global
+                currentLat = lat;
+                currentLng = lng;
+                
+                // Hitung jarak jika cfg ada
                 if (cfg && cfg.lat && cfg.lng && cfg.radius_m) {
+                    debugLog('Calc distance...');
                     var d = haversineDistanceMeters(cfg.lat, cfg.lng, lat, lng);
-                    currentLat = lat;
-                    currentLng = lng;
                     currentDistance = d;
                     
-                    var distEl = document.querySelector('[data-role="current-distance"]');
-                    if (distEl) distEl.textContent = Math.round(d) + ' m';
+                    els = document.querySelectorAll('[data-role="current-distance"]');
+                    for (var i = 0; i < els.length; i++) {
+                        els[i].textContent = Math.round(d) + ' m';
+                    }
                     
-                    // Update status berdasarkan jarak
                     var inside = d <= cfg.radius_m;
-                    debugLog('Distance: ' + Math.round(d) + 'm, inside=' + inside + ', radius=' + cfg.radius_m);
+                    debugLog('Inside radius: ' + inside + ' (distance=' + Math.round(d) + 'm, radius=' + cfg.radius_m + 'm)');
                     
                     if (inside) {
-                        updateLocationStatusText('✓ Lokasi OK - di dalam radius absen', 'text-success fw-semibold');
-                        if (continueBtn) {
-                            continueBtn.disabled = false;
-                            continueBtn.classList.remove('btn-secondary');
-                            continueBtn.classList.add('btn-success');
-                        }
+                        updateLocationStatusText('✓ Di dalam radius absen', 'text-success fw-semibold');
+                        if (continueBtn) continueBtn.disabled = false;
                     } else {
-                        updateLocationStatusText('✗ Lokasi diluar radius (' + Math.round(d) + ' m)', 'text-danger fw-semibold');
-                        if (continueBtn) {
-                            continueBtn.disabled = true;
-                            continueBtn.classList.add('btn-secondary');
-                            continueBtn.classList.remove('btn-success');
-                        }
+                        updateLocationStatusText('✗ Di luar radius (' + Math.round(d) + ' m)', 'text-danger fw-semibold');
+                        if (continueBtn) continueBtn.disabled = true;
                     }
-                } else {
-                    debugLog('ERROR: cfg incomplete - lat=' + (cfg ? cfg.lat : 'null') + ', lng=' + (cfg ? cfg.lng : 'null'));
                 }
+                
+                debugLog('=== initGeolocation DONE ===');
             },
             function(err) {
-                debugLog('ERROR callback: code=' + err.code + ', msg=' + err.message);
-                var msg = 'Gagal ambil lokasi';
-                if (err.code === 1) msg = 'Izin ditolak - aktifkan di setting';
-                else if (err.code === 2) msg = 'Lokasi tidak tersedia (GPS/sinyal lemah)';
-                else if (err.code === 3) msg = 'Timeout ambil lokasi';
+                var msg = '';
+                debugLog('✗ ERROR callback!');
+                debugLog('Code: ' + err.code);
+                debugLog('Message: ' + err.message);
                 
-                showAbsenError(msg);
+                if (err.code === 1) {
+                    msg = 'Izin ditolak - cek setting browser';
+                } else if (err.code === 2) {
+                    msg = 'Lokasi tidak tersedia (GPS off?)';
+                } else if (err.code === 3) {
+                    msg = 'Timeout mencari lokasi';
+                } else {
+                    msg = 'Error: ' + err.message;
+                }
+                
                 updateLocationStatusText(msg, 'text-danger');
+                showAbsenError(msg);
             },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            { 
+                enableHighAccuracy: true, 
+                timeout: 10000,  // Lebih lama 
+                maximumAge: 0 
+            }
         );
     }
 
