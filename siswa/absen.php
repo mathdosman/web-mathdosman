@@ -499,6 +499,31 @@ include __DIR__ . '/../includes/header.php';
     // DEBUG: IIFE start
     console.log('[GEO] IIFE START');
     
+    // DEBUG LOG function yang visible di halaman
+    var debugLogs = [];
+    function debugLog(msg) {
+        debugLogs.push(msg);
+        console.log('[GEO] ' + msg);
+        var el = document.getElementById('absenDiagnosticsAdvanced');
+        if (el) {
+            el.innerHTML = '<div style="background:#fff3cd;padding:8px;border-radius:4px;max-height:200px;overflow-y:auto;">' + 
+                           debugLogs.map(function(m) { return htmlspecialchars(m); }).join('<br>') + 
+                           '</div>';
+        }
+    }
+    function htmlspecialchars(str) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(str).replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+    
+    debugLog('IIFE START');
+    
     const cfg = <?php echo json_encode([
         'id' => isset($activeSetting['id']) ? (int)$activeSetting['id'] : null,
         'lat' => isset($activeSetting['center_lat']) ? (float)$activeSetting['center_lat'] : null,
@@ -507,7 +532,7 @@ include __DIR__ . '/../includes/header.php';
     ]); ?>;
 
     var attendanceStep = <?php echo json_encode($step); ?>;
-    console.log('[GEO] attendanceStep:', attendanceStep, 'cfg:', cfg);
+    debugLog('attendanceStep=' + attendanceStep + ', cfg.lat=' + (cfg ? cfg.lat : 'null'));
 
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
@@ -604,29 +629,27 @@ include __DIR__ . '/../includes/header.php';
 
     function initGeolocation() {
         if (!navigator.geolocation) {
+            debugLog('ERROR: Browser tidak mendukung geolokasi');
             showAbsenError('Browser tidak mendukung geolokasi.');
             return;
         }
         
-        // DEBUG LOG
-        console.log('[GEO] initGeolocation start', { cfg: cfg, attendanceStep: attendanceStep });
-        
+        debugLog('initGeolocation() called');
         updateLocationStatusText('📍 Mengambil lokasi...', 'text-muted');
         
         navigator.geolocation.getCurrentPosition(
             function(pos) {
-                // DEBUG: Callback fire
-                console.log('[GEO] SUCCESS callback', pos);
-                
+                debugLog('SUCCESS callback fired!');
                 // Ambil koordinat
                 var lat = pos.coords.latitude;
                 var lng = pos.coords.longitude;
                 var acc = pos.coords.accuracy;
+                debugLog('Coords: ' + lat.toFixed(4) + ', ' + lng.toFixed(4) + ' (acc=' + Math.round(acc) + 'm)');
                 
                 // Update UI: koordinat
                 var latEl = document.querySelector('[data-role="current-lat"]');
                 var lngEl = document.querySelector('[data-role="current-lng"]');
-                console.log('[GEO] Element search:', { latEl: latEl ? 'found' : 'NOT FOUND', lngEl: lngEl ? 'found' : 'NOT FOUND' });
+                debugLog('latEl found=' + (latEl ? 'yes' : 'NO') + ', lngEl found=' + (lngEl ? 'yes' : 'NO'));
                 
                 if (latEl) latEl.textContent = lat.toFixed(6);
                 if (lngEl) lngEl.textContent = lng.toFixed(6);
@@ -647,7 +670,7 @@ include __DIR__ . '/../includes/header.php';
                     
                     // Update status berdasarkan jarak
                     var inside = d <= cfg.radius_m;
-                    console.log('[GEO] Distance calc:', { distance: d, inside: inside, cfg_radius: cfg.radius_m });
+                    debugLog('Distance: ' + Math.round(d) + 'm, inside=' + inside + ', radius=' + cfg.radius_m);
                     
                     if (inside) {
                         updateLocationStatusText('✓ Lokasi OK - di dalam radius absen', 'text-success fw-semibold');
@@ -665,11 +688,11 @@ include __DIR__ . '/../includes/header.php';
                         }
                     }
                 } else {
-                    console.log('[GEO] cfg incomplete', cfg);
+                    debugLog('ERROR: cfg incomplete - lat=' + (cfg ? cfg.lat : 'null') + ', lng=' + (cfg ? cfg.lng : 'null'));
                 }
             },
             function(err) {
-                console.log('[GEO] ERROR callback', err);
+                debugLog('ERROR callback: code=' + err.code + ', msg=' + err.message);
                 var msg = 'Gagal ambil lokasi';
                 if (err.code === 1) msg = 'Izin ditolak - aktifkan di setting';
                 else if (err.code === 2) msg = 'Lokasi tidak tersedia (GPS/sinyal lemah)';
@@ -1021,7 +1044,7 @@ include __DIR__ . '/../includes/header.php';
 
     // ULTRA SIMPLE: Just call geolocation directly, no Promise logic
     function checkPermissionsAndInit() {
-        console.log('[GEO] checkPermissionsAndInit called');
+        debugLog('checkPermissionsAndInit() called');
         // Langsung call geolocation
         initGeolocation();
         
@@ -1032,11 +1055,11 @@ include __DIR__ . '/../includes/header.php';
     }
 
     try {
-        console.log('[GEO] About to call checkPermissionsAndInit');
+        debugLog('About to call checkPermissionsAndInit');
         checkPermissionsAndInit();
-        console.log('[GEO] checkPermissionsAndInit finished');
+        debugLog('checkPermissionsAndInit finished');
     } catch (e) {
-        console.error('[GEO] ERROR in checkPermissionsAndInit:', e);
+        debugLog('ERROR in checkPermissionsAndInit: ' + e.message);
     }
     
     // Setup refresh button
@@ -1045,11 +1068,12 @@ include __DIR__ . '/../includes/header.php';
         refreshBtn.addEventListener('click', function() {
             var errEl = document.getElementById('absenErrorMessage');
             if (errEl) errEl.textContent = '';
+            debugLog('Refresh button clicked, calling initGeolocation');
             initGeolocation();
         });
     }
     
-    console.log('[GEO] IIFE END');
+    debugLog('IIFE END');
 })();
 </script>
 <?php endif; ?>
