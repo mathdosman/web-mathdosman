@@ -334,7 +334,9 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <div class="mt-2">
             <button type="button" id="btnAbsDiagAdvanced" class="btn btn-sm btn-outline-secondary">Diagnostik Lanjutan</button>
+            <button type="button" id="btnAbsRefresh" class="btn btn-sm btn-outline-info ms-2">Coba Ulang Lokasi</button>
             <div id="absenDiagnosticsAdvanced" class="small text-monospace text-break mt-2">(tekan tombol untuk menjalankan diagnostik lanjutan)</div>
+            <div id="absenErrorMessage" class="small text-danger mt-2"></div>
         </div>
         <script>
         (function(){
@@ -528,6 +530,14 @@ include __DIR__ . '/../includes/header.php';
         }
     }
 
+    function showAbsenError(message) {
+        var errEl = document.getElementById('absenErrorMessage');
+        if (errEl) {
+            errEl.textContent = '⚠️ ' + message;
+            errEl.style.display = 'block';
+        }
+    }
+
     function formatNumber(n) {
         if (!isFinite(n)) return '-';
         return n.toFixed(2);
@@ -547,9 +557,11 @@ include __DIR__ . '/../includes/header.php';
 
     function initMapIfNeeded() {
         if (typeof L === 'undefined') {
+            showAbsenError('Leaflet library tidak dimuat. Mungkin koneksi internet sedang lambat atau konten CDN terblokir.');
             return;
         }
         if (!cfg || cfg.lat === null || cfg.lng === null) {
+            showAbsenError('Konfigurasi titik absen tidak valid.');
             return;
         }
         if (map) {
@@ -558,27 +570,32 @@ include __DIR__ . '/../includes/header.php';
 
         var mapEl = document.getElementById('attendanceMap');
         if (!mapEl) {
+            showAbsenError('Elemen peta tidak ditemukan di halaman.');
             return;
         }
 
-        map = L.map(mapEl, {
-            zoomControl: true,
-        }).setView([cfg.lat, cfg.lng], 17);
+        try {
+            map = L.map(mapEl, {
+                zoomControl: true,
+            }).setView([cfg.lat, cfg.lng], 17);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors',
-        }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(map);
 
-        radiusCircle = L.circle([cfg.lat, cfg.lng], {
-            radius: cfg.radius_m || 100,
-            color: '#0d6efd',
-            fillColor: '#0d6efd',
-            fillOpacity: 0.12,
-            weight: 1,
-        }).addTo(map);
+            radiusCircle = L.circle([cfg.lat, cfg.lng], {
+                radius: cfg.radius_m || 100,
+                color: '#0d6efd',
+                fillColor: '#0d6efd',
+                fillOpacity: 0.12,
+                weight: 1,
+            }).addTo(map);
 
-        centerMarker = L.marker([cfg.lat, cfg.lng]).addTo(map).bindPopup('Titik absen');
+            centerMarker = L.marker([cfg.lat, cfg.lng]).addTo(map).bindPopup('Titik absen');
+        } catch (e) {
+            showAbsenError('Gagal menginisialisasi peta: ' + e.message);
+        }
     }
 
     var geoTriedFallback = false;
@@ -1133,6 +1150,16 @@ include __DIR__ . '/../includes/header.php';
     }
 
     checkPermissionsAndInit();
+    
+    // Setup refresh button
+    var refreshBtn = document.getElementById('btnAbsRefresh');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            var errEl = document.getElementById('absenErrorMessage');
+            if (errEl) errEl.textContent = '';
+            initGeolocation();
+        });
+    }
 })();
 </script>
 <?php endif; ?>
