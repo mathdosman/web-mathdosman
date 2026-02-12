@@ -327,6 +327,30 @@ include __DIR__ . '/../includes/header.php';
             Untuk melakukan absen, pastikan Anda berada di sekitar lokasi yang ditentukan sekolah dan izinkan akses lokasi &amp; kamera pada perangkat.
         </p>
 
+        <!-- Diagnostic panel (moved here so it's always present for debugging) -->
+        <div class="mb-2 small">
+            <strong>Diagnostik (global):</strong>
+            <div id="absenDiagnostics" class="small text-monospace text-break">Memeriksa...</div>
+        </div>
+        <script>
+        (function(){
+            try {
+                document.addEventListener('DOMContentLoaded', function () {
+                    var d = document.getElementById('absenDiagnostics');
+                    if (!d) return;
+                    var s = [];
+                    s.push('JS: loaded');
+                    try { s.push('isSecureContext:' + (window.isSecureContext ? 'yes' : 'no')); } catch (e) {}
+                    s.push('online:' + (navigator.onLine ? 'yes' : 'no'));
+                    s.push('host:' + location.hostname);
+                    d.textContent = s.join(' | ');
+                });
+            } catch (e) {
+                try { var d = document.getElementById('absenDiagnostics'); if (d) d.textContent = 'JS init error'; } catch (e) {}
+            }
+        })();
+        </script>
+
         <?php if (!$activeSetting): ?>
             <div class="alert alert-warning mb-0" role="alert">
                 Pengaturan titik absen belum dikonfigurasi oleh admin. Silakan hubungi guru/admin untuk mengaktifkan fitur absen.
@@ -347,10 +371,7 @@ include __DIR__ . '/../includes/header.php';
                     <div class="mb-2 small">
                         Jarak dari titik absen: <span data-role="current-distance">-</span> m
                     </div>
-                    <div class="mb-2 small">
-                        <strong>Diagnostik:</strong>
-                        <div id="absenDiagnostics" class="small text-monospace text-break">Memeriksa...</div>
-                    </div>
+                    
                     <div class="small" data-role="location-status-text">
                         <span class="text-muted">Mengambil lokasi dari perangkat...</span>
                     </div>
