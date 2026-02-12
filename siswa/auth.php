@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../config/bootstrap.php';
 require_once __DIR__ . '/../includes/session.php';
 
-app_session_start();
+app_session_start('student');
 
 function siswa_redirect_to(string $path): void
 {

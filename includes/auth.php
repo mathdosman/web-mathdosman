@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/bootstrap.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/security.php';
 
-app_session_start();
+app_session_start('admin');
 
 function redirect_to(string $path): void
 {

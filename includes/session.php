@@ -21,7 +21,7 @@ function app_is_https(): bool
     return false;
 }
 
-function app_session_start(): void
+function app_session_start(?string $purpose = null): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
@@ -31,6 +31,21 @@ function app_session_start(): void
     @ini_set('session.use_strict_mode', '1');
 
     $secure = app_is_https();
+
+    // Allow separate session names for admin and student to avoid
+    // collisions and allow simultaneous logins in different areas.
+    // Valid purpose values: 'admin', 'student', or null for default.
+    try {
+        if ($purpose === 'admin') {
+            session_name('WM_ADMINSESSID');
+        } elseif ($purpose === 'student' || $purpose === 'siswa') {
+            session_name('WM_STUDENTSESSID');
+        } else {
+            session_name('WM_SESSID');
+        }
+    } catch (Throwable $_) {
+        // ignore failures to set a custom name and continue with PHP default
+    }
 
     // Derive cookie domain from configured base URL if available, otherwise use Host header.
     $cookie_domain = '';
@@ -104,6 +119,46 @@ function app_session_start(): void
         }
     }
 
+    // Minimal anti-session-fixation helper: if session was started for a
+    // privileged purpose, ensure a fresh id when a user first authenticates.
+
+
+
+/**
+ * Regenerate the session ID safely.
+ */
+function app_session_regenerate(bool $deleteOld = true): void
+{
+    try {
+        session_regenerate_id($deleteOld);
+    } catch (Throwable $_) {
+    }
+}
+
+
+/**
+ * Convenience helper: set admin user into session and rotate id.
+ */
+function app_set_admin_user(array $user): void
+{
+    $_SESSION['user'] = $user;
+    $_SESSION['admin_login_at'] = time();
+    app_session_regenerate(true);
+}
+
+
+/**
+ * Convenience helper: set student into session and rotate id.
+ */
+function app_set_student(array $student, ?string $sessionToken = null): void
+{
+    $_SESSION['student'] = $student;
+    $_SESSION['student_login_at'] = time();
+    if ($sessionToken !== null) {
+        $_SESSION['student_session_token'] = $sessionToken;
+    }
+    app_session_regenerate(true);
+}
     // No extra setcookie here: rely on PHP's session handling and
     // the cookie params set earlier via session_set_cookie_params().
     // Sending duplicate Set-Cookie headers causes multiple PHPSESSID
