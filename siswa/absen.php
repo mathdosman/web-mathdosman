@@ -496,6 +496,9 @@ include __DIR__ . '/../includes/header.php';
 ></script>
 <script>
 (function () {
+    // DEBUG: IIFE start
+    console.log('[GEO] IIFE START');
+    
     const cfg = <?php echo json_encode([
         'id' => isset($activeSetting['id']) ? (int)$activeSetting['id'] : null,
         'lat' => isset($activeSetting['center_lat']) ? (float)$activeSetting['center_lat'] : null,
@@ -504,6 +507,7 @@ include __DIR__ . '/../includes/header.php';
     ]); ?>;
 
     var attendanceStep = <?php echo json_encode($step); ?>;
+    console.log('[GEO] attendanceStep:', attendanceStep, 'cfg:', cfg);
 
     const csrfMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
@@ -1017,6 +1021,7 @@ include __DIR__ . '/../includes/header.php';
 
     // ULTRA SIMPLE: Just call geolocation directly, no Promise logic
     function checkPermissionsAndInit() {
+        console.log('[GEO] checkPermissionsAndInit called');
         // Langsung call geolocation
         initGeolocation();
         
@@ -1026,7 +1031,13 @@ include __DIR__ . '/../includes/header.php';
         }
     }
 
-    checkPermissionsAndInit();
+    try {
+        console.log('[GEO] About to call checkPermissionsAndInit');
+        checkPermissionsAndInit();
+        console.log('[GEO] checkPermissionsAndInit finished');
+    } catch (e) {
+        console.error('[GEO] ERROR in checkPermissionsAndInit:', e);
+    }
     
     // Setup refresh button
     var refreshBtn = document.getElementById('btnAbsRefresh');
@@ -1037,6 +1048,8 @@ include __DIR__ . '/../includes/header.php';
             initGeolocation();
         });
     }
+    
+    console.log('[GEO] IIFE END');
 })();
 </script>
 <?php endif; ?>
