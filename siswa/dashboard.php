@@ -212,6 +212,8 @@ try {
 }
 
 $page_title = 'Dashboard Siswa';
+$body_class = 'siswa-page';
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">

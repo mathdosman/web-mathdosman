@@ -210,7 +210,7 @@ if ($assignment && $isExamAssignment && $requiresToken && isset($_GET['force_tok
 $examRevokedAt = trim((string)($assignment['exam_revoked_at'] ?? ''));
 if ($assignment && $isExamAssignment && $hasExamRevokedColumn && $examRevokedAt !== '' && (string)($assignment['status'] ?? 'assigned') !== 'done') {
     $page_title = 'Ujian Terkunci';
-    $body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view');
+    $body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view siswa-page');
     $hide_public_footer_links = true;
     $disable_student_sidebar = true;
     $disable_adsense = true;
@@ -985,7 +985,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (!$assignment) {
     http_response_code(404);
     $page_title = 'Penugasan tidak ditemukan';
-    $body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view');
+    $body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view siswa-page');
     $hide_public_footer_links = true;
     $disable_student_sidebar = true;
     $disable_adsense = true;
@@ -1049,12 +1049,13 @@ try {
 }
 
 $page_title = 'Tugas/Ujian';
-$body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view');
+$body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view siswa-page');
 $hide_public_footer_links = true;
 $use_print_soal_css = true;
 $disable_student_sidebar = true;
 $disable_adsense = true;
 $disable_navbar = true;
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm mx-auto md-assignment-card">

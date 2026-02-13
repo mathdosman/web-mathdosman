@@ -1,0 +1,192 @@
+/* Global responsive tweaks for all student (siswa) pages */
+
+/* Ensure cards and layout adapt nicely on mobile */
+body.siswa-page .card {
+    border-radius: 14px;
+}
+
+body.siswa-page .card-body {
+    padding: 1rem 1rem;
+}
+
+@media (max-width: 575.98px) {
+    body.siswa-page .card-body {
+        padding: 0.85rem 0.85rem;
+    }
+
+    body.siswa-page .dashboard-card-title {
+        font-size: 1.05rem;
+    }
+
+    body.siswa-page .dashboard-card-subtitle {
+        font-size: 0.82rem;
+    }
+
+    body.siswa-page .btn,
+    body.siswa-page .btn-sm {
+        font-size: 0.8rem;
+        padding-inline: 0.5rem;
+        padding-block: 0.35rem;
+    }
+
+    body.siswa-page .row.g-3 > [class*="col-"] {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Make all student tables horizontally scrollable when needed */
+body.siswa-page .table-responsive,
+body.siswa-page .results-table,
+body.siswa-page .attendance-history-table,
+body.siswa-page .attendance-requests-table,
+body.siswa-page .mini-game-highscore-table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* If a table is not wrapped in .table-responsive, emulate it */
+body.siswa-page table.table {
+    display: table;
+    width: 100%;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    body.siswa-page .results-table th,
+    body.siswa-page .results-table td,
+    body.siswa-page .attendance-history-table th,
+    body.siswa-page .attendance-history-table td,
+    body.siswa-page .attendance-requests-table th,
+    body.siswa-page .attendance-requests-table td,
+    body.siswa-page .mini-game-highscore-table th,
+    body.siswa-page .mini-game-highscore-table td {
+        font-size: 0.78rem;
+        padding: 0.35rem 0.4rem;
+    }
+}
+
+/* Score badges on results page */
+body.siswa-page .score-badge {
+    min-width: 52px;
+    text-align: center;
+}
+
+body.siswa-page .score-primary {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+body.siswa-page .score-success {
+    background-color: #16a34a;
+    color: #fff;
+}
+
+body.siswa-page .score-warning {
+    background-color: #facc15;
+    color: #000;
+}
+
+body.siswa-page .score-danger {
+    background-color: #ef4444;
+    color: #fff;
+}
+
+/* Attendance history image thumbnails */
+body.siswa-page .attendance-history-table img {
+    max-width: 40px;
+    max-height: 40px;
+    object-fit: cover;
+}
+
+/* Game score table tweaks */
+body.siswa-page .mini-game-highscore-table .badge {
+    font-size: 0.75rem;
+}
+
+/* -------------------------------
+ * Assignment / exam view (soal)
+ * -----------------------------*/
+
+body.assignment-view {
+    background-color: #0f172a;
+}
+
+body.assignment-view .md-assignment-card {
+    max-width: 960px;
+    width: 100%;
+    margin: 0 auto 1.5rem auto;
+}
+
+body.assignment-view .md-assignment-header {
+    border-radius: 1rem;
+}
+
+body.assignment-view .md-assignment-header-title {
+    font-size: 1rem;
+}
+
+body.assignment-view .md-assignment-meta {
+    font-size: 0.85rem;
+}
+
+body.assignment-view .md-assignment-main {
+    font-size: 0.95rem;
+}
+
+body.assignment-view .md-assignment-main img {
+    max-width: 100%;
+    height: auto;
+}
+
+body.assignment-view .question-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.assignment-view .question-body table {
+    max-width: 100%;
+    width: 100% !important;
+}
+
+body.assignment-view .question-body code,
+body.assignment-view .question-body pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+body.assignment-view .md-assignment-question-card {
+    border-radius: 0.9rem;
+}
+
+@media (max-width: 575.98px) {
+    body.assignment-view .md-assignment-card {
+        margin-inline: -0.5rem;
+        border-radius: 0;
+    }
+
+    body.assignment-view .md-assignment-card .card-body {
+        padding: 0.9rem 0.8rem;
+    }
+
+    body.assignment-view .md-assignment-header-title {
+        font-size: 0.95rem;
+    }
+
+    body.assignment-view .md-assignment-meta {
+        font-size: 0.8rem;
+    }
+
+    body.assignment-view .md-assignment-main {
+        font-size: 0.9rem;
+    }
+
+    body.assignment-view .md-assignment-question-card {
+        margin-bottom: 0.75rem;
+    }
+
+    body.assignment-view .md-assignment-main .form-check-label {
+        font-size: 0.9rem;
+    }
+}
+

@@ -186,6 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // GET: halaman kamera untuk ambil foto absen
 $page_title = 'Ambil Foto Absen';
+$body_class = 'siswa-page';
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">

@@ -207,10 +207,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 }
 
 $page_title = 'Edit Profil';
-$body_class = trim((string)($body_class ?? '') . ' profile-edit-page');
+$body_class = trim((string)($body_class ?? '') . ' profile-edit-page siswa-page');
 $extra_head_links = [
     'https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css',
 ];
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="card shadow-sm">

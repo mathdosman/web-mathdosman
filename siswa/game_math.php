@@ -158,6 +158,8 @@ if ($mode === 'muldiv') {
 } else {
     $page_title = 'Game Hitung Cepat (+ / -)';
 }
+$body_class = 'siswa-page';
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 echo '<div class="mini-game-mode-tabs mb-3 d-flex justify-content-center gap-2">';
 echo '<a href="game_math.php" class="btn btn-outline-primary' . ($mode === 'addsub' ? ' active' : '') . '">+ / -</a>';
