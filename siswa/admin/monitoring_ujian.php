@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/security.php';
+require_once __DIR__ . '/../lib.php';
 
 require_role('admin');
 
@@ -68,6 +69,7 @@ if ($serverNowTs === null) {
     $serverNowTs = time();
 }
 
+// Helper konsisten: pakai siswa_compute_effective_duration_sec untuk cek waktu habis.
 $isExamTimeExpired = static function (?string $dueRaw, ?string $startedRaw, ?int $durationMinutes, int $nowTs): bool {
     $dueRaw = trim((string)($dueRaw ?? ''));
     $startedRaw = trim((string)($startedRaw ?? ''));
@@ -88,19 +90,12 @@ $isExamTimeExpired = static function (?string $dueRaw, ?string $startedRaw, ?int
         }
     }
 
-    $candidates = [];
-    if ($dueTs !== null) {
-        $candidates[] = $dueTs;
-    }
-    if ($startTs !== null && $durationMinutes !== null && $durationMinutes > 0) {
-        $candidates[] = $startTs + ($durationMinutes * 60);
-    }
-
-    if (!$candidates) {
+    $effectiveSec = siswa_compute_effective_duration_sec($dueTs, $startTs, $durationMinutes);
+    if ($effectiveSec === null) {
         return false;
     }
 
-    $endTs = min($candidates);
+    $endTs = $startTs + $effectiveSec;
     return $nowTs >= $endTs;
 };
 

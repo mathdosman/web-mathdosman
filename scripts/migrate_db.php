@@ -91,6 +91,11 @@ if (!function_exists('app_ensure_student_assignments_shuffle_schema')) {
     exit(1);
 }
 
+if (!function_exists('app_ensure_student_assignments_fk_schema')) {
+    fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_student_assignments_fk_schema).\n");
+    exit(1);
+}
+
 if (!function_exists('app_ensure_kelas_rombels_schema')) {
     fwrite(STDERR, "Fungsi migrasi tidak ditemukan (app_ensure_kelas_rombels_schema).\n");
     exit(1);
@@ -222,6 +227,9 @@ try {
 
     echo "Menjalankan migrasi skema (Siswa/acak soal & opsi)...\n";
     app_ensure_student_assignments_shuffle_schema($pdo);
+
+    echo "Menjalankan migrasi skema (Siswa/relasi & index dasar penugasan)...\n";
+    app_ensure_student_assignments_fk_schema($pdo);
 
     echo "Menjalankan migrasi skema (Siswa/absen berbasis lokasi)...\n";
     app_ensure_student_attendance_schema($pdo);

@@ -6,6 +6,41 @@ declare(strict_types=1);
  * Helper untuk modul siswa (upload foto, validasi sederhana).
  */
 
+/**
+ * Hitung durasi efektif ujian (dalam detik) berdasarkan:
+ * - due_at (timestamp unix, boleh null)
+ * - started_at (timestamp unix, boleh null)
+ * - duration_minutes (durasi menit, boleh null)
+ *
+ * Aturan:
+ * - Jika started_at null -> null (ujian belum dimulai).
+ * - Jika due_at terisi dan mulai di/ setelah due_at -> 0 (waktu habis).
+ * - End time = min(due_at, started_at + duration_minutes*60) jika keduanya ada.
+ */
+function siswa_compute_effective_duration_sec(?int $dueTs, ?int $startedAtTs, ?int $durationMinutes): ?int
+{
+    if ($startedAtTs === null) {
+        return null;
+    }
+
+    $durationSec = null;
+    if ($durationMinutes !== null && $durationMinutes > 0) {
+        $durationSec = $durationMinutes * 60;
+    }
+
+    if ($dueTs !== null) {
+        $spanToDue = $dueTs - $startedAtTs;
+        if ($spanToDue <= 0) {
+            return 0;
+        }
+        if ($durationSec === null || $spanToDue < $durationSec) {
+            $durationSec = $spanToDue;
+        }
+    }
+
+    return $durationSec;
+}
+
 function siswa_clean_string(?string $value): string
 {
     $value = trim((string)$value);

@@ -3,6 +3,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/security.php';
 require_once __DIR__ . '/../includes/richtext.php';
+require_once __DIR__ . '/lib.php';
 
 siswa_require_login();
 
@@ -85,29 +86,9 @@ if ($serverNowTs === null) {
     $serverNowTs = time();
 }
 
+// Gunakan helper terpusat untuk perhitungan durasi ujian.
 $computeEffectiveDurationSec = static function (?int $dueTs, ?int $startedAtTs, ?int $durationMinutes): ?int {
-    if ($startedAtTs === null) {
-        return null;
-    }
-
-    $durationSec = null;
-    if ($durationMinutes !== null && $durationMinutes > 0) {
-        $durationSec = $durationMinutes * 60;
-    }
-
-    // If due time exists, cap duration to end at due time.
-    if ($dueTs !== null) {
-        $spanToDue = $dueTs - $startedAtTs;
-        // Jika mulai di/ setelah due_at, tidak ada waktu tersisa (ujian harus terkunci).
-        if ($spanToDue <= 0) {
-            return 0;
-        }
-        if ($durationSec === null || $spanToDue < $durationSec) {
-            $durationSec = $spanToDue;
-        }
-    }
-
-    return $durationSec;
+    return siswa_compute_effective_duration_sec($dueTs, $startedAtTs, $durationMinutes);
 };
 
 $stmt = $pdo->prepare('SELECT sa.id, sa.jenis, sa.judul, sa.catatan, sa.status, sa.assigned_at, sa.due_at,
@@ -391,6 +372,9 @@ $ensureScoringColumns = function () use ($pdo): void {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf_valid();
 
+    $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || ((string)($_POST['autosave'] ?? '') === '1');
+
     // NOTE: The submit buttons (Simpan/Kumpulkan) are outside the form and use the `form="answerForm"` attribute.
     // If we also keep a hidden input named "action" inside the form, the posted value can be overwritten due to DOM order.
     // Use a separate default_action instead and fall back to it only when no explicit action is posted.
@@ -628,8 +612,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $startedNow = trim((string)($assignment['started_at'] ?? ''));
         $requiresStartNow = ($jenisNow === 'ujian' && $statusNow !== 'done' && $durNowInt > 0);
 
+        // Best-effort: jika ujian seharusnya sudah dimulai (durasi > 0) tetapi
+        // belum tercatat started_at (mis. AJAX touch_started gagal), tandai
+        // ujian sebagai dimulai di sini agar:
+        // - jawaban siswa tetap tersimpan
+        // - siswa muncul di halaman monitoring admin
         if ($requiresStartNow && $startedNow === '') {
-            return 'Ujian belum dimulai.';
+            try {
+                $stmtStart = $pdo->prepare('UPDATE student_assignments
+                    SET started_at = NOW(), updated_at = NOW()
+                    WHERE id = :id AND student_id = :sid AND (started_at IS NULL OR started_at = "")');
+                $stmtStart->execute([':id' => $id, ':sid' => $studentId]);
+            } catch (Throwable $e) {
+                // best-effort: jika gagal, tetap lanjut menyimpan jawaban
+            }
         }
         if ($statusNow === 'done') {
             return 'Penugasan sudah selesai.';
@@ -963,8 +959,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $actionError = $lockReason !== '' ? $lockReason : 'Ujian sudah terkunci.';
         } else {
             $actionError = $saveAnswersAndMaybeGrade(false);
-            if ($actionError === '') {
-                siswa_redirect_to('siswa/assignment_view.php?id=' . $id . '&flash=saved');
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'ok' => $actionError === '',
+                    'error' => $actionError,
+                    'saved_at' => date('H:i:s'),
+                ]);
+                exit;
+            } else {
+                if ($actionError === '') {
+                    siswa_redirect_to('siswa/assignment_view.php?id=' . $id . '&flash=saved');
+                }
             }
         }
     }
@@ -1033,6 +1039,40 @@ $renderHtml = function (?string $html): string {
     return sanitize_rich_text((string)$html);
 };
 
+// Optional: load linked materi/konten untuk paket ini (jika ada).
+// Guru dapat mengaitkan konten materi ke paket soal via intro_content_id di halaman paket.
+// Di sini kita tampilkan materi tersebut di atas daftar soal (khusus siswa yang mengerjakan).
+$introContent = null;
+try {
+    $pkgId = (int)($assignment['package_id'] ?? 0);
+    if ($pkgId > 0) {
+        // Ambil intro_content_id dari tabel packages (tanpa asumsi kolom selalu ada di SELECT awal).
+        try {
+            $stmtIntroId = $pdo->prepare('SELECT intro_content_id FROM packages WHERE id = :pid LIMIT 1');
+            $stmtIntroId->execute([':pid' => $pkgId]);
+            $introId = (int)($stmtIntroId->fetchColumn() ?? 0);
+        } catch (Throwable $eIntroId) {
+            $introId = 0;
+        }
+
+        if ($introId > 0) {
+            try {
+                // Hanya tampilkan materi berstatus published (sesuai perilaku halaman publik).
+                $stmtIntro = $pdo->prepare('SELECT title, content_html, status FROM contents WHERE id = :id AND status = "published" LIMIT 1');
+                $stmtIntro->execute([':id' => $introId]);
+                $rowIntro = $stmtIntro->fetch(PDO::FETCH_ASSOC) ?: null;
+                if ($rowIntro) {
+                    $introContent = $rowIntro;
+                }
+            } catch (Throwable $eIntro) {
+                $introContent = null;
+            }
+        }
+    }
+} catch (Throwable $e) {
+    $introContent = null;
+}
+
 // Load saved answers (best-effort)
 $savedAnswers = [];
 try {
@@ -1087,6 +1127,18 @@ include __DIR__ . '/../includes/header.php';
                 <div class="md-assignment-header-right"></div>
             </div>
         </div>
+
+        <?php if ($introContent): ?>
+        <div class="mb-3">
+            <div class="fw-semibold mb-1">
+                <?php echo htmlspecialchars((string)($introContent['title'] ?? 'Materi')); ?>
+            </div>
+            <div class="richtext-content">
+                <?php echo $renderHtml((string)($introContent['content_html'] ?? '')); ?>
+            </div>
+            <hr class="my-3">
+        </div>
+        <?php endif; ?>
 
         <?php if ($actionError !== ''): ?>
         <div class="alert alert-danger mt-3 mb-0"><?php echo htmlspecialchars($actionError); ?></div>
@@ -1453,6 +1505,8 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
         </div>
+
+        <div id="autosaveStatus" class="small text-muted mb-2"></div>
 
         <form id="answerForm" method="post">
             <input type="hidden" name="csrf_token"
@@ -2273,13 +2327,77 @@ include __DIR__ . '/../includes/header.php';
                     });
                 }
 
-                // Update answered styles in real-time.
+                // Update answered styles in real-time + schedule auto-save.
                 var formEl = document.getElementById('answerForm');
+
+                var autosaveTimer = null;
+                var autosaveDelayMs = 5000; // 5 detik setelah perubahan terakhir
+                var autosaveInFlight = false;
+                var autosaveStatusEl = document.getElementById('autosaveStatus');
+
+                function setAutosaveStatus(text, cls) {
+                    if (!autosaveStatusEl) return;
+                    autosaveStatusEl.textContent = text || '';
+                    autosaveStatusEl.className = 'small ' + (cls || 'text-muted');
+                }
+
+                function scheduleAutosave() {
+                    if (autosaveInFlight) return;
+                    if (autosaveTimer) {
+                        clearTimeout(autosaveTimer);
+                    }
+                    autosaveTimer = setTimeout(sendAutosave, autosaveDelayMs);
+                }
+
+                function sendAutosave() {
+                    autosaveTimer = null;
+                    if (!formEl || !csrf) return;
+
+                    try {
+                        var fd = new FormData(formEl);
+                        fd.set('action', 'save_answers');
+                        fd.append('autosave', '1');
+
+                        autosaveInFlight = true;
+                        setAutosaveStatus('Menyimpan otomatis...', 'text-muted');
+
+                        fetch(window.location.href, {
+                            method: 'POST',
+                            body: fd,
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        }).then(function (resp) {
+                            return resp.json().catch(function () {
+                                return { ok: false, error: 'Respon server tidak valid.' };
+                            });
+                        }).then(function (data) {
+                            if (data && data.ok) {
+                                var label = data.saved_at ? ('Tersimpan otomatis ' + data.saved_at) : 'Tersimpan otomatis.';
+                                setAutosaveStatus(label, 'text-success');
+                            } else if (data && data.error) {
+                                setAutosaveStatus('Auto-save gagal: ' + data.error, 'text-danger');
+                            } else {
+                                setAutosaveStatus('Auto-save gagal.', 'text-danger');
+                            }
+                        }).catch(function (err) {
+                            setAutosaveStatus('Auto-save gagal: ' + (err && err.message ? err.message : ''), 'text-danger');
+                        }).finally(function () {
+                            autosaveInFlight = false;
+                        });
+                    } catch (e) {
+                        autosaveInFlight = false;
+                    }
+                }
+
                 if (formEl) {
                     formEl.addEventListener('change', function() {
                         saveDraft();
                         refreshAnswerBoxStyles();
                         refreshAnsweredStyles();
+                        scheduleAutosave();
                     });
                 }
 

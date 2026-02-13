@@ -691,6 +691,81 @@ try {
         }
     }
 
+    if (!function_exists('app_ensure_student_assignments_fk_schema')) {
+        /**
+         * Pastikan student_assignments memiliki foreign key & index dasar yang sehat.
+         * Dimaksudkan untuk dipanggil dari scripts/migrate_db.php (bukan dari request web).
+         */
+        function app_ensure_student_assignments_fk_schema(PDO $pdo): void
+        {
+            try {
+                $has = $pdo->query("SHOW TABLES LIKE 'student_assignments'")->fetchColumn();
+                if (!$has) {
+                    return;
+                }
+            } catch (Throwable $e) {
+                return;
+            }
+
+            try {
+                // Index dasar untuk query umum.
+                $idx = $pdo->query("SHOW INDEX FROM student_assignments WHERE Key_name = 'idx_sa_student_status'")->fetch();
+                if (!$idx) {
+                    $pdo->exec("ALTER TABLE student_assignments ADD KEY idx_sa_student_status (student_id, status)");
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            try {
+                // Foreign key ke students dan packages (best-effort; di-skip jika DB lama tidak kompatibel).
+                $fkRows = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'student_assignments' AND REFERENCED_TABLE_NAME IS NOT NULL")->fetchAll(PDO::FETCH_COLUMN);
+                $hasFkStudent = false;
+                $hasFkPackage = false;
+                foreach ($fkRows as $fkName) {
+                    if (stripos((string)$fkName, 'fk_sa_student') !== false) {
+                        $hasFkStudent = true;
+                    }
+                    if (stripos((string)$fkName, 'fk_sa_package') !== false) {
+                        $hasFkPackage = true;
+                    }
+                }
+
+                if (!$hasFkStudent) {
+                    try {
+                        $pdo->exec("ALTER TABLE student_assignments ADD CONSTRAINT fk_sa_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE");
+                    } catch (Throwable $e) {
+                        // ignore (misal jika engine bukan InnoDB atau data tidak konsisten)
+                    }
+                }
+
+                if (!$hasFkPackage) {
+                    try {
+                        $pdo->exec("ALTER TABLE student_assignments ADD CONSTRAINT fk_sa_package FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE");
+                    } catch (Throwable $e) {
+                        // ignore
+                    }
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+
+            // Jawaban siswa: pastikan tabel & index unik sudah benar (dipisahkan di assignment_view.php),
+            // di sini hanya siapkan index dasar tambahan jika ingin query by student.
+            try {
+                $hasAns = $pdo->query("SHOW TABLES LIKE 'student_assignment_answers'")->fetchColumn();
+                if ($hasAns) {
+                    $idx2 = $pdo->query("SHOW INDEX FROM student_assignment_answers WHERE Key_name = 'idx_saa_student'")->fetch();
+                    if (!$idx2) {
+                        $pdo->exec("ALTER TABLE student_assignment_answers ADD KEY idx_saa_student (student_id)");
+                    }
+                }
+            } catch (Throwable $e) {
+                // ignore
+            }
+        }
+    }
+
     if (!function_exists('app_ensure_kelas_rombels_schema')) {
         function app_ensure_kelas_rombels_schema(PDO $pdo): void
         {

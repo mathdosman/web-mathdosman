@@ -2197,6 +2197,46 @@ body.admin-layout .admin-page-actions {
     justify-content: flex-end;
 }
 
+/* Admin layout: mobile-friendly adjustments */
+@media (max-width: 575.98px) {
+    body.admin-layout .admin-page {
+        padding-inline: .25rem;
+    }
+
+    body.admin-layout .admin-page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: .5rem;
+    }
+
+    body.admin-layout .admin-page-actions {
+        justify-content: flex-start;
+    }
+
+    body.admin-layout .admin-page-subtitle {
+        font-size: .85rem;
+    }
+
+    /* Make admin tables and content denser on small screens */
+    body.admin-layout .card-body {
+        padding: .9rem;
+    }
+
+    body.admin-layout .table thead th {
+        font-size: .7rem;
+    }
+
+    body.admin-layout .table td {
+        font-size: .82rem;
+    }
+
+    /* Add breathing room between stacked form fields */
+    body.admin-layout .admin-page form .row > [class*="col-"],
+    body.admin-layout .admin-page form.row > [class*="col-"] {
+        margin-bottom: .75rem;
+    }
+}
+
 /* Admin question editor helpers */
 body.admin-layout .question-block {
     border: 1px solid var(--bs-border-color);

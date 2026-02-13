@@ -228,19 +228,6 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
         <hr class="mt-3 mb-3">
-
-        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-            <i class="bi bi-controller text-success"></i>
-            <span>Mini Game Matematika</span>
-        </div>
-        <div class="d-flex flex-wrap gap-2 mb-3">
-            <a class="btn btn-outline-primary btn-sm" href="game_math.php?mode=addsub">
-                <i class="bi bi-plus-slash-minus"></i> Penjumlahan / Pengurangan
-            </a>
-            <a class="btn btn-outline-success btn-sm" href="game_math.php?mode=muldiv">
-                <i class="bi bi-x-diamond"></i> Perkalian / Pembagian
-            </a>
-        </div>
         <div class="row g-3 align-items-stretch">
             <div class="col-lg-4 col-md-5">
                 <div class="card shadow-sm border-0 h-100">
@@ -537,4 +524,72 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+<?php
+// Tampilkan ajakan ganti foto profil hanya jika siswa belum punya foto.
+$studentHasPhoto = !empty($student['foto']);
+if (!$studentHasPhoto):
+?>
+
+<!-- Modal ajakan ganti foto profil -->
+<div class="modal fade" id="profilePhotoReminderModal" tabindex="-1" aria-labelledby="profilePhotoReminderLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="profilePhotoReminderLabel">Lengkapi Foto Profil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">
+                    Kamu belum memasang foto profil. Foto yang jelas membantu guru mengenali dan memverifikasi akunmu.
+                </p>
+                <p class="mb-0 text-muted small">
+                    Silakan unggah foto wajahmu yang terbaru. Pastikan pencahayaan cukup dan wajah terlihat jelas.
+                </p>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Nanti Saja</button>
+                <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/profile_edit.php" class="btn btn-primary btn-sm">
+                    Ganti Foto Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tampilkan modal ajakan ganti foto profil ~10 detik setelah halaman siap
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+
+    var modalEl = document.getElementById('profilePhotoReminderModal');
+    if (!modalEl) return;
+
+    var delayMs = 10000; // 10 detik
+
+    setTimeout(function () {
+        try {
+            if (window.sessionStorage && sessionStorage.getItem('profilePhotoReminderDismissed') === '1') {
+                return;
+            }
+        } catch (e) {
+            // abaikan jika storage tidak tersedia
+        }
+
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            try {
+                if (window.sessionStorage) {
+                    sessionStorage.setItem('profilePhotoReminderDismissed', '1');
+                }
+            } catch (e) {
+                // abaikan
+            }
+        }, { once: true });
+    }, delayMs);
+});
+</script>
+<?php endif; ?>
+
 <?php include __DIR__ . '/../includes/footer.php'; ?>

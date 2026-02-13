@@ -408,7 +408,11 @@ include __DIR__ . '/../../includes/header.php';
                                     $soBtnClass = $soMixed ? 'btn-outline-warning' : ($soOn ? 'btn-outline-success' : 'btn-outline-secondary');
                                 }
                                 $packageCode = (string)($r['package_code'] ?? '');
-                                $packageViewUrl = $packageCode !== '' ? ('../../paket.php?code=' . rawurlencode($packageCode)) : '';
+                                // Admin needs to be able to preview paket (materi + soal) even if:
+                                // - status paket masih draft / exam, atau
+                                // - paket dipakai sebagai ujian (disembunyikan dari publik).
+                                // Gunakan mode preview=1 agar paket.php melewati filter publik.
+                                $packageViewUrl = $packageCode !== '' ? ('../../paket.php?code=' . rawurlencode($packageCode) . '&preview=1') : '';
                             ?>
                             <tr>
                                 <td class="text-muted"><?php echo $no; ?></td>
