@@ -216,7 +216,7 @@ $body_class = 'siswa-page';
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card shadow-sm">
+<div class="card shadow-sm dashboard-root">
     <div class="card-body">
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-1">
             <div>
@@ -558,13 +558,15 @@ if (!$studentHasPhoto):
 
 <script>
 // Tampilkan modal ajakan ganti foto profil ~10 detik setelah halaman siap
+// dan auto-tutup setelah beberapa detik agar tidak mengganggu.
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
 
     var modalEl = document.getElementById('profilePhotoReminderModal');
     if (!modalEl) return;
 
-    var delayMs = 10000; // 10 detik
+    var delayMs = 10000;    // jeda sebelum modal muncul
+    var autoHideMs = 12000; // durasi modal terbuka sebelum auto-tutup
 
     setTimeout(function () {
         try {
@@ -578,7 +580,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var modal = new bootstrap.Modal(modalEl);
         modal.show();
 
+        var autoHideTimer = setTimeout(function () {
+            try {
+                modal.hide();
+            } catch (e) {
+                // abaikan
+            }
+        }, autoHideMs);
+
         modalEl.addEventListener('hidden.bs.modal', function () {
+            if (autoHideTimer) {
+                clearTimeout(autoHideTimer);
+            }
             try {
                 if (window.sessionStorage) {
                     sessionStorage.setItem('profilePhotoReminderDismissed', '1');

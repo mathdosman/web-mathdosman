@@ -1506,8 +1506,6 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <div id="autosaveStatus" class="small text-muted mb-2"></div>
-
         <form id="answerForm" method="post">
             <input type="hidden" name="csrf_token"
                 value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
