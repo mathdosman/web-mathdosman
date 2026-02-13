@@ -335,7 +335,7 @@ include __DIR__ . '/../includes/header.php';
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <a class="btn btn-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen.php?step=lokasi">Absen Sekarang</a>
+                                <a class="btn btn-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen_location.php">Absen Sekarang</a>
                                 <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php">Lihat Rekap Absen</a>
                             </div>
                         <?php endif; ?>

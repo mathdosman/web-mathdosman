@@ -184,79 +184,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// GET: show minimal photo-capture UI + maps radius
-$page_title = 'Absen Kehadiran Siswa';
+// GET: halaman kamera untuk ambil foto absen
+$page_title = 'Ambil Foto Absen';
 include __DIR__ . '/../includes/header.php';
 ?>
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
->
-<script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-></script>
-
 <div class="card shadow-sm">
-    <div class="card-body d-flex flex-column">
-        <h5 class="mb-3 text-center">Absen Berbasis Lokasi</h5>
-        <?php if ($activeAttendanceSetting !== null): ?>
-            <p class="text-muted small text-center mb-2">
-                Titik absen: <strong><?php echo htmlspecialchars($activeAttendanceSetting['name']); ?></strong><br>
-                Radius: <strong><?php echo (int)$activeAttendanceSetting['radius_m']; ?> meter</strong>.
-            </p>
-            <div id="attendanceMap" class="mb-3 rounded overflow-hidden" style="width: 100%; height: 260px;"></div>
-            <div class="small mb-3" id="attendanceDistanceInfo"></div>
-        <?php else: ?>
-            <p class="text-warning small text-center mb-3">
-                Pengaturan titik absen belum dibuat. Absen akan menggunakan foto saja tanpa pembatasan lokasi.
-            </p>
-        <?php endif; ?>
-
-        <div class="d-flex flex-column align-items-center">
-            <h6 class="mb-2">Ambil Foto Absen</h6>
-            <p class="text-muted small mb-2 text-center">
-                Izinkan akses lokasi dan kamera pada perangkat. Foto hanya bisa diambil jika Anda berada di dalam radius absen.
-            </p>
-            <div class="ratio ratio-4x3 mb-3 bg-dark-subtle rounded overflow-hidden" style="max-width:480px; width:100%;">
-                <video id="attendanceCamera" playsinline class="w-100 h-100" style="object-fit: cover; transform: scaleX(-1);"></video>
-                <canvas id="attendanceSnapshot" class="d-none"></canvas>
-            </div>
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" class="btn btn-outline-secondary" id="btnAttendanceStartCamera" disabled>Aktifkan Kamera</button>
-                <button type="button" class="btn btn-primary" id="btnAttendanceCapture" disabled>Ambil & Kirim Absen</button>
-            </div>
-            <div class="small text-muted mb-2 text-center">Pastikan wajah terlihat jelas dan satu orang per foto.</div>
-            <div class="small" id="attendanceStatus"></div>
+    <div class="card-body d-flex flex-column align-items-center">
+        <h5 class="mb-3">Ambil Foto Absen</h5>
+        <p class="text-muted small text-center mb-2">
+            Pastikan Anda sudah melewati halaman cek lokasi dan berada di dalam radius absen, lalu izinkan akses kamera pada perangkat.
+        </p>
+        <div class="ratio ratio-4x3 mb-3 bg-dark-subtle rounded overflow-hidden" style="max-width:480px; width:100%;">
+            <video id="attendanceCamera" playsinline class="w-100 h-100" style="object-fit: cover; transform: scaleX(-1);"></video>
+            <canvas id="attendanceSnapshot" class="d-none"></canvas>
         </div>
+        <div class="d-flex gap-2 mb-3">
+            <button type="button" class="btn btn-outline-secondary" id="btnAttendanceStartCamera">Aktifkan Kamera</button>
+            <button type="button" class="btn btn-primary" id="btnAttendanceCapture" disabled>Ambil &amp; Kirim Absen</button>
+        </div>
+        <div class="small text-muted mb-2 text-center">Pastikan wajah terlihat jelas dan satu orang per foto.</div>
+        <div class="small" id="attendanceStatus"></div>
+        <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen_location.php" class="btn btn-link btn-sm mt-2">Kembali ke Cek Lokasi</a>
     </div>
 </div>
 
 <script>
-var attendanceConfig = <?php echo json_encode([
-    'hasSetting' => $activeAttendanceSetting !== null,
-    'centerLat' => $activeAttendanceSetting['center_lat'] ?? null,
-    'centerLng' => $activeAttendanceSetting['center_lng'] ?? null,
-    'radiusM' => $activeAttendanceSetting['radius_m'] ?? null,
-]); ?>;
-
 (function(){
     var startBtn = document.getElementById('btnAttendanceStartCamera');
     var captureBtn = document.getElementById('btnAttendanceCapture');
     var video = document.getElementById('attendanceCamera');
     var canvas = document.getElementById('attendanceSnapshot');
     var statusEl = document.getElementById('attendanceStatus');
-    var distanceInfoEl = document.getElementById('attendanceDistanceInfo');
-    var mapEl = document.getElementById('attendanceMap');
     var streamRef = null;
     var currentLat = null;
     var currentLng = null;
-    var map = null;
-    var userMarker = null;
-    var radiusCircle = null;
 
     function setStatus(txt, cls) {
         if (!statusEl) return;
@@ -267,118 +228,17 @@ var attendanceConfig = <?php echo json_encode([
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
-    function haversineDistance(lat1, lng1, lat2, lng2) {
-        var R = 6371000; // meter
-        var toRad = function (deg) { return deg * Math.PI / 180; };
-        var dLat = toRad(lat2 - lat1);
-        var dLng = toRad(lng2 - lng1);
-        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.max(1e-12, Math.sqrt(1 - a)));
-        return R * c;
-    }
-
-    function initMap() {
-        if (!mapEl || !attendanceConfig.hasSetting || typeof L === 'undefined') {
-            return;
-        }
-        var centerLat = attendanceConfig.centerLat;
-        var centerLng = attendanceConfig.centerLng;
-        var radiusM = attendanceConfig.radiusM || 0;
-        if (centerLat === null || centerLng === null) return;
-
-        map = L.map(mapEl).setView([centerLat, centerLng], 17);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        radiusCircle = L.circle([centerLat, centerLng], {
-            radius: radiusM,
-            color: '#0d6efd',
-            fillColor: '#0d6efd',
-            fillOpacity: 0.15
-        }).addTo(map);
-
-        L.marker([centerLat, centerLng], { title: 'Titik Absen' }).addTo(map);
-    }
-
-    function updateLocationAndRadius(pos) {
-        currentLat = pos.coords.latitude;
-        currentLng = pos.coords.longitude;
-
-        var hasSetting = !!attendanceConfig.hasSetting;
-        var centerLat = attendanceConfig.centerLat;
-        var centerLng = attendanceConfig.centerLng;
-        var radiusM = attendanceConfig.radiusM || 0;
-
-        if (hasSetting && centerLat !== null && centerLng !== null && typeof centerLat === 'number' && typeof centerLng === 'number') {
-            var dist = haversineDistance(centerLat, centerLng, currentLat, currentLng);
-            var rounded = Math.round(dist);
-            if (distanceInfoEl) {
-                distanceInfoEl.textContent = 'Jarak Anda dari titik absen: sekitar ' + rounded + ' meter.';
-                distanceInfoEl.className = 'small ' + (rounded <= radiusM ? 'text-success' : 'text-danger');
-            }
-
-            if (map) {
-                if (!userMarker) {
-                    userMarker = L.marker([currentLat, currentLng], { title: 'Posisi Anda' }).addTo(map);
-                } else {
-                    userMarker.setLatLng([currentLat, currentLng]);
-                }
-                try {
-                    var bounds = L.latLngBounds(radiusCircle.getBounds());
-                    bounds.extend([currentLat, currentLng]);
-                    map.fitBounds(bounds, { padding: [20, 20] });
-                } catch (e) {}
-            }
-
-            if (rounded <= radiusM) {
-                startBtn.disabled = false;
-                setStatus('Anda berada di dalam radius absen. Aktifkan kamera lalu ambil foto.', 'text-success');
-            } else {
-                startBtn.disabled = true;
-                captureBtn.disabled = true;
-                setStatus('Anda berada di luar radius absen. Silakan mendekat ke lokasi yang ditentukan.', 'text-danger');
-            }
-        } else {
-            // Tidak ada konfigurasi titik absen: izinkan tanpa pembatasan radius.
-            if (distanceInfoEl) {
-                distanceInfoEl.textContent = 'Lokasi berhasil didapatkan.';
-                distanceInfoEl.className = 'small text-success';
-            }
-            startBtn.disabled = false;
-            setStatus('Lokasi berhasil didapatkan. Aktifkan kamera lalu ambil foto.', 'text-success');
-        }
-    }
-
-    // Inisialisasi peta dan geolocation.
-    initMap();
-
-    if (!navigator.geolocation) {
-        if (attendanceConfig.hasSetting) {
-            setStatus('Perangkat Anda tidak mendukung geolocation. Tidak dapat memverifikasi radius absen.', 'text-danger');
-        } else {
-            setStatus('Perangkat Anda tidak mendukung geolocation. Absen akan menggunakan foto saja.', 'text-warning');
-            startBtn.disabled = false;
-        }
-    } else {
-        setStatus('Meminta lokasi perangkat...', 'text-muted');
+    // Coba ambil lokasi sekali lagi untuk dikirim ke server (validasi radius tetap dilakukan di server).
+    if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function (pos) {
-            updateLocationAndRadius(pos);
-        }, function (err) {
+            currentLat = pos.coords.latitude;
+            currentLng = pos.coords.longitude;
+        }, function () {
             currentLat = null;
             currentLng = null;
-            if (attendanceConfig.hasSetting) {
-                setStatus('Gagal mengambil lokasi: ' + (err && err.message ? err.message : 'tidak diketahui') + '. Tidak dapat memverifikasi radius absen.', 'text-danger');
-            } else {
-                setStatus('Gagal mengambil lokasi, tetapi absen masih bisa dilanjutkan.', 'text-warning');
-                startBtn.disabled = false;
-            }
         }, {
             enableHighAccuracy: true,
-            timeout: 20000,
+            timeout: 15000,
             maximumAge: 60000
         });
     }
@@ -415,7 +275,6 @@ var attendanceConfig = <?php echo json_encode([
         if (!streamRef) { setStatus('Kamera belum aktif.', 'text-danger'); return; }
         if (!csrfToken) { setStatus('CSRF token tidak tersedia. Refresh halaman.', 'text-danger'); return; }
 
-        // wait for video ready
         if (!video || video.videoWidth === 0) {
             setStatus('Video belum siap. Coba lagi.', 'text-danger');
             return;
@@ -441,7 +300,6 @@ var attendanceConfig = <?php echo json_encode([
             fd.append('csrf_token', csrfToken);
             fd.append('photo', blob, 'absen.jpg');
 
-            // Kirim koordinat jika tersedia; jika tidak, server akan memakai fallback 0,0.
             if (currentLat !== null && currentLng !== null) {
                 fd.append('lat', String(currentLat));
                 fd.append('lng', String(currentLng));
