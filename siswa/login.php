@@ -42,8 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $captcha_input = trim((string)($_POST['captcha'] ?? ''));
         $expected_captcha = (string)($_SESSION['student_login_captcha_answer'] ?? '');
 
-        if ($expected_captcha === '' || $captcha_input === '') {
+        // Jika user tidak mengisi sama sekali, tetap wajib diisi.
+        if ($captcha_input === '') {
             $error = 'Jawaban verifikasi wajib diisi.';
+        } elseif ($expected_captcha === '') {
+            // Kasus khusus: session atau cookie bermasalah di browser tertentu (mis. Chrome HP),
+            // sehingga jawaban captcha di server hilang. Jangan kunci user; lewati cek captcha
+            // tapi tetap catat di log agar bisa dianalisis.
+            if (function_exists('app_log')) {
+                try {
+                    app_log('WARN', 'student_login_captcha_missing_expected', [
+                        'sid' => session_id(),
+                        'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                        'ua' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                    ]);
+                } catch (Throwable $_) {}
+            }
         } elseif (!hash_equals($expected_captcha, $captcha_input)) {
             $error = 'Jawaban verifikasi salah. Silakan coba lagi.';
         }
