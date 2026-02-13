@@ -113,19 +113,8 @@ function siswa_upload_photo(array $file, ?string $oldStoredPath = null): array
         @mkdir($uploadDir, 0775, true);
     }
 
-    if (!is_dir($uploadDir) || !is_writable($uploadDir)) {
-        if (function_exists('app_log')) {
-            app_log('ERROR', 'upload_dir_unwritable', ['path' => $uploadDir, 'func' => 'siswa_upload_photo']);
-        }
-        return [null, 'Folder upload tidak tersedia atau tidak dapat ditulis.'];
-    }
-
     $targetFs = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
     if (!@move_uploaded_file($tmp, $targetFs)) {
-        if (function_exists('app_log')) {
-            $err = error_get_last();
-            app_log('ERROR', 'move_uploaded_file_failed', ['target' => $targetFs, 'tmp' => $tmp, 'err' => $err]);
-        }
         return [null, 'Gagal menyimpan foto.'];
     }
 
@@ -230,19 +219,8 @@ function siswa_upload_photo_data_url(string $dataUrl, ?string $oldStoredPath = n
         @mkdir($uploadDir, 0775, true);
     }
 
-    if (!is_dir($uploadDir) || !is_writable($uploadDir)) {
-        if (function_exists('app_log')) {
-            app_log('ERROR', 'upload_dir_unwritable', ['path' => $uploadDir, 'func' => 'siswa_upload_photo_data_url']);
-        }
-        return [null, 'Folder upload tidak tersedia atau tidak dapat ditulis.'];
-    }
-
     $targetFs = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
     if (@file_put_contents($targetFs, $binary) === false) {
-        if (function_exists('app_log')) {
-            $err = error_get_last();
-            app_log('ERROR', 'file_put_contents_failed', ['target' => $targetFs, 'err' => $err]);
-        }
         return [null, 'Gagal menyimpan foto.'];
     }
 
@@ -349,19 +327,8 @@ function siswa_upload_attendance_photo(array $file, ?string $oldStoredPath = nul
         @mkdir($uploadDir, 0775, true);
     }
 
-    if (!is_dir($uploadDir) || !is_writable($uploadDir)) {
-        if (function_exists('app_log')) {
-            app_log('ERROR', 'upload_dir_unwritable', ['path' => $uploadDir, 'func' => 'siswa_upload_attendance_photo']);
-        }
-        return [null, 'Folder upload absen tidak tersedia atau tidak dapat ditulis.'];
-    }
-
     $targetFs = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
     if (!@move_uploaded_file($tmp, $targetFs)) {
-        if (function_exists('app_log')) {
-            $err = error_get_last();
-            app_log('ERROR', 'move_uploaded_file_failed', ['target' => $targetFs, 'tmp' => $tmp, 'err' => $err]);
-        }
         return [null, 'Gagal menyimpan foto.'];
     }
 

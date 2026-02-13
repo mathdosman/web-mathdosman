@@ -34,7 +34,14 @@ function siswa_require_login(): void
         return;
     }
 
-    if (time() - $loginAt > (int)STUDENT_SESSION_TIMEOUT_SECONDS) {
+    $studentTimeout = (int)(defined('STUDENT_SESSION_TIMEOUT_SECONDS') ? STUDENT_SESSION_TIMEOUT_SECONDS : (3 * 60 * 60));
+    if (!defined('STUDENT_SESSION_TIMEOUT_SECONDS')) {
+        if (function_exists('app_log')) {
+            app_log('WARN', 'missing_constant', ['const' => 'STUDENT_SESSION_TIMEOUT_SECONDS', 'file' => __FILE__]);
+        }
+    }
+
+    if (time() - $loginAt > $studentTimeout) {
         unset($_SESSION['student']);
         unset($_SESSION['student_login_at']);
         unset($_SESSION['student_session_token']);
