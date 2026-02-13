@@ -1784,6 +1784,15 @@ body.student-area.profile-edit-page .modal-backdrop {
     z-index: 2090;
 }
 
+/* Student dashboard & umum: pastikan modal di atas overlay lainnya */
+body.siswa-page .modal {
+    z-index: 2100;
+}
+
+body.siswa-page .modal-backdrop {
+    z-index: 2090;
+}
+
 /* Daftar Soal modal: grid 5 kolom + ukuran seragam */
 body.student-area.assignment-view .md-soal-grid {
     display: grid;

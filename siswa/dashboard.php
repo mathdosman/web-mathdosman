@@ -557,50 +557,37 @@ if (!$studentHasPhoto):
 </div>
 
 <script>
-// Tampilkan modal ajakan ganti foto profil ~10 detik setelah halaman siap
-// dan auto-tutup setelah beberapa detik agar tidak mengganggu.
+// Tampilkan modal ajakan ganti foto profil segera setelah dashboard siap.
+// Modal hanya muncul sekali per sesi browser (selama tab masih terbuka).
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
 
     var modalEl = document.getElementById('profilePhotoReminderModal');
     if (!modalEl) return;
 
-    var delayMs = 10000;    // jeda sebelum modal muncul
-    var autoHideMs = 12000; // durasi modal terbuka sebelum auto-tutup
+    try {
+        if (window.sessionStorage && sessionStorage.getItem('profilePhotoReminderDismissed') === '1') {
+            return;
+        }
+    } catch (e) {
+        // abaikan jika storage tidak tersedia
+    }
 
-    setTimeout(function () {
+    var modal = new bootstrap.Modal(modalEl, {
+        backdrop: 'static', // klik di luar tidak menutup, paksa pilih aksi
+        keyboard: true
+    });
+    modal.show();
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
         try {
-            if (window.sessionStorage && sessionStorage.getItem('profilePhotoReminderDismissed') === '1') {
-                return;
+            if (window.sessionStorage) {
+                sessionStorage.setItem('profilePhotoReminderDismissed', '1');
             }
         } catch (e) {
-            // abaikan jika storage tidak tersedia
+            // abaikan
         }
-
-        var modal = new bootstrap.Modal(modalEl);
-        modal.show();
-
-        var autoHideTimer = setTimeout(function () {
-            try {
-                modal.hide();
-            } catch (e) {
-                // abaikan
-            }
-        }, autoHideMs);
-
-        modalEl.addEventListener('hidden.bs.modal', function () {
-            if (autoHideTimer) {
-                clearTimeout(autoHideTimer);
-            }
-            try {
-                if (window.sessionStorage) {
-                    sessionStorage.setItem('profilePhotoReminderDismissed', '1');
-                }
-            } catch (e) {
-                // abaikan
-            }
-        }, { once: true });
-    }, delayMs);
+    }, { once: true });
 });
 </script>
 <?php endif; ?>
