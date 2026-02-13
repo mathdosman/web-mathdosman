@@ -49,6 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Debugging: log captcha/session issues
+    try {
+        if (function_exists('app_log') && !$captcha_disabled) {
+            app_log('DEBUG', 'student_login_captcha_check', [
+                'sid' => session_id(),
+                'expected' => isset($_SESSION['student_login_captcha_answer']) ? 'present' : 'missing',
+                'expected_value' => $_SESSION['student_login_captcha_answer'] ?? null,
+                'input' => $captcha_input ?? null,
+                'error' => $error,
+            ]);
+        }
+    } catch (Throwable $_) {}
+
     if ($error === '') {
         require_once __DIR__ . '/../config/db.php';
         try {

@@ -21,6 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // Ambil koordinat geolocation (jika tersedia dari browser).
+    $lat = isset($_POST['lat']) ? (float)$_POST['lat'] : null;
+    $lng = isset($_POST['lng']) ? (float)$_POST['lng'] : null;
+
+    // Validasi dasar latitude/longitude. Jika tidak valid, tolak agar absensi memiliki lokasi yang jelas.
+    if ($lat === null || $lng === null || !is_finite($lat) || !is_finite($lng) || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+        echo json_encode(['ok' => false, 'error' => 'Lokasi tidak valid atau tidak dapat diambil. Pastikan GPS diaktifkan dan izinkan akses lokasi.']);
+        exit;
+    }
+
     if (!isset($_FILES['photo'])) {
         echo json_encode(['ok' => false, 'error' => 'Foto tidak ditemukan pada permintaan.']);
         exit;
@@ -45,15 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
-        // Insert attendance record (photo-only, accepted)
+        // Insert attendance record (photo + geolocation, accepted).
         $stmtIns = $pdo->prepare('INSERT INTO student_attendance_records
             (student_id, setting_id, taken_at, lat, lng, distance_m, status, photo_path, user_agent, ip_address, created_at)
             VALUES (:sid, :setting_id, NOW(), :lat, :lng, :distance_m, :status, :photo_path, :ua, :ip, NOW())');
         $stmtIns->execute([
             ':sid' => $studentId,
             ':setting_id' => null,
-            ':lat' => null,
-            ':lng' => null,
+            ':lat' => $lat,
+            ':lng' => $lng,
             ':distance_m' => null,
             ':status' => 'accepted',
             ':photo_path' => $storedPath,
@@ -125,6 +135,8 @@ include __DIR__ . '/../includes/header.php';
     var canvas = document.getElementById('attendanceSnapshot');
     var statusEl = document.getElementById('attendanceStatus');
     var streamRef = null;
+    var currentLat = null;
+    var currentLng = null;
 
     function setStatus(txt, cls) {
         if (!statusEl) return;
@@ -134,6 +146,26 @@ include __DIR__ . '/../includes/header.php';
 
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    // Minta izin lokasi segera saat halaman dimuat.
+    if (!navigator.geolocation) {
+        setStatus('Perangkat Anda tidak mendukung geolocation. Lokasi tidak dapat direkam.', 'text-danger');
+    } else {
+        setStatus('Meminta lokasi perangkat...', 'text-muted');
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            currentLat = pos.coords.latitude;
+            currentLng = pos.coords.longitude;
+            setStatus('Lokasi berhasil didapatkan. Silakan aktifkan kamera dan ambil foto.', 'text-success');
+        }, function (err) {
+            currentLat = null;
+            currentLng = null;
+            setStatus('Gagal mengambil lokasi: ' + (err && err.message ? err.message : 'tidak diketahui') + '. Aktifkan GPS dan izinkan akses lokasi.', 'text-danger');
+        }, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        });
+    }
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         startBtn.disabled = true;
@@ -164,8 +196,14 @@ include __DIR__ . '/../includes/header.php';
     });
 
     captureBtn.addEventListener('click', function () {
-        if (!streamRef) return;
+        if (!streamRef) { setStatus('Kamera belum aktif.', 'text-danger'); return; }
         if (!csrfToken) { setStatus('CSRF token tidak tersedia. Refresh halaman.', 'text-danger'); return; }
+
+        // Pastikan lokasi sudah ada sebelum kirim absen.
+        if (currentLat === null || currentLng === null) {
+            setStatus('Lokasi belum tersedia. Pastikan GPS aktif dan izinkan akses lokasi.', 'text-danger');
+            return;
+        }
 
         // wait for video ready
         if (!video || video.videoWidth === 0) {
@@ -192,6 +230,8 @@ include __DIR__ . '/../includes/header.php';
             var fd = new FormData();
             fd.append('csrf_token', csrfToken);
             fd.append('photo', blob, 'absen.jpg');
+            fd.append('lat', String(currentLat));
+            fd.append('lng', String(currentLng));
 
             setStatus('Mengirim foto...', 'text-muted');
             fetch(window.location.href, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
