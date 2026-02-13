@@ -558,36 +558,17 @@ if (!$studentHasPhoto):
 
 <script>
 // Tampilkan modal ajakan ganti foto profil segera setelah dashboard siap.
-// Modal hanya muncul sekali per sesi browser (selama tab masih terbuka).
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
 
     var modalEl = document.getElementById('profilePhotoReminderModal');
     if (!modalEl) return;
 
-    try {
-        if (window.sessionStorage && sessionStorage.getItem('profilePhotoReminderDismissed') === '1') {
-            return;
-        }
-    } catch (e) {
-        // abaikan jika storage tidak tersedia
-    }
-
     var modal = new bootstrap.Modal(modalEl, {
         backdrop: 'static', // klik di luar tidak menutup, paksa pilih aksi
         keyboard: true
     });
     modal.show();
-
-    modalEl.addEventListener('hidden.bs.modal', function () {
-        try {
-            if (window.sessionStorage) {
-                sessionStorage.setItem('profilePhotoReminderDismissed', '1');
-            }
-        } catch (e) {
-            // abaikan
-        }
-    }, { once: true });
 });
 </script>
 <?php endif; ?>
