@@ -236,6 +236,20 @@ include __DIR__ . '/../includes/header.php';
                         <i class="bi bi-person-circle text-primary"></i>
                         <span>Profil</span>
                     </div>
+                    <?php if (empty($student['foto'])): ?>
+                        <div class="alert alert-warning py-2 px-3 mb-3 small">
+                            <div class="fw-semibold mb-1">Lengkapi foto profilmu</div>
+                            <div class="mb-2">
+                                Unggah foto wajah yang jelas agar guru lebih mudah mengenali akunmu.
+                                <span class="fw-bold text-danger d-block mt-1">
+                                    Pesan ini akan hilang jika kamu sudah mengganti foto profil.
+                                </span>
+                            </div>
+                            <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/profile_edit.php" class="btn btn-sm btn-primary">
+                                Ganti Foto Sekarang
+                            </a>
+                        </div>
+                    <?php endif; ?>
                     <div class="d-flex flex-column flex-sm-row align-items-center align-items-sm-start gap-3">
                         <div class="text-center flex-shrink-0">
                             <?php if (!empty($student['foto'])): ?>
@@ -524,53 +538,4 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
-<?php
-// Tampilkan ajakan ganti foto profil hanya jika siswa belum punya foto.
-$studentHasPhoto = !empty($student['foto']);
-if (!$studentHasPhoto):
-?>
-
-<!-- Modal ajakan ganti foto profil -->
-<div class="modal fade" id="profilePhotoReminderModal" tabindex="-1" aria-labelledby="profilePhotoReminderLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="profilePhotoReminderLabel">Lengkapi Foto Profil</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-2">
-                    Kamu belum memasang foto profil. Foto yang jelas membantu guru mengenali dan memverifikasi akunmu.
-                </p>
-                <p class="mb-0 text-muted small">
-                    Silakan unggah foto wajahmu yang terbaru. Pastikan pencahayaan cukup dan wajah terlihat jelas.
-                </p>
-            </div>
-            <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Nanti Saja</button>
-                <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/profile_edit.php" class="btn btn-primary btn-sm">
-                    Ganti Foto Sekarang
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-// Tampilkan modal ajakan ganti foto profil segera setelah dashboard siap.
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
-
-    var modalEl = document.getElementById('profilePhotoReminderModal');
-    if (!modalEl) return;
-
-    var modal = new bootstrap.Modal(modalEl, {
-        backdrop: 'static', // klik di luar tidak menutup, paksa pilih aksi
-        keyboard: true
-    });
-    modal.show();
-});
-</script>
-<?php endif; ?>
-
 <?php include __DIR__ . '/../includes/footer.php'; ?>
