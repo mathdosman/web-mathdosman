@@ -84,11 +84,11 @@ function app_session_start(?string $purpose = null): void
             'httponly' => true,
             'samesite' => 'Lax',
         ];
-        // Intentionally avoid setting an explicit cookie domain so the
-        // browser will scope the session cookie to the exact request host.
-        // Setting a domain (especially a leading-dot domain) can cause the
-        // browser to ignore the Set-Cookie when the configured host and the
-        // request host differ (common in local or proxied setups).
+        // If we successfully derived a cookie domain (and it's not localhost),
+        // include it so cookies are scoped correctly for the configured host.
+        if (!empty($cookie_domain)) {
+            $params['domain'] = $cookie_domain;
+        }
         session_set_cookie_params($params);
     } catch (Throwable $e) {
         // Ignore; fallback to defaults.
@@ -121,7 +121,12 @@ function app_session_start(?string $purpose = null): void
 
     // Minimal anti-session-fixation helper: if session was started for a
     // privileged purpose, ensure a fresh id when a user first authenticates.
-
+    
+    // No extra setcookie here: rely on PHP's session handling and
+    // the cookie params set earlier via session_set_cookie_params().
+    // Sending duplicate Set-Cookie headers causes multiple PHPSESSID
+    // values to appear in the browser which breaks session affinity.
+}
 
 
 /**
@@ -158,9 +163,4 @@ function app_set_student(array $student, ?string $sessionToken = null): void
         $_SESSION['student_session_token'] = $sessionToken;
     }
     app_session_regenerate(true);
-}
-    // No extra setcookie here: rely on PHP's session handling and
-    // the cookie params set earlier via session_set_cookie_params().
-    // Sending duplicate Set-Cookie headers causes multiple PHPSESSID
-    // values to appear in the browser which breaks session affinity.
 }
