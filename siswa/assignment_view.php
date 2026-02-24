@@ -1690,7 +1690,9 @@ include __DIR__ . '/../includes/header.php';
                         data-swal-confirm-text="Selesai" data-swal-cancel-text="Batal"
                         <?php if ($jenisLabel === 'ujian'): ?> data-swal-require-check="1"
                         data-swal-check-text="Saya yakin ingin mengakhiri ujian ini."
-                        data-swal-check-error="Centang dulu sebelum mengakhiri ujian." <?php endif; ?>>Selesai</button>
+                        data-swal-check-error="Centang dulu sebelum mengakhiri ujian." <?php endif; ?>>
+                        <?php echo ($jenisLabel === 'ujian') ? 'Selesai' : 'Kumpulkan Tugas'; ?>
+                    </button>
                 </div>
             </div>
         </form>
@@ -2409,6 +2411,24 @@ include __DIR__ . '/../includes/header.php';
                 // - Refresh during an already-started exam should return to soal if the student previously clicked Mulai.
                 var examStarted =
                     <?php echo json_encode((bool)($assignment && $isExamAssignment && $startedAtTs !== null && (string)($assignment['status'] ?? 'assigned') !== 'done')); ?>;
+                
+                // If this is a non-exam assignment (tugas), show all questions on one page
+                function showAllQuestions() {
+                    try {
+                        questions.forEach(function(el) { el.classList.remove('d-none'); });
+                        if (introWrap) introWrap.classList.add('d-none');
+                        if (introBox) introBox.classList.add('d-none');
+                        if (startBtn) startBtn.classList.add('d-none');
+                        if (prevBtn) prevBtn.classList.add('d-none');
+                        if (nextBtn) nextBtn.classList.add('d-none');
+                        if (listBtn) listBtn.classList.add('d-none');
+                        if (backBtn) backBtn.classList.add('d-none');
+                        if (finishBtn) finishBtn.classList.remove('d-none');
+                        refreshAnsweredStyles();
+                        refreshAnswerBoxStyles();
+                        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0,0); }
+                    } catch (e) {}
+                }
                 var resume = false;
                 try {
                     var params = new URLSearchParams(window.location.search || '');
@@ -2428,7 +2448,10 @@ include __DIR__ . '/../includes/header.php';
                         '1';
                 } catch (e) {}
 
-                if (examStarted && (resume || uiStarted)) {
+                if (typeof isExam !== 'undefined' && !isExam) {
+                    // Non-exam (tugas): display all questions on single page
+                    showAllQuestions();
+                } else if (examStarted && (resume || uiStarted)) {
                     installLeaveLock();
                     startFocusTimer();
                     show(0);
