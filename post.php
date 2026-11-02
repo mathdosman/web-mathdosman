@@ -489,9 +489,18 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 	<div class="col-12">
 		<div class="d-flex align-items-center justify-content-between gap-2 mb-2">
 			<div class="d-flex align-items-center gap-2 flex-wrap">
-				<a href="index.php" class="btn btn-dark btn-sm fw-semibold">&laquo; Kembali</a>
-				<button type="button" class="btn btn-outline-secondary btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">Munculkan Sidebar</button>
-				<button type="button" class="btn btn-outline-secondary btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">Sembunyikan Sidebar</button>
+				<a href="index.php" class="btn btn-tabler-nav btn-sm fw-semibold">
+					<i class="ti ti-arrow-left" aria-hidden="true"></i>
+					<span>Kembali</span>
+				</a>
+				<button type="button" class="btn btn-tabler-nav btn-sm fw-semibold d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#paketSidebarOffcanvas" aria-controls="paketSidebarOffcanvas">
+					<i class="ti ti-layout-sidebar" aria-hidden="true"></i>
+					<span>Munculkan Sidebar</span>
+				</button>
+				<button type="button" class="btn btn-tabler-nav btn-sm fw-semibold d-none d-lg-inline-flex" id="paketDockToggle" aria-controls="paketDockSidebar" aria-expanded="true">
+					<i class="ti ti-layout-sidebar" aria-hidden="true"></i>
+					<span class="dock-toggle-label">Sembunyikan Sidebar</span>
+				</button>
 			</div>
 			<div class="text-muted small">Slug: <strong><?php echo htmlspecialchars($slug !== '' ? $slug : '-'); ?></strong></div>
 		</div>
@@ -606,9 +615,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 							</div>
 						</div>
 
-						<nav class="mt-4" aria-label="Navigasi konten">
-							<div class="d-flex align-items-center gap-2">
-								<div class="flex-grow-1 text-start">
+						<nav class="mt-4 d-print-none tabler-page-nav" aria-label="Navigasi konten">
+							<div class="tabler-page-nav-grid">
+								<div class="tabler-page-nav-slot text-start">
 									<?php
 									$prevKind = (string)($navPrev['kind'] ?? '');
 									$prevHref = '';
@@ -619,34 +628,26 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 									}
 									?>
 									<?php if ($prevHref !== ''): ?>
-										<a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
-											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-												<path d="M15 18l-6-6 6-6" />
-											</svg>
+										<a class="btn btn-tabler-nav nav-action-btn" href="<?php echo htmlspecialchars($prevHref); ?>" aria-label="Sebelumnya">
+											<i class="ti ti-chevron-left" aria-hidden="true"></i>
 											<span>Sebelumnya</span>
 										</a>
 									<?php else: ?>
-										<a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sebelumnya">
-											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-												<path d="M15 18l-6-6 6-6" />
-											</svg>
+										<a class="btn btn-tabler-nav nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sebelumnya">
+											<i class="ti ti-chevron-left" aria-hidden="true"></i>
 											<span>Sebelumnya</span>
 										</a>
 									<?php endif; ?>
 								</div>
 
-								<div class="flex-grow-1 text-center">
-									<a class="btn btn-dark nav-action-btn" href="index.php" aria-label="Kembali ke beranda">
-										<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-											<path d="M3 10.5L12 3l9 7.5" />
-											<path d="M5 10v10h14V10" />
-											<path d="M10 20v-6h4v6" />
-										</svg>
+								<div class="tabler-page-nav-slot text-center">
+									<a class="btn btn-primary btn-tabler-home nav-action-btn" href="index.php" aria-label="Kembali ke beranda">
+										<i class="ti ti-home" aria-hidden="true"></i>
 										<span>Beranda</span>
 									</a>
 								</div>
 
-								<div class="flex-grow-1 text-end">
+								<div class="tabler-page-nav-slot text-end">
 									<?php
 									$nextKind = (string)($navNext['kind'] ?? '');
 									$nextHref = '';
@@ -657,18 +658,14 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 									}
 									?>
 									<?php if ($nextHref !== ''): ?>
-										<a class="btn btn-outline-dark nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
+										<a class="btn btn-tabler-nav nav-action-btn" href="<?php echo htmlspecialchars($nextHref); ?>" aria-label="Sesudahnya">
 											<span>Sesudahnya</span>
-											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-												<path d="M9 18l6-6-6-6" />
-											</svg>
+											<i class="ti ti-chevron-right" aria-hidden="true"></i>
 										</a>
 									<?php else: ?>
-										<a class="btn btn-outline-dark nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sesudahnya">
+										<a class="btn btn-tabler-nav nav-action-btn disabled" href="#" tabindex="-1" aria-disabled="true" aria-label="Sesudahnya">
 											<span>Sesudahnya</span>
-											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-												<path d="M9 18l6-6-6-6" />
-											</svg>
+											<i class="ti ti-chevron-right" aria-hidden="true"></i>
 										</a>
 									<?php endif; ?>
 								</div>
@@ -685,7 +682,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 			class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3 scroll-top-btn"
 			aria-label="Ke atas"
 			title="Ke atas">
-			<span aria-hidden="true">↑</span>
+			<i class="ti ti-arrow-up" aria-hidden="true"></i>
 		</button>
 
 		<script>
@@ -709,7 +706,12 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 
 				const sync = () => {
 					const collapsed = body.classList.contains(cls);
-					btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
+					const lbl = btn.querySelector('.dock-toggle-label');
+					if (lbl) {
+						lbl.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
+					} else {
+						btn.textContent = collapsed ? 'Munculkan Sidebar' : 'Sembunyikan Sidebar';
+					}
 					btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 				};
 

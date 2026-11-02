@@ -1320,8 +1320,8 @@ function get_home_carousel_slides(): array
                         ?>
 
                 <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
-                    <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>"
-                        aria-label="Sebelumnya">&laquo;</a>
+                    <a class="page-link d-inline-flex align-items-center justify-content-center" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>"
+                        aria-label="Sebelumnya"><i class="ti ti-chevron-left" aria-hidden="true"></i></a>
                 </li>
 
                 <?php for ($i = $start; $i <= $end; $i++): ?>
@@ -1332,8 +1332,8 @@ function get_home_carousel_slides(): array
                 <?php endfor; ?>
 
                 <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
-                    <a class="page-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>"
-                        aria-label="Berikutnya">&raquo;</a>
+                    <a class="page-link d-inline-flex align-items-center justify-content-center" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>"
+                        aria-label="Berikutnya"><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
                 </li>
             </ul>
         </nav>
