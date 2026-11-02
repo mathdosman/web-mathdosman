@@ -624,52 +624,50 @@ pre {
     z-index: 1100;
 }
 
-/* Navbar color inversion:
-   - Light theme: navbar dark (like the original look)
-   - Dark theme: navbar light */
+/* Navbar colors for Light & Dark modes */
 html[data-bs-theme="light"] .app-navbar {
-    background-color: #212529 !important;
-    border-bottom-color: rgba(var(--bs-primary-rgb), 0.25) !important;
-    --bs-navbar-color: rgba(255, 255, 255, 0.88);
-    --bs-navbar-hover-color: rgba(255, 255, 255, 0.98);
-    --bs-navbar-active-color: #fff;
-    --bs-navbar-brand-color: #fff;
-    --bs-navbar-brand-hover-color: #fff;
-    --bs-navbar-toggler-border-color: rgba(255, 255, 255, 0.35);
-    --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    background-color: #ffffff !important;
+    border-bottom-color: var(--bs-border-color) !important;
+    --bs-navbar-color: #334155;
+    --bs-navbar-hover-color: #0054a6;
+    --bs-navbar-active-color: #0054a6;
+    --bs-navbar-brand-color: #0f172a;
+    --bs-navbar-brand-hover-color: #0054a6;
+    --bs-navbar-toggler-border-color: rgba(15, 23, 42, 0.2);
+    --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2815,23,42,0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 html[data-bs-theme="dark"] .app-navbar {
-    background-color: #f8f9fa !important;
-    border-bottom-color: rgba(var(--bs-primary-rgb), 0.18) !important;
-    --bs-navbar-color: rgba(17, 24, 39, 0.82);
-    --bs-navbar-hover-color: rgba(17, 24, 39, 0.96);
-    --bs-navbar-active-color: #111827;
-    --bs-navbar-brand-color: #111827;
-    --bs-navbar-brand-hover-color: #111827;
-    --bs-navbar-toggler-border-color: rgba(17, 24, 39, 0.25);
-    --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2817,24,39,0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    background-color: #111827 !important;
+    border-bottom-color: #1f2937 !important;
+    --bs-navbar-color: rgba(241, 245, 249, 0.88);
+    --bs-navbar-hover-color: #ffffff;
+    --bs-navbar-active-color: #38bdf8;
+    --bs-navbar-brand-color: #ffffff;
+    --bs-navbar-brand-hover-color: #38bdf8;
+    --bs-navbar-toggler-border-color: rgba(255, 255, 255, 0.3);
+    --bs-navbar-toggler-icon-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.88%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* Navbar buttons (btn-outline-secondary in markup) need proper contrast in both modes */
 html[data-bs-theme="light"] .app-navbar .btn-outline-secondary {
-    --bs-btn-color: rgba(255, 255, 255, 0.92);
-    --bs-btn-border-color: rgba(255, 255, 255, 0.35);
-    --bs-btn-hover-color: rgba(255, 255, 255, 0.98);
+    --bs-btn-color: #334155;
+    --bs-btn-border-color: #cbd5e1;
+    --bs-btn-hover-color: #0f172a;
+    --bs-btn-hover-bg: #f1f5f9;
+    --bs-btn-hover-border-color: #94a3b8;
+    --bs-btn-active-bg: #e2e8f0;
+    --bs-btn-active-border-color: #64748b;
+}
+
+html[data-bs-theme="dark"] .app-navbar .btn-outline-secondary {
+    --bs-btn-color: rgba(248, 250, 252, 0.92);
+    --bs-btn-border-color: rgba(255, 255, 255, 0.28);
+    --bs-btn-hover-color: #ffffff;
     --bs-btn-hover-bg: rgba(255, 255, 255, 0.12);
     --bs-btn-hover-border-color: rgba(255, 255, 255, 0.45);
     --bs-btn-active-bg: rgba(255, 255, 255, 0.18);
     --bs-btn-active-border-color: rgba(255, 255, 255, 0.55);
-}
-
-html[data-bs-theme="dark"] .app-navbar .btn-outline-secondary {
-    --bs-btn-color: rgba(17, 24, 39, 0.86);
-    --bs-btn-border-color: rgba(17, 24, 39, 0.25);
-    --bs-btn-hover-color: rgba(17, 24, 39, 0.98);
-    --bs-btn-hover-bg: rgba(17, 24, 39, 0.06);
-    --bs-btn-hover-border-color: rgba(17, 24, 39, 0.35);
-    --bs-btn-active-bg: rgba(17, 24, 39, 0.10);
-    --bs-btn-active-border-color: rgba(17, 24, 39, 0.45);
 }
 
 /* ====== Admin-only sidebar (responsive + can open/close) ====== */
