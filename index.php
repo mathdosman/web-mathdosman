@@ -1078,7 +1078,7 @@ function get_home_carousel_slides(): array
 ?>
 
 <button id="homeSidebarFab" class="btn btn-primary btn-sm d-lg-none position-fixed d-inline-flex align-items-center gap-2"
-    style="z-index: 1040; top: 120px; right: 12px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;"
+    style="z-index: 1040; top: 120px; right: 12px; touch-action: none; user-select: none; -webkit-user-select: none;"
     type="button" aria-controls="homeSidebar" aria-label="Buka sidebar (geser untuk memindahkan tombol)">
     <img src="assets/img/icon.svg" width="18" height="18" alt="" aria-hidden="true" draggable="false"
         style="filter: brightness(0) invert(1); pointer-events: none;" />
@@ -1138,6 +1138,10 @@ function get_home_carousel_slides(): array
             } catch (e) {}
         }
 
+        var rafId = 0,
+            pendingX = 0,
+            pendingY = 0;
+
         fab.addEventListener('pointerdown', function(e) {
             dragging = true;
             moved = false;
@@ -1146,10 +1150,11 @@ function get_home_carousel_slides(): array
             var r = fab.getBoundingClientRect();
             offX = e.clientX - r.left;
             offY = e.clientY - r.top;
+            fab.classList.remove('is-snapping');
+            fab.classList.add('is-pressed');
             try {
                 fab.setPointerCapture(e.pointerId);
             } catch (err) {}
-            fab.style.cursor = 'grabbing';
         });
 
         fab.addEventListener('pointermove', function(e) {
@@ -1158,23 +1163,43 @@ function get_home_carousel_slides(): array
                 return;
             }
             moved = true;
-            place(e.clientX - offX, e.clientY - offY);
+            fab.classList.add('is-dragging');
+            pendingX = e.clientX - offX;
+            pendingY = e.clientY - offY;
+            // Update posisi sekali per frame agar gerakan halus.
+            if (!rafId) {
+                rafId = requestAnimationFrame(function() {
+                    rafId = 0;
+                    place(pendingX, pendingY);
+                });
+            }
             e.preventDefault();
         });
 
         function endDrag(e) {
             if (!dragging) return;
             dragging = false;
-            fab.style.cursor = 'grab';
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = 0;
+            }
+            fab.classList.remove('is-pressed', 'is-dragging');
             try {
                 fab.releasePointerCapture(e.pointerId);
             } catch (err) {}
             if (moved) {
+                // Menempel halus ke tepi layar terdekat (seperti AssistiveTouch iPhone).
                 var r = fab.getBoundingClientRect();
-                save({
-                    left: r.left,
-                    top: r.top
-                });
+                var margin = 12;
+                var snapLeft = (r.left + r.width / 2 < window.innerWidth / 2) ?
+                    margin :
+                    window.innerWidth - r.width - margin;
+                fab.classList.add('is-snapping');
+                var pos = place(snapLeft, r.top);
+                save(pos);
+                setTimeout(function() {
+                    fab.classList.remove('is-snapping');
+                }, 500);
             }
         }
         fab.addEventListener('pointerup', endDrag);

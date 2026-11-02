@@ -1434,3 +1434,180 @@
     }
 
 }
+
+
+/* ==============================================================================
+   SMOOTH MOTION: tombol sidebar mengambang, offcanvas, & transisi antar halaman
+   ============================================================================== */
+
+/* Tombol Sidebar mengambang: matikan `transition: all` bawaan .btn agar tidak
+   "ketinggalan" saat digeser; animasi hanya dipakai saat menempel ke tepi. */
+#homeSidebarFab {
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease !important;
+    will-change: left, top, transform;
+    cursor: grab;
+    box-shadow: 0 6px 18px rgba(0, 84, 166, 0.35);
+}
+
+#homeSidebarFab.is-pressed {
+    transform: scale(1.07);
+    box-shadow: 0 10px 26px rgba(0, 84, 166, 0.45);
+}
+
+#homeSidebarFab.is-dragging {
+    cursor: grabbing;
+    opacity: 0.95;
+}
+
+#homeSidebarFab.is-snapping {
+    transition:
+        left 0.48s cubic-bezier(0.34, 1.45, 0.64, 1),
+        top 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.22s ease !important;
+}
+
+/* Sidebar (offcanvas) meluncur lebih halus */
+.offcanvas {
+    --bs-offcanvas-transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+}
+
+.offcanvas-backdrop.fade {
+    transition: opacity 0.4s ease;
+}
+
+.offcanvas.show .sidebar-link,
+.offcanvas.showing .sidebar-link,
+.offcanvas.show .sidebar-cat-item {
+    animation: mdItemIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.offcanvas.show .sidebar-link:nth-child(2) { animation-delay: 0.04s; }
+.offcanvas.show .sidebar-link:nth-child(3) { animation-delay: 0.08s; }
+.offcanvas.show .sidebar-link:nth-child(4) { animation-delay: 0.12s; }
+.offcanvas.show .sidebar-link:nth-child(5) { animation-delay: 0.16s; }
+
+@keyframes mdItemIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ---- Transisi antar halaman ---- */
+@keyframes mdPageIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes mdPageOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.99);
+    }
+}
+
+@keyframes mdCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Chrome/Edge/Android: transisi lintas-dokumen (halaman lama memudar, halaman baru naik) */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root) {
+    animation: mdPageOut 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+    animation: mdPageIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Navbar & tombol mengambang tetap diam saat halaman berganti */
+.app-navbar {
+    view-transition-name: md-navbar;
+}
+
+#homeSidebarFab {
+    view-transition-name: md-sidebar-fab;
+}
+
+::view-transition-group(md-navbar),
+::view-transition-group(md-sidebar-fab) {
+    animation-duration: 0.3s;
+}
+
+/* Kartu paket muncul bergantian (stagger) */
+body.front-page .package-grid > .col {
+    animation: mdCardIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body.front-page .package-grid > .col:nth-child(1) { animation-delay: 0.04s; }
+body.front-page .package-grid > .col:nth-child(2) { animation-delay: 0.10s; }
+body.front-page .package-grid > .col:nth-child(3) { animation-delay: 0.16s; }
+body.front-page .package-grid > .col:nth-child(4) { animation-delay: 0.22s; }
+body.front-page .package-grid > .col:nth-child(5) { animation-delay: 0.28s; }
+body.front-page .package-grid > .col:nth-child(n+6) { animation-delay: 0.34s; }
+
+/* Halaman paket/materi: kartu konten masuk dengan lembut */
+body.paket-preview .paket-sheet > .custom-card,
+body.paket-preview .paket-sheet > .kop-header {
+    animation: mdCardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+body.paket-preview .paket-sheet > .custom-card:nth-of-type(2) { animation-delay: 0.08s; }
+body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay: 0.14s; }
+
+/* Fallback untuk browser tanpa View Transitions (Safari/Firefox): fade-in saat halaman dibuka */
+@supports not (view-transition-name: none) {
+    body.front-page .app-container,
+    body.paket-preview .app-container {
+        animation: mdPageIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+}
+
+/* Hormati pengguna yang mematikan animasi */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
+
+    body.front-page .package-grid > .col,
+    body.paket-preview .paket-sheet > .custom-card,
+    body.paket-preview .paket-sheet > .kop-header,
+    .offcanvas.show .sidebar-link,
+    .offcanvas.show .sidebar-cat-item {
+        animation: none !important;
+    }
+
+    #homeSidebarFab,
+    #homeSidebarFab.is-snapping,
+    .offcanvas {
+        transition-duration: 0.01ms !important;
+        --bs-offcanvas-transition: transform 0.01ms;
+    }
+}
