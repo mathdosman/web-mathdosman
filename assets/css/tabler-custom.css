@@ -1,0 +1,185 @@
+/* ==============================================================================
+   TABLER-INSPIRED DASHBOARD & UI ENHANCEMENTS FOR MATHDOSMAN
+   Based on Tabler UI (https://github.com/tabler/tabler)
+   ============================================================================== */
+
+/* 1. Global Tabler Typography & Base Tokens */
+:root {
+    --tblr-font-sans-serif: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+    --tblr-primary: #0054a6;
+    --tblr-primary-rgb: 0, 84, 166;
+    --tblr-primary-fg: #ffffff;
+    --tblr-border-color: #e6e7e9;
+    --tblr-border-radius: 8px;
+    --tblr-card-border-radius: 10px;
+    --tblr-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05), 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    --tblr-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --tblr-card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+html[data-bs-theme="dark"] {
+    --tblr-border-color: #2c323f;
+    --tblr-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --tblr-card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* 2. Tabler Card Component */
+.card, .admin-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: var(--bs-card-bg, #ffffff);
+    background-clip: border-box;
+    border: 1px solid var(--tblr-border-color) !important;
+    border-radius: var(--tblr-card-border-radius) !important;
+    box-shadow: var(--tblr-card-shadow) !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card:hover, .admin-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--tblr-card-hover-shadow) !important;
+    border-color: rgba(var(--bs-primary-rgb), 0.35) !important;
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--tblr-border-color) !important;
+    padding: 1rem 1.25rem !important;
+    font-weight: 600;
+}
+
+.card-footer {
+    background-color: transparent !important;
+    border-top: 1px solid var(--tblr-border-color) !important;
+    padding: 0.85rem 1.25rem !important;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+    margin-bottom: 0.5rem;
+}
+
+/* 3. Tabler Admin Metric Tiles (Dashboard Widgets) */
+.admin-tile {
+    padding: 0;
+    overflow: hidden;
+}
+
+.admin-tile-body {
+    padding: 1.25rem 1.5rem !important;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.admin-tile-title {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--bs-body-color) !important;
+    margin-bottom: 0.4rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-tile-text {
+    font-size: 0.9rem !important;
+    color: var(--bs-secondary-color) !important;
+    line-height: 1.5;
+    margin-bottom: 1.25rem !important;
+}
+
+/* 4. Tabler Tables (Clean, Compact, Striped) */
+.table {
+    --bs-table-border-color: var(--tblr-border-color);
+    vertical-align: middle;
+}
+
+.table thead th {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    color: var(--bs-secondary-color) !important;
+    background-color: var(--bs-tertiary-bg) !important;
+    border-bottom: 1px solid var(--tblr-border-color) !important;
+    padding: 0.75rem 1rem !important;
+}
+
+.table tbody td {
+    padding: 0.85rem 1rem !important;
+    border-bottom: 1px solid var(--tblr-border-color) !important;
+}
+
+/* 5. Tabler Badges & Status Indicators */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.35em 0.65em;
+    border-radius: 4px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    margin-right: 0.4rem;
+}
+.status-dot-success { background-color: #2fb344; }
+.status-dot-warning { background-color: #f76707; }
+.status-dot-danger  { background-color: #d63939; }
+
+/* 6. Tabler Sidebar Style */
+.app-sidebar, #adminSidebar {
+    border-right: 1px solid var(--tblr-border-color) !important;
+}
+
+.sidebar-link {
+    font-size: 0.925rem;
+    font-weight: 500;
+    color: var(--bs-secondary-color) !important;
+    padding: 0.65rem 1rem !important;
+    border-radius: var(--tblr-border-radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.sidebar-link:hover {
+    color: var(--bs-primary) !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+}
+
+.sidebar-link.active {
+    color: #ffffff !important;
+    background-color: var(--bs-primary) !important;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* 7. Tabler Buttons */
+.btn {
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--tblr-border-radius) !important;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.785rem;
+}
