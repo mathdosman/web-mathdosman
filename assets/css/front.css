@@ -85,6 +85,13 @@
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
     }
 
+    @media (max-width: 575.98px) {
+        body.front-page .home-hero {
+            padding: 1.15rem;
+            border-radius: 1rem;
+        }
+    }
+
     body.front-page .home-hero::before {
         content: '';
         position: absolute;
@@ -316,18 +323,26 @@
         background: linear-gradient(145deg, rgba(var(--bs-body-bg-rgb), 0.9), rgba(var(--bs-primary-rgb), 0.04));
         border: 1px solid rgba(var(--bs-primary-rgb), 0.14) !important;
         box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        padding: 1.25rem;
+    }
+
+    @media (min-width: 576px) {
+        body.front-page .home-vision {
+            padding: 1.5rem;
+        }
     }
 
     body.front-page .vision-icon-wrap {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         border-radius: 8px;
         background: rgba(var(--bs-primary-rgb), 0.12);
         color: var(--bs-primary);
-        font-size: 1rem;
+        font-size: 1.05rem;
+        flex-shrink: 0;
     }
 
     body.front-page .bg-emerald-subtle {
@@ -343,9 +358,8 @@
     }
 
     body.front-page .hero-mission-list li {
-        margin-bottom: 0.35rem;
-        display: flex;
-        align-items: baseline;
+        margin-bottom: 0.5rem;
+        line-height: 1.45;
     }
 
     /* Sidebar Widgets Styling */

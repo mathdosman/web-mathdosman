@@ -1132,7 +1132,7 @@ function get_home_carousel_slides(): array
                         Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.
                     </p>
                     <div class="home-slogan mb-3 d-flex align-items-center gap-2">
-                        <span class="badge bg-indigo-subtle text-indigo px-2.5 py-1.5 fw-bold border border-indigo-subtle">
+                        <span class="badge bg-indigo-subtle text-indigo px-2 py-1 fw-bold border border-indigo-subtle">
                             <i class="ti ti-sparkles me-1"></i>Slogan
                         </span>
                         <span class="fw-bold text-primary">Belajar Matematika, Gaskeun!</span>
@@ -1152,17 +1152,17 @@ function get_home_carousel_slides(): array
                         </span>
                     </div>
                     <div class="mt-3 d-flex flex-wrap gap-2">
-                        <a href="daftar-isi.php" class="btn btn-primary shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 hero-btn-main">
+                        <a href="daftar-isi.php" class="btn btn-primary shadow-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 hero-btn-main">
                             <i class="ti ti-compass"></i> Jelajahi Daftar Isi
                         </a>
-                        <a href="index.php#konten-paket" class="btn btn-outline-primary px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                        <a href="index.php#konten-paket" class="btn btn-outline-primary px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
                             <i class="ti ti-layers-intersect"></i> Lihat Konten &amp; Paket Terbaru
                         </a>
                     </div>
                 </div>
 
                 <div class="col-12 col-lg-5">
-                    <div class="home-vision border rounded-4 p-3.5 p-lg-4">
+                    <div class="home-vision border rounded-4 p-3 p-sm-4">
                         <div class="d-flex align-items-center gap-2 fw-bold text-primary mb-2">
                             <span class="vision-icon-wrap"><i class="ti ti-target"></i></span>
                             <span class="fs-6">Visi</span>
@@ -1175,9 +1175,18 @@ function get_home_carousel_slides(): array
                             <span class="fs-6">Misi</span>
                         </div>
                         <ul class="mb-0 text-body-secondary small ps-0 list-unstyled hero-mission-list">
-                            <li><i class="ti ti-check text-emerald me-1.5"></i> Menyajikan materi yang jelas dan mudah dipahami.</li>
-                            <li><i class="ti ti-check text-emerald me-1.5"></i> Menyediakan paket soal HOTS dan evaluasi terarah.</li>
-                            <li><i class="ti ti-check text-emerald me-1.5"></i> Membantu belajar lebih konsisten dengan pembahasan lengkap.</li>
+                            <li class="d-flex align-items-start gap-2 mb-2">
+                                <i class="ti ti-check text-emerald fs-6 mt-0.5 flex-shrink-0"></i>
+                                <span>Menyajikan materi yang jelas dan mudah dipahami.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2 mb-2">
+                                <i class="ti ti-check text-emerald fs-6 mt-0.5 flex-shrink-0"></i>
+                                <span>Menyediakan paket soal HOTS dan evaluasi terarah.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="ti ti-check text-emerald fs-6 mt-0.5 flex-shrink-0"></i>
+                                <span>Membantu belajar lebih konsisten dengan pembahasan lengkap.</span>
+                            </li>
                         </ul>
                     </div>
                 </div>
