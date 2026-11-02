@@ -119,7 +119,7 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
         $where = [];
         $params = [];
 
-        $includeContentsInMainFeed = ($filterSubjectId <= 0 && $filterMateri === '' && $filterSubmateri === '');
+        $includeContentsInMainFeed = ($filterSubjectId <= 0);
 
         // Beranda publik: paket draft tidak boleh tampil, meskipun admin sedang login.
         $where[] = 'p.status = "published"';
@@ -363,6 +363,14 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
             try {
                 $cWhere = ['status = "published"'];
                 $cParams = [];
+                if ($filterMateri !== '') {
+                    $cWhere[] = 'materi = :cm';
+                    $cParams[':cm'] = $filterMateri;
+                }
+                if ($filterSubmateri !== '') {
+                    $cWhere[] = 'submateri = :csm';
+                    $cParams[':csm'] = $filterSubmateri;
+                }
                 if ($q !== '') {
                     $cWhere[] = '(title LIKE :cq OR excerpt LIKE :cq)';
                     $cParams[':cq'] = '%' . $q . '%';

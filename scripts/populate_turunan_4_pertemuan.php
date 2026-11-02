@@ -29,7 +29,7 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $subjectId = 2; // Matematika
 $materi = 'Kalkulus';
-$submateri = 'Turunan Fungsi Aljabar';
+$submateri = 'Turunan';
 
 // Pasti pastikan topik/submateri terdaftar di tabel materials jika tabel tersebut ada
 try {
