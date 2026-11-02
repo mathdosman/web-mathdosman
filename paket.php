@@ -1163,24 +1163,31 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                                             <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
                                                 <button
                                                     type="button"
-                                                    class="btn btn-outline-secondary btn-sm"
+                                                    class="btn btn-outline-primary btn-sm btn-toggle-penyelesaian"
                                                     data-bs-toggle="collapse"
                                                     data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>"
                                                     aria-controls="<?php echo htmlspecialchars($collapseId); ?>"
                                                     aria-expanded="false">
-                                                    Penyelesaian
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down toggle-arrow me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s ease;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                                                    <span class="btn-penyelesaian-label">Buka Penyelesaian</span>
                                                 </button>
                                             </div>
                                             <div id="<?php echo htmlspecialchars($collapseId); ?>" class="collapse mt-2">
-                                                <div class="border rounded p-2 bg-warning-subtle small text-break">
-                                                    <?php if ($penyelesaianHasContent): ?>
+                                                <?php if ($penyelesaianHasContent): ?>
+                                                    <div class="border rounded-3 p-3 bg-light shadow-sm small text-break border-secondary-subtle">
+                                                        <div class="fw-bold text-primary mb-2 d-flex align-items-center gap-1">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-bulb text-warning" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7" /><path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3" /><path d="M9.7 17l4.6 0" /></svg>
+                                                            <span>Langkah Penyelesaian:</span>
+                                                        </div>
                                                         <div class="richtext-content"><?php echo $penyelesaianRendered; ?></div>
-                                                    <?php else: ?>
-                                                        <div class="small text-muted">
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="border rounded-3 p-3 bg-warning-subtle small text-break">
+                                                        <div class="text-muted">
                                                             Belum ada detail penyelesaian untuk soal ini. Jika kamu punya langkah penyelesaian yang benar dan rapi, silakan kirimkan melalui halaman Kontak agar bisa kami tambahkan.
                                                         </div>
-                                                    <?php endif; ?>
-                                                </div>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     <?php endif; ?>
@@ -1329,18 +1336,37 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                 sync();
             })();
 
-            // Toggle highlight kunci jawaban hanya saat penyelesaian dibuka
+            // Toggle highlight kunci jawaban & label tombol hanya saat penyelesaian dibuka/ditutup
             document.addEventListener('DOMContentLoaded', function() {
                 const collapses = document.querySelectorAll('[id^="collapsePenyelesaian_"]');
                 collapses.forEach(function(el) {
                     const card = el.closest('.custom-card');
-                    if (!card) return;
+                    const btn = document.querySelector('[data-bs-target="#' + el.id + '"]');
+                    const label = btn ? btn.querySelector('.btn-penyelesaian-label') : null;
+                    const arrow = btn ? btn.querySelector('.toggle-arrow') : null;
 
                     el.addEventListener('show.bs.collapse', function() {
-                        card.classList.add('show-answers-active');
+                        if (card) card.classList.add('show-answers-active');
+                        if (label) label.textContent = 'Tutup Penyelesaian';
+                        if (arrow) arrow.style.transform = 'rotate(180deg)';
+                        if (btn) {
+                            btn.classList.remove('btn-outline-primary');
+                            btn.classList.add('btn-primary');
+                        }
+                    });
+                    el.addEventListener('shown.bs.collapse', function() {
+                        if (window.MathJax && window.MathJax.typesetPromise) {
+                            window.MathJax.typesetPromise([el]).catch(function() {});
+                        }
                     });
                     el.addEventListener('hide.bs.collapse', function() {
-                        card.classList.remove('show-answers-active');
+                        if (card) card.classList.remove('show-answers-active');
+                        if (label) label.textContent = 'Buka Penyelesaian';
+                        if (arrow) arrow.style.transform = 'rotate(0deg)';
+                        if (btn) {
+                            btn.classList.remove('btn-primary');
+                            btn.classList.add('btn-outline-primary');
+                        }
                     });
                 });
             });
