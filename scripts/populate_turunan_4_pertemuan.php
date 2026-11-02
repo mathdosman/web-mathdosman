@@ -562,7 +562,7 @@ HTML,
 <hr>
 
 <h3>Contoh Soal 2: Kombinasi Bentuk Akar &amp; Akar di Penyebut</h3>
-<p><strong>Soal:</strong> Diketahui fungsi \(f(x) = 4x\sqrt{x} - \frac{8}{\sqrt{x}}\) untuk \(x > 0\). Hitunglah nilai dari \(f'(4)\)!</p>
+<p><strong>Soal:</strong> Diketahui fungsi \(f(x) = 4x\sqrt{x} - \frac{8}{\sqrt{x}}\) untuk \(x \gt 0\). Hitunglah nilai dari \(f'(4)\)!</p>
 <p><strong>Cara Pengerjaan Langkah demi Langkah:</strong></p>
 <ol>
   <li><strong>Langkah 1 (Ubah semua bentuk akar ke bentuk pangkat pecahan \(x^n\)):</strong>
@@ -666,7 +666,7 @@ HTML
 HTML
             ],
             3 => [
-                'pertanyaan' => '<p>Diketahui fungsi \(f(x) = 6\sqrt[3]{x^2} + \frac{4}{\sqrt{x}}\) untuk \(x > 0\). Nilai dari \(f\'(1)\) adalah...</p>',
+                'pertanyaan' => '<p>Diketahui fungsi \(f(x) = 6\sqrt[3]{x^2} + \frac{4}{\sqrt{x}}\) untuk \(x \gt 0\). Nilai dari \(f\'(1)\) adalah...</p>',
                 'p1' => '<p>\(6\)</p>',
                 'p2' => '<p>\(4\)</p>',
                 'p3' => '<p>\(2\)</p>',
@@ -1153,7 +1153,7 @@ HTML
 <p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari bahan ajar dan mengerjakan latihan pada paket ini, siswa diharapkan mampu:</p>
 <ol>
   <li>Menentukan <strong>gradien (\(m = f'(x_1)\)) dan persamaan garis singgung kurva</strong> di suatu titik, maupun garis singgung yang sejajar/tegak lurus garis tertentu.</li>
-  <li>Menentukan interval di mana suatu <strong>fungsi naik (\(f'(x) > 0\))</strong> dan <strong>fungsi turun (\(f'(x) < 0\))</strong>.</li>
+  <li>Menentukan interval di mana suatu <strong>fungsi naik (\(f'(x) \gt 0\))</strong> dan <strong>fungsi turun (\(f'(x) \lt 0\))</strong>.</li>
   <li>Menentukan <strong>titik stasioner (\(f'(x) = 0\))</strong> serta mengklasifikasikan jenisnya (<strong>titik balik maksimum, titik balik minimum, atau titik belok</strong>).</li>
   <li>Merancang model matematika dan menyelesaikan <strong>masalah kontekstual optimasi</strong> (luas maksimum, volume kotak maksimum, biaya minimum, keuntungan maksimum).</li>
 </ol>
@@ -1196,12 +1196,12 @@ HTML,
   </thead>
   <tbody>
     <tr>
-      <td>\(f'(x) > 0\) (Positif)</td>
+      <td>\(f'(x) \gt 0\) (Positif)</td>
       <td>Miring naik ke kanan (\(/\))</td>
       <td><strong>Fungsi Naik</strong> pada interval tersebut</td>
     </tr>
     <tr>
-      <td>\(f'(x) < 0\) (Negatif)</td>
+      <td>\(f'(x) \lt 0\) (Negatif)</td>
       <td>Miring turun ke kanan (\(\backslash\))</td>
       <td><strong>Fungsi Turun</strong> pada interval tersebut</td>
     </tr>
@@ -1224,8 +1224,8 @@ HTML,
   </ul></li>
   <li><strong>Uji Turunan Kedua \(f''(c)\) (Sangat Cepat untuk Polinomial!):</strong>
   <ul>
-    <li>Jika \(f''(c) < 0\) (cekung ke bawah) \(\implies\) \(f(c)\) adalah <strong>Nilai Balik Maksimum</strong>.</li>
-    <li>Jika \(f''(c) > 0\) (cekung ke atas) \(\implies\) \(f(c)\) adalah <strong>Nilai Balik Minimum</strong>.</li>
+    <li>Jika \(f''(c) \lt 0\) (cekung ke bawah) \(\implies\) \(f(c)\) adalah <strong>Nilai Balik Maksimum</strong>.</li>
+    <li>Jika \(f''(c) \gt 0\) (cekung ke atas) \(\implies\) \(f(c)\) adalah <strong>Nilai Balik Minimum</strong>.</li>
   </ul></li>
 </ol>
 
@@ -1272,14 +1272,14 @@ HTML,
   \[ (x - 4)(x + 2) = 0 \implies x = -2 \quad \text{atau} \quad x = 4 \]</li>
   <li><strong>Langkah 3 (Uji tanda pada garis bilangan):</strong>
   <ul>
-    <li>Untuk \(x < -2\) (ambil \(x = -3\)): \(f'(-3) = (-7)(-1) = +7 > 0\) <strong>(Positif / Naik)</strong></li>
-    <li>Untuk \(-2 < x < 4\) (ambil \(x = 0\)): \(f'(0) = (-4)(+2) = -8 < 0\) <strong>(Negatif / Turun)</strong></li>
-    <li>Untuk \(x > 4\) (ambil \(x = 5\)): \(f'(5) = (+1)(+7) = +7 > 0\) <strong>(Positif / Naik)</strong></li>
+    <li>Untuk \(x \lt -2\) (ambil \(x = -3\)): \(f'(-3) = (-7)(-1) = +7 \gt 0\) <strong>(Positif / Naik)</strong></li>
+    <li>Untuk \(-2 \lt x \lt 4\) (ambil \(x = 0\)): \(f'(0) = (-4)(+2) = -8 \lt 0\) <strong>(Negatif / Turun)</strong></li>
+    <li>Untuk \(x \gt 4\) (ambil \(x = 5\)): \(f'(5) = (+1)(+7) = +7 \gt 0\) <strong>(Positif / Naik)</strong></li>
   </ul></li>
   <li><strong>Kesimpulan:</strong>
   <ul>
-    <li>(a) Fungsi <strong>turun</strong> (\(f'(x) < 0\)) pada interval \(-2 < x < 4\).</li>
-    <li>(b) Fungsi <strong>naik</strong> (\(f'(x) > 0\)) pada interval \(x < -2\) atau \(x > 4\).</li>
+    <li>(a) Fungsi <strong>turun</strong> (\(f'(x) \lt 0\)) pada interval \(-2 \lt x \lt 4\).</li>
+    <li>(b) Fungsi <strong>naik</strong> (\(f'(x) \gt 0\)) pada interval \(x \lt -2\) atau \(x \gt 4\).</li>
   </ul></li>
 </ol>
 
@@ -1296,10 +1296,10 @@ HTML,
   Diperoleh absis stasioner \(x = -1\) dan \(x = 3\).</li>
   <li><strong>Langkah 2 (Uji jenis stasioner dengan turunan kedua \(f''(x) = 6x - 6\)):</strong>
   <ul>
-    <li>Untuk \(x = -1 \implies f''(-1) = 6(-1) - 6 = -12 < 0\) (negatif \(\implies\) <strong>Maksimum</strong>).<br>
+    <li>Untuk \(x = -1 \implies f''(-1) = 6(-1) - 6 = -12 \lt 0\) (negatif \(\implies\) <strong>Maksimum</strong>).<br>
     Nilai maksimumnya: \(f(-1) = (-1)^3 - 3(-1)^2 - 9(-1) + 10 = -1 - 3 + 9 + 10 = 15\).<br>
     Jadi, <strong>Titik Balik Maksimum</strong> adalah \((-1, 15)\).</li>
-    <li>Untuk \(x = 3 \implies f''(3) = 6(3) - 6 = +12 > 0\) (positif \(\implies\) <strong>Minimum</strong>).<br>
+    <li>Untuk \(x = 3 \implies f''(3) = 6(3) - 6 = +12 \gt 0\) (positif \(\implies\) <strong>Minimum</strong>).<br>
     Nilai minimumnya: \(f(3) = (3)^3 - 3(3)^2 - 9(3) + 10 = 27 - 27 - 27 + 10 = -17\).<br>
     Jadi, <strong>Titik Balik Minimum</strong> adalah \((3, -17)\).</li>
   </ul></li>
@@ -1316,7 +1316,7 @@ HTML,
   <ul>
     <li>Panjang alas kotak: \(p = 18 - 2x\)</li>
     <li>Lebar alas kotak: \(l = 18 - 2x\)</li>
-    <li>Tinggi kotak: \(t = x\) (dengan syarat fisik \(0 < x < 9\))</li>
+    <li>Tinggi kotak: \(t = x\) (dengan syarat fisik \(0 \lt x \lt 9\))</li>
   </ul></li>
   <li><strong>Langkah 2 (Susun fungsi Volume \(V(x) = p \cdot l \cdot t\)):</strong>
   \[ V(x) = (18 - 2x)(18 - 2x)x = (324 - 72x + 4x^2)x = 4x^3 - 72x^2 + 324x \]</li>
@@ -1376,45 +1376,45 @@ HTML
             ],
             3 => [
                 'pertanyaan' => '<p>Grafik fungsi \(f(x) = x^3 - 6x^2 - 15x + 7\) <strong>turun</strong> pada interval...</p>',
-                'p1' => '<p>\(-5 < x < 1\)</p>',
-                'p2' => '<p>\(-1 < x < 5\)</p>',
-                'p3' => '<p>\(1 < x < 5\)</p>',
-                'p4' => '<p>\(x < -1\text{ atau }x > 5\)</p>',
-                'p5' => '<p>\(x < -5\text{ atau }x > 1\)</p>',
+                'p1' => '<p>\(-5 \lt x \lt 1\)</p>',
+                'p2' => '<p>\(-1 \lt x \lt 5\)</p>',
+                'p3' => '<p>\(1 \lt x \lt 5\)</p>',
+                'p4' => '<p>\(x \lt -1\text{ atau }x \gt 5\)</p>',
+                'p5' => '<p>\(x \lt -5\text{ atau }x \gt 1\)</p>',
                 'jb' => 'pilihan_2',
                 'penyelesaian' => <<<'HTML'
 <p><strong>Langkah Penyelesaian:</strong></p>
 <ol>
-  <li>Syarat fungsi turun adalah \(f'(x) < 0\).</li>
+  <li>Syarat fungsi turun adalah \(f'(x) \lt 0\).</li>
   <li>Tentukan turunan pertama \(f'(x)\):
-  \[ f'(x) = 3x^2 - 12x - 15 < 0 \]</li>
+  \[ f'(x) = 3x^2 - 12x - 15 \lt 0 \]</li>
   <li>Bagi kedua ruas dengan \(3\) lalu faktorkan:
-  \[ x^2 - 4x - 5 < 0 \implies (x - 5)(x + 1) < 0 \]</li>
-  <li>Pembuat nol adalah \(x = -1\) dan \(x = 5\). Karena koefisien \(x^2\) positif dan tanda pertidaksamaan \(< 0\), maka himpunan penyelesaiannya berada di antara kedua akar:
-  \[ -1 < x < 5 \]</li>
+  \[ x^2 - 4x - 5 \lt 0 \implies (x - 5)(x + 1) \lt 0 \]</li>
+  <li>Pembuat nol adalah \(x = -1\) dan \(x = 5\). Karena koefisien \(x^2\) positif dan tanda pertidaksamaan \( \lt 0\), maka himpunan penyelesaiannya berada di antara kedua akar:
+  \[ -1 \lt x \lt 5 \]</li>
 </ol>
 <div><strong>Jawaban: B</strong></div>
 HTML
             ],
             4 => [
                 'pertanyaan' => '<p>Agar grafik fungsi \(f(x) = \frac{1}{3}x^3 + ax^2 + (2a + 3)x + 8\) <strong>selalu naik</strong> untuk setiap nilai \(x \in \mathbb{R}\), maka batas-batas nilai konstanta \(a\) yang memenuhi adalah...</p>',
-                'p1' => '<p>\(-1 < a < 3\)</p>',
-                'p2' => '<p>\(-3 < a < 1\)</p>',
-                'p3' => '<p>\(1 < a < 3\)</p>',
-                'p4' => '<p>\(a < -1\text{ atau }a > 3\)</p>',
-                'p5' => '<p>\(a < -3\text{ atau }a > 1\)</p>',
+                'p1' => '<p>\(-1 \lt a \lt 3\)</p>',
+                'p2' => '<p>\(-3 \lt a \lt 1\)</p>',
+                'p3' => '<p>\(1 \lt a \lt 3\)</p>',
+                'p4' => '<p>\(a \lt -1\text{ atau }a \gt 3\)</p>',
+                'p5' => '<p>\(a \lt -3\text{ atau }a \gt 1\)</p>',
                 'jb' => 'pilihan_1',
                 'penyelesaian' => <<<'HTML'
 <p><strong>Langkah Penyelesaian:</strong></p>
 <ol>
   <li>Tentukan turunan pertama \(f'(x)\):
   \[ f'(x) = x^2 + 2ax + (2a + 3) \]</li>
-  <li>Agar fungsi \(f(x)\) selalu naik untuk setiap \(x \in \mathbb{R}\), fungsi kuadrat \(f'(x)\) harus bernilai positif (definit positif), yang syaratnya koefisien \(x^2 > 0\) dan diskriminan \(D < 0\):
-  \[ D = b^2 - 4ac < 0 \]
-  \[ (2a)^2 - 4(1)(2a + 3) < 0 \]</li>
+  <li>Agar fungsi \(f(x)\) selalu naik untuk setiap \(x \in \mathbb{R}\), fungsi kuadrat \(f'(x)\) harus bernilai positif (definit positif), yang syaratnya koefisien \(x^2 \gt 0\) dan diskriminan \(D \lt 0\):
+  \[ D = b^2 - 4ac \lt 0 \]
+  \[ (2a)^2 - 4(1)(2a + 3) \lt 0 \]</li>
   <li>Sederhanakan dan faktorkan:
-  \[ 4a^2 - 8a - 12 < 0 \implies a^2 - 2a - 3 < 0 \implies (a - 3)(a + 1) < 0 \]
-  Diperoleh batas nilai \(-1 < a < 3\).</li>
+  \[ 4a^2 - 8a - 12 \lt 0 \implies a^2 - 2a - 3 \lt 0 \implies (a - 3)(a + 1) \lt 0 \]
+  Diperoleh batas nilai \(-1 \lt a \lt 3\).</li>
 </ol>
 <div><strong>Jawaban: A</strong></div>
 HTML
@@ -1436,8 +1436,8 @@ HTML
   \[ x^2 - 2x - 3 = 0 \implies (x - 3)(x + 1) = 0 \implies x = 3 \text{ atau } x = -1 \]</li>
   <li>Uji dengan turunan kedua \(f''(x) = -6x + 6\):
   <ul>
-    <li>Saat \(x = 3 \implies f''(3) = -6(3) + 6 = -12 < 0\) (maka \(x = 3\) menghasilkan <strong>nilai balik maksimum</strong>).</li>
-    <li>Saat \(x = -1 \implies f''(-1) = -6(-1) + 6 = +12 > 0\) (minimum).</li>
+    <li>Saat \(x = 3 \implies f''(3) = -6(3) + 6 = -12 \lt 0\) (maka \(x = 3\) menghasilkan <strong>nilai balik maksimum</strong>).</li>
+    <li>Saat \(x = -1 \implies f''(-1) = -6(-1) + 6 = +12 \gt 0\) (minimum).</li>
   </ul></li>
   <li>Hitung nilai balik maksimum \(f(3)\):
   \[ f(3) = -(3)^3 + 3(3)^2 + 9(3) - 5 = -27 + 27 + 27 - 5 = 22 \]</li>
@@ -1512,7 +1512,7 @@ HTML
   <li>Agar biaya total minimum, gunakan syarat stasioner \(B'(x) = 0\):
   \[ B'(x) = 4x - 60 = 0 \]
   \[ 4x = 60 \implies x = 15\text{ hari} \]</li>
-  <li><em>Cek turunan kedua:</em> \(B''(x) = 4 > 0\) (benar menghasilkan nilai minimum). Jadi proyek harus diselesaikan dalam waktu \(15\text{ hari}\).</li>
+  <li><em>Cek turunan kedua:</em> \(B''(x) = 4 \gt 0\) (benar menghasilkan nilai minimum). Jadi proyek harus diselesaikan dalam waktu \(15\text{ hari}\).</li>
 </ol>
 <div><strong>Jawaban: B</strong></div>
 HTML
@@ -1581,7 +1581,7 @@ HTML,
     <tr>
       <td><strong>Pola 4: Fungsi Naik/Turun &amp; Syarat Definit</strong><br><em>(SBMPTN 2013, 2014)</em></td>
       <td>Menanyakan interval naik dari \(g(x) = f(1 - x)\) atau syarat agar kurva kubik <em>selalu turun</em> untuk setiap \(x \in \mathbb{R}\).</td>
-      <td>Ingat turunan dalam dari \((1-x)\) adalah \(-1\) (membalik tanda!). Untuk "selalu naik/turun", gunakan syarat definit kuadrat: <strong>Diskriminan \(D = b^2 - 4ac < 0\)</strong>.</td>
+      <td>Ingat turunan dalam dari \((1-x)\) adalah \(-1\) (membalik tanda!). Untuk "selalu naik/turun", gunakan syarat definit kuadrat: <strong>Diskriminan \(D = b^2 - 4ac \lt 0\)</strong>.</td>
     </tr>
     <tr>
       <td><strong>Pola 5: Nilai Ekstrem, Titik Belok &amp; Lintas Topik</strong><br><em>(SBMPTN 2016, UTBK 2019)</em></td>
@@ -1806,11 +1806,11 @@ HTML
             ],
             8 => [
                 'pertanyaan' => '<p><strong>[SBMPTN 2013 Kode 436]</strong><br>Diketahui \(f(x) = \frac{2}{3}x^3 - \frac{1}{2}x^2 - 3x + \frac{1}{6}\). Jika \(g(x) = f(1 - x)\), maka grafik fungsi \(g\) <strong>naik</strong> pada selang...</p>',
-                'p1' => '<p>\(-\frac{1}{2} < x < 2\)</p>',
-                'p2' => '<p>\(-2 < x < \frac{1}{2}\)</p>',
-                'p3' => '<p>\(-1 < x < \frac{3}{2}\)</p>',
-                'p4' => '<p>\(x < -\frac{1}{2}\text{ atau }x > 2\)</p>',
-                'p5' => '<p>\(x < -2\text{ atau }x > \frac{1}{2}\)</p>',
+                'p1' => '<p>\(-\frac{1}{2} \lt x \lt 2\)</p>',
+                'p2' => '<p>\(-2 \lt x \lt \frac{1}{2}\)</p>',
+                'p3' => '<p>\(-1 \lt x \lt \frac{3}{2}\)</p>',
+                'p4' => '<p>\(x \lt -\frac{1}{2}\text{ atau }x \gt 2\)</p>',
+                'p5' => '<p>\(x \lt -2\text{ atau }x \gt \frac{1}{2}\)</p>',
                 'jb' => 'pilihan_1',
                 'penyelesaian' => <<<'HTML'
 <p><strong>Langkah Penyelesaian:</strong></p>
@@ -1823,21 +1823,21 @@ HTML
   \[ f'(1 - x) = \left[2(1 - x) - 3\right]\left[(1 - x) + 1\right] = (-2x - 1)(2 - x) = (2x + 1)(x - 2) \]
   Maka:
   \[ g'(x) = -(2x + 1)(x - 2) \]</li>
-  <li>Syarat fungsi \(g(x)\) naik adalah \(g'(x) > 0\):
-  \[ -(2x + 1)(x - 2) > 0 \iff (2x + 1)(x - 2) < 0 \]
+  <li>Syarat fungsi \(g(x)\) naik adalah \(g'(x) \gt 0\):
+  \[ -(2x + 1)(x - 2) \gt 0 \iff (2x + 1)(x - 2) \lt 0 \]
   Diperoleh interval penyelesaian:
-  \[ -\frac{1}{2} < x < 2 \]</li>
+  \[ -\frac{1}{2} \lt x \lt 2 \]</li>
 </ol>
 <div><strong>Jawaban: A</strong></div>
 HTML
             ],
             9 => [
                 'pertanyaan' => '<p><strong>[SBMPTN 2014 Kode 631]</strong><br>Syarat agar fungsi \(f(x) = -x^3 + \frac{1}{2}ax^2 - \frac{1}{2}x^2 - 3x + 8\) <strong>selalu turun</strong> untuk semua nilai real \(x\) adalah...</p>',
-                'p1' => '<p>\(a < -5\text{ atau }a > 7\)</p>',
-                'p2' => '<p>\(a < 0\text{ atau }a > 4\)</p>',
-                'p3' => '<p>\(-5 < a < 7\)</p>',
-                'p4' => '<p>\(-7 < a < 5\)</p>',
-                'p5' => '<p>\(-7 < a < 0\text{ atau }4 < a < 7\)</p>',
+                'p1' => '<p>\(a \lt -5\text{ atau }a \gt 7\)</p>',
+                'p2' => '<p>\(a \lt 0\text{ atau }a \gt 4\)</p>',
+                'p3' => '<p>\(-5 \lt a \lt 7\)</p>',
+                'p4' => '<p>\(-7 \lt a \lt 5\)</p>',
+                'p5' => '<p>\(-7 \lt a \lt 0\text{ atau }4 \lt a \lt 7\)</p>',
                 'jb' => 'pilihan_3',
                 'penyelesaian' => <<<'HTML'
 <p><strong>Langkah Penyelesaian:</strong></p>
@@ -1846,13 +1846,13 @@ HTML
   \[ f(x) = -x^3 + \frac{1}{2}(a - 1)x^2 - 3x + 8 \]</li>
   <li>Tentukan turunan pertama \(f'(x)\):
   \[ f'(x) = -3x^2 + (a - 1)x - 3 \]</li>
-  <li>Agar \(f(x)\) selalu turun untuk seluruh \(x \in \mathbb{R}\), fungsi kuadrat \(f'(x)\) harus <strong>definit negatif</strong> (\(f'(x) < 0\)). Karena koefisien \(x^2\) sudah negatif (\(-3 < 0\)), syarat yang harus dipenuhi adalah diskriminan \(D < 0\):
-  \[ D = b^2 - 4ac < 0 \]
-  \[ (a - 1)^2 - 4(-3)(-3) < 0 \]
-  \[ (a - 1)^2 - 36 < 0 \]</li>
+  <li>Agar \(f(x)\) selalu turun untuk seluruh \(x \in \mathbb{R}\), fungsi kuadrat \(f'(x)\) harus <strong>definit negatif</strong> (\(f'(x) \lt 0\)). Karena koefisien \(x^2\) sudah negatif (\(-3 \lt 0\)), syarat yang harus dipenuhi adalah diskriminan \(D \lt 0\):
+  \[ D = b^2 - 4ac \lt 0 \]
+  \[ (a - 1)^2 - 4(-3)(-3) \lt 0 \]
+  \[ (a - 1)^2 - 36 \lt 0 \]</li>
   <li>Faktorkan dengan selisih kuadrat \((A^2 - B^2) = (A - B)(A + B)\):
-  \[ (a - 1 - 6)(a - 1 + 6) < 0 \implies (a - 7)(a + 5) < 0 \]
-  Diperoleh batas nilai \(-5 < a < 7\).</li>
+  \[ (a - 1 - 6)(a - 1 + 6) \lt 0 \implies (a - 7)(a + 5) \lt 0 \]
+  Diperoleh batas nilai \(-5 \lt a \lt 7\).</li>
 </ol>
 <div><strong>Jawaban: C</strong></div>
 HTML
@@ -1876,8 +1876,8 @@ HTML
   \[ (x + 3)(x - 1) = 0 \implies x = -3 \text{ atau } x = 1 \]</li>
   <li>Uji dengan turunan kedua \(f''(x) = 6x + 6\):
   <ul>
-    <li>Untuk \(x = -3 \implies f''(-3) = -12 < 0\) (maksimum lokal).</li>
-    <li>Untuk \(x = 1 \implies f''(1) = +12 > 0\) (<strong>minimum lokal</strong>).</li>
+    <li>Untuk \(x = -3 \implies f''(-3) = -12 \lt 0\) (maksimum lokal).</li>
+    <li>Untuk \(x = 1 \implies f''(1) = +12 \gt 0\) (<strong>minimum lokal</strong>).</li>
   </ul></li>
   <li>Substitusikan \(x = 1\) ke \(f(x)\) untuk mendapatkan nilai minimum lokal:
   \[ f(1) = (1)^3 + 3(1)^2 - 9(1) + 1 = 1 + 3 - 9 + 1 = -4 \]</li>
@@ -1907,7 +1907,7 @@ HTML
   \[ N'(a) = 3a^2 - 9 = 0 \implies a^2 = 3 \implies a = -\sqrt{3} \text{ atau } a = \sqrt{3} \]</li>
   <li>Uji turunan kedua \(N''(a) = 6a\):
   <ul>
-    <li>Saat \(a = -\sqrt{3} \implies N''(-\sqrt{3}) = -6\sqrt{3} < 0\) (pembuat maksimum lokal, dengan \(N(-\sqrt{3}) = -3\sqrt{3} + 9\sqrt{3} + 1 = 6\sqrt{3} + 1 \approx 11{,}39\)).</li>
+    <li>Saat \(a = -\sqrt{3} \implies N''(-\sqrt{3}) = -6\sqrt{3} \lt 0\) (pembuat maksimum lokal, dengan \(N(-\sqrt{3}) = -3\sqrt{3} + 9\sqrt{3} + 1 = 6\sqrt{3} + 1 \approx 11{,}39\)).</li>
     <li>Cek juga ujung kanan interval \(a = 3 \implies N(3) = 27 - 27 + 1 = 1\).</li>
   </ul>
   Maka nilai maksimum pada \([-3, 3]\) tercapai pada saat \(a = -\sqrt{3}\).</li>
