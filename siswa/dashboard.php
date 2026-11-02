@@ -309,19 +309,44 @@ foreach ((array)$assignments as $idx => $a) {
         'btn' => $btnLabel,
     ];
 }
+
+// Ringkasan tugas & ujian untuk menggantikan kartu absen yang disembunyikan
+$cntTugasAktif = 0;
+$cntUjianAktif = 0;
+$cntSelesai = 0;
+foreach ((array)$assignments as $aItem) {
+    $jItem = strtolower((string)($aItem['jenis'] ?? 'tugas'));
+    $sItem = (string)($aItem['status'] ?? 'assigned');
+    if ($sItem === 'done') {
+        $cntSelesai++;
+    }
+}
+foreach ($visibleAssignments as $vaItem) {
+    if ($vaItem['status'] !== 'done') {
+        if ($vaItem['jenis'] === 'ujian') {
+            $cntUjianAktif++;
+        } else {
+            $cntTugasAktif++;
+        }
+    }
+}
+$studyStats = [
+    ['label' => 'Tugas Aktif', 'value' => $cntTugasAktif, 'icon' => 'ti-notebook', 'color' => 'blue'],
+    ['label' => 'Ujian Aktif', 'value' => $cntUjianAktif, 'icon' => 'ti-file-certificate', 'color' => 'red'],
+    ['label' => 'Sudah Selesai', 'value' => $cntSelesai, 'icon' => 'ti-circle-check', 'color' => 'green'],
+    ['label' => 'Total Penugasan', 'value' => count($visibleAssignments), 'icon' => 'ti-clipboard-list', 'color' => 'azure'],
+];
 ?>
 <div class="student-page">
     <div class="page-header-tabler">
         <div class="page-header-text">
-            <div class="page-pretitle">Ringkasan</div>
+            <div class="page-pretitle">Ringkasan Belajar</div>
             <h2 class="page-title"><i class="ti ti-layout-dashboard"></i> Dashboard Siswa</h2>
-            <div class="page-subtitle">Profil, jadwal absen, serta tugas dan ujian yang diberikan guru.</div>
+            <div class="page-subtitle">Profil siswa serta daftar tugas dan ujian yang diberikan guru.</div>
         </div>
         <div class="page-header-actions">
-            <?php if ($activeAttendance): ?>
-                <a class="btn btn-primary" href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen_location.php"><i class="ti ti-map-pin-check"></i><span>Absen Sekarang</span></a>
-            <?php endif; ?>
-            <a class="btn btn-outline-secondary" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php"><i class="ti ti-chart-line"></i><span>Hasil</span></a>
+            <a class="btn btn-outline-secondary" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php"><i class="ti ti-chart-line"></i><span>Hasil &amp; Nilai</span></a>
+            <a class="btn btn-outline-primary" href="<?php echo htmlspecialchars($base_url); ?>/siswa/game_math.php"><i class="ti ti-device-gamepad-2"></i><span>Mini Game</span></a>
         </div>
     </div>
 
@@ -372,10 +397,10 @@ foreach ((array)$assignments as $idx => $a) {
             </div>
         </div>
 
-        <!-- Absen -->
+        <!-- Ringkasan & Tugas / Ujian -->
         <div class="col-lg-8 col-md-7">
-            <div class="row row-cols-2 row-cols-sm-3 row-cols-xl-5 g-2 mb-3">
-                <?php foreach ($attStats as $st): ?>
+            <div class="row row-cols-2 row-cols-xl-4 g-2 mb-3">
+                <?php foreach ($studyStats as $st): ?>
                     <div class="col">
                         <div class="card stat-card">
                             <div class="card-body">
@@ -383,57 +408,20 @@ foreach ((array)$assignments as $idx => $a) {
                                     <span class="stat-icon bg-<?php echo htmlspecialchars($st['color']); ?>-lt"><i class="ti <?php echo htmlspecialchars($st['icon']); ?>"></i></span>
                                     <span class="stat-label"><?php echo htmlspecialchars($st['label']); ?></span>
                                 </div>
-                                <div class="stat-value"><?php echo (int)($attendanceSummary[$st['key']] ?? 0); ?></div>
+                                <div class="stat-value"><?php echo (int)$st['value']; ?></div>
                             </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
 
+            <!-- Tugas / Ujian -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="ti ti-calendar-check text-green"></i> Absen</h3>
+                    <h3 class="card-title"><i class="ti ti-notebook text-orange"></i> Tugas / Ujian</h3>
+                    <span class="badge bg-blue-lt ms-auto"><?php echo (int)count($visibleAssignments); ?> aktif</span>
                 </div>
                 <div class="card-body">
-                    <?php if (!$activeAttendance): ?>
-                        <div class="alert alert-info mb-3 small" data-no-swal="1">Belum ada absen yang dijadwalkan saat ini.</div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php"><i class="ti ti-history"></i><span>Lihat Rekap Absen</span></a>
-                            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_requests.php"><i class="ti ti-calendar-event"></i><span>Ajuan Status Absen</span></a>
-                        </div>
-                    <?php else: ?>
-                        <?php
-                        $attName = trim((string)($activeAttendance['name'] ?? 'Jadwal Absen'));
-                        $attStart = (string)($activeAttendance['start_at'] ?? '');
-                        $attEnd = (string)($activeAttendance['end_at'] ?? '');
-                        $startLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($attStart) : $attStart;
-                        $endLabel = function_exists('format_id_datetime_short') ? format_id_datetime_short($attEnd) : $attEnd;
-                        ?>
-                        <div class="active-schedule">
-                            <span class="stat-icon bg-green-lt"><i class="ti ti-clock-play"></i></span>
-                            <div class="active-schedule-body">
-                                <div class="text-muted small">Jadwal absen aktif untuk Anda</div>
-                                <div class="fw-semibold"><?php echo htmlspecialchars($attName); ?></div>
-                                <div class="text-muted small"><?php echo htmlspecialchars($startLabel); ?> s/d <?php echo htmlspecialchars($endLabel); ?></div>
-                            </div>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2 mt-3">
-                            <a class="btn btn-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen_location.php"><i class="ti ti-map-pin-check"></i><span>Absen Sekarang</span></a>
-                            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php"><i class="ti ti-history"></i><span>Lihat Rekap Absen</span></a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tugas / Ujian -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="ti ti-notebook text-orange"></i> Tugas / Ujian</h3>
-            <span class="badge bg-blue-lt ms-auto"><?php echo (int)count($visibleAssignments); ?> aktif</span>
-        </div>
-        <div class="card-body">
             <?php if (!$visibleAssignments): ?>
                 <div class="empty-state">
                     <span class="empty-icon"><i class="ti ti-mood-smile"></i></span>
@@ -543,6 +531,8 @@ foreach ((array)$assignments as $idx => $a) {
                     <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php"><i class="ti ti-chart-line"></i><span>Lihat Hasil Tugas / Ujian</span></a>
                 </div>
             <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>

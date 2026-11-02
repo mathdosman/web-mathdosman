@@ -729,6 +729,7 @@ body.student-layout #studentSidebar .sidebar-submenu {
 /* ---------- 17. Navigasi bawah (mobile) ---------- */
 @media (max-width: 767.98px) {
     body.student-layout .student-bottom-nav {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
         background: var(--st-card-bg);
         border: 0;
         border-top: 1px solid var(--st-border);

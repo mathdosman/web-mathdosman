@@ -1045,8 +1045,6 @@ if ($useAdminSidebar) {
                 <nav class="nav flex-column">
                     <?php
                     $stuNavItem($base_url . '/siswa/dashboard.php', 'ti-layout-dashboard', 'Dashboard', in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && $inStudentPages);
-                    $stuNavItem($base_url . '/siswa/attendance_history.php', 'ti-history', 'Rekap Absen', ($currentPage === 'attendance_history.php') && $inStudentPages);
-                    $stuNavItem($base_url . '/siswa/attendance_requests.php', 'ti-calendar-event', 'Ajuan Status', ($currentPage === 'attendance_requests.php') && $inStudentPages);
                     $stuNavItem($base_url . '/siswa/results.php', 'ti-chart-line', 'Hasil', ($currentPage === 'results.php') && $inStudentPages);
                     $stuNavItem($base_url . '/siswa/profile_edit.php', 'ti-user-circle', 'Edit Profil', ($currentPage === 'profile_edit.php') && $inStudentPages);
                     ?>

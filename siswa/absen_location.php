@@ -2,6 +2,8 @@
 require_once __DIR__ . '/auth.php';
 
 siswa_require_login();
+// Fitur absen siswa disembunyikan (menggunakan aplikasi absensi eksternal)
+siswa_redirect_to('siswa/dashboard.php');
 
 require_once __DIR__ . '/../config/db.php';
 

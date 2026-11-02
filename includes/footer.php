@@ -59,8 +59,7 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 	<nav class="student-bottom-nav position-sticky bottom-0 d-md-none" aria-label="Navigasi utama siswa">
 		<?php
 		$isDashboard = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-		$isAttendance = in_array($currentPage, ['attendance_history.php', 'attendance_requests.php', 'absen.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-		$isResults = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+		$isResults = in_array($currentPage, ['results.php', 'result_view.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
 		$isGame = in_array($currentPage, ['game_math.php', 'game_math_scores.php'], true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
 		$isProfile = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
 		?>
@@ -68,22 +67,6 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 			<i class="ti ti-layout-dashboard" aria-hidden="true"></i>
 			<span>Beranda</span>
 		</a>
-		<div class="student-bottom-nav-group">
-			<button type="button" class="student-bottom-nav-item js-bottom-nav-attendance<?php echo $isAttendance ? ' active' : ''; ?>" aria-expanded="false">
-				<i class="ti ti-calendar-check" aria-hidden="true"></i>
-				<span>Absen</span>
-			</button>
-			<div class="student-bottom-nav-submenu" id="bottomNavAttendanceMenu" hidden>
-				<a href="<?php echo $base_url; ?>/siswa/attendance_history.php">
-					<i class="ti ti-history" aria-hidden="true"></i>
-					<span>Rekap Absen</span>
-				</a>
-				<a href="<?php echo $base_url; ?>/siswa/attendance_requests.php">
-					<i class="ti ti-calendar-event" aria-hidden="true"></i>
-					<span>Ajuan Status</span>
-				</a>
-			</div>
-		</div>
 		<a href="<?php echo $base_url; ?>/siswa/results.php" class="student-bottom-nav-item<?php echo $isResults ? ' active' : ''; ?>">
 			<i class="ti ti-chart-line" aria-hidden="true"></i>
 			<span>Hasil</span>
