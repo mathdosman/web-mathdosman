@@ -1077,13 +1077,130 @@ function get_home_carousel_slides(): array
 }
 ?>
 
-<button class="btn btn-primary btn-sm d-lg-none position-fixed end-0 me-3 d-inline-flex align-items-center gap-2"
-    style="z-index: 1040; top: 120px;" type="button" data-bs-toggle="offcanvas" data-bs-target="#homeSidebar"
-    aria-controls="homeSidebar">
-    <img src="assets/img/icon.svg" width="18" height="18" alt="" aria-hidden="true"
-        style="filter: brightness(0) invert(1);" />
+<button id="homeSidebarFab" class="btn btn-primary btn-sm d-lg-none position-fixed d-inline-flex align-items-center gap-2"
+    style="z-index: 1040; top: 120px; right: 12px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;"
+    type="button" aria-controls="homeSidebar" aria-label="Buka sidebar (geser untuk memindahkan tombol)">
+    <img src="assets/img/icon.svg" width="18" height="18" alt="" aria-hidden="true" draggable="false"
+        style="filter: brightness(0) invert(1); pointer-events: none;" />
     <span>Sidebar</span>
 </button>
+<script>
+    // Tombol Sidebar mengambang: bisa digeser bebas (seperti AssistiveTouch iPhone),
+    // klik/tap singkat tetap membuka sidebar.
+    (function() {
+        var fab = document.getElementById('homeSidebarFab');
+        if (!fab) return;
+        var KEY = 'md_sidebar_fab_pos';
+        var MOVE_THRESHOLD = 6; // px sebelum dianggap geser, bukan klik
+        var dragging = false,
+            moved = false,
+            startX = 0,
+            startY = 0,
+            offX = 0,
+            offY = 0;
+
+        function clamp(v, min, max) {
+            return Math.min(Math.max(v, min), max);
+        }
+
+        function place(left, top) {
+            var w = fab.offsetWidth,
+                h = fab.offsetHeight;
+            left = clamp(left, 4, window.innerWidth - w - 4);
+            top = clamp(top, 4, window.innerHeight - h - 4);
+            fab.style.left = left + 'px';
+            fab.style.top = top + 'px';
+            fab.style.right = 'auto';
+            return {
+                left: left,
+                top: top
+            };
+        }
+
+        function restore() {
+            try {
+                var s = JSON.parse(localStorage.getItem(KEY) || 'null');
+                if (s && typeof s.xr === 'number' && typeof s.yr === 'number') {
+                    // Posisi disimpan sebagai rasio agar tetap valid saat layar berputar.
+                    place(s.xr * (window.innerWidth - fab.offsetWidth), s.yr * (window.innerHeight - fab.offsetHeight));
+                }
+            } catch (e) {}
+        }
+
+        function save(pos) {
+            try {
+                var maxL = Math.max(1, window.innerWidth - fab.offsetWidth);
+                var maxT = Math.max(1, window.innerHeight - fab.offsetHeight);
+                localStorage.setItem(KEY, JSON.stringify({
+                    xr: pos.left / maxL,
+                    yr: pos.top / maxT
+                }));
+            } catch (e) {}
+        }
+
+        fab.addEventListener('pointerdown', function(e) {
+            dragging = true;
+            moved = false;
+            startX = e.clientX;
+            startY = e.clientY;
+            var r = fab.getBoundingClientRect();
+            offX = e.clientX - r.left;
+            offY = e.clientY - r.top;
+            try {
+                fab.setPointerCapture(e.pointerId);
+            } catch (err) {}
+            fab.style.cursor = 'grabbing';
+        });
+
+        fab.addEventListener('pointermove', function(e) {
+            if (!dragging) return;
+            if (!moved && Math.abs(e.clientX - startX) < MOVE_THRESHOLD && Math.abs(e.clientY - startY) < MOVE_THRESHOLD) {
+                return;
+            }
+            moved = true;
+            place(e.clientX - offX, e.clientY - offY);
+            e.preventDefault();
+        });
+
+        function endDrag(e) {
+            if (!dragging) return;
+            dragging = false;
+            fab.style.cursor = 'grab';
+            try {
+                fab.releasePointerCapture(e.pointerId);
+            } catch (err) {}
+            if (moved) {
+                var r = fab.getBoundingClientRect();
+                save({
+                    left: r.left,
+                    top: r.top
+                });
+            }
+        }
+        fab.addEventListener('pointerup', endDrag);
+        fab.addEventListener('pointercancel', endDrag);
+
+        fab.addEventListener('click', function(e) {
+            if (moved) {
+                // Baru selesai digeser: jangan buka sidebar.
+                moved = false;
+                e.preventDefault();
+                return;
+            }
+            var el = document.getElementById('homeSidebar');
+            if (el && window.bootstrap && window.bootstrap.Offcanvas) {
+                window.bootstrap.Offcanvas.getOrCreateInstance(el).toggle();
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            var r = fab.getBoundingClientRect();
+            if (fab.style.left) place(r.left, r.top);
+        });
+
+        restore();
+    })();
+</script>
 
 <?php if ($page === 1): ?>
 <?php $slides = get_home_carousel_slides(); ?>
@@ -1263,7 +1380,7 @@ function get_home_carousel_slides(): array
                         $cardTitle = $titlePrefix . (string)($row['title'] ?? '');
                         $href = seo_post_url((string)($row['slug'] ?? ''), (string)$base_url);
                         $metaLeft = $badge;
-                        $rawExcerpt = strip_tags((string)($row['excerpt'] ?? ''));
+                        $rawExcerpt = html_entity_decode(strip_tags((string)($row['excerpt'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                         $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
                         $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
                         $needsEllipsis = mb_strlen($rawExcerpt) > 160;
@@ -1272,7 +1389,7 @@ function get_home_carousel_slides(): array
                         $cardTitle = $titlePrefix . (string)($row['name'] ?? '');
                         $href = seo_package_url((string)($row['code'] ?? ''), (string)$base_url);
                         $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
-                        $raw = strip_tags((string)($row['description'] ?? ''));
+                        $raw = html_entity_decode(strip_tags((string)($row['description'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                         $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
                         $excerpt = (string)mb_substr($raw, 0, 160);
                         $needsEllipsis = mb_strlen((string)$raw) > 160;
