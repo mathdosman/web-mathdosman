@@ -934,47 +934,47 @@ function get_home_carousel_slides(): array
     <span>Sidebar</span>
 </button>
 
+<?php if ($page === 1): ?>
+<?php $slides = get_home_carousel_slides(); ?>
+<?php if ($slides): ?>
+<!-- Floating Full-Width Hero Carousel Banner -->
+<div class="home-floating-banner-wrap mb-4 mb-lg-5">
+    <div class="border rounded-4 overflow-hidden brand-banner position-relative floating-carousel-card">
+        <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+            <div class="carousel-indicators">
+                <?php foreach ($slides as $idx => $s): ?>
+                <button type="button" data-bs-target="#homeBrandCarousel" data-bs-slide-to="<?php echo $idx; ?>"
+                    class="<?php echo $idx === 0 ? 'active' : ''; ?>"
+                    aria-current="<?php echo $idx === 0 ? 'true' : 'false'; ?>"
+                    aria-label="Slide <?php echo $idx + 1; ?>"></button>
+                <?php endforeach; ?>
+            </div>
+            <div class="carousel-inner">
+                <?php foreach ($slides as $idx => $s): ?>
+                <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
+                    <div class="ratio ratio-21x9">
+                        <img src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
+                            class="w-100 h-100 object-fit-cover"
+                            alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>" loading="lazy">
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#homeBrandCarousel" data-bs-slide="prev" aria-label="Sebelumnya">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#homeBrandCarousel" data-bs-slide="next" aria-label="Selanjutnya">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+<?php endif; ?>
+
 <div class="row g-3 g-lg-4">
     <div class="col-12 col-lg-8">
         <?php if ($page === 1): ?>
-        <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner position-relative">
-            <?php $slides = get_home_carousel_slides(); ?>
-            <?php if ($slides): ?>
-            <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
-                <div class="carousel-indicators">
-                    <?php foreach ($slides as $idx => $s): ?>
-                    <button type="button" data-bs-target="#homeBrandCarousel" data-bs-slide-to="<?php echo $idx; ?>"
-                        class="<?php echo $idx === 0 ? 'active' : ''; ?>"
-                        aria-current="<?php echo $idx === 0 ? 'true' : 'false'; ?>"
-                        aria-label="Slide <?php echo $idx + 1; ?>"></button>
-                    <?php endforeach; ?>
-                </div>
-                <div class="carousel-inner">
-                    <?php foreach ($slides as $idx => $s): ?>
-                    <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
-                        <div class="ratio ratio-21x9">
-                            <img src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
-                                class="w-100 h-100 object-fit-cover"
-                                alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>" loading="lazy">
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#homeBrandCarousel" data-bs-slide="prev" aria-label="Sebelumnya">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#homeBrandCarousel" data-bs-slide="next" aria-label="Selanjutnya">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                </button>
-            </div>
-            <?php else: ?>
-            <div class="ratio ratio-21x9">
-                <img src="assets/img/icon.svg" class="w-100 h-100 object-fit-contain" alt="Logo MATHDOSMAN"
-                    loading="lazy">
-            </div>
-            <?php endif; ?>
-        </div>
-
         <div class="home-hero mb-3 mb-lg-4">
             <div class="row g-4 align-items-center position-relative">
                 <div class="col-12 col-lg-7">

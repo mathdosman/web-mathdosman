@@ -13,28 +13,30 @@
 
     body.front-page .app-container {
         max-width: 1140px;
-        padding-left: 1.75rem;
-        padding-right: 1.75rem;
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
     }
 
     @media (min-width: 768px) {
         body.front-page .app-container {
-            padding-left: 2rem;
-            padding-right: 2rem;
+            padding-left: 1.75rem;
+            padding-right: 1.75rem;
         }
     }
 
     @media (min-width: 1200px) {
         body.front-page .app-container {
-            padding-left: 3rem;
-            padding-right: 3rem;
+            max-width: 1280px;
+            padding-left: 2.25rem;
+            padding-right: 2.25rem;
         }
     }
 
     @media (min-width: 1400px) {
         body.front-page .app-container {
-            padding-left: 3.5rem;
-            padding-right: 3.5rem;
+            max-width: 1360px;
+            padding-left: 2.75rem;
+            padding-right: 2.75rem;
         }
     }
 
@@ -99,10 +101,87 @@
         pointer-events: none;
     }
 
+    /* Floating Carousel Showcase Banner */
+    body.front-page .home-floating-banner-wrap {
+        position: relative;
+        margin-top: 0.5rem;
+        margin-bottom: 2.25rem;
+    }
+
+    /* Ambient backlight glow underneath the floating banner */
+    body.front-page .home-floating-banner-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 16px 28px -18px 28px;
+        background: linear-gradient(
+            135deg,
+            rgba(56, 189, 248, 0.42) 0%,
+            rgba(99, 102, 241, 0.46) 40%,
+            rgba(236, 72, 153, 0.36) 75%,
+            rgba(16, 185, 129, 0.30) 100%
+        );
+        filter: blur(34px);
+        border-radius: 2.5rem;
+        z-index: 0;
+        pointer-events: none;
+        transform: translateZ(0);
+        opacity: 0.85;
+        transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+    }
+
+    [data-bs-theme="dark"] body.front-page .home-floating-banner-wrap::before {
+        opacity: 0.65;
+        filter: blur(42px);
+    }
+
+    body.front-page .home-floating-banner-wrap:hover::before {
+        opacity: 1;
+        filter: blur(38px);
+        transform: scale(1.01);
+    }
+
+    body.front-page .floating-carousel-card {
+        position: relative;
+        z-index: 1;
+        border-radius: 1.5rem !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        background: #090d16;
+        box-shadow:
+            0 24px 50px -12px rgba(15, 23, 42, 0.35),
+            0 8px 20px -4px rgba(15, 23, 42, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+        transform: translateY(0);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+    }
+
+    body.front-page .floating-carousel-card:hover {
+        transform: translateY(-5px);
+        box-shadow:
+            0 32px 64px -14px rgba(15, 23, 42, 0.45),
+            0 14px 28px -6px rgba(15, 23, 42, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.15) !important;
+    }
+
+    @media (max-width: 767.98px) {
+        body.front-page .home-floating-banner-wrap {
+            margin-top: 0.25rem;
+            margin-bottom: 1.5rem;
+        }
+        body.front-page .floating-carousel-card {
+            border-radius: 1.15rem !important;
+        }
+        body.front-page .floating-carousel-card .ratio-21x9 {
+            --bs-aspect-ratio: 46%; /* Slightly taller on mobile for clear text readability */
+        }
+        body.front-page .home-floating-banner-wrap::before {
+            inset: 8px 12px -10px 12px;
+            filter: blur(20px);
+        }
+    }
+
     /* Brand Banner & Carousel Enhancements */
     body.front-page .brand-banner {
         border-color: rgba(var(--bs-primary-rgb), 0.15) !important;
-        box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.16), 0 4px 8px -4px rgba(0, 0, 0, 0.08);
         background: #090d16;
     }
 
