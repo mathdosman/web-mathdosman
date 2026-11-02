@@ -381,11 +381,77 @@
         vertical-align: middle;
     }
 
-    /* Daftar Isi (Table of Contents) */
+    /* Daftar Isi (Table of Contents) Modern Styling */
     body.front-page.daftar-isi .toc-grid {
-        max-width: 1140px;
+        max-width: 1240px;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    body.front-page.daftar-isi .toc-filter-card {
+        border-radius: 1.15rem;
+        border: 1px solid rgba(var(--bs-primary-rgb), 0.14);
+        background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.04), rgba(var(--bs-body-bg-rgb), 0.98));
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    body.front-page.daftar-isi .toc-item-card {
+        border-radius: 1.15rem;
+        border: 1px solid rgba(var(--bs-primary-rgb), 0.13);
+        background: var(--bs-card-bg, #ffffff);
+        box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+        transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Subtle top accent gradient line */
+    body.front-page.daftar-isi .toc-item-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3.5px;
+        background: linear-gradient(90deg, #38bdf8, #6366f1, #ec4899);
+        opacity: 0.6;
+        transition: opacity 0.22s ease, height 0.22s ease;
+    }
+
+    body.front-page.daftar-isi .toc-item-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px -6px rgba(0, 0, 0, 0.1), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+        border-color: rgba(var(--bs-primary-rgb), 0.38);
+    }
+
+    body.front-page.daftar-isi .toc-item-card:hover::before {
+        opacity: 1;
+        height: 5px;
+    }
+
+    body.front-page.daftar-isi .toc-item-card .toc-card-title a {
+        transition: color 0.15s ease;
+        line-height: 1.35;
+    }
+
+    body.front-page.daftar-isi .toc-item-card:hover .toc-card-title a {
+        color: var(--bs-primary) !important;
+    }
+
+    body.front-page.daftar-isi .toc-item-card .toc-card-desc {
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    body.front-page.daftar-isi .toc-item-card .toc-action-link i {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body.front-page.daftar-isi .toc-item-card:hover .toc-action-link i {
+        transform: translateX(4px);
     }
 
     body.front-page.daftar-isi .toc-card {

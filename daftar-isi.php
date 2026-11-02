@@ -122,7 +122,7 @@ if (mb_strlen($qFilter) > 120) {
     $qFilter = mb_substr($qFilter, 0, 120);
 }
 
-$perPage = 16; // 4 kolom x 4 baris
+$perPage = 15; // 3 kolom x 5 baris
 
 $total = 0;
 $feedItems = [];
@@ -352,11 +352,21 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="row">
-    <div class="col-12 col-lg-10 mx-auto">
-        <div class="d-flex align-items-end justify-content-between gap-2 mb-3">
+    <div class="col-12 col-xl-11 mx-auto">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-4 flex-wrap">
             <div>
-                <h1 class="h4 mb-1">Daftar Isi</h1>
-                <div class="text-muted small">Seluruh konten materi &amp; paket soal (16 item per halaman).</div>
+                <div class="d-inline-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary-subtle text-primary px-2.5 py-1 fw-bold rounded-pill">
+                        <i class="ti ti-layout-grid me-1"></i>KATALOG
+                    </span>
+                    <span class="small text-body-secondary fw-semibold">Mathdosman Directory</span>
+                </div>
+                <h1 class="h3 fw-bolder mb-1 text-body">
+                    Daftar Isi Materi &amp; Paket Soal
+                </h1>
+                <div class="text-body-secondary small">
+                    Jelajahi seluruh koleksi bank soal HOTS dan ringkasan materi matematika SMA.
+                </div>
             </div>
             <?php
             $buildTopHref = function (string $nextMode) use ($page, $materiFilter, $submateriFilter, $qFilter): string {
@@ -371,44 +381,64 @@ include __DIR__ . '/includes/header.php';
             };
             ?>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <div class="btn-group btn-group-sm" role="group" aria-label="Mode tampilan">
-                    <a class="btn btn-outline-secondary<?php echo $mode === 'card' ? ' active' : ''; ?>" href="<?php echo htmlspecialchars($buildTopHref('card')); ?>">Card</a>
-                    <a class="btn btn-outline-secondary<?php echo $mode === 'list' ? ' active' : ''; ?>" href="<?php echo htmlspecialchars($buildTopHref('list')); ?>">List</a>
+                <div class="btn-group shadow-sm" role="group" aria-label="Mode tampilan">
+                    <a class="btn btn-sm btn-outline-primary<?php echo $mode === 'card' ? ' active fw-bold' : ''; ?>" href="<?php echo htmlspecialchars($buildTopHref('card')); ?>">
+                        <i class="ti ti-grid-dots me-1"></i>Card
+                    </a>
+                    <a class="btn btn-sm btn-outline-primary<?php echo $mode === 'list' ? ' active fw-bold' : ''; ?>" href="<?php echo htmlspecialchars($buildTopHref('list')); ?>">
+                        <i class="ti ti-list me-1"></i>List
+                    </a>
                 </div>
-                <div class="text-muted small">Total: <?php echo (int)$total; ?> item</div>
+                <span class="badge bg-body-secondary text-body-secondary border px-3 py-2 rounded-pill small fw-semibold">
+                    Total: <strong class="text-primary"><?php echo (int)$total; ?></strong> item
+                </span>
             </div>
         </div>
 
-        <form method="get" class="toc-filters row g-2 align-items-end mb-3">
-            <input type="hidden" name="mode" value="<?php echo htmlspecialchars($mode); ?>">
-            <input type="hidden" name="page" value="1">
-            <div class="col-12 col-md-4">
-                <label class="form-label small mb-1">Materi</label>
-                <select name="materi" class="form-select form-select-sm">
-                    <option value="">Semua</option>
-                    <?php foreach ($materiOptions as $mOpt): ?>
-                        <option value="<?php echo htmlspecialchars($mOpt); ?>" <?php echo $materiFilter === $mOpt ? 'selected' : ''; ?>><?php echo htmlspecialchars($mOpt); ?></option>
-                    <?php endforeach; ?>
-                </select>
+        <div class="card toc-filter-card mb-4">
+            <div class="card-body p-3 p-md-3.5">
+                <form method="get" class="toc-filters row g-3 align-items-end">
+                    <input type="hidden" name="mode" value="<?php echo htmlspecialchars($mode); ?>">
+                    <input type="hidden" name="page" value="1">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold text-body-secondary mb-1">
+                            <i class="ti ti-folder text-primary me-1"></i>Materi Pokok
+                        </label>
+                        <select name="materi" class="form-select form-select-sm rounded-3">
+                            <option value="">Semua Materi</option>
+                            <?php foreach ($materiOptions as $mOpt): ?>
+                                <option value="<?php echo htmlspecialchars($mOpt); ?>" <?php echo $materiFilter === $mOpt ? 'selected' : ''; ?>><?php echo htmlspecialchars($mOpt); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold text-body-secondary mb-1">
+                            <i class="ti ti-subtask text-primary me-1"></i>Submateri
+                        </label>
+                        <select name="submateri" class="form-select form-select-sm rounded-3">
+                            <option value="">Semua Submateri</option>
+                            <?php foreach ($submateriOptions as $smOpt): ?>
+                                <option value="<?php echo htmlspecialchars($smOpt); ?>" <?php echo $submateriFilter === $smOpt ? 'selected' : ''; ?>><?php echo htmlspecialchars($smOpt); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold text-body-secondary mb-1">
+                            <i class="ti ti-search text-primary me-1"></i>Cari Judul
+                        </label>
+                        <input type="text" name="q" class="form-control form-control-sm rounded-3" value="<?php echo htmlspecialchars($qFilter); ?>" placeholder="Ketik kata kunci...">
+                    </div>
+                    <div class="col-12 d-flex gap-2 justify-content-end">
+                        <button type="submit" class="btn btn-sm btn-primary px-3 rounded-3 fw-semibold">
+                            <i class="ti ti-filter me-1"></i>Terapkan Filter
+                        </button>
+                        <a class="btn btn-sm btn-outline-secondary px-3 rounded-3" href="daftar-isi.php?<?php echo htmlspecialchars(http_build_query(['mode' => $mode, 'page' => 1])); ?>">
+                            <i class="ti ti-rotate me-1"></i>Reset
+                        </a>
+                    </div>
+                </form>
             </div>
-            <div class="col-12 col-md-4">
-                <label class="form-label small mb-1">Submateri</label>
-                <select name="submateri" class="form-select form-select-sm">
-                    <option value="">Semua</option>
-                    <?php foreach ($submateriOptions as $smOpt): ?>
-                        <option value="<?php echo htmlspecialchars($smOpt); ?>" <?php echo $submateriFilter === $smOpt ? 'selected' : ''; ?>><?php echo htmlspecialchars($smOpt); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-12 col-md-4">
-                <label class="form-label small mb-1">Judul Paket</label>
-                <input type="text" name="q" class="form-control form-control-sm" value="<?php echo htmlspecialchars($qFilter); ?>" placeholder="Cari judul paket...">
-            </div>
-            <div class="col-12 d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
-                <a class="btn btn-sm btn-outline-secondary" href="daftar-isi.php?<?php echo htmlspecialchars(http_build_query(['mode' => $mode, 'page' => 1])); ?>">Reset</a>
-            </div>
-        </form>
+        </div>
 
         <?php if (!$dbPreflightOk): ?>
             <div class="alert alert-warning">Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.</div>
@@ -457,65 +487,93 @@ include __DIR__ . '/includes/header.php';
                     </ol>
                 </div>
             <?php else: ?>
-                <div class="row g-3 justify-content-center toc-grid">
+                <div class="row g-3 g-lg-4 justify-content-center toc-grid">
                     <?php foreach ($feedItems as $row): ?>
                         <?php
                         $kind = (string)($row['kind'] ?? '');
-
-                        $publishedAt = (string)($row['published_at'] ?? '');
-                        if ($publishedAt === '') {
-                            $publishedAt = (string)($row['created_at'] ?? '');
+                        $publishedAt = (string)($row['published_at'] ?? ($row['created_at'] ?? ''));
+                        $materi = trim((string)($row['materi'] ?? ''));
+                        $submateri = trim((string)($row['submateri'] ?? ''));
+                        $rawTitle = trim((string)($row['title'] ?? ''));
+                        if ($rawTitle === '') {
+                            $rawTitle = 'Tanpa Judul';
                         }
-
-                        $cardTitle = '';
-                        $href = '#';
-                        $metaLeft = '';
-                        $excerpt = '';
-                        $needsEllipsis = false;
-                        $accentKey = '';
 
                         if ($kind === 'content') {
                             $t = (string)($row['type'] ?? 'materi');
-                            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
-                            $cardTitle = $badge . ' - ' . (string)($row['title'] ?? '');
+                            $isBerita = ($t === 'berita');
+                            $badgeText = $isBerita ? 'Berita' : 'Materi';
+                            $badgeClass = $isBerita ? 'bg-amber-subtle text-amber' : 'bg-emerald-subtle text-emerald';
+                            $badgeIcon = $isBerita ? 'ti-news' : 'ti-book-2';
                             $href = 'post.php?slug=' . urlencode((string)($row['slug'] ?? ''));
-                            $metaLeft = $badge;
+                            $btnLabel = 'Baca Materi';
                             $rawExcerpt = strip_tags((string)($row['excerpt'] ?? ''));
-                            $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
-                            $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
-                            $needsEllipsis = mb_strlen((string)$rawExcerpt) > 160;
                         } else {
-                            $cardTitle = 'Paket Soal - ' . (string)($row['title'] ?? '');
+                            $badgeText = 'Paket Soal';
+                            $badgeClass = 'bg-primary-subtle text-primary';
+                            $badgeIcon = 'ti-notes';
                             $href = 'paket.php?code=' . urlencode((string)($row['code'] ?? ''));
-                            $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
-                            $raw = strip_tags((string)($row['description'] ?? ''));
-                            $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
-                            $excerpt = (string)mb_substr($raw, 0, 160);
-                            $needsEllipsis = mb_strlen((string)$raw) > 160;
+                            $btnLabel = 'Buka Paket Soal';
+                            $questionCount = (int)($row['published_questions'] ?? 0);
+                            $rawExcerpt = strip_tags((string)($row['description'] ?? ''));
                         }
+
+                        $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
+                        $excerpt = (string)mb_substr($rawExcerpt, 0, 140);
+                        $needsEllipsis = mb_strlen((string)$rawExcerpt) > 140;
                         ?>
-                        <div class="col-12 col-md-6 col-lg-3">
-                            <div class="card h-100 post-card package-card">
-                                <div class="card-body">
-                                    <div class="d-flex flex-column h-100">
-                                        <div class="mb-2">
-                                            <h3 class="package-card-title mb-1">
-                                                <a class="stretched-link text-decoration-none" href="<?php echo htmlspecialchars($href); ?>">
-                                                    <?php echo htmlspecialchars($cardTitle); ?>
-                                                </a>
-                                            </h3>
-
-                                            <div class="package-card-meta text-muted small">
-                                                <?php echo htmlspecialchars($metaLeft); ?>
-                                                • Publish: <strong><?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($publishedAt) : $publishedAt); ?></strong>
-                                            </div>
-                                        </div>
-
-                                        <?php if ($excerpt !== ''): ?>
-                                            <p class="text-muted mb-0 package-card-excerpt"><?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
-                                        <?php else: ?>
-                                            <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 toc-item-card">
+                                <div class="card-body d-flex flex-column p-3 p-md-3.5">
+                                    <!-- Badges Row -->
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2.5">
+                                        <span class="badge <?php echo $badgeClass; ?> fw-semibold px-2.5 py-1.5 rounded-pill d-inline-flex align-items-center gap-1">
+                                            <i class="ti <?php echo $badgeIcon; ?>"></i> <?php echo htmlspecialchars($badgeText); ?>
+                                        </span>
+                                        <?php if ($kind === 'package'): ?>
+                                        <span class="badge bg-body-secondary text-body-secondary fw-semibold rounded-pill px-2.5 py-1.5 d-inline-flex align-items-center gap-1">
+                                            <i class="ti ti-list-numbers text-primary"></i> <?php echo $questionCount; ?> Soal
+                                        </span>
                                         <?php endif; ?>
+                                    </div>
+
+                                    <!-- Subject / Submateri Pills (if any) -->
+                                    <?php if ($materi !== '' || $submateri !== ''): ?>
+                                    <div class="d-flex flex-wrap gap-1 mb-2">
+                                        <?php if ($materi !== ''): ?>
+                                        <span class="badge bg-indigo-subtle text-indigo rounded-pill small fw-normal px-2 py-0.5">
+                                            <i class="ti ti-folder me-1"></i><?php echo htmlspecialchars($materi); ?>
+                                        </span>
+                                        <?php endif; ?>
+                                        <?php if ($submateri !== ''): ?>
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill small fw-normal px-2 py-0.5">
+                                            <?php echo htmlspecialchars($submateri); ?>
+                                        </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endif; ?>
+
+                                    <!-- Title -->
+                                    <h3 class="toc-card-title mb-2 fs-6 fw-bold">
+                                        <a class="stretched-link text-decoration-none text-body" href="<?php echo htmlspecialchars($href); ?>">
+                                            <?php echo htmlspecialchars($rawTitle); ?>
+                                        </a>
+                                    </h3>
+
+                                    <!-- Excerpt -->
+                                    <p class="text-body-secondary small mb-3 flex-grow-1 toc-card-desc">
+                                        <?php echo $excerpt !== '' ? htmlspecialchars($excerpt) . ($needsEllipsis ? '...' : '') : 'Klik untuk membuka butir soal dan pembahasan lengkap.'; ?>
+                                    </p>
+
+                                    <!-- Card Bottom Meta & CTA -->
+                                    <div class="toc-card-footer pt-2.5 mt-auto border-top d-flex align-items-center justify-content-between">
+                                        <span class="text-body-tertiary small d-inline-flex align-items-center gap-1" style="font-size: 0.8rem;">
+                                            <i class="ti ti-calendar"></i> <?php echo htmlspecialchars(function_exists('format_id_date') ? format_id_date($publishedAt) : $publishedAt); ?>
+                                        </span>
+                                        <span class="toc-action-link text-primary fw-semibold small d-inline-flex align-items-center gap-1" style="font-size: 0.85rem;">
+                                            <span><?php echo $btnLabel; ?></span>
+                                            <i class="ti ti-arrow-right"></i>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
