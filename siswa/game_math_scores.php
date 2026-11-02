@@ -50,27 +50,37 @@ $body_class = 'siswa-page';
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
-            <div>
-                <h5 class="mb-1">Highscore Mini Game</h5>
-                <div class="text-muted small">10 peringkat teratas untuk dua jenis mini game.</div>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/game_math.php">Main Lagi</a>
-            </div>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Papan Peringkat</div>
+            <h1 class="page-title"><i class="ti ti-trophy me-1 text-warning"></i>Highscore Mini Game</h1>
         </div>
+        <div class="page-header-actions">
+            <a class="btn btn-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/game_math.php">
+                <i class="ti ti-device-gamepad-2"></i>
+                <span>Main Sekarang</span>
+            </a>
+        </div>
+    </div>
 
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-award text-warning"></i> Top 10 Peringkat Terbaik</h3>
+            <div class="card-subtitle">10 skor tertinggi untuk masing-masing mode permainan</div>
+        </div>
+    </div>
+    <div class="card-body">
         <ul class="nav nav-pills mb-3" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tabAddSub" data-bs-toggle="pill" data-bs-target="#panelAddSub" type="button" role="tab" aria-controls="panelAddSub" aria-selected="true">
-                    Penjumlahan / Pengurangan
+                    <i class="ti ti-plus-minus me-1"></i>Penjumlahan / Pengurangan
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tabMulDiv" data-bs-toggle="pill" data-bs-target="#panelMulDiv" type="button" role="tab" aria-controls="panelMulDiv" aria-selected="false">
-                    Perkalian / Pembagian
+                    <i class="ti ti-x me-1"></i>Perkalian / Pembagian
                 </button>
             </li>
         </ul>
@@ -187,6 +197,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

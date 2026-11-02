@@ -210,26 +210,34 @@ try {
 }
 
 $page_title = 'Ajuan Perubahan Status Absen';
-$body_class = 'attendance-requests-page';
+$body_class = 'attendance-requests-page siswa-page';
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 
 $now = new DateTimeImmutable('now');
 ?>
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-2">
-            <div>
-                <h5 class="mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-envelope-exclamation text-warning"></i>
-                    <span>Ajuan Perubahan Status Absen</span>
-                </h5>
-                <div class="text-muted small">Ajukan perubahan dari Alpha (A) menjadi Izin (I), Sakit (S), atau Dispen (D) dengan alasan dan bukti.</div>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Dashboard</a>
-            </div>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Kehadiran Siswa</div>
+            <h1 class="page-title"><i class="ti ti-calendar-event me-1 text-primary"></i>Ajuan Status Absen</h1>
         </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
 
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-mail-exclamation text-warning"></i> Pengajuan Perubahan Status Absen</h3>
+            <div class="card-subtitle">Ajukan perubahan dari Alpha (A) menjadi Izin (I), Sakit (S), atau Dispen (D) beserta alasan &amp; bukti</div>
+        </div>
+    </div>
+    <div class="card-body">
         <?php if ($successMsg !== ''): ?>
             <div class="alert alert-success py-2 small"><?php echo htmlspecialchars($successMsg); ?></div>
         <?php endif; ?>
@@ -322,7 +330,7 @@ $now = new DateTimeImmutable('now');
                                 <td class="text-center"><span class="small text-muted"><?php echo (int)$rowNo; ?></span></td>
                                 <td>
                                     <div class="small fw-semibold d-flex align-items-center gap-1">
-                                        <i class="bi bi-calendar-check text-primary"></i>
+                                        <i class="ti ti-calendar-check text-primary"></i>
                                         <span><?php echo htmlspecialchars($windowName !== '' ? $windowName : 'Jadwal Absen'); ?></span>
                                     </div>
                                     <div class="small text-muted mt-1">
@@ -379,6 +387,7 @@ $now = new DateTimeImmutable('now');
             </div>
         <?php endif; ?>
     </div>
+</div>
 </div>
 
 <div class="modal fade" id="attendanceRequestModal" tabindex="-1" aria-labelledby="attendanceRequestModalLabel" aria-hidden="true">

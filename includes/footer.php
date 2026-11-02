@@ -65,35 +65,35 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 		$isProfile = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
 		?>
 		<a href="<?php echo $base_url; ?>/siswa/dashboard.php" class="student-bottom-nav-item<?php echo $isDashboard ? ' active' : ''; ?>">
-			<i class="bi bi-speedometer2" aria-hidden="true"></i>
+			<i class="ti ti-layout-dashboard" aria-hidden="true"></i>
 			<span>Beranda</span>
 		</a>
 		<div class="student-bottom-nav-group">
 			<button type="button" class="student-bottom-nav-item js-bottom-nav-attendance<?php echo $isAttendance ? ' active' : ''; ?>" aria-expanded="false">
-				<i class="bi bi-calendar-check" aria-hidden="true"></i>
+				<i class="ti ti-calendar-check" aria-hidden="true"></i>
 				<span>Absen</span>
 			</button>
 			<div class="student-bottom-nav-submenu" id="bottomNavAttendanceMenu" hidden>
 				<a href="<?php echo $base_url; ?>/siswa/attendance_history.php">
-					<i class="bi bi-clock-history" aria-hidden="true"></i>
+					<i class="ti ti-history" aria-hidden="true"></i>
 					<span>Rekap Absen</span>
 				</a>
 				<a href="<?php echo $base_url; ?>/siswa/attendance_requests.php">
-					<i class="bi bi-envelope-exclamation" aria-hidden="true"></i>
+					<i class="ti ti-calendar-event" aria-hidden="true"></i>
 					<span>Ajuan Status</span>
 				</a>
 			</div>
 		</div>
 		<a href="<?php echo $base_url; ?>/siswa/results.php" class="student-bottom-nav-item<?php echo $isResults ? ' active' : ''; ?>">
-			<i class="bi bi-clipboard-check" aria-hidden="true"></i>
+			<i class="ti ti-chart-line" aria-hidden="true"></i>
 			<span>Hasil</span>
 		</a>
 		<a href="<?php echo $base_url; ?>/siswa/game_math.php" class="student-bottom-nav-item<?php echo $isGame ? ' active' : ''; ?>">
-			<i class="bi bi-controller" aria-hidden="true"></i>
+			<i class="ti ti-device-gamepad-2" aria-hidden="true"></i>
 			<span>Game</span>
 		</a>
 		<a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="student-bottom-nav-item<?php echo $isProfile ? ' active' : ''; ?>">
-			<i class="bi bi-person-circle" aria-hidden="true"></i>
+			<i class="ti ti-user-circle" aria-hidden="true"></i>
 			<span>Profil</span>
 		</a>
 	</nav>

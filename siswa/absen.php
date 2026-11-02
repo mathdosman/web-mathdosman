@@ -190,24 +190,50 @@ $body_class = 'siswa-page';
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Kehadiran Siswa</div>
+            <h1 class="page-title"><i class="ti ti-camera me-1 text-primary"></i>Ambil Foto Absen</h1>
+        </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen_location.php">
+                <i class="ti ti-map-pin"></i>
+                <span>Cek Lokasi</span>
+            </a>
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
 <div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-user-scan text-primary"></i> Verifikasi Foto Kehadiran</h3>
+            <div class="card-subtitle">Pastikan kamu berada di dalam radius absen dan izinkan akses kamera perangkat</div>
+        </div>
+    </div>
     <div class="card-body d-flex flex-column align-items-center">
-        <h5 class="mb-3">Ambil Foto Absen</h5>
-        <p class="text-muted small text-center mb-2">
-            Pastikan Anda sudah melewati halaman cek lokasi dan berada di dalam radius absen, lalu izinkan akses kamera pada perangkat.
-        </p>
-        <div class="ratio ratio-4x3 mb-3 bg-dark-subtle rounded overflow-hidden" style="max-width:480px; width:100%;">
+        <div class="ratio ratio-4x3 mb-3 bg-dark-subtle rounded-3 border overflow-hidden" style="max-width:480px; width:100%;">
             <video id="attendanceCamera" playsinline class="w-100 h-100" style="object-fit: cover; transform: scaleX(-1);"></video>
             <canvas id="attendanceSnapshot" class="d-none"></canvas>
         </div>
-        <div class="d-flex gap-2 mb-3">
-            <button type="button" class="btn btn-outline-secondary" id="btnAttendanceStartCamera">Aktifkan Kamera</button>
-            <button type="button" class="btn btn-primary" id="btnAttendanceCapture" disabled>Ambil &amp; Kirim Absen</button>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+            <button type="button" class="btn btn-outline-secondary" id="btnAttendanceStartCamera">
+                <i class="ti ti-video"></i>
+                <span>Aktifkan Kamera</span>
+            </button>
+            <button type="button" class="btn btn-primary" id="btnAttendanceCapture" disabled>
+                <i class="ti ti-camera-check"></i>
+                <span>Ambil &amp; Kirim Absen</span>
+            </button>
         </div>
-        <div class="small text-muted mb-2 text-center">Pastikan wajah terlihat jelas dan satu orang per foto.</div>
-        <div class="small" id="attendanceStatus"></div>
-        <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/absen_location.php" class="btn btn-link btn-sm mt-2">Kembali ke Cek Lokasi</a>
+        <div class="small text-muted mb-2 text-center"><i class="ti ti-info-circle me-1"></i>Pastikan wajah terlihat jelas dan satu orang per foto.</div>
+        <div class="small fw-semibold" id="attendanceStatus"></div>
     </div>
+</div>
 </div>
 
 <script>

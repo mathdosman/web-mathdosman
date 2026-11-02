@@ -42,31 +42,59 @@ include __DIR__ . '/../includes/header.php';
     crossorigin=""
 ></script>
 
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Kehadiran Siswa</div>
+            <h1 class="page-title"><i class="ti ti-map-pin-check me-1 text-primary"></i>Cek Lokasi Absen</h1>
+        </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
 <div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-current-location text-primary"></i> Verifikasi Radius Lokasi</h3>
+            <div class="card-subtitle">Pastikan GPS perangkat aktif sebelum melanjutkan ke kamera absen</div>
+        </div>
+    </div>
     <div class="card-body d-flex flex-column">
-        <h5 class="mb-3 text-center">Cek Lokasi Absen</h5>
         <?php if ($activeAttendanceSetting !== null): ?>
-            <p class="text-muted small text-center mb-2">
-                Titik absen: <strong><?php echo htmlspecialchars($activeAttendanceSetting['name']); ?></strong><br>
-                Radius: <strong><?php echo (int)$activeAttendanceSetting['radius_m']; ?> meter</strong>.
-            </p>
-            <div id="attendanceMap" class="mb-3 rounded overflow-hidden" style="width: 100%; height: 260px;"></div>
-            <div class="small mb-3" id="attendanceDistanceInfo"></div>
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <span class="badge bg-blue-lt"><i class="ti ti-building-community"></i> Titik: <?php echo htmlspecialchars($activeAttendanceSetting['name']); ?></span>
+                <span class="badge bg-azure-lt"><i class="ti ti-radar-2"></i> Radius Maks: <?php echo (int)$activeAttendanceSetting['radius_m']; ?> meter</span>
+            </div>
+            <div id="attendanceMap" class="mb-3 rounded-3 border overflow-hidden" style="width: 100%; height: 280px;"></div>
+            <div class="small fw-semibold text-center mb-3" id="attendanceDistanceInfo"></div>
         <?php else: ?>
-            <p class="text-warning small text-center mb-3">
-                Pengaturan titik absen belum dibuat. Absen akan menggunakan foto saja tanpa pembatasan lokasi.
-            </p>
+            <div class="alert alert-warning small text-center mb-3">
+                <i class="ti ti-alert-triangle me-1"></i>Pengaturan titik absen belum dibuat. Absen akan menggunakan foto saja tanpa pembatasan lokasi.
+            </div>
         <?php endif; ?>
 
         <div class="d-flex flex-column align-items-center">
-            <p class="text-muted small text-center mb-2">
-                Izinkan akses lokasi pada perangkat. Jika Anda berada di dalam radius absen, Anda dapat melanjutkan ke halaman kamera untuk mengambil foto.
+            <p class="text-muted small text-center mb-3">
+                Izinkan akses lokasi pada perangkat. Jika kamu berada di dalam radius absen, tombol <b>Lanjut ke Kamera</b> akan aktif.
             </p>
-            <button type="button" class="btn btn-primary mb-2" id="btnGoToCamera" disabled>Lanjut ke Kamera</button>
-            <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary btn-sm">Kembali ke Dashboard</a>
-            <div class="small mt-3" id="attendanceStatus"></div>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <button type="button" class="btn btn-primary" id="btnGoToCamera" disabled>
+                    <i class="ti ti-camera"></i>
+                    <span>Lanjut ke Kamera</span>
+                </button>
+                <a href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php" class="btn btn-outline-secondary">
+                    <i class="ti ti-arrow-left"></i>
+                    <span>Kembali ke Dashboard</span>
+                </a>
+            </div>
+            <div class="small fw-semibold mt-3 text-center" id="attendanceStatus"></div>
         </div>
     </div>
+</div>
 </div>
 
 <script>

@@ -214,26 +214,31 @@ $extra_head_links = [
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card shadow-sm">
-    <div class="card-body pb-2">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-1">
-            <div>
-                <h5 class="mb-1 d-flex align-items-center gap-2 dashboard-card-title">
-                    <i class="bi bi-person-gear text-primary"></i>
-                    <span>Edit Profil</span>
-                </h5>
-                <div class="text-muted dashboard-card-subtitle">Perbarui data kontak dan password akun.</div>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars((string)$base_url); ?>/siswa/dashboard.php">Kembali</a>
-            </div>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Pengaturan Akun</div>
+            <h1 class="page-title"><i class="ti ti-user-circle me-1 text-primary"></i>Edit Profil Siswa</h1>
         </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars((string)$base_url); ?>/siswa/dashboard.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
 
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-user-edit text-primary"></i> Informasi Profil &amp; Keamanan</h3>
+            <div class="card-subtitle">Perbarui foto profil, nomor WhatsApp/HP, dan password akun</div>
+        </div>
+    </div>
+    <div class="card-body">
         <?php if ($error !== ''): ?>
-            <div class="alert alert-danger mt-3 mb-0"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger mb-3"><i class="ti ti-alert-circle me-1"></i><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-
-        <hr class="my-3">
 
         <form method="post" enctype="multipart/form-data" class="row g-3 profile-edit-form" autocomplete="off">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
@@ -305,11 +310,14 @@ include __DIR__ . '/../includes/header.php';
 
             <div class="col-12">
                 <div class="border rounded-3 p-3">
-                    <div class="fw-semibold mb-2 small text-uppercase">Ganti Password (opsional)</div>
+                    <div class="fw-semibold mb-2 small text-uppercase d-flex align-items-center gap-1">
+                        <i class="ti ti-lock text-primary"></i>
+                        <span>Ganti Password (opsional)</span>
+                    </div>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Password saat ini</label>
-                            <input type="password" name="current_password" class="form-control" placeholder="••••••••">
+                            <input type="password" name="current_password" class="form-control" placeholder="Password saat ini">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Password baru</label>
@@ -324,7 +332,10 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="col-12 d-flex justify-content-end gap-2">
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy"></i>
+                    <span>Simpan Perubahan</span>
+                </button>
             </div>
         </form>
 
@@ -360,6 +371,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>

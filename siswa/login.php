@@ -168,64 +168,75 @@ if (!$captcha_disabled && function_exists('generate_student_login_captcha')) {
 include __DIR__ . '/../includes/header.php';
 ?>
 <div class="login-container">
-    <div class="login-card">
-        <header class="header-section">
-            <div class="logo-wrapper">
+    <div class="login-brand">
+        <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/index.php'); ?>" class="login-brand-link">
+            <span class="login-brand-logo">
                 <img
                     src="<?php echo htmlspecialchars(asset_url('assets/img/icon.svg', (string)$base_url)); ?>"
-                    width="60"
-                    height="60"
+                    width="40"
+                    height="40"
                     alt="Mathdosman"
                 >
-                <h1>MATHDOSMAN</h1>
-            </div>
-            <p>Platform Belajar Matematika Terpadu &amp; Interaktif</p>
+            </span>
+            <span class="login-brand-text">MATHDOSMAN</span>
+        </a>
+    </div>
+
+    <div class="login-card">
+        <header class="header-section">
+            <span class="badge bg-blue-lt mb-2"><i class="ti ti-school"></i> Portal Siswa</span>
+            <h1>Masuk ke Akun Siswa</h1>
+            <p>Gunakan NISN / Username dan password akun belajarmu</p>
         </header>
 
         <?php if ($error): ?>
-            <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                <i class="ti ti-alert-circle fs-5"></i>
+                <span><?php echo htmlspecialchars($error); ?></span>
+            </div>
         <?php endif; ?>
 
         <form method="post" autocomplete="off">
             <div class="input-group">
-                <label for="nisn">NISN</label>
-                <input type="text" id="nisn" name="username" placeholder="Masukkan nomor induk siswa" required>
+                <label for="nisn"><i class="ti ti-id-badge-2 me-1 text-primary"></i>NISN / Username</label>
+                <input type="text" id="nisn" name="username" placeholder="Masukkan NISN atau username siswa" required>
             </div>
             <div class="input-group">
-                <label for="password">Password</label>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <label for="password" class="mb-0"><i class="ti ti-lock me-1 text-primary"></i>Password</label>
+                    <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/kontak.php'); ?>" class="small text-decoration-none fw-semibold">Lupa password?</a>
+                </div>
                 <div class="password-wrapper">
-                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <input type="password" id="password" name="password" placeholder="Masukkan password" required>
                     <button type="button" class="toggle-password" data-target="#password" data-visible="0" aria-label="Tampilkan password" aria-pressed="false">
-                        <svg class="icon icon-eye" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        <svg class="icon icon-eye-off" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M2 12s3.5-7 10-7c2.1 0 4 .7 5.6 1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7c2 0 3.8-.6 5.3-1.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M10.6 10.6a3 3 0 0 0 2.8 2.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M9.9 5.2a3 3 0 0 1 4.9 4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
+                        <i class="ti ti-eye icon icon-eye" aria-hidden="true"></i>
+                        <i class="ti ti-eye-off icon icon-eye-off" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
             <?php if (!$captcha_disabled): ?>
                 <div class="input-group">
-                    <label for="captcha">Verifikasi</label>
-                    <div class="captcha-box">
-                        Berapa hasil: <?php echo htmlspecialchars($captcha_question); ?>
+                    <label for="captcha"><i class="ti ti-shield-check me-1 text-primary"></i>Verifikasi Keamanan</label>
+                    <div class="captcha-row">
+                        <div class="captcha-box">
+                            <?php echo htmlspecialchars($captcha_question); ?>
+                        </div>
+                        <input type="text" id="captcha" name="captcha" placeholder="Hasil?" required inputmode="numeric" pattern="[0-9]*">
                     </div>
-                    <input type="text" id="captcha" name="captcha" placeholder="Jawab" required inputmode="numeric" pattern="[0-9]*">
                 </div>
             <?php endif; ?>
-            <button type="submit" class="btn-login">Login Siswa</button>
-            <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/index.php'); ?>" class="btn btn-outline-secondary w-100 mt-2">Kembali ke Halaman Utama</a>
+            <button type="submit" class="btn-login">
+                <i class="ti ti-login-2"></i>
+                <span>Masuk Sekarang</span>
+            </button>
+            <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/index.php'); ?>" class="btn btn-outline-secondary w-100 mt-2">
+                <i class="ti ti-arrow-left"></i>
+                <span>Kembali ke Beranda</span>
+            </a>
         </form>
 
         <footer>
-            <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/kontak.php'); ?>">Lupa password?</a>
-            <span>Belum punya akun? <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/kontak.php'); ?>">Daftar</a></span>
+            <span>Belum punya akun siswa? <a href="<?php echo htmlspecialchars(rtrim((string)$base_url, '/') . '/kontak.php'); ?>">Hubungi Guru / Admin</a></span>
         </footer>
     </div>
 </div>

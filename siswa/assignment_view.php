@@ -1646,10 +1646,12 @@ include __DIR__ . '/../includes/header.php';
             <div id="mdNavBar" class="md-nav-grid mt-3 pt-3 border-top">
                 <div class="md-nav-left d-flex align-items-center gap-2">
                     <a id="mdBackBtn" class="btn btn-outline-secondary md-nav-btn"
-                        href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Kembali</a>
+                        href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">
+                        <i class="ti ti-arrow-left"></i><span>Kembali</span>
+                    </a>
                     <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdPrevBtn"
                         title="Sebelumnya">
-                        <i class="bi bi-arrow-left"></i><span>Prev</span>
+                        <i class="ti ti-chevron-left"></i><span>Prev</span>
                     </button>
                 </div>
 
@@ -1658,13 +1660,13 @@ include __DIR__ . '/../includes/header.php';
                         <button type="button" id="mdListBtn" class="btn btn-outline-secondary md-nav-btn"
                             data-bs-toggle="modal" data-bs-target="#mdSoalModal" aria-controls="mdSoalModal"
                             title="Daftar Soal">
-                            <i class="bi bi-list-ol"></i><span>Daftar Soal</span>
+                            <i class="ti ti-layout-grid"></i><span>Daftar Soal</span>
                         </button>
                         <?php if ($showCalculator): ?>
                         <button type="button" id="mdCalcBtn" class="btn btn-outline-secondary md-nav-btn"
                             data-bs-toggle="modal" data-bs-target="#mdCalcModal" aria-controls="mdCalcModal"
                             title="Kalkulator">
-                            <i class="bi bi-calculator"></i><span>Kalkulator</span>
+                            <i class="ti ti-calculator"></i><span>Kalkulator</span>
                         </button>
                         <?php endif; ?>
                     </div>
@@ -1673,15 +1675,14 @@ include __DIR__ . '/../includes/header.php';
                 <div class="md-nav-right d-flex align-items-center justify-content-end gap-2">
                     <button type="button" class="btn btn-outline-secondary md-nav-btn" id="mdNextBtn"
                         title="Berikutnya">
-                        <i class="bi bi-arrow-right"></i><span>Next</span>
+                        <span>Next</span><i class="ti ti-chevron-right"></i>
                     </button>
-                    <!-- Bootstrap Icons CDN -->
-                    <link rel="stylesheet"
-                        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
                     <?php $jenisLabel = strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))); ?>
-                    <button type="button" class="btn btn-primary md-nav-btn" id="mdStartBtn">Mulai
-                        <?php echo $jenisLabel === 'ujian' ? 'Ujian' : 'Mengerjakan'; ?></button>
+                    <button type="button" class="btn btn-primary md-nav-btn" id="mdStartBtn">
+                        <i class="ti ti-player-play-filled"></i>
+                        <span>Mulai <?php echo $jenisLabel === 'ujian' ? 'Ujian' : 'Mengerjakan'; ?></span>
+                    </button>
 
                     <button form="answerForm" type="submit" name="action" value="mark_done"
                         class="btn btn-success md-nav-btn" id="mdFinishBtn" data-swal-confirm="1"
@@ -1691,7 +1692,8 @@ include __DIR__ . '/../includes/header.php';
                         <?php if ($jenisLabel === 'ujian'): ?> data-swal-require-check="1"
                         data-swal-check-text="Saya yakin ingin mengakhiri ujian ini."
                         data-swal-check-error="Centang dulu sebelum mengakhiri ujian." <?php endif; ?>>
-                        <?php echo ($jenisLabel === 'ujian') ? 'Selesai' : 'Kumpulkan Tugas'; ?>
+                        <i class="ti ti-circle-check"></i>
+                        <span><?php echo ($jenisLabel === 'ujian') ? 'Selesai' : 'Kumpulkan Tugas'; ?></span>
                     </button>
                 </div>
             </div>

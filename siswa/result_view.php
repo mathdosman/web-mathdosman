@@ -121,25 +121,38 @@ if ($judul === '') {
 }
 
 $page_title = 'Detail Hasil';
+$body_class = 'siswa-page';
+$extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Evaluasi &amp; Pembahasan</div>
+            <h1 class="page-title"><i class="ti ti-file-check me-1 text-primary"></i>Detail Hasil</h1>
+        </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Kembali ke Hasil</span>
+            </a>
+        </div>
+    </div>
+
 <div class="card shadow-sm">
     <div class="card-body">
         <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2">
             <div>
-                <div class="mb-1">
+                <div class="mb-2 d-flex flex-wrap gap-1">
                     <?php $jenisBadge = strtolower(trim((string)($assignment['jenis'] ?? 'tugas'))); ?>
                     <?php if ($jenisBadge === 'ujian'): ?>
-                        <span class="badge text-bg-danger">UJIAN</span>
+                        <span class="badge bg-red-lt"><i class="ti ti-file-certificate"></i> UJIAN</span>
                     <?php else: ?>
-                        <span class="badge text-bg-primary">TUGAS</span>
+                        <span class="badge bg-blue-lt"><i class="ti ti-notebook"></i> TUGAS</span>
                     <?php endif; ?>
-                    <span class="badge text-bg-success ms-1">DONE</span>
+                    <span class="badge bg-green-lt"><i class="ti ti-circle-check"></i> SELESAI</span>
                 </div>
-                <h5 class="mb-1"><?php echo htmlspecialchars($judul); ?></h5>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/results.php">Kembali</a>
+                <h4 class="mb-1 fw-bold"><?php echo htmlspecialchars($judul); ?></h4>
             </div>
         </div>
 
@@ -184,14 +197,16 @@ include __DIR__ . '/../includes/header.php';
 
         <?php if (!$allowReviewDetails): ?>
             <div class="alert alert-secondary mt-3 mb-0">
-                Detail jawaban dan kunci disembunyikan oleh admin untuk menjaga kerahasiaan. Jika diperlukan, hubungi admin.
+                <i class="ti ti-lock me-1"></i>Detail jawaban dan kunci disembunyikan oleh admin untuk menjaga kerahasiaan. Jika diperlukan, hubungi admin.
             </div>
+            </div></div></div>
             <?php include __DIR__ . '/../includes/footer.php'; ?>
             <?php exit; ?>
         <?php endif; ?>
 
         <?php if (!$hasAnswersTable): ?>
-            <div class="alert alert-warning mt-3 mb-0">Detail jawaban belum tersedia di database (tabel jawaban belum ada).</div>
+            <div class="alert alert-warning mt-3 mb-0"><i class="ti ti-alert-triangle me-1"></i>Detail jawaban belum tersedia di database (tabel jawaban belum ada).</div>
+            </div></div></div>
             <?php include __DIR__ . '/../includes/footer.php'; ?>
             <?php exit; ?>
         <?php endif; ?>
@@ -380,5 +395,6 @@ include __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+</div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php';

@@ -407,6 +407,11 @@ try {
             echo '<link href="' . htmlspecialchars(asset_url($cssPath, (string)$base_url)) . '" rel="stylesheet">';
         }
     }
+
+    // Tema Tabler untuk seluruh area siswa (dimuat terakhir agar menimpa style lama).
+    if (!empty($isStudentArea)) {
+        echo '<link href="' . htmlspecialchars(asset_url('assets/css/student-tabler.css', (string)$base_url)) . '" rel="stylesheet">';
+    }
     ?>
 
     <?php
@@ -545,7 +550,7 @@ if ($useAdminSidebar) {
                             class="btn btn-outline-secondary btn-sm student-top-logout-btn"
                             aria-label="Logout"
                             title="Logout">
-                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            <i class="ti ti-logout" aria-hidden="true"></i>
                         </a>
                     <?php endif; ?>
 
@@ -702,11 +707,14 @@ if ($useAdminSidebar) {
                     </div>
                     <div class="modal-footer justify-content-between py-2 px-3">
                         <div class="d-flex align-items-center gap-2 w-100 justify-content-between">
-                            <a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="btn btn-outline-primary btn-sm">Kelola profil</a>
+                            <a href="<?php echo $base_url; ?>/siswa/profile_edit.php" class="btn btn-outline-primary btn-sm">
+                                <i class="ti ti-user-edit"></i>
+                                <span>Kelola Profil</span>
+                            </a>
                             <div class="d-flex align-items-center gap-2">
                                 <a href="<?php echo $base_url; ?>/siswa/logout.php" class="btn btn-outline-danger btn-sm" aria-label="Logout">
-                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                                    <span class="ms-1">Logout</span>
+                                    <i class="ti ti-logout" aria-hidden="true"></i>
+                                    <span>Logout</span>
                                 </a>
                                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                             </div>
@@ -1007,118 +1015,59 @@ if ($useAdminSidebar) {
     <?php endif; ?>
 
     <?php if ($useStudentSidebar): ?>
+        <?php
+        $stuName = trim((string)($_SESSION['student']['nama_siswa'] ?? 'Siswa'));
+        $stuKelasRombel = trim(trim((string)($_SESSION['student']['kelas'] ?? '')) . ' ' . trim((string)($_SESSION['student']['rombel'] ?? '')));
+        $stuAvatarUrl = $studentHasPhoto ? $studentPhotoUrl : asset_url('assets/img/no-photo.png', (string)$base_url);
+        $inStudentPages = (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+        $stuNavItem = function (string $href, string $icon, string $label, bool $active) {
+            echo '<a class="nav-link sidebar-link' . ($active ? ' active' : '') . '" href="' . htmlspecialchars($href) . '"' . ($active ? ' aria-current="page"' : '') . '>'
+                . '<i class="ti ' . htmlspecialchars($icon) . '" aria-hidden="true"></i>'
+                . '<span>' . htmlspecialchars($label) . '</span></a>';
+        };
+        $miniGamePages = ['game_math.php', 'game_math_scores.php'];
+        $miniGameActive = in_array($currentPage, $miniGamePages, true) && $inStudentPages;
+        $miniGameExpanded = $miniGameActive;
+        $requestUri = (string)($_SERVER['REQUEST_URI'] ?? '');
+        $isMulDivMode = (strpos($requestUri, 'mode=muldiv') !== false);
+        ?>
         <aside class="app-sidebar" id="studentSidebar" aria-label="Sidebar Siswa">
             <div class="app-sidebar-inner">
-                <div class="student-sidebar-title text-white-50 mb-3">Menu Siswa</div>
+                <div class="student-sidebar-user">
+                    <span class="avatar avatar-md" style="background-image: url('<?php echo htmlspecialchars($stuAvatarUrl); ?>');" role="img" aria-label="Foto siswa"></span>
+                    <div class="student-sidebar-user-text">
+                        <div class="student-sidebar-user-name"><?php echo htmlspecialchars($stuName !== '' ? $stuName : 'Siswa'); ?></div>
+                        <div class="student-sidebar-user-meta"><?php echo $stuKelasRombel !== '' ? 'Kelas ' . htmlspecialchars($stuKelasRombel) : 'Siswa'; ?></div>
+                    </div>
+                </div>
+
+                <div class="student-sidebar-title">Menu Siswa</div>
                 <nav class="nav flex-column">
-                    <?php $isActive = in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && (strpos($scriptName, '/siswa/') !== false); ?>
-                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/dashboard.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M3 13h8V3H3z" />
-                            <path d="M13 21h8V11h-8z" />
-                            <path d="M13 3h8v6h-8z" />
-                            <path d="M3 17h8v4H3z" />
-                        </svg>
-                        <span>Dashboard</span>
-                    </a>
-
-                    <?php $isActive = ($currentPage === 'attendance_history.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
-                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/attendance_history.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                        <span>Rekap Absen</span>
-                    </a>
-
-                    <?php $isActive = ($currentPage === 'attendance_requests.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
-                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/attendance_requests.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                            <path d="M16 2v4" />
-                            <path d="M8 2v4" />
-                            <path d="M3 10h18" />
-                            <path d="M9 16h6" />
-                            <path d="M9 20h6" />
-                        </svg>
-                        <span>Ajuan Status</span>
-                    </a>
-
-                    <?php $isActive = ($currentPage === 'results.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
-                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/results.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M3 3v18h18" />
-                            <path d="M7 14l3-3 3 2 5-6" />
-                        </svg>
-                        <span>Hasil</span>
-                    </a>
-
-                    
-
-                    <?php $isActive = ($currentPage === 'profile_edit.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false); ?>
-                    <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/profile_edit.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
-                        <span>Edit Profil</span>
-                    </a>
-
                     <?php
-                    $miniGamePages = ['game_math.php', 'game_math_scores.php'];
-                    $miniGameActive = in_array($currentPage, $miniGamePages, true) && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-                    $miniGameExpanded = $miniGameActive;
-                    $requestUri = (string)($_SERVER['REQUEST_URI'] ?? '');
-                    $isMulDivMode = (strpos($requestUri, 'mode=muldiv') !== false);
+                    $stuNavItem($base_url . '/siswa/dashboard.php', 'ti-layout-dashboard', 'Dashboard', in_array($currentPage, ['dashboard.php', 'assignment_view.php'], true) && $inStudentPages);
+                    $stuNavItem($base_url . '/siswa/attendance_history.php', 'ti-history', 'Rekap Absen', ($currentPage === 'attendance_history.php') && $inStudentPages);
+                    $stuNavItem($base_url . '/siswa/attendance_requests.php', 'ti-calendar-event', 'Ajuan Status', ($currentPage === 'attendance_requests.php') && $inStudentPages);
+                    $stuNavItem($base_url . '/siswa/results.php', 'ti-chart-line', 'Hasil', ($currentPage === 'results.php') && $inStudentPages);
+                    $stuNavItem($base_url . '/siswa/profile_edit.php', 'ti-user-circle', 'Edit Profil', ($currentPage === 'profile_edit.php') && $inStudentPages);
                     ?>
-                    <a class="nav-link sidebar-link<?php echo $miniGameExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#studentSidebarMiniGame" role="button" aria-expanded="<?php echo $miniGameExpanded ? 'true' : 'false'; ?>" aria-controls="studentSidebarMiniGame">
-                        <span class="sidebar-section-emphasis">Mini Game</span>
+
+                    <a class="nav-link sidebar-link sidebar-group-toggle<?php echo $miniGameExpanded ? '' : ' collapsed'; ?>" data-bs-toggle="collapse" href="#studentSidebarMiniGame" role="button" aria-expanded="<?php echo $miniGameExpanded ? 'true' : 'false'; ?>" aria-controls="studentSidebarMiniGame">
+                        <i class="ti ti-device-gamepad-2" aria-hidden="true"></i>
+                        <span>Mini Game</span>
+                        <i class="ti ti-chevron-down sidebar-chevron" aria-hidden="true"></i>
                     </a>
 
-                    <div class="collapse<?php echo $miniGameExpanded ? ' show' : ''; ?>" id="studentSidebarMiniGame">
+                    <div class="collapse sidebar-submenu<?php echo $miniGameExpanded ? ' show' : ''; ?>" id="studentSidebarMiniGame">
                         <?php
-                        $isActive = ($currentPage === 'game_math.php') && !$isMulDivMode && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
+                        $stuNavItem($base_url . '/siswa/game_math.php', 'ti-plus-minus', 'Tambah / Kurang', ($currentPage === 'game_math.php') && !$isMulDivMode && $inStudentPages);
+                        $stuNavItem($base_url . '/siswa/game_math.php?mode=muldiv', 'ti-x', 'Kali / Bagi', ($currentPage === 'game_math.php') && $isMulDivMode && $inStudentPages);
+                        $stuNavItem($base_url . '/siswa/game_math_scores.php', 'ti-trophy', 'Highscore', ($currentPage === 'game_math_scores.php') && $inStudentPages);
                         ?>
-                        <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/game_math.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 5v14" />
-                                <path d="M5 12h14" />
-                                <circle cx="12" cy="12" r="9" />
-                            </svg>
-                            <span>Tambah / Kurang</span>
-                        </a>
-
-                        <?php
-                        $isActive = ($currentPage === 'game_math.php') && $isMulDivMode && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-                        ?>
-                        <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/game_math.php?mode=muldiv" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M7 7l10 10" />
-                                <path d="M7 17L17 7" />
-                                <circle cx="12" cy="12" r="9" />
-                            </svg>
-                            <span>Kali / Bagi</span>
-                        </a>
-
-                        <?php
-                        $isActive = ($currentPage === 'game_math_scores.php') && (strpos($scriptName, '/siswa/') !== false) && (strpos($scriptName, '/siswa/admin/') === false);
-                        ?>
-                        <a class="nav-link sidebar-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/siswa/game_math_scores.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M3 3v18h18" />
-                                <path d="M7 14l3-3 3 2 5-6" />
-                            </svg>
-                            <span>Highscore</span>
-                        </a>
                     </div>
 
                     <hr class="my-2">
                     <a class="nav-link sidebar-link" href="<?php echo $base_url; ?>/siswa/logout.php">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <path d="M16 17l5-5-5-5" />
-                            <path d="M21 12H9" />
-                        </svg>
+                        <i class="ti ti-logout" aria-hidden="true"></i>
                         <span>Logout</span>
                     </a>
                 </nav>

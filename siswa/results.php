@@ -61,38 +61,43 @@ $body_class = 'siswa-page';
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card shadow-sm results-main-card">
-    <div class="card-body">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-1">
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Evaluasi &amp; Nilai</div>
+            <h1 class="page-title"><i class="ti ti-chart-line me-1 text-primary"></i>Hasil Belajar</h1>
+        </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm results-main-card">
+        <div class="card-header">
             <div>
-                <h5 class="mb-1 d-flex align-items-center gap-2 dashboard-card-title">
-                    <i class="bi bi-clipboard-check text-success"></i>
-                    <span>Hasil</span>
-                </h5>
-                <div class="text-muted dashboard-card-subtitle">Rekap nilai tugas/ujian yang sudah dikumpulkan.</div>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Dashboard</a>
+                <h3 class="card-title"><i class="ti ti-clipboard-check text-success"></i> Rekap Nilai Tugas &amp; Ujian</h3>
+                <div class="card-subtitle">Daftar tugas dan ujian yang telah kamu kumpulkan</div>
             </div>
         </div>
-
+        <div class="card-body">
         <?php if ($error !== ''): ?>
-            <div class="alert alert-danger mt-3 mb-0"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger mb-0"><i class="ti ti-alert-circle me-1"></i><?php echo htmlspecialchars($error); ?></div>
         <?php else: ?>
-            <hr>
-
             <?php if (!$rows): ?>
-                <div class="alert alert-info mb-2 small" data-no-swal="1">Belum ada tugas/ujian yang sudah dikumpulkan saat ini.</div>
+                <div class="alert alert-info mb-0 small" data-no-swal="1"><i class="ti ti-info-circle me-1"></i>Belum ada tugas atau ujian yang sudah dikumpulkan saat ini.</div>
             <?php else: ?>
                 <ul class="nav nav-pills mb-3 results-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="tabTugas" data-bs-toggle="pill" data-bs-target="#panelTugas" type="button" role="tab" aria-controls="panelTugas" aria-selected="true">
-                            Tugas (<?php echo (int)count($rowsTugas); ?>)
+                            <i class="ti ti-notebook me-1"></i>Tugas (<?php echo (int)count($rowsTugas); ?>)
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="tabUjian" data-bs-toggle="pill" data-bs-target="#panelUjian" type="button" role="tab" aria-controls="panelUjian" aria-selected="false">
-                            Ujian (<?php echo (int)count($rowsUjian); ?>)
+                            <i class="ti ti-file-certificate me-1"></i>Ujian (<?php echo (int)count($rowsUjian); ?>)
                         </button>
                     </li>
                 </ul>
@@ -263,6 +268,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             <?php endif; ?>
         <?php endif; ?>
+        </div>
     </div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php';

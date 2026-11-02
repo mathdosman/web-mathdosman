@@ -161,81 +161,109 @@ if ($mode === 'muldiv') {
 $body_class = 'siswa-page';
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
-echo '<div class="mini-game-mode-tabs mb-3 d-flex justify-content-center gap-2">';
-echo '<a href="game_math.php" class="btn btn-outline-primary' . ($mode === 'addsub' ? ' active' : '') . '">+ / -</a>';
-echo '<a href="game_math.php?mode=muldiv" class="btn btn-outline-primary' . ($mode === 'muldiv' ? ' active' : '') . '">× / ÷</a>';
-echo '<a href="game_math_scores.php" class="btn btn-outline-secondary">Skor</a>';
-echo '</div>';
 ?>
-<div class="card shadow-sm">
-    <div class="card-body">
-           <h5 class="mb-1 d-flex align-items-center gap-2 dashboard-card-title">
-            <?php if ($mode === 'muldiv'): ?>
-                Game Hitung Cepat (× / ÷)
-            <?php else: ?>
-                Game Hitung Cepat (+ / -)
-            <?php endif; ?>
-           </h5>
-           <p class="text-muted dashboard-card-subtitle mb-3">
-            <?php if ($mode === 'muldiv'): ?>
-                Jawab soal perkalian dan pembagian sebanyak mungkin dalam waktu terbatas.
-            <?php else: ?>
-                Jawab soal penjumlahan dan pengurangan sebanyak mungkin dalam waktu terbatas.
-            <?php endif; ?>
-            Waktu awal 45 detik. Setiap jawaban benar akan menambah waktu dan skor.
-            Semakin banyak soal yang berhasil dijawab, bilangan akan semakin besar.
-        </p>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Zona Latihan Interaktif</div>
+            <h1 class="page-title">
+                <i class="ti ti-device-gamepad-2 me-1 text-primary"></i>
+                <?php echo $mode === 'muldiv' ? 'Game Hitung Cepat (× / ÷)' : 'Game Hitung Cepat (+ / -)'; ?>
+            </h1>
+        </div>
+        <div class="page-header-actions mini-game-mode-tabs">
+            <a href="game_math.php" class="btn btn-sm <?php echo $mode === 'addsub' ? 'btn-primary' : 'btn-outline-secondary'; ?>">
+                <i class="ti ti-plus-minus"></i>
+                <span>+ / -</span>
+            </a>
+            <a href="game_math.php?mode=muldiv" class="btn btn-sm <?php echo $mode === 'muldiv' ? 'btn-primary' : 'btn-outline-secondary'; ?>">
+                <i class="ti ti-x"></i>
+                <span>× / ÷</span>
+            </a>
+            <a href="game_math_scores.php" class="btn btn-sm btn-outline-secondary">
+                <i class="ti ti-trophy text-warning"></i>
+                <span>Highscore</span>
+            </a>
+        </div>
+    </div>
 
-        <div id="gm-hud" class="row g-3 align-items-center mb-3">
-            <div class="col-6 col-md-3">
-                <div class="fw-semibold text-muted small">Sisa Waktu</div>
-                <div id="gm-time" class="fs-4 fw-bold text-danger">45</div>
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">
+                <i class="ti ti-bolt text-warning"></i>
+                <?php echo $mode === 'muldiv' ? 'Mode Perkalian & Pembagian (× / ÷)' : 'Mode Penjumlahan & Pengurangan (+ / -)'; ?>
+            </h3>
+            <div class="card-subtitle">
+                Waktu awal 45 detik. Setiap jawaban benar menambah +3 detik &amp; skor berlipat sesuai level!
             </div>
-            <div class="col-6 col-md-3">
-                <div class="fw-semibold text-muted small">Skor</div>
-                <div id="gm-score" class="fs-4 fw-bold">0</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="gm-hud" class="row g-2 g-md-3 align-items-stretch mb-3">
+            <div class="col-4 col-md-3">
+                <div class="stat-card h-100">
+                    <div class="stat-card-label">Sisa Waktu</div>
+                    <div id="gm-time" class="stat-card-value text-danger">45</div>
+                </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="fw-semibold text-muted small">Level</div>
-                <div id="gm-level" class="fs-5 fw-semibold">1</div>
+            <div class="col-4 col-md-3">
+                <div class="stat-card h-100">
+                    <div class="stat-card-label">Skor</div>
+                    <div id="gm-score" class="stat-card-value text-primary">0</div>
+                </div>
             </div>
-            <div class="col-6 col-md-3">
-                <button id="gm-start" class="btn btn-primary w-100">Mulai Game</button>
+            <div class="col-4 col-md-3">
+                <div class="stat-card h-100">
+                    <div class="stat-card-label">Level</div>
+                    <div id="gm-level" class="stat-card-value text-success">1</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 d-flex align-items-center">
+                <button id="gm-start" class="btn btn-primary w-100 py-2">
+                    <i class="ti ti-player-play-filled"></i>
+                    <span>Mulai Game</span>
+                </button>
             </div>
         </div>
 
         <div id="gm-status" class="alert alert-info py-2 small mb-3" role="alert" style="display: none;" data-no-swal="1"></div>
 
-        <div class="border rounded-3 p-3 mb-3 bg-light" id="gm-question-box" style="display: none;">
-            <div class="fw-semibold mb-2">Soal Saat Ini</div>
+        <div class="border rounded-3 p-3 p-md-4 mb-3 bg-body-tertiary" id="gm-question-box" style="display: none;">
+            <div class="text-uppercase text-muted fw-bold small mb-2">Soal Saat Ini</div>
             <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
-                <div id="gm-question" class="fs-3 fw-bold me-3">0 + 0 = ?</div>
+                <div id="gm-question" class="display-6 fw-bold text-primary me-3">0 + 0 = ?</div>
             </div>
             <form id="gm-form" class="d-flex flex-wrap gap-2 align-items-center" autocomplete="off">
-                <input type="number" id="gm-answer" class="form-control" style="max-width: 150px;" placeholder="Jawaban" required>
-                <button type="submit" class="btn btn-success">Jawab</button>
-                <span id="gm-feedback" class="ms-2 small"></span>
+                <input type="number" id="gm-answer" class="form-control" style="max-width: 160px;" placeholder="Jawaban" required>
+                <button type="submit" class="btn btn-success">
+                    <i class="ti ti-check"></i>
+                    <span>Jawab</span>
+                </button>
+                <span id="gm-feedback" class="ms-2 small fw-semibold"></span>
             </form>
         </div>
 
         <div class="small text-muted">
-            Catatan: Skor terbaik akan tersimpan dan dapat dilihat oleh admin di halaman laporan.
+            <i class="ti ti-info-circle me-1"></i>Skor terbaik akan tersimpan secara otomatis dan masuk ke papan peringkat Highscore.
         </div>
     </div>
 </div>
 
 <div class="card shadow-sm mt-3">
-    <div class="card-body">
-        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
-            <i class="bi bi-bar-chart-line text-primary"></i>
-            <span>Rekap Hasil Mini Game Kamu</span>
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-chart-bar text-primary"></i> Rekap Hasil Mini Game Kamu</h3>
+            <div class="card-subtitle">10 permainan terakhir yang kamu selesaikan</div>
         </div>
+    </div>
+    <div class="card-body">
         <?php if (empty($historyRows)): ?>
             <div class="text-muted small mb-0">Belum ada data permainan yang tersimpan. Mainkan salah satu mode untuk menyimpan skor pertama.</div>
         <?php else: ?>
             <div class="table-responsive small mb-0">
                 <table class="table table-sm table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th style="width: 1%;">No</th>
                             <th>Waktu</th>
@@ -259,16 +287,16 @@ echo '</div>';
                                     <?php
                                         $m = (string)($row['mode'] ?? '');
                                         if ($m === 'muldiv') {
-                                            echo '<span class="badge bg-success rounded-pill d-inline-flex align-items-center gap-1" title="Perkalian / Pembagian"><i class="bi bi-calculator"></i><span>×/÷</span></span>';
+                                            echo '<span class="badge bg-green-lt" title="Perkalian / Pembagian"><i class="ti ti-x"></i><span>× / ÷</span></span>';
                                         } elseif ($m === 'addsub' || $m === '') {
-                                            echo '<span class="badge bg-info text-dark rounded-pill d-inline-flex align-items-center gap-1" title="Penjumlahan / Pengurangan"><i class="bi bi-calculator"></i><span>+/−</span></span>';
+                                            echo '<span class="badge bg-azure-lt" title="Penjumlahan / Pengurangan"><i class="ti ti-plus-minus"></i><span>+ / −</span></span>';
                                         } else {
-                                            echo '<span class="badge bg-secondary rounded-pill">' . htmlspecialchars($m) . '</span>';
+                                            echo '<span class="badge bg-secondary-lt">' . htmlspecialchars($m) . '</span>';
                                         }
                                     ?>
                                 </td>
-                                <td><strong><?php echo (int)($row['score'] ?? 0); ?></strong></td>
-                                <td><?php echo (int)($row['max_level'] ?? 0); ?></td>
+                                <td><strong class="text-primary"><?php echo (int)($row['score'] ?? 0); ?></strong></td>
+                                <td><span class="badge bg-blue-lt">Lv. <?php echo (int)($row['max_level'] ?? 0); ?></span></td>
                                 <td><?php echo (int)($row['questions_answered'] ?? 0); ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -277,6 +305,7 @@ echo '</div>';
             </div>
         <?php endif; ?>
     </div>
+</div>
 </div>
 
 <script>

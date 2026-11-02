@@ -157,27 +157,40 @@ $body_class = 'siswa-page';
 $extra_stylesheets = array_merge($extra_stylesheets ?? [], ['assets/css/student-app.css']);
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="card shadow-sm">
-    <div class="card-body">
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-2">
-            <div>
-                <h5 class="mb-1 d-flex align-items-center gap-2">
-                    <i class="bi bi-clock-history text-primary"></i>
-                    <span>Rekap Absen</span>
-                </h5>
-                <div class="text-muted small">Riwayat absen yang sudah Anda lakukan.</div>
-                <div class="text-muted small">Minggu: <?php echo htmlspecialchars($weekLabelStart); ?> - <?php echo htmlspecialchars($weekLabelEnd); ?> (Senin&ndash;Sabtu)</div>
-            </div>
-            <div class="d-flex flex-wrap gap-2 justify-content-end">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">Dashboard</a>
-                <?php if ($page > 1): ?>
-                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php?page=<?php echo (int)($page - 1); ?>">Minggu lebih baru</a>
-                <?php endif; ?>
-                <?php if ($hasOlderWeek): ?>
-                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php?page=<?php echo (int)($page + 1); ?>">Minggu lebih lama</a>
-                <?php endif; ?>
-            </div>
+<div class="student-page">
+    <div class="page-header-tabler">
+        <div>
+            <div class="page-pretitle">Kehadiran Siswa</div>
+            <h1 class="page-title"><i class="ti ti-history me-1 text-primary"></i>Rekap Absen</h1>
+        </div>
+        <div class="page-header-actions">
+            <a class="btn btn-outline-secondary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/dashboard.php">
+                <i class="ti ti-arrow-left"></i>
+                <span>Dashboard</span>
+            </a>
+            <?php if ($page > 1): ?>
+                <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php?page=<?php echo (int)($page - 1); ?>">
+                    <i class="ti ti-chevron-left"></i>
+                    <span>Minggu Lebih Baru</span>
+                </a>
+            <?php endif; ?>
+            <?php if ($hasOlderWeek): ?>
+                <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars($base_url); ?>/siswa/attendance_history.php?page=<?php echo (int)($page + 1); ?>">
+                    <span>Minggu Lebih Lama</span>
+                    <i class="ti ti-chevron-right"></i>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
 
+<div class="card shadow-sm">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i class="ti ti-calendar-time text-primary"></i> Riwayat Absen &amp; Ajuan Status</h3>
+            <div class="card-subtitle">Periode minggu: <?php echo htmlspecialchars($weekLabelStart); ?> &ndash; <?php echo htmlspecialchars($weekLabelEnd); ?> (Senin&ndash;Sabtu)</div>
+        </div>
+    </div>
+    <div class="card-body">
         <?php if ($error !== ''): ?>
             <div class="alert alert-danger mb-0" data-no-swal="1"><?php echo htmlspecialchars($error); ?></div>
         <?php elseif (!$combined): ?>
@@ -331,6 +344,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
         <?php endif; ?>
     </div>
+</div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
