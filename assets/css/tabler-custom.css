@@ -1,100 +1,121 @@
 /* ==============================================================================
-   TABLER-INSPIRED DASHBOARD & UI ENHANCEMENTS FOR MATHDOSMAN
+   TABLER-INSPIRED FULL THEME ENGINE FOR MATHDOSMAN
    Based on Tabler UI (https://github.com/tabler/tabler)
+   Applied globally across Admin, Public Portal, and Student Area
    ============================================================================== */
 
-/* 1. Global Tabler Typography & Base Tokens */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* --- 1. Global Tabler Color Tokens & Foundations --- */
 :root {
-    --tblr-font-sans-serif: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+    --tblr-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --tblr-font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    
+    --bs-body-font-family: var(--tblr-font-sans);
+    --bs-font-monospace: var(--tblr-font-mono);
+
+    /* Tabler Primary Palette (Deep Navy / Royal Azure) */
     --tblr-primary: #0054a6;
     --tblr-primary-rgb: 0, 84, 166;
     --tblr-primary-fg: #ffffff;
-    --tblr-border-color: #e6e7e9;
+    --tblr-primary-subtle: #f0f6ff;
+
+    --bs-primary: #0054a6;
+    --bs-primary-rgb: 0, 84, 166;
+    --bs-primary-hover: #003e7e;
+
+    /* Semantic Colors */
+    --tblr-success: #2fb344;
+    --tblr-warning: #f76707;
+    --tblr-danger: #d63939;
+    --tblr-info: #4299e1;
+
+    /* Canvas & Surfaces */
+    --bs-body-bg: #f8fafc;
+    --bs-body-color: #1e293b;
+    --bs-secondary-color: #64748b;
+    --tblr-border-color: #e2e8f0;
+    --bs-border-color: #e2e8f0;
+    --bs-tertiary-bg: #f1f5f9;
+
+    /* Radii & Shadows */
     --tblr-border-radius: 8px;
-    --tblr-card-border-radius: 10px;
-    --tblr-box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05), 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
-    --tblr-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-    --tblr-card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    --tblr-card-border-radius: 12px;
+    --tblr-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+    --tblr-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+    --tblr-shadow-hover: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
 }
 
+/* Dark Mode Tokens */
 html[data-bs-theme="dark"] {
-    --tblr-border-color: #2c323f;
-    --tblr-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    --tblr-card-hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    --bs-body-bg: #0b0f19;
+    --bs-body-color: #f1f5f9;
+    --bs-secondary-color: #94a3b8;
+    --tblr-border-color: #1e293b;
+    --bs-border-color: #1e293b;
+    --bs-tertiary-bg: #111827;
+    --tblr-primary-subtle: #0f2342;
+
+    --tblr-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --tblr-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --tblr-shadow-hover: 0 10px 20px -3px rgba(0, 0, 0, 0.6);
 }
 
-/* 2. Tabler Card Component */
-.card, .admin-tile {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    word-wrap: break-word;
+/* --- 2. Typography & Headers --- */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--bs-body-color);
+}
+
+/* --- 3. Tabler Glassmorphism Navbar --- */
+.app-navbar {
+    background: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid var(--tblr-border-color) !important;
+    box-shadow: var(--tblr-shadow-sm);
+}
+
+html[data-bs-theme="dark"] .app-navbar {
+    background: rgba(11, 15, 25, 0.90) !important;
+}
+
+.navbar-brand {
+    font-weight: 800 !important;
+    letter-spacing: -0.03em;
+    font-size: 1.25rem;
+}
+
+/* --- 4. Cards & Content Tiles --- */
+.card, .content-card, .admin-tile, .package-card, .md-package-card {
     background-color: var(--bs-card-bg, #ffffff);
-    background-clip: border-box;
     border: 1px solid var(--tblr-border-color) !important;
     border-radius: var(--tblr-card-border-radius) !important;
-    box-shadow: var(--tblr-card-shadow) !important;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--tblr-shadow) !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease !important;
 }
 
-.card:hover, .admin-tile:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--tblr-card-hover-shadow) !important;
-    border-color: rgba(var(--bs-primary-rgb), 0.35) !important;
+.card:hover, .admin-tile:hover, .package-card:hover, .md-package-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--tblr-shadow-hover) !important;
+    border-color: rgba(var(--tblr-primary-rgb), 0.35) !important;
 }
 
 .card-header {
-    background-color: transparent !important;
+    background: transparent !important;
     border-bottom: 1px solid var(--tblr-border-color) !important;
     padding: 1rem 1.25rem !important;
     font-weight: 600;
 }
 
 .card-footer {
-    background-color: transparent !important;
+    background: transparent !important;
     border-top: 1px solid var(--tblr-border-color) !important;
     padding: 0.85rem 1.25rem !important;
 }
 
-.card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--bs-body-color);
-    margin-bottom: 0.5rem;
-}
-
-/* 3. Tabler Admin Metric Tiles (Dashboard Widgets) */
-.admin-tile {
-    padding: 0;
-    overflow: hidden;
-}
-
-.admin-tile-body {
-    padding: 1.25rem 1.5rem !important;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.admin-tile-title {
-    font-size: 1.1rem !important;
-    font-weight: 700 !important;
-    color: var(--bs-body-color) !important;
-    margin-bottom: 0.4rem !important;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.admin-tile-text {
-    font-size: 0.9rem !important;
-    color: var(--bs-secondary-color) !important;
-    line-height: 1.5;
-    margin-bottom: 1.25rem !important;
-}
-
-/* 4. Tabler Tables (Clean, Compact, Striped) */
+/* --- 5. Tabler Tables --- */
 .table {
     --bs-table-border-color: var(--tblr-border-color);
     vertical-align: middle;
@@ -116,28 +137,49 @@ html[data-bs-theme="dark"] {
     border-bottom: 1px solid var(--tblr-border-color) !important;
 }
 
-/* 5. Tabler Badges & Status Indicators */
-.badge {
-    font-size: 0.75rem;
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--tblr-primary-rgb), 0.03) !important;
+}
+
+/* --- 6. Buttons & Inputs --- */
+.btn {
     font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 0.35em 0.65em;
-    border-radius: 4px;
+    letter-spacing: -0.01em;
+    border-radius: var(--tblr-border-radius) !important;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.16s ease-in-out;
 }
 
-.status-dot {
-    display: inline-block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background-color: var(--bs-primary);
-    margin-right: 0.4rem;
+.btn-primary {
+    background: #0054a6;
+    border-color: #0054a6;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
-.status-dot-success { background-color: #2fb344; }
-.status-dot-warning { background-color: #f76707; }
-.status-dot-danger  { background-color: #d63939; }
 
-/* 6. Tabler Sidebar Style */
+.btn-primary:hover {
+    background: #003e7e;
+    border-color: #003e7e;
+    transform: translateY(-1px);
+}
+
+.form-control, .form-select {
+    border-radius: var(--tblr-border-radius);
+    border-color: var(--tblr-border-color);
+    padding: 0.55rem 0.85rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--tblr-primary);
+    box-shadow: 0 0 0 3px rgba(var(--tblr-primary-rgb), 0.15);
+}
+
+/* --- 7. Sidebar Styling --- */
 .app-sidebar, #adminSidebar {
     border-right: 1px solid var(--tblr-border-color) !important;
 }
@@ -151,35 +193,31 @@ html[data-bs-theme="dark"] {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease;
+}
+
+.sidebar-link i, .sidebar-link svg {
+    font-size: 1.15rem;
+    flex-shrink: 0;
 }
 
 .sidebar-link:hover {
-    color: var(--bs-primary) !important;
-    background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+    color: var(--tblr-primary) !important;
+    background-color: rgba(var(--tblr-primary-rgb), 0.08) !important;
 }
 
 .sidebar-link.active {
     color: #ffffff !important;
-    background-color: var(--bs-primary) !important;
+    background-color: var(--tblr-primary) !important;
     font-weight: 600;
-    box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.25);
+    box-shadow: 0 4px 10px rgba(var(--tblr-primary-rgb), 0.25);
 }
 
-/* 7. Tabler Buttons */
-.btn {
-    font-size: 0.875rem;
+/* --- 8. Badges & Tags --- */
+.badge {
+    font-size: 0.75rem;
     font-weight: 600;
-    border-radius: var(--tblr-border-radius) !important;
-    padding: 0.5rem 1rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    transition: all 0.15s ease-in-out;
-}
-
-.btn-sm {
-    padding: 0.25rem 0.65rem;
-    font-size: 0.785rem;
+    letter-spacing: 0.02em;
+    padding: 0.35em 0.65em;
+    border-radius: 4px;
 }

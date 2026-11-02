@@ -457,9 +457,11 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <div class="admin-page-actions">
             <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel">
-                Filter
+                <i class="ti ti-filter me-1"></i> Filter
             </button>
-            <a class="btn btn-primary btn-sm" href="package_add.php">Tambah Paket Soal</a>
+            <a class="btn btn-primary btn-sm" href="package_add.php">
+                <i class="ti ti-plus me-1"></i> Tambah Paket Soal
+            </a>
         </div>
     </div>
 
@@ -602,7 +604,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <div class="table-responsive">
-            <table class="table table-sm table-striped align-middle mb-0 table-fit small packages-table">
+            <table class="table table-vcenter table-hover table-striped align-middle mb-0 small packages-table">
                 <thead>
                     <tr>
                         <th class="text-center packages-col-no">No</th>
