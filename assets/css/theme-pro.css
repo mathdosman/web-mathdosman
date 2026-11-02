@@ -1,0 +1,117 @@
+/* ==============================================================================
+   THEME PROFESIONAL: MODERN ACADEMIC TECH (MATHDOSMAN)
+   Menghadirkan tampilan bersih, elegan, dan berkelas dunia untuk edukasi matematika
+   ============================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* Tipografi Utama */
+    --bs-body-font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --bs-font-monospace: 'JetBrains Mono', monospace;
+
+    /* Warna Identitas Profesional (Modern Indigo / Academic Blue) */
+    --bs-primary: #2563eb;
+    --bs-primary-rgb: 37, 99, 235;
+    --bs-primary-hover: #1d4ed8;
+
+    /* Latar Belakang Lembut (Mata Nyaman Belajar Lama) */
+    --bs-body-bg: #f8fafc;
+    --bs-body-color: #0f172a;
+    --bs-secondary-color: #64748b;
+    --bs-border-color: #e2e8f0;
+
+    /* Efek Elevasi & Bayangan Lembut */
+    --md-surface-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    --md-card-hover-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
+    --md-radius-sm: 8px;
+    --md-radius-md: 12px;
+    --md-radius-lg: 16px;
+}
+
+/* Penyesuaian Dark Mode (Midnight Slate) */
+html[data-bs-theme="dark"] {
+    --bs-body-bg: #0b0f19;
+    --bs-body-color: #f1f5f9;
+    --bs-secondary-color: #94a3b8;
+    --bs-border-color: #1e293b;
+    --bs-tertiary-bg: #111827;
+
+    --md-surface-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+    --md-card-hover-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.15);
+}
+
+/* 1. Header & Navbar Glassmorphism */
+.app-navbar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid var(--bs-border-color) !important;
+    transition: all 0.25s ease;
+}
+
+html[data-bs-theme="dark"] .app-navbar {
+    background: rgba(11, 15, 25, 0.85) !important;
+}
+
+.navbar-brand {
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+    font-size: 1.25rem;
+}
+
+/* 2. Kartu Konten & Paket (Modern Card Hover) */
+.card, .content-card, .md-package-card, .brand-banner {
+    border-radius: var(--md-radius-lg) !important;
+    border: 1px solid var(--bs-border-color) !important;
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.md-package-card:hover, .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--md-card-hover-shadow) !important;
+}
+
+/* 3. Hero Banner Beranda */
+.brand-banner {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-banner h1, .brand-banner h2, .brand-banner .h1, .brand-banner .h2 {
+    color: #ffffff !important;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* 4. Tombol Modern (Pills & Smooth Transition) */
+.btn {
+    border-radius: var(--md-radius-md);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    padding: 0.55rem 1.15rem;
+    transition: all 0.18s ease-in-out;
+}
+
+.btn-primary {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    border: 1px solid #1d4ed8;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    transform: translateY(-1px);
+}
+
+/* 5. Rumus & Notasi Matematika KaTeX / MathJax */
+.katex, .MathJax {
+    font-size: 1.05em;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+

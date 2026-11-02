@@ -1795,6 +1795,24 @@ include __DIR__ . '/../includes/header.php';
                 var questions = Array.prototype.slice.call(document.querySelectorAll('.md-question'));
                 if (!questions.length) return;
 
+                // Proteksi Anti-Cheat: Mencegah Klik Kanan, Salin Teks, dan Drag pada Soal Ujian
+                document.addEventListener('contextmenu', function(e) {
+                    if (e.target.closest('.md-question') || e.target.closest('#mdSoalWrap')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+                document.addEventListener('copy', function(e) {
+                    if (window.getSelection().toString()) {
+                        e.preventDefault();
+                    }
+                });
+                document.addEventListener('selectstart', function(e) {
+                    if (e.target.closest('.md-question')) {
+                        e.preventDefault();
+                    }
+                });
+
                 // Ensure modal sits directly under <body> so it isn't affected by any parent stacking context.
                 var soalModalEl = document.getElementById('mdSoalModal');
                 if (soalModalEl && soalModalEl.parentElement !== document.body) {
