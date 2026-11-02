@@ -584,6 +584,88 @@ function hsl_to_rgb(int $h, int $s, int $l): array
     return [$r, $g, $b];
 }
 
+function get_sidebar_category_meta(string $materi): array
+{
+    $clean = trim($materi);
+    $normalized = strtolower(str_replace(['_', '-'], ' ', $clean));
+    $display = str_replace('_', ' ', $clean);
+
+    // Default icon & theme
+    $icon = 'ti ti-math-symbols';
+    $theme = 'cat-theme-blue';
+
+    if (str_contains($normalized, 'aljabar')) {
+        $icon = 'ti ti-variable';
+        $theme = 'cat-theme-blue';
+    } elseif (str_contains($normalized, 'barisan') || str_contains($normalized, 'deret') || str_contains($normalized, 'aritmetika')) {
+        $icon = 'ti ti-sort-ascending-numbers';
+        $theme = 'cat-theme-emerald';
+    } elseif (str_contains($normalized, 'transformasi')) {
+        $icon = 'ti ti-rotate-clockwise-2';
+        $theme = 'cat-theme-cyan';
+    } elseif (str_contains($normalized, 'geometri') || str_contains($normalized, 'dimensi tiga') || str_contains($normalized, 'bangun ruang')) {
+        $icon = 'ti ti-geometry';
+        $theme = 'cat-theme-purple';
+    } elseif (str_contains($normalized, 'turunan')) {
+        $icon = 'ti ti-trending-up';
+        $theme = 'cat-theme-rose';
+    } elseif (str_contains($normalized, 'integral')) {
+        $icon = 'ti ti-math-integral-x';
+        $theme = 'cat-theme-amber';
+    } elseif (str_contains($normalized, 'kalkulus') || str_contains($normalized, 'limit')) {
+        $icon = 'ti ti-chart-line';
+        $theme = 'cat-theme-rose';
+    } elseif (str_contains($normalized, 'kelas 10') || str_contains($normalized, 'kelas_10') || str_contains($normalized, 'kelas x')) {
+        $icon = 'ti ti-school';
+        $theme = 'cat-theme-blue';
+    } elseif (str_contains($normalized, 'kelas 11') || str_contains($normalized, 'kelas_11') || str_contains($normalized, 'kelas xi')) {
+        $icon = 'ti ti-books';
+        $theme = 'cat-theme-indigo';
+    } elseif (str_contains($normalized, 'kelas 12') || str_contains($normalized, 'kelas_12') || str_contains($normalized, 'kelas xii')) {
+        $icon = 'ti ti-certificate';
+        $theme = 'cat-theme-purple';
+    } elseif (str_contains($normalized, 'matriks')) {
+        $icon = 'ti ti-grid-dots';
+        $theme = 'cat-theme-teal';
+    } elseif (str_contains($normalized, 'kuadrat') || str_contains($normalized, 'fungsi kuadrat')) {
+        $icon = 'ti ti-superscript';
+        $theme = 'cat-theme-amber';
+    } elseif (str_contains($normalized, 'polinomial') || str_contains($normalized, 'suku banyak')) {
+        $icon = 'ti ti-math-function';
+        $theme = 'cat-theme-purple';
+    } elseif (str_contains($normalized, 'statistika') || str_contains($normalized, 'peluang') || str_contains($normalized, 'bivariat') || str_contains($normalized, 'diagram')) {
+        $icon = 'ti ti-chart-bar';
+        $theme = 'cat-theme-emerald';
+    } elseif (str_contains($normalized, 'trigonometri')) {
+        $icon = 'ti ti-angle';
+        $theme = 'cat-theme-cyan';
+    } elseif (str_contains($normalized, 'logika')) {
+        $icon = 'ti ti-brain';
+        $theme = 'cat-theme-slate';
+    } elseif (str_contains($normalized, 'vektor')) {
+        $icon = 'ti ti-arrow-up-right';
+        $theme = 'cat-theme-blue';
+    } elseif (str_contains($normalized, 'eksponen') || str_contains($normalized, 'logaritma')) {
+        $icon = 'ti ti-square-root-2';
+        $theme = 'cat-theme-rose';
+    } elseif (str_contains($normalized, 'lingkaran')) {
+        $icon = 'ti ti-circle';
+        $theme = 'cat-theme-teal';
+    } elseif (str_contains($normalized, 'program linear')) {
+        $icon = 'ti ti-chart-area-line';
+        $theme = 'cat-theme-indigo';
+    } elseif (str_contains($normalized, 'us') || str_contains($normalized, 'ujian') || str_contains($normalized, 'utbk') || str_contains($normalized, 'snbt') || str_contains($normalized, 'spmb')) {
+        $icon = 'ti ti-award';
+        $theme = 'cat-theme-amber';
+    }
+
+    return [
+        'label' => $display,
+        'icon' => $icon,
+        'theme' => $theme,
+    ];
+}
+
 function render_home_sidebar_widgets(
     array $materiCategories,
     array $submateriCategories,
@@ -670,11 +752,14 @@ function render_home_sidebar_widgets(
             <?php if ($filterSubmateri !== ''): ?>
             <input type="hidden" name="submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
             <?php endif; ?>
-            <div class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="Cari paket / materi..."
-                    value="<?php echo htmlspecialchars($q); ?>">
-                <button class="btn btn-primary px-3" type="submit" aria-label="Cari">
+            <div class="input-group sidebar-search-group">
+                <span class="input-group-text bg-body-tertiary border-end-0 text-muted ps-3">
                     <i class="ti ti-search"></i>
+                </span>
+                <input type="text" name="q" class="form-control border-start-0 ps-2" placeholder="Cari materi atau paket..."
+                    value="<?php echo htmlspecialchars($q); ?>">
+                <button class="btn btn-primary px-3 fw-semibold" type="submit" aria-label="Cari">
+                    Cari
                 </button>
             </div>
         </form>
@@ -683,71 +768,107 @@ function render_home_sidebar_widgets(
 
 <div class="card mb-3 sidebar-widget">
     <div class="card-header">
-        <div class="d-flex align-items-center gap-2 fw-bold text-primary">
-            <i class="ti ti-category fs-5"></i> Kategori Materi
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <div class="d-flex align-items-center gap-2 fw-bold text-primary">
+                <i class="ti ti-category fs-5"></i> Kategori Materi
+            </div>
+            <?php if ($materiCategories): ?>
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size: 0.72rem;">
+                <?php echo count($materiCategories); ?> Topik
+            </span>
+            <?php endif; ?>
         </div>
     </div>
     <div class="card-body">
-        <div class="mb-3">
-            <div class="fw-bold small text-body-secondary text-uppercase mb-2" style="letter-spacing: 0.05em; font-size: 0.75rem;">Materi Pokok</div>
+        <div class="mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-bold small text-body-secondary text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Materi Pokok</div>
+                <?php if ($filterMateri !== ''): ?>
+                <a href="<?php echo htmlspecialchars('index.php?' . http_build_query(['q' => ($q !== '' ? $q : null)])); ?>" class="small text-decoration-none text-danger fw-semibold" style="font-size: 0.75rem;">
+                    <i class="ti ti-x"></i> Reset
+                </a>
+                <?php endif; ?>
+            </div>
+
             <?php if (!$materiCategories): ?>
             <div class="text-muted small">Belum ada materi.</div>
             <?php else: ?>
-            <div class="list-group list-group-flush">
+            <div class="sidebar-cat-list">
                 <?php foreach ($materiCategories as $m): ?>
                 <?php
-                            $label = trim((string)($m['materi'] ?? ''));
-                            if ($label === '') {
-                                continue;
-                            }
-                            $cnt = (int)($m['package_count'] ?? 0);
-                            $href = 'index.php?' . http_build_query([
-                                'q' => ($q !== '' ? $q : null),
-                                'materi' => $label,
-                                'submateri' => null,
-                                'page' => 1,
-                            ]);
-                            $active = ($filterMateri === $label);
-                            ?>
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between rounded-2 mb-1 border-0 <?php echo $active ? 'active fw-bold' : ''; ?>"
+                    $rawLabel = trim((string)($m['materi'] ?? ''));
+                    if ($rawLabel === '') {
+                        continue;
+                    }
+                    $meta = get_sidebar_category_meta($rawLabel);
+                    $cnt = (int)($m['package_count'] ?? 0);
+                    $href = 'index.php?' . http_build_query([
+                        'q' => ($q !== '' ? $q : null),
+                        'materi' => $rawLabel,
+                        'submateri' => null,
+                        'page' => 1,
+                    ]);
+                    $active = ($filterMateri === $rawLabel);
+                ?>
+                <a class="sidebar-cat-item <?php echo $active ? 'active' : ''; ?>"
                     href="<?php echo htmlspecialchars($href); ?>">
-                    <span><?php echo htmlspecialchars($label); ?></span>
-                    <span
-                        class="badge rounded-pill <?php echo $active ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'; ?> fw-bold"><?php echo $cnt; ?></span>
+                    <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                        <span class="cat-icon-badge <?php echo htmlspecialchars($meta['theme']); ?>">
+                            <i class="<?php echo htmlspecialchars($meta['icon']); ?>"></i>
+                        </span>
+                        <span class="cat-name text-truncate"><?php echo htmlspecialchars($meta['label']); ?></span>
+                    </div>
+                    <span class="badge cat-counter"><?php echo $cnt; ?></span>
                 </a>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
         </div>
 
-        <div>
-            <div class="fw-semibold small text-muted mb-2">Submateri</div>
+        <div class="pt-2 border-top border-light-subtle">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-bold small text-body-secondary text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Submateri</div>
+                <?php if ($filterMateri !== ''): ?>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill" style="font-size: 0.7rem;">
+                    <?php echo htmlspecialchars(str_replace('_', ' ', $filterMateri)); ?>
+                </span>
+                <?php endif; ?>
+            </div>
+
             <?php if ($filterMateri === ''): ?>
-            <div class="text-muted small">Pilih materi untuk melihat submateri.</div>
+            <div class="sidebar-empty-hint p-3 text-center rounded-3">
+                <i class="ti ti-hand-click fs-4 text-primary opacity-50 mb-1 d-block"></i>
+                <div class="small text-body-secondary">Pilih salah satu kategori materi di atas untuk melihat submateri terkait.</div>
+            </div>
             <?php elseif (!$submateriCategories): ?>
-            <div class="text-muted small">Belum ada submateri.</div>
+            <div class="sidebar-empty-hint p-3 text-center rounded-3">
+                <i class="ti ti-folder-off fs-4 text-muted opacity-50 mb-1 d-block"></i>
+                <div class="small text-muted">Belum ada submateri untuk kategori ini.</div>
+            </div>
             <?php else: ?>
-            <div class="list-group list-group-flush">
+            <div class="sidebar-subcat-list">
                 <?php foreach ($submateriCategories as $sm): ?>
                 <?php
-                            $label = trim((string)($sm['submateri'] ?? ''));
-                            if ($label === '') {
-                                continue;
-                            }
-                            $cnt = (int)($sm['package_count'] ?? 0);
-                            $href = 'index.php?' . http_build_query([
-                                'q' => ($q !== '' ? $q : null),
-                                'materi' => $filterMateri,
-                                'submateri' => $label,
-                                'page' => 1,
-                            ]);
-                            $active = ($filterSubmateri === $label);
-                            ?>
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between rounded-2 mb-1 border-0 <?php echo $active ? 'active fw-bold' : ''; ?>"
+                    $label = trim((string)($sm['submateri'] ?? ''));
+                    if ($label === '') {
+                        continue;
+                    }
+                    $cnt = (int)($sm['package_count'] ?? 0);
+                    $href = 'index.php?' . http_build_query([
+                        'q' => ($q !== '' ? $q : null),
+                        'materi' => $filterMateri,
+                        'submateri' => $label,
+                        'page' => 1,
+                    ]);
+                    $active = ($filterSubmateri === $label);
+                ?>
+                <a class="sidebar-subcat-item <?php echo $active ? 'active' : ''; ?>"
                     href="<?php echo htmlspecialchars($href); ?>">
-                    <span><?php echo htmlspecialchars($label); ?></span>
-                    <span
-                        class="badge rounded-pill <?php echo $active ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'; ?> fw-bold"><?php echo $cnt; ?></span>
+                    <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                        <i class="ti ti-corner-down-right fs-6 text-muted subcat-indicator"></i>
+                        <span class="subcat-name text-truncate"><?php echo htmlspecialchars($label); ?></span>
+                    </div>
+                    <span class="badge cat-counter"><?php echo $cnt; ?></span>
                 </a>
                 <?php endforeach; ?>
             </div>
@@ -756,37 +877,48 @@ function render_home_sidebar_widgets(
     </div>
 </div>
 
-<div class="card sidebar-widget">
+<div class="card mb-3 sidebar-widget">
     <div class="card-header">
         <div class="d-flex align-items-center gap-2 fw-bold text-primary">
             <i class="ti ti-flame fs-5 text-danger"></i> Popular Post
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body p-2">
         <?php if (!$popularItems): ?>
-        <div class="text-muted small">Belum ada data populer.</div>
+        <div class="text-muted small p-3 text-center">Belum ada data populer.</div>
         <?php else: ?>
-        <div class="list-group list-group-flush">
-            <?php foreach ($popularItems as $it): ?>
+        <div class="sidebar-pop-list">
+            <?php foreach ($popularItems as $idx => $it): ?>
             <?php
-                        $title = (string)($it['title'] ?? '');
-                        $href = (string)($it['href'] ?? '#');
-                        $badge = (string)($it['badge'] ?? '');
-                        $date = (string)($it['date'] ?? '');
-                        ?>
-            <a class="list-group-item list-group-item-action" href="<?php echo htmlspecialchars($href); ?>">
-                <div class="d-flex align-items-start justify-content-between gap-2">
-                    <div class="fw-semibold text-truncate" style="max-width: 70%;">
-                        <?php echo htmlspecialchars($title); ?></div>
-                    <div class="d-flex gap-1 flex-shrink-0">
-                        <?php if ($badge !== ''): ?>
-                        <span class="badge text-bg-light border"><?php echo htmlspecialchars($badge); ?></span>
-                        <?php endif; ?>
+                $rank = $idx + 1;
+                $title = (string)($it['title'] ?? '');
+                $href = (string)($it['href'] ?? '#');
+                $badge = (string)($it['badge'] ?? '');
+                $date = (string)($it['date'] ?? '');
+                $rankBadgeClass = 'rank-other';
+                if ($rank === 1) {
+                    $rankBadgeClass = 'rank-1';
+                } elseif ($rank === 2) {
+                    $rankBadgeClass = 'rank-2';
+                } elseif ($rank === 3) {
+                    $rankBadgeClass = 'rank-3';
+                }
+            ?>
+            <a class="sidebar-pop-item" href="<?php echo htmlspecialchars($href); ?>">
+                <div class="d-flex align-items-start gap-2">
+                    <span class="sidebar-rank-pill <?php echo $rankBadgeClass; ?>"><?php echo $rank; ?></span>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="sidebar-pop-title text-truncate"><?php echo htmlspecialchars($title); ?></div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <?php if ($badge !== ''): ?>
+                            <span class="badge sidebar-pop-tag"><?php echo htmlspecialchars($badge); ?></span>
+                            <?php endif; ?>
+                            <?php if ($date !== ''): ?>
+                            <span class="sidebar-pop-date"><i class="ti ti-calendar me-1"></i><?php echo htmlspecialchars(format_id_date($date)); ?></span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
-                <?php if ($date !== ''): ?>
-                <div class="small text-muted"><?php echo htmlspecialchars(format_id_date($date)); ?></div>
-                <?php endif; ?>
             </a>
             <?php endforeach; ?>
         </div>
@@ -795,8 +927,13 @@ function render_home_sidebar_widgets(
 </div>
 
 <div class="card mt-3 sidebar-widget">
-    <div class="card-header bg-body-secondary">
-        <div class="fw-semibold">Highscore Mini Game</div>
+    <div class="card-header">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <div class="d-flex align-items-center gap-2 fw-bold text-primary">
+                <i class="ti ti-device-gamepad-2 fs-5 text-warning"></i> Highscore Mini Game
+            </div>
+            <span class="badge bg-warning-subtle text-warning-emphasis fw-bold px-2 py-1 rounded-pill" style="font-size: 0.72rem;">TOP 10</span>
+        </div>
     </div>
     <div class="card-body small mini-game-sidebar-highscore">
         <?php
@@ -804,10 +941,14 @@ function render_home_sidebar_widgets(
             $isStudentLoggedIn = !empty($_SESSION['student']) && is_array($_SESSION['student']) && !empty($_SESSION['student']['id']);
             $gameHref = (string)($isStudentLoggedIn ? ($base_url . '/siswa/game_math.php') : 'game_math_public.php');
             ?>
-        <a href="<?php echo htmlspecialchars($gameHref); ?>" class="btn btn-primary btn-sm w-100 mb-2">Ikut Bermain</a>
-        <div class="text-muted small mb-3">Login: otomatis pakai nama akun. Tanpa login: isi nama sendiri.</div>
+        <a href="<?php echo htmlspecialchars($gameHref); ?>" class="btn btn-primary btn-sm w-100 mb-2 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm rounded-pill">
+            <i class="ti ti-player-play-filled"></i> Ikut Bermain
+        </a>
+        <div class="text-muted small mb-3 text-center">Login otomatis pakai akun siswa, atau main bebas tanpa login.</div>
         <div class="mb-3">
-            <div class="fw-semibold small text-muted mb-1">Tambah / Kurang</div>
+            <div class="fw-semibold small text-muted mb-1 d-flex align-items-center gap-1">
+                <i class="ti ti-math-symbols text-primary"></i> Tambah / Kurang
+            </div>
             <?php if (!$miniGameAddSub): ?>
             <div class="text-muted small">Belum ada data.</div>
             <?php else: ?>
@@ -841,7 +982,7 @@ function render_home_sidebar_widgets(
                             <?php echo htmlspecialchars($name); ?>
                             <?php if ($kelasRombel !== ''): ?>
                             <span class="mini-kr-badge"
-                                aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
+                                 aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
                             <?php endif; ?>
                         </span>
                     </div>
@@ -853,7 +994,9 @@ function render_home_sidebar_widgets(
         </div>
 
         <div>
-            <div class="fw-semibold small text-muted mb-1">Kali / Bagi</div>
+            <div class="fw-semibold small text-muted mb-1 d-flex align-items-center gap-1">
+                <i class="ti ti-x text-danger"></i> Kali / Bagi
+            </div>
             <?php if (!$miniGameMulDiv): ?>
             <div class="text-muted small">Belum ada data.</div>
             <?php else: ?>
@@ -887,7 +1030,7 @@ function render_home_sidebar_widgets(
                             <?php echo htmlspecialchars($name); ?>
                             <?php if ($kelasRombel !== ''): ?>
                             <span class="mini-kr-badge"
-                                aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
+                                 aria-label="Kelas & rombel"><?php echo htmlspecialchars($kelasRombel); ?></span>
                             <?php endif; ?>
                         </span>
                     </div>
@@ -1198,12 +1341,13 @@ function get_home_carousel_slides(): array
 </div>
 
 <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="homeSidebar" aria-labelledby="homeSidebarLabel">
-    <div class="offcanvas-header justify-content-center position-relative">
-        <h5 class="offcanvas-title text-center" id="homeSidebarLabel">Sidebar</h5>
-        <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="offcanvas"
-            aria-label="Close"></button>
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title d-flex align-items-center gap-2 fw-bold text-primary mb-0" id="homeSidebarLabel">
+            <i class="ti ti-layout-sidebar"></i> Menu & Kategori
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="offcanvas-body">
+    <div class="offcanvas-body p-3">
         <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q); ?>
     </div>
 </div>
