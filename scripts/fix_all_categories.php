@@ -335,11 +335,16 @@ try {
 
         // Kalkulus
         ["UPDATE questions SET materi = 'Kalkulus', submateri = 'Turunan' WHERE materi = 'Turunan' OR (materi = 'Kalkulus' AND submateri = 'Turunan Fungsi Aljabar')"],
+        ["UPDATE questions SET materi = 'Kalkulus', submateri = 'Integral' WHERE materi = 'Integral'"],
+        ["UPDATE questions SET materi = 'Kalkulus', submateri = 'Limit' WHERE materi = 'Limit'"],
 
         // Evaluasi & Ujian
-        ["UPDATE questions SET materi = 'Evaluasi & Ujian', submateri = 'PAS & PAT Kelas 10' WHERE materi = 'Kelas_10'"],
-        ["UPDATE questions SET materi = 'Evaluasi & Ujian', submateri = 'PAS & PAT Kelas 11' WHERE materi = 'Kelas_11'"],
+        ["UPDATE questions SET materi = 'Evaluasi & Ujian', submateri = 'PAS & PAT Kelas 10' WHERE materi = 'Kelas_10' OR (materi = 'PAT' AND submateri = 'Kelas10')"],
+        ["UPDATE questions SET materi = 'Evaluasi & Ujian', submateri = 'PAS & PAT Kelas 11' WHERE materi = 'Kelas_11' OR (materi = 'PAT' AND submateri = 'Wajib')"],
         ["UPDATE questions SET materi = 'Evaluasi & Ujian', submateri = 'PAS & Ujian Sekolah Kelas 12' WHERE materi = 'Kelas_12'"],
+
+        // Soal barisan aritmetika/suku tengah/sisipan yang belum tertaut ke paket (materi masih kosong/NULL)
+        ["UPDATE questions SET materi = 'Aljabar', submateri = 'Barisan dan Deret' WHERE materi IS NULL OR TRIM(materi) = ''"],
     ];
 
     foreach ($questionNormalizationRules as [$sqlRule]) {
