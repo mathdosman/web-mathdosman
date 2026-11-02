@@ -1,41 +1,142 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="MATHDOSMAN - Slide 1">
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="MATHDOSMAN - Portal Materi dan Bank Soal">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#f8f9fa"/>
+    <!-- Background Gradient -->
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="40%" stop-color="#0f172a" />
+      <stop offset="80%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#172554" />
     </linearGradient>
-    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#000" stroke-opacity="0.07" stroke-width="2"/>
+
+    <!-- Glowing accents -->
+    <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.03" />
+    </linearGradient>
+
+    <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="glow-purple" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="60" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <pattern id="grid-dots" width="60" height="60" patternUnits="userSpaceOnUse">
+      <circle cx="30" cy="30" r="1.5" fill="#ffffff" fill-opacity="0.12" />
     </pattern>
   </defs>
 
-  <rect width="2100" height="900" fill="url(#bg)"/>
-  <rect width="2100" height="900" fill="url(#grid)"/>
+  <!-- Background Base -->
+  <rect width="2100" height="900" fill="url(#bg1)" />
+  <rect width="2100" height="900" fill="url(#grid-dots)" />
 
-  <!-- Left brand block -->
-  <g transform="translate(170 140)">
-    <rect x="0" y="0" width="560" height="560" rx="48" fill="#ffffff" stroke="#000" stroke-opacity="0.14" stroke-width="6"/>
-    <g transform="translate(110 110)" fill="none" stroke="#000" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M170 0 L340 98 V294 L170 392 L0 294 V98 Z"/>
-      <path d="M65 260 V120 L170 182 L275 120 V260"/>
-      <path d="M65 260 L170 322 L275 260"/>
+  <!-- Ambient Light Orbs -->
+  <circle cx="350" cy="200" r="280" fill="#2563eb" fill-opacity="0.25" filter="url(#glow-purple)" />
+  <circle cx="1750" cy="700" r="320" fill="#a855f7" fill-opacity="0.22" filter="url(#glow-purple)" />
+  <circle cx="1100" cy="450" r="220" fill="#06b6d4" fill-opacity="0.18" filter="url(#glow-cyan)" />
+
+  <!-- LEFT COLUMN: Main Typography & Badges -->
+  <g transform="translate(140, 150)">
+    <!-- Category Pill Badge -->
+    <rect x="0" y="0" width="460" height="54" rx="27" fill="#1e293b" fill-opacity="0.8" stroke="#38bdf8" stroke-width="2" />
+    <circle cx="28" cy="27" r="9" fill="#38bdf8" />
+    <text x="50" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#e0f2fe" letter-spacing="1.5">🚀 PORTAL BELAJAR MATEMATIKA SMA</text>
+
+    <!-- Main Title -->
+    <text x="0" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="94" font-weight="900" fill="#ffffff" letter-spacing="-1">
+      MATH<tspan fill="#38bdf8">DOSMAN</tspan>
+    </text>
+
+    <!-- Slogan Gradient -->
+    <text x="0" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="700" fill="url(#grad-accent)">
+      Belajar Matematika Jadi Ringkas, Rapi &amp; Terarah
+    </text>
+
+    <!-- Description -->
+    <text x="0" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" width="900">
+      Kumpulan materi terstruktur, paket soal HOTS, dan pembahasan lengkap langkah demi langkah.
+    </text>
+
+    <!-- Feature Pills -->
+    <g transform="translate(0, 370)">
+      <!-- Pill 1 -->
+      <g>
+        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
+        <circle cx="36" cy="33" r="16" fill="#10b981" fill-opacity="0.25" />
+        <text x="36" y="40" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#34d399" text-anchor="middle">✓</text>
+        <text x="68" y="41" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f1f5f9">1000+ Butir Soal</text>
+      </g>
+
+      <!-- Pill 2 -->
+      <g transform="translate(330, 0)">
+        <rect x="0" y="0" width="350" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
+        <circle cx="36" cy="33" r="16" fill="#6366f1" fill-opacity="0.25" />
+        <text x="36" y="40" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#818cf8" text-anchor="middle">⚡</text>
+        <text x="68" y="41" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f1f5f9">Pembahasan Detail</text>
+      </g>
+
+      <!-- Pill 3 -->
+      <g transform="translate(700, 0)">
+        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
+        <circle cx="36" cy="33" r="16" fill="#f59e0b" fill-opacity="0.25" />
+        <text x="36" y="40" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#fbbf24" text-anchor="middle">★</text>
+        <text x="68" y="41" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f1f5f9">Siap Ujian &amp; UTBK</text>
+      </g>
     </g>
   </g>
 
-  <!-- Title -->
-  <g fill="#000" font-family="sans-serif">
-    <text x="820" y="320" font-size="92" font-weight="800" letter-spacing="2">MATHDOSMAN</text>
-    <text x="820" y="400" font-size="34" font-weight="600" opacity="0.75">Portal Materi &amp; Bank Soal</text>
+  <!-- RIGHT COLUMN: Modern 3D Floating Math Card -->
+  <g transform="translate(1320, 120)">
+    <!-- Glass card container -->
+    <rect x="0" y="0" width="640" height="640" rx="36" fill="url(#card-grad)" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2" />
 
-    <text x="820" y="520" font-size="40" font-weight="700">Belajar, latihan, dan cetak soal.</text>
-    <text x="820" y="585" font-size="32" opacity="0.8">Materi • Berita • Paket Soal</text>
-  </g>
+    <!-- Card Header / Tab bar -->
+    <rect x="36" y="36" width="568" height="50" rx="16" fill="#0f172a" fill-opacity="0.7" />
+    <circle cx="66" cy="61" r="7" fill="#ef4444" />
+    <circle cx="90" cy="61" r="7" fill="#eab308" />
+    <circle cx="114" cy="61" r="7" fill="#22c55e" />
+    <text x="144" y="68" font-family="monospace" font-size="18" fill="#94a3b8">mathdosman.my.id • interactive math</text>
 
-  <!-- Decorative math marks -->
-  <g fill="none" stroke="#000" stroke-opacity="0.22" stroke-width="10" stroke-linecap="round">
-    <path d="M1650 220 h220"/>
-    <path d="M1760 110 v220"/>
-    <path d="M1600 620 c120 -120 240 -120 360 0"/>
+    <!-- Mathematical Visual Composition -->
+    <!-- 3D Geometric Cube with Glowing Edges -->
+    <g transform="translate(320, 240)">
+      <!-- Cube Top -->
+      <polygon points="0,-90 120,-30 0,30 -120,-30" fill="#3b82f6" fill-opacity="0.35" stroke="#60a5fa" stroke-width="3" />
+      <!-- Cube Left -->
+      <polygon points="-120,-30 0,30 0,160 -120,100" fill="#1d4ed8" fill-opacity="0.5" stroke="#38bdf8" stroke-width="3" />
+      <!-- Cube Right -->
+      <polygon points="0,30 120,-30 120,100 0,160" fill="#4338ca" fill-opacity="0.4" stroke="#818cf8" stroke-width="3" />
+
+      <!-- Center Glow Core -->
+      <circle cx="0" cy="30" r="18" fill="#38bdf8" filter="url(#glow-cyan)" />
+    </g>
+
+    <!-- Floating Math Formulas -->
+    <g transform="translate(60, 420)">
+      <!-- Formula 1 Card -->
+      <rect x="0" y="0" width="240" height="74" rx="18" fill="#1e293b" fill-opacity="0.85" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="2" />
+      <text x="24" y="46" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#38bdf8">∫ f(x) dx = F(x)</text>
+
+      <!-- Formula 2 Card -->
+      <rect x="270" y="20" width="250" height="74" rx="18" fill="#1e293b" fill-opacity="0.85" stroke="#a855f7" stroke-opacity="0.5" stroke-width="2" />
+      <text x="294" y="66" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#c084fc">lim (1 + 1/n)ⁿ = e</text>
+    </g>
+
+    <!-- Bottom Stat Strip -->
+    <g transform="translate(60, 540)">
+      <rect x="0" y="0" width="520" height="60" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5" />
+      <text x="260" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#38bdf8" text-anchor="middle">
+        💡 Solusi Pintar &amp; Pembahasan Soal Interaktif
+      </text>
+    </g>
   </g>
 </svg>

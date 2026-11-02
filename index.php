@@ -657,8 +657,10 @@ function render_home_sidebar_widgets(
 
 ?>
 <div class="card mb-3 sidebar-widget">
-    <div class="card-header bg-body-secondary">
-        <div class="fw-semibold">Search</div>
+    <div class="card-header">
+        <div class="d-flex align-items-center gap-2 fw-bold text-primary">
+            <i class="ti ti-search fs-5"></i> Pencarian
+        </div>
     </div>
     <div class="card-body">
         <form method="get" class="mb-0">
@@ -669,21 +671,25 @@ function render_home_sidebar_widgets(
             <input type="hidden" name="submateri" value="<?php echo htmlspecialchars($filterSubmateri); ?>">
             <?php endif; ?>
             <div class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="Cari paket (nama/deskripsi)..."
+                <input type="text" name="q" class="form-control" placeholder="Cari paket / materi..."
                     value="<?php echo htmlspecialchars($q); ?>">
-                <button class="btn btn-outline-secondary" type="submit">Cari</button>
+                <button class="btn btn-primary px-3" type="submit" aria-label="Cari">
+                    <i class="ti ti-search"></i>
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <div class="card mb-3 sidebar-widget">
-    <div class="card-header bg-body-secondary">
-        <div class="fw-semibold">Kategori</div>
+    <div class="card-header">
+        <div class="d-flex align-items-center gap-2 fw-bold text-primary">
+            <i class="ti ti-category fs-5"></i> Kategori Materi
+        </div>
     </div>
     <div class="card-body">
         <div class="mb-3">
-            <div class="fw-semibold small text-muted mb-2">Materi</div>
+            <div class="fw-bold small text-body-secondary text-uppercase mb-2" style="letter-spacing: 0.05em; font-size: 0.75rem;">Materi Pokok</div>
             <?php if (!$materiCategories): ?>
             <div class="text-muted small">Belum ada materi.</div>
             <?php else: ?>
@@ -703,11 +709,11 @@ function render_home_sidebar_widgets(
                             ]);
                             $active = ($filterMateri === $label);
                             ?>
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>"
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between rounded-2 mb-1 border-0 <?php echo $active ? 'active fw-bold' : ''; ?>"
                     href="<?php echo htmlspecialchars($href); ?>">
                     <span><?php echo htmlspecialchars($label); ?></span>
                     <span
-                        class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
+                        class="badge rounded-pill <?php echo $active ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'; ?> fw-bold"><?php echo $cnt; ?></span>
                 </a>
                 <?php endforeach; ?>
             </div>
@@ -737,11 +743,11 @@ function render_home_sidebar_widgets(
                             ]);
                             $active = ($filterSubmateri === $label);
                             ?>
-                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between <?php echo $active ? 'active' : ''; ?>"
+                <a class="list-group-item list-group-item-action d-flex align-items-center justify-content-between rounded-2 mb-1 border-0 <?php echo $active ? 'active fw-bold' : ''; ?>"
                     href="<?php echo htmlspecialchars($href); ?>">
                     <span><?php echo htmlspecialchars($label); ?></span>
                     <span
-                        class="badge <?php echo $active ? 'text-bg-light' : 'text-bg-secondary'; ?>"><?php echo $cnt; ?></span>
+                        class="badge rounded-pill <?php echo $active ? 'bg-white text-primary' : 'bg-primary-subtle text-primary'; ?> fw-bold"><?php echo $cnt; ?></span>
                 </a>
                 <?php endforeach; ?>
             </div>
@@ -751,8 +757,10 @@ function render_home_sidebar_widgets(
 </div>
 
 <div class="card sidebar-widget">
-    <div class="card-header bg-body-secondary">
-        <div class="fw-semibold">Popular Post</div>
+    <div class="card-header">
+        <div class="d-flex align-items-center gap-2 fw-bold text-primary">
+            <i class="ti ti-flame fs-5 text-danger"></i> Popular Post
+        </div>
     </div>
     <div class="card-body">
         <?php if (!$popularItems): ?>
@@ -929,21 +937,35 @@ function get_home_carousel_slides(): array
 <div class="row g-3 g-lg-4">
     <div class="col-12 col-lg-8">
         <?php if ($page === 1): ?>
-        <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner">
+        <div class="border rounded-4 overflow-hidden bg-body-tertiary mb-3 mb-lg-4 brand-banner position-relative">
             <?php $slides = get_home_carousel_slides(); ?>
             <?php if ($slides): ?>
-            <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div id="homeBrandCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+                <div class="carousel-indicators">
+                    <?php foreach ($slides as $idx => $s): ?>
+                    <button type="button" data-bs-target="#homeBrandCarousel" data-bs-slide-to="<?php echo $idx; ?>"
+                        class="<?php echo $idx === 0 ? 'active' : ''; ?>"
+                        aria-current="<?php echo $idx === 0 ? 'true' : 'false'; ?>"
+                        aria-label="Slide <?php echo $idx + 1; ?>"></button>
+                    <?php endforeach; ?>
+                </div>
                 <div class="carousel-inner">
                     <?php foreach ($slides as $idx => $s): ?>
                     <div class="carousel-item<?php echo $idx === 0 ? ' active' : ''; ?>">
                         <div class="ratio ratio-21x9">
                             <img src="<?php echo htmlspecialchars((string)($s['url'] ?? '')); ?>?v=<?php echo (int)($s['mtime'] ?? 0); ?>"
-                                class="w-100 h-100 object-fit-contain"
+                                class="w-100 h-100 object-fit-cover"
                                 alt="Carousel slide <?php echo (int)($s['slot'] ?? ($idx + 1)); ?>" loading="lazy">
                         </div>
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#homeBrandCarousel" data-bs-slide="prev" aria-label="Sebelumnya">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#homeBrandCarousel" data-bs-slide="next" aria-label="Selanjutnya">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
             </div>
             <?php else: ?>
             <div class="ratio ratio-21x9">
@@ -956,36 +978,63 @@ function get_home_carousel_slides(): array
         <div class="home-hero mb-3 mb-lg-4">
             <div class="row g-4 align-items-center position-relative">
                 <div class="col-12 col-lg-7">
-                    <div class="text-uppercase small text-muted mb-2">Portal Materi &amp; Bank Soal</div>
-                    <h1 class="display-6 fw-bold mb-2">Selamat datang di MATHDOSMAN</h1>
-                    <p class="lead mb-3">Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.
-                    </p>
-                    <div class="home-slogan mb-3">
-                        <span class="badge text-bg-light border">Slogan</span>
-                        <span class="ms-2 fw-semibold">Belajar Matematika, Gaskeun!</span>
+                    <div class="hero-top-pill d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2">
+                        <span class="badge bg-primary text-white fw-bold">PORTAL MATEMATIKA</span>
+                        <span class="small fw-semibold text-body-secondary">Materi &amp; Bank Soal SMA</span>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge text-bg-light border">Materi ringkas</span>
-                        <span class="badge text-bg-light border">Bank soal siap latihan</span>
-                        <span class="badge text-bg-light border">Preview &amp; cetak mudah</span>
+                    <h1 class="display-6 fw-bolder mb-2 hero-heading">
+                        Selamat datang di <span class="brand-gradient-text">MATHDOSMAN</span>
+                    </h1>
+                    <p class="lead text-secondary mb-3 hero-lead">
+                        Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.
+                    </p>
+                    <div class="home-slogan mb-3 d-flex align-items-center gap-2">
+                        <span class="badge bg-indigo-subtle text-indigo px-2.5 py-1.5 fw-bold border border-indigo-subtle">
+                            <i class="ti ti-sparkles me-1"></i>Slogan
+                        </span>
+                        <span class="fw-bold text-primary">Belajar Matematika, Gaskeun!</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge hero-badge badge-blue">
+                            <i class="ti ti-book-2 me-1"></i> Materi Ringkas
+                        </span>
+                        <span class="badge hero-badge badge-emerald">
+                            <i class="ti ti-circle-check me-1"></i> Bank Soal HOTS
+                        </span>
+                        <span class="badge hero-badge badge-amber">
+                            <i class="ti ti-bulb me-1"></i> Pembahasan Bertahap
+                        </span>
+                        <span class="badge hero-badge badge-purple">
+                            <i class="ti ti-printer me-1"></i> Cetak &amp; PDF
+                        </span>
                     </div>
                     <div class="mt-3 d-flex flex-wrap gap-2">
-                        <a href="daftar-isi.php" class="btn btn-primary btn-sm">Jelajahi Daftar Isi</a>
-                        <a href="index.php#konten-paket" class="btn btn-outline-secondary btn-sm">Lihat Konten &amp;
-                            Paket Terbaru</a>
+                        <a href="daftar-isi.php" class="btn btn-primary shadow-sm px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2 hero-btn-main">
+                            <i class="ti ti-compass"></i> Jelajahi Daftar Isi
+                        </a>
+                        <a href="index.php#konten-paket" class="btn btn-outline-primary px-3.5 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                            <i class="ti ti-layers-intersect"></i> Lihat Konten &amp; Paket Terbaru
+                        </a>
                     </div>
                 </div>
 
                 <div class="col-12 col-lg-5">
-                    <div class="home-vision border rounded-4 bg-body-tertiary p-3 p-lg-4">
-                        <div class="fw-semibold mb-2">Visi</div>
-                        <div class="text-muted">Menjadi portal belajar matematika yang simpel, rapi, dan mudah diakses
-                            untuk semua.</div>
-                        <div class="fw-semibold mt-3 mb-2">Misi</div>
-                        <ul class="mb-0 text-muted small ps-3">
-                            <li>Menyajikan materi yang jelas dan mudah dipahami.</li>
-                            <li>Menyediakan paket soal untuk latihan dan evaluasi.</li>
-                            <li>Membantu belajar lebih konsisten lewat latihan terarah.</li>
+                    <div class="home-vision border rounded-4 p-3.5 p-lg-4">
+                        <div class="d-flex align-items-center gap-2 fw-bold text-primary mb-2">
+                            <span class="vision-icon-wrap"><i class="ti ti-target"></i></span>
+                            <span class="fs-6">Visi</span>
+                        </div>
+                        <div class="text-body-secondary small mb-3 lh-base">
+                            Menjadi portal belajar matematika yang simpel, rapi, interaktif, dan mudah diakses untuk semua siswa &amp; guru.
+                        </div>
+                        <div class="d-flex align-items-center gap-2 fw-bold text-emerald mb-2">
+                            <span class="vision-icon-wrap bg-emerald-subtle text-emerald"><i class="ti ti-rocket"></i></span>
+                            <span class="fs-6">Misi</span>
+                        </div>
+                        <ul class="mb-0 text-body-secondary small ps-0 list-unstyled hero-mission-list">
+                            <li><i class="ti ti-check text-emerald me-1.5"></i> Menyajikan materi yang jelas dan mudah dipahami.</li>
+                            <li><i class="ti ti-check text-emerald me-1.5"></i> Menyediakan paket soal HOTS dan evaluasi terarah.</li>
+                            <li><i class="ti ti-check text-emerald me-1.5"></i> Membantu belajar lebih konsisten dengan pembahasan lengkap.</li>
                         </ul>
                     </div>
                 </div>

@@ -1,55 +1,125 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="MATHDOSMAN - Slide 3">
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="Kalkulus - MATHDOSMAN">
   <defs>
-    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#f8f9fa"/>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#110726" />
+      <stop offset="45%" stop-color="#240046" />
+      <stop offset="85%" stop-color="#3c096c" />
+      <stop offset="100%" stop-color="#5a189a" />
     </linearGradient>
+
+    <linearGradient id="grad-rose" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="50%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <linearGradient id="curve-area" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.05" />
+    </linearGradient>
+
+    <filter id="glow-rose" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <pattern id="calc-grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#e879f9" stroke-opacity="0.08" stroke-width="1.5" />
+    </pattern>
   </defs>
 
-  <rect width="2100" height="900" fill="url(#bg3)"/>
+  <rect width="2100" height="900" fill="url(#bg3)" />
+  <rect width="2100" height="900" fill="url(#calc-grid)" />
 
-  <!-- Geometry card -->
-  <g transform="translate(130 120)" fill="none" stroke="#000">
-    <rect x="0" y="0" width="980" height="660" rx="32" fill="#fff" stroke-opacity="0.14" stroke-width="6"/>
+  <!-- Ambient Light Orbs -->
+  <circle cx="1550" cy="250" r="320" fill="#db2777" fill-opacity="0.25" filter="url(#glow-rose)" />
+  <circle cx="320" cy="650" r="280" fill="#7c3aed" fill-opacity="0.3" filter="url(#glow-rose)" />
 
-    <!-- Triangle + circle -->
-    <g transform="translate(120 70)" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="370" cy="260" r="220" stroke-opacity="0.22" stroke-width="10"/>
-      <path d="M160 470 L580 470 L370 80 Z" stroke-opacity="0.75" stroke-width="12"/>
-      <path d="M370 80 L370 470" stroke-opacity="0.35" stroke-width="10"/>
-      <path d="M160 470 L370 260 L580 470" stroke-opacity="0.35" stroke-width="10"/>
+  <!-- LEFT COLUMN: Typography -->
+  <g transform="translate(140, 150)">
+    <rect x="0" y="0" width="410" height="54" rx="27" fill="#2d0b4d" stroke="#f43f5e" stroke-width="2" />
+    <circle cx="28" cy="27" r="9" fill="#f43f5e" />
+    <text x="50" y="35" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="#fce7f3" letter-spacing="1.5">📈 KALKULUS &amp; ANALISIS FUNGSI</text>
 
-      <!-- Angle arc -->
-      <path d="M580 470 A 160 160 0 0 0 470 350" stroke-opacity="0.35" stroke-width="10"/>
-      <circle cx="370" cy="260" r="12" fill="#000" fill-opacity="0.75" stroke="none"/>
-    </g>
+    <!-- Main Title -->
+    <text x="0" y="160" font-family="system-ui, sans-serif" font-size="90" font-weight="900" fill="#ffffff" letter-spacing="-1">
+      Limit, Turunan &amp; <tspan fill="#f43f5e">Integral</tspan>
+    </text>
 
-    <!-- Labels -->
-    <g fill="#000" stroke="none" font-family="sans-serif" font-weight="700">
-      <text x="175" y="575" font-size="42">a</text>
-      <text x="585" y="575" font-size="42">b</text>
-      <text x="385" y="190" font-size="42">c</text>
-    </g>
+    <!-- Slogan -->
+    <text x="0" y="240" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="url(#grad-rose)">
+      Laju Perubahan, Garis Singgung &amp; Luas Daerah
+    </text>
 
-    <g fill="#000" stroke="none" font-family="sans-serif">
-      <text x="610" y="615" font-size="34" opacity="0.8">Geometri • Trigonometri • Vektor</text>
+    <!-- Description -->
+    <text x="0" y="320" font-family="system-ui, sans-serif" font-size="26" font-weight="400" fill="#cbd5e1">
+      Pahami konsep kalkulus secara intuitif melalui grafik dinamis dan aplikasi perhitungan nyata.
+    </text>
+
+    <!-- Sub-topic Pills -->
+    <g transform="translate(0, 370)">
+      <g>
+        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#f43f5e" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#fdf2f8" text-anchor="middle">Limit Aljabar &amp; Tak Hingga</text>
+      </g>
+      <g transform="translate(300, 0)">
+        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="155" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#fdf2f8" text-anchor="middle">Garis Singgung dy/dx</text>
+      </g>
+      <g transform="translate(630, 0)">
+        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#fdf2f8" text-anchor="middle">Integral Luas &amp; Volume</text>
+      </g>
     </g>
   </g>
 
-  <!-- Copy on right -->
-  <g fill="#000" font-family="sans-serif">
-    <text x="1240" y="250" font-size="78" font-weight="800">Geometri</text>
-    <text x="1240" y="330" font-size="34" opacity="0.75">Dari dasar sampai lanjut.</text>
+  <!-- RIGHT COLUMN: Elegant Calculus Curve Visual Card -->
+  <g transform="translate(1320, 120)">
+    <rect x="0" y="0" width="640" height="640" rx="36" fill="#1b0a38" fill-opacity="0.8" stroke="#f43f5e" stroke-opacity="0.3" stroke-width="2" />
 
-    <text x="1240" y="470" font-size="44" font-weight="700">Rumus:</text>
-    <text x="1240" y="540" font-size="46" font-weight="800">a² + b² = c²</text>
-    <text x="1240" y="605" font-size="34" opacity="0.8">Siap untuk latihan paket soal.</text>
-  </g>
+    <!-- Card Header -->
+    <rect x="36" y="36" width="568" height="50" rx="16" fill="#290f52" fill-opacity="0.9" />
+    <circle cx="66" cy="61" r="7" fill="#f43f5e" />
+    <text x="90" y="68" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#fbcfe8">Calculus Visualizer • Definite Integral &amp; Slopes</text>
 
-  <!-- Decorative lines -->
-  <g fill="none" stroke="#000" stroke-opacity="0.18" stroke-width="10" stroke-linecap="round">
-    <path d="M1250 720 h700"/>
-    <path d="M1250 760 h420"/>
+    <!-- Visual Area Under Curve -->
+    <g transform="translate(60, 120)">
+      <!-- Axes -->
+      <path d="M 40,320 L 520,320" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" />
+      <path d="M 40,320 L 40,40" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" />
+
+      <!-- Area Under Curve Fill -->
+      <path d="M 100,320 L 100,240 Q 200,80 320,180 T 460,110 L 460,320 Z" fill="url(#curve-area)" />
+
+      <!-- Smooth Curve -->
+      <path d="M 50,280 Q 200,80 320,180 T 500,80" fill="none" stroke="#f43f5e" stroke-width="6" stroke-linecap="round" />
+
+      <!-- Tangent Line at x=320 -->
+      <line x1="220" y1="260" x2="420" y2="100" stroke="#38bdf8" stroke-width="4" stroke-dasharray="8 6" />
+      <circle cx="320" cy="180" r="8" fill="#38bdf8" />
+      <text x="340" y="170" font-family="Georgia, serif" font-size="22" font-style="italic" fill="#38bdf8">m = f'(x₀)</text>
+
+      <!-- Interval bounds a and b -->
+      <line x1="100" y1="320" x2="100" y2="335" stroke="#ffffff" stroke-width="3" />
+      <text x="95" y="360" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#ffffff">a</text>
+      <line x1="460" y1="320" x2="460" y2="335" stroke="#ffffff" stroke-width="3" />
+      <text x="455" y="360" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#ffffff">b</text>
+    </g>
+
+    <!-- Big Formula Banner -->
+    <g transform="translate(40, 470)">
+      <rect x="0" y="0" width="560" height="76" rx="20" fill="#3b0764" fill-opacity="0.9" stroke="#c084fc" stroke-opacity="0.4" stroke-width="2" />
+      <text x="280" y="48" font-family="Georgia, serif" font-size="30" font-style="italic" fill="#ffffff" text-anchor="middle">
+        ∫<tspan font-size="20" dy="10">a</tspan><tspan font-size="20" dy="-20">b</tspan><tspan font-size="30" dy="10"> f(x) dx = F(b) - F(a)</tspan>
+      </text>
+    </g>
+
+    <!-- Bottom Stat Strip -->
+    <g transform="translate(40, 565)">
+      <rect x="0" y="0" width="560" height="50" rx="16" fill="#4c0519" fill-opacity="0.4" stroke="#f43f5e" stroke-opacity="0.3" stroke-width="1.5" />
+      <text x="280" y="32" font-family="system-ui, sans-serif" font-size="19" font-weight="700" fill="#fda4af" text-anchor="middle">
+        💡 Dilengkapi Trik Turunan Cepat &amp; Integral Substitusi
+      </text>
+    </g>
   </g>
 </svg>

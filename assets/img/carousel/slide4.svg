@@ -1,62 +1,121 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="MATHDOSMAN - Slide 4">
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="900" viewBox="0 0 2100 900" role="img" aria-label="Transformasi Geometri - MATHDOSMAN">
   <defs>
-    <linearGradient id="bg4" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#f8f9fa"/>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#022026" />
+      <stop offset="45%" stop-color="#04323f" />
+      <stop offset="85%" stop-color="#075985" />
+      <stop offset="100%" stop-color="#1d4ed8" />
     </linearGradient>
+
+    <linearGradient id="grad-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+
+    <filter id="glow-cyan4" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="35" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <pattern id="polar-dots" width="60" height="60" patternUnits="userSpaceOnUse">
+      <circle cx="30" cy="30" r="1.5" fill="#38bdf8" fill-opacity="0.15" />
+    </pattern>
   </defs>
 
-  <rect width="2100" height="900" fill="url(#bg4)"/>
+  <rect width="2100" height="900" fill="url(#bg4)" />
+  <rect width="2100" height="900" fill="url(#polar-dots)" />
 
-  <!-- Stats card -->
-  <g transform="translate(140 120)" fill="none" stroke="#000">
-    <rect x="0" y="0" width="980" height="660" rx="32" fill="#fff" stroke-opacity="0.14" stroke-width="6"/>
+  <!-- Ambient Light Orbs -->
+  <circle cx="1600" cy="250" r="320" fill="#0284c7" fill-opacity="0.3" filter="url(#glow-cyan4)" />
+  <circle cx="320" cy="650" r="280" fill="#4f46e5" fill-opacity="0.25" filter="url(#glow-cyan4)" />
 
-    <!-- Bar chart -->
-    <g transform="translate(140 90)">
-      <path d="M0 520 H700" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
-      <path d="M0 520 V0" stroke-opacity="0.45" stroke-width="8" stroke-linecap="round"/>
+  <!-- LEFT COLUMN: Typography -->
+  <g transform="translate(140, 150)">
+    <rect x="0" y="0" width="440" height="54" rx="27" fill="#063242" stroke="#38bdf8" stroke-width="2" />
+    <circle cx="28" cy="27" r="9" fill="#38bdf8" />
+    <text x="50" y="35" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="#e0f2fe" letter-spacing="1.5">🔄 GEOMETRI &amp; TRANSFORMASI</text>
 
-      <g fill="#000" fill-opacity="0.12" stroke="#000" stroke-opacity="0.25" stroke-width="6">
-        <rect x="70" y="260" width="90" height="260" rx="10"/>
-        <rect x="210" y="160" width="90" height="360" rx="10"/>
-        <rect x="350" y="320" width="90" height="200" rx="10"/>
-        <rect x="490" y="110" width="90" height="410" rx="10"/>
-        <rect x="630" y="220" width="90" height="300" rx="10"/>
+    <!-- Main Title -->
+    <text x="0" y="160" font-family="system-ui, sans-serif" font-size="90" font-weight="900" fill="#ffffff" letter-spacing="-1">
+      Transformasi <tspan fill="#38bdf8">Geometri</tspan>
+    </text>
+
+    <!-- Slogan -->
+    <text x="0" y="240" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="url(#grad-cyan)">
+      Translasi, Refleksi, Rotasi &amp; Komposisi Matriks
+    </text>
+
+    <!-- Description -->
+    <text x="0" y="320" font-family="system-ui, sans-serif" font-size="26" font-weight="400" fill="#94a3b8">
+      Pelajari cara menentukan bayangan titik, kurva, dan garis dengan matriks transformasi serta pusat (a, b).
+    </text>
+
+    <!-- Sub-topic Pills -->
+    <g transform="translate(0, 370)">
+      <g>
+        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f0f9ff" text-anchor="middle">Translasi Titik &amp; Garis</text>
       </g>
-
-      <!-- Trend line -->
-      <path d="M115 300 L255 200 L395 355 L535 150 L675 250" stroke="#000" stroke-opacity="0.75" stroke-width="10" fill="none" stroke-linecap="round"/>
-      <g fill="#000" fill-opacity="0.75" stroke="none">
-        <circle cx="115" cy="300" r="10"/>
-        <circle cx="255" cy="200" r="10"/>
-        <circle cx="395" cy="355" r="10"/>
-        <circle cx="535" cy="150" r="10"/>
-        <circle cx="675" cy="250" r="10"/>
+      <g transform="translate(300, 0)">
+        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#818cf8" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="155" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f0f9ff" text-anchor="middle">Rotasi Sudut θ (Pusat a,b)</text>
       </g>
-    </g>
-
-    <g fill="#000" stroke="none" font-family="sans-serif">
-      <text x="140" y="620" font-size="34" opacity="0.8">Statistika • Peluang • Data</text>
+      <g transform="translate(630, 0)">
+        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f0f9ff" text-anchor="middle">Komposisi Transformasi</text>
+      </g>
     </g>
   </g>
 
-  <!-- Copy on right -->
-  <g fill="#000" font-family="sans-serif">
-    <text x="1240" y="250" font-size="78" font-weight="800">Statistika</text>
-    <text x="1240" y="330" font-size="34" opacity="0.75">Pahami data, bukan hafal.</text>
+  <!-- RIGHT COLUMN: Geometry Visual Card -->
+  <g transform="translate(1320, 120)">
+    <rect x="0" y="0" width="640" height="640" rx="36" fill="#082838" fill-opacity="0.85" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="2" />
 
-    <text x="1240" y="470" font-size="44" font-weight="700">Istilah:</text>
-    <text x="1240" y="540" font-size="44" font-weight="800">mean • median • modus</text>
-    <text x="1240" y="605" font-size="34" opacity="0.8">Cocok untuk latihan dan evaluasi.</text>
-  </g>
+    <!-- Card Header -->
+    <rect x="36" y="36" width="568" height="50" rx="16" fill="#031b26" fill-opacity="0.9" />
+    <circle cx="66" cy="61" r="7" fill="#38bdf8" />
+    <text x="90" y="68" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#bae6fd">Coordinate Transformation • Rotation R[P, θ]</text>
 
-  <!-- Decorative dots -->
-  <g fill="#000" fill-opacity="0.18">
-    <circle cx="1900" cy="690" r="8"/>
-    <circle cx="1940" cy="720" r="6"/>
-    <circle cx="1985" cy="690" r="10"/>
-    <circle cx="2025" cy="735" r="7"/>
+    <!-- Visual Interactive Coordinate Grid -->
+    <g transform="translate(60, 120)">
+      <!-- Crosshairs -->
+      <line x1="280" y1="20" x2="280" y2="340" stroke="#475569" stroke-width="2" stroke-dasharray="6 6" />
+      <line x1="20" y1="180" x2="540" y2="180" stroke="#475569" stroke-width="2" stroke-dasharray="6 6" />
+
+      <!-- Center (0,0) -->
+      <circle cx="280" cy="180" r="6" fill="#ffffff" />
+      <text x="290" y="205" font-family="system-ui, sans-serif" font-size="18" fill="#94a3b8">O(0,0)</text>
+
+      <!-- Original Shape (Blue Triangle) -->
+      <polygon points="340,140 440,110 390,70" fill="#38bdf8" fill-opacity="0.25" stroke="#38bdf8" stroke-width="4" />
+      <circle cx="340" cy="140" r="7" fill="#38bdf8" />
+      <text x="350" y="150" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#38bdf8">A(x,y)</text>
+
+      <!-- Rotation Arc -->
+      <path d="M 340,140 A 100,100 0 0,0 230,90" fill="none" stroke="#facc15" stroke-width="3" stroke-dasharray="6 4" />
+      <text x="300" y="110" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#facc15">+θ</text>
+
+      <!-- Rotated Shape (Purple Triangle) -->
+      <polygon points="230,90 200,-10 140,40" fill="#818cf8" fill-opacity="0.3" stroke="#818cf8" stroke-width="4" />
+      <circle cx="230" cy="90" r="7" fill="#818cf8" />
+      <text x="150" y="110" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#c084fc">A'(x',y')</text>
+    </g>
+
+    <!-- Rotation Matrix Formula Banner -->
+    <g transform="translate(40, 460)">
+      <rect x="0" y="0" width="560" height="84" rx="20" fill="#042230" fill-opacity="0.9" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="2" />
+      <text x="280" y="52" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#ffffff" text-anchor="middle">
+        [ cos θ  -sin θ ; sin θ  cos θ ]
+      </text>
+    </g>
+
+    <!-- Bottom Stat Strip -->
+    <g transform="translate(40, 565)">
+      <rect x="0" y="0" width="560" height="50" rx="16" fill="#082f49" fill-opacity="0.4" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5" />
+      <text x="280" y="32" font-family="system-ui, sans-serif" font-size="19" font-weight="700" fill="#7dd3fc" text-anchor="middle">
+        💡 50+ Soal HOTS Transformasi Geometri dengan Pembahasan
+      </text>
+    </g>
   </g>
 </svg>
