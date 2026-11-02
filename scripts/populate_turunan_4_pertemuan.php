@@ -78,7 +78,7 @@ $meetings = [
         'title' => 'Bahan Ajar Pertemuan 1: Konsep Laju Perubahan Sesaat, Garis Singgung, dan Definisi Limit Turunan',
         'published_at' => '2026-11-02 18:10:00',
         'excerpt' => 'Memahami makna fisis dan geometris turunan dari perubahan rata-rata menjadi perubahan sesaat, kemiringan garis potong (sekan) menuju garis singgung (tangen), serta menentukan turunan pertama menggunakan definisi limit.',
-        'description' => <<<HTML
+        'description' => <<<'HTML'
 <h3>Identitas &amp; Tujuan Pembelajaran (Pertemuan 1 dari 4)</h3>
 <p>Selamat datang di <strong>Pertemuan 1</strong> dari seri pembelajaran <strong>Turunan Fungsi Aljabar SMA</strong>. Pada pertemuan pertama ini, kita tidak langsung menghafal rumus cepat, melainkan membangun <strong>intuisi konsep</strong> mengapa turunan ditemukan dan bagaimana cara kerjanya dari konsep limit.</p>
 <p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari bahan ajar dan mengerjakan latihan pada paket ini, siswa diharapkan mampu:</p>
@@ -95,8 +95,8 @@ $meetings = [
   <li><strong>Langkah 3 (25 Menit):</strong> Simak <strong>4 Contoh Soal Terbimbing</strong> beserta bedah langkah penyelesaiannya.</li>
   <li><strong>Langkah 4 (30 Menit):</strong> Kerjakan <strong>8 Soal Latihan Pilihan Ganda</strong> di bagian bawah halaman, lalu cocokkan pekerjaanmu dengan menekan tombol <em>Buka Penyelesaian</em>.</li>
 </ul>
-{$navHtml(1)}
-HTML,
+HTML
+        . "\n" . $navHtml(1),
         'content_html' => <<<'HTML'
 <h2>1. Mengapa Kita Mempelajari Turunan? (Masalah Kecepatan Sesaat)</h2>
 <p>Bayangkan kamu mengendarai sepeda motor dari rumah ke sekolah yang berjarak \(12\text{ km}\) dalam waktu \(20\text{ menit}\) (\(\frac{1}{3}\text{ jam}\)). Jika ditanya berapakah <strong>kecepatan rata-rata</strong> perjalananmu, kamu cukup membagi perubahan jarak (\(\Delta s\)) dengan selang waktu (\(\Delta t\)):</p>
@@ -441,7 +441,7 @@ HTML
         'title' => 'Bahan Ajar Pertemuan 2: Aturan Dasar Turunan (Pangkat, Bentuk Akar/Pecahan, Hasil Kali & Hasil Bagi)',
         'published_at' => '2026-11-02 18:20:00',
         'excerpt' => 'Menguasai rumus-rumus dasar turunan fungsi aljabar tanpa harus menggunakan limit berulang kali: aturan pangkat, trik eksponen untuk bentuk akar dan pecahan, aturan hasil kali u.v, serta aturan hasil bagi u/v.',
-        'description' => <<<HTML
+        'description' => <<<'HTML'
 <h3>Identitas &amp; Tujuan Pembelajaran (Pertemuan 2 dari 4)</h3>
 <p>Setelah memahami asal-usul turunan dari konsep limit pada Pertemuan 1, kini di <strong>Pertemuan 2</strong> kita akan mempelajari <strong>Teorema &amp; Aturan Dasar Turunan</strong>. Dengan aturan ini, kamu dapat menurunkan berbagai fungsi aljabar secara cepat, akurat, dan sistematis.</p>
 <p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari bahan ajar dan mengerjakan latihan pada paket ini, siswa diharapkan mampu:</p>
@@ -458,8 +458,8 @@ HTML
   <li><strong>Langkah 3 (25 Menit):</strong> Pelajari <strong>4 Contoh Soal Terbimbing</strong> dari polinomial, bentuk akar, perkalian fungsi, hingga pecahan rasional.</li>
   <li><strong>Langkah 4 (35 Menit):</strong> Uji pemahamanmu dengan mengerjakan <strong>8 Soal Latihan Pilihan Ganda</strong> di bawah bahan ajar.</li>
 </ul>
-{$navHtml(2)}
-HTML,
+HTML
+        . "\n" . $navHtml(2),
         'content_html' => <<<'HTML'
 <h2>1. Peta Konsep Aturan Dasar Turunan Fungsi Aljabar</h2>
 <p>Pada Pertemuan 1 kita telah membuktikan dengan limit bahwa turunan dari \(x^2\) adalah \(2x\), dan turunan dari \(x^3\) adalah \(3x^2\). Secara umum, untuk sembarang bilangan rasional \(n\), berlaku pola yang sangat rapi: <strong>pangkat turun ke depan sebagai pengali, lalu pangkat berkurang satu</strong>.</p>
@@ -818,7 +818,7 @@ HTML
         'title' => 'Bahan Ajar Pertemuan 3: Turunan Fungsi Komposisi (Aturan Rantai) & Turunan Tingkat Tinggi',
         'published_at' => '2026-11-02 18:30:00',
         'excerpt' => 'Menguasai teknik Aturan Rantai (Chain Rule) untuk menurunkan fungsi bersusun/berpangkat besar dan bentuk akar kompleks, serta memahami konsep turunan kedua dalam gerak lurus (posisi, kecepatan, percepatan).',
-        'description' => <<<HTML
+        'description' => <<<'HTML'
 <h3>Identitas &amp; Tujuan Pembelajaran (Pertemuan 3 dari 4)</h3>
 <p>Selamat datang di <strong>Pertemuan 3</strong>! Bagaimana jika kita diminta menurunkan fungsi seperti \(f(x) = (3x^2 - 5x + 1)^{10}\) atau \(f(x) = \sqrt{4x^2 + 9}\)? Tentu tidak mungkin kita menjabarkan pangkat sepuluh satu per satu! Di sinilah <strong>Aturan Rantai (<em>Chain Rule</em>)</strong> menjadi senjata utama kita.</p>
 <p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari bahan ajar dan mengerjakan latihan pada paket ini, siswa diharapkan mampu:</p>
@@ -835,8 +835,8 @@ HTML
   <li><strong>Langkah 3 (25 Menit):</strong> Simak <strong>4 Contoh Soal Terbimbing</strong> secara berurutan.</li>
   <li><strong>Langkah 4 (35 Menit):</strong> Kerjakan <strong>8 Soal Latihan Pilihan Ganda</strong> di bawah halaman dan periksa langkah kerjamu pada pembahasannya.</li>
 </ul>
-{$navHtml(3)}
-HTML,
+HTML
+        . "\n" . $navHtml(3),
         'content_html' => <<<'HTML'
 <h2>1. Memahami Konsep Aturan Rantai (<em>Chain Rule</em>)</h2>
 <p>Bayangkan kamu membuka sebuah paket berlapis: untuk mencapai isinya, kamu harus <strong>membuka kotak luarnya terlebih dahulu</strong>, baru kemudian <strong>membuka isi di dalamnya</strong>. Begitu pula cara kerja turunan pada <strong>fungsi komposisi (fungsi bersusun)</strong> \(y = f(u(x))\).</p>
@@ -1147,7 +1147,7 @@ HTML
         'title' => 'Bahan Ajar Pertemuan 4: Aplikasi Turunan (Garis Singgung Kurva, Fungsi Naik/Turun, Titik Stasioner & Masalah Optimasi)',
         'published_at' => '2026-11-02 18:40:00',
         'excerpt' => 'Menyelesaikan masalah nyata menggunakan turunan: menyusun persamaan garis singgung kurva, menentukan interval fungsi naik dan turun, menganalisis titik stasioner (maksimum/minimum), serta memecahkan soal cerita optimasi.',
-        'description' => <<<HTML
+        'description' => <<<'HTML'
 <h3>Identitas &amp; Tujuan Pembelajaran (Pertemuan 4 dari 4)</h3>
 <p>Selamat datang di <strong>Pertemuan 4 (Pertemuan Puncak)</strong> dari seri pembelajaran <strong>Turunan Fungsi Aljabar SMA</strong>! Setelah menguasai konsep limit (Pertemuan 1), aturan dasar (Pertemuan 2), dan aturan rantai (Pertemuan 3), kini saatnya kita memetik manfaat terbesar kalkulus: <strong>menganalisis grafik kurva dan memecahkan masalah optimasi (nilai maksimum &amp; minimum)</strong>.</p>
 <p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari bahan ajar dan mengerjakan latihan pada paket ini, siswa diharapkan mampu:</p>
@@ -1164,8 +1164,8 @@ HTML
   <li><strong>Langkah 3 (25 Menit):</strong> Simak <strong>4 Contoh Soal Terbimbing</strong> secara tuntas.</li>
   <li><strong>Langkah 4 (35 Menit):</strong> Selesaikan <strong>8 Soal Latihan Pilihan Ganda (termasuk HOTS Kontekstual)</strong> di bawah bahan ajar.</li>
 </ul>
-{$navHtml(4)}
-HTML,
+HTML
+        . "\n" . $navHtml(4),
         'content_html' => <<<'HTML'
 <h2>1. Persamaan Garis Singgung (PGS) pada Kurva</h2>
 <p>Sebagaimana telah kita pelajari di Pertemuan 1, <strong>gradien garis singgung</strong> kurva \(y = f(x)\) di titik singgung \(T(x_1, y_1)\) adalah nilai turunan pertama fungsi tersebut di \(x = x_1\):</p>
@@ -1530,7 +1530,7 @@ HTML
         'title' => 'Panduan Strategis & Bedah Pola Soal Asli UTBK / SBMPTN Turunan Fungsi Aljabar',
         'published_at' => '2026-11-02 19:00:00',
         'excerpt' => 'Kumpulan soal asli UTBK, SBMPTN, SNMPTN, dan SIMAK UI dari tahun-tahun sebelumnya tentang Turunan Fungsi Aljabar, dilengkapi peta pola soal dan pembahasan langkah demi langkah.',
-        'description' => <<<HTML
+        'description' => <<<'HTML'
 <h3>Identitas &amp; Tujuan Pembelajaran (Paket Pengayaan Khusus UTBK / SBMPTN)</h3>
 <p>Paket ke-5 ini disusun khusus sebagai <strong>Pengayaan &amp; Pemantapan Seleksi Masuk PTN (UTBK-SNBT / SBMPTN / Mandiri)</strong> setelah siswa menuntaskan Pertemuan 1 hingga Pertemuan 4. Seluruh soal di dalam paket ini diambil dari <strong>naskah asli SBMPTN, UTBK, SNMPTN, dan SIMAK UI tahun-tahun sebelumnya</strong>.</p>
 <p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari ringkasan strategi dan mengerjakan 12 soal asli UTBK/SBMPTN pada paket ini, siswa diharapkan mampu:</p>
@@ -1546,8 +1546,8 @@ HTML
   <li><strong>Tahap 2 (45 Menit):</strong> Kerjakan <strong>12 Soal Asli UTBK/SBMPTN</strong> secara mandiri (target waktu \(\pm 3{,}5\) menit per soal).</li>
   <li><strong>Tahap 3 (20 Menit):</strong> Buka bagian <em>Penyelesaian</em> pada setiap nomor untuk mempelajari cara formal maupun alternatif cara cepatnya.</li>
 </ul>
-{$navHtml(5)}
-HTML,
+HTML
+        . "\n" . $navHtml(5),
         'content_html' => <<<'HTML'
 <h2>1. Peta 5 Pola Soal Turunan yang Paling Sering Muncul di UTBK &amp; SBMPTN</h2>
 <p>Jika kita membedah arsip soal seleksi masuk PTN (SNMPTN, SBMPTN, UTBK, hingga SIMAK UI) selama lebih dari satu dekade terakhir, soal <strong>Turunan Fungsi Aljabar</strong> hampir tidak pernah menanyakan <em>"tentukan turunan dari \(f(x) = 3x^4\)"</em> secara polos. Sebaliknya, pembuat soal UTBK mengemas konsep Pertemuan 1&ndash;4 ke dalam <strong>5 pola favorit</strong> berikut:</p>
