@@ -46,50 +46,56 @@
 
   <!-- LEFT COLUMN: Main Typography & Badges -->
   <g transform="translate(140, 150)">
-    <!-- Category Pill Badge -->
-    <rect x="0" y="0" width="460" height="54" rx="27" fill="#1e293b" fill-opacity="0.8" stroke="#38bdf8" stroke-width="2" />
-    <circle cx="28" cy="27" r="9" fill="#38bdf8" />
-    <text x="50" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="#e0f2fe" letter-spacing="1.5">🚀 PORTAL BELAJAR MATEMATIKA SMA</text>
+    <!-- Category Pill Badge (Generous width to prevent any overflow) -->
+    <rect x="0" y="0" width="510" height="52" rx="26" fill="#1e293b" fill-opacity="0.9" stroke="#38bdf8" stroke-width="2" />
+    <circle cx="26" cy="26" r="8" fill="#38bdf8" />
+    <!-- Vector Rocket Icon instead of font emoji -->
+    <g transform="translate(44, 16) scale(0.85)" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 13a8 8 0 0 1 7 7 6 6 0 0 0 3 -5l4 -4a6 6 0 0 0 -5 -5l-4 4a6 6 0 0 0 -5 3" />
+      <path d="M7 14a6 6 0 0 0 -3 6 6 6 0 0 0 6 -3" />
+      <circle cx="15" cy="9" r="1" fill="#38bdf8" />
+    </g>
+    <text x="76" y="33" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#e0f2fe" letter-spacing="1">PORTAL BELAJAR MATEMATIKA SMA</text>
 
     <!-- Main Title -->
-    <text x="0" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="94" font-weight="900" fill="#ffffff" letter-spacing="-1">
+    <text x="0" y="160" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="94" font-weight="900" fill="#ffffff" letter-spacing="-1">
       MATH<tspan fill="#38bdf8">DOSMAN</tspan>
     </text>
 
     <!-- Slogan Gradient -->
-    <text x="0" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="700" fill="url(#grad-accent)">
+    <text x="0" y="240" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="url(#grad-accent)">
       Belajar Matematika Jadi Ringkas, Rapi &amp; Terarah
     </text>
 
     <!-- Description -->
-    <text x="0" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="400" fill="#94a3b8" width="900">
+    <text x="0" y="315" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="24" font-weight="400" fill="#94a3b8">
       Kumpulan materi terstruktur, paket soal HOTS, dan pembahasan lengkap langkah demi langkah.
     </text>
 
     <!-- Feature Pills -->
-    <g transform="translate(0, 370)">
+    <g transform="translate(0, 365)">
       <!-- Pill 1 -->
       <g>
-        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
-        <circle cx="36" cy="33" r="16" fill="#10b981" fill-opacity="0.25" />
-        <text x="36" y="40" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#34d399" text-anchor="middle">✓</text>
-        <text x="68" y="41" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f1f5f9">1000+ Butir Soal</text>
+        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
+        <circle cx="34" cy="33" r="14" fill="#10b981" fill-opacity="0.25" />
+        <text x="34" y="39" font-family="system-ui, sans-serif" font-size="18" font-weight="900" fill="#34d399" text-anchor="middle">✓</text>
+        <text x="62" y="40" font-family="'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="600" fill="#f1f5f9">1000+ Butir Soal</text>
       </g>
 
       <!-- Pill 2 -->
-      <g transform="translate(330, 0)">
-        <rect x="0" y="0" width="350" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
-        <circle cx="36" cy="33" r="16" fill="#6366f1" fill-opacity="0.25" />
-        <text x="36" y="40" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#818cf8" text-anchor="middle">⚡</text>
-        <text x="68" y="41" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f1f5f9">Pembahasan Detail</text>
+      <g transform="translate(305, 0)">
+        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
+        <circle cx="34" cy="33" r="14" fill="#6366f1" fill-opacity="0.25" />
+        <text x="34" y="39" font-family="system-ui, sans-serif" font-size="18" font-weight="900" fill="#818cf8" text-anchor="middle">⚡</text>
+        <text x="62" y="40" font-family="'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="600" fill="#f1f5f9">Pembahasan Detail</text>
       </g>
 
       <!-- Pill 3 -->
-      <g transform="translate(700, 0)">
-        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
-        <circle cx="36" cy="33" r="16" fill="#f59e0b" fill-opacity="0.25" />
-        <text x="36" y="40" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#fbbf24" text-anchor="middle">★</text>
-        <text x="68" y="41" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f1f5f9">Siap Ujian &amp; UTBK</text>
+      <g transform="translate(640, 0)">
+        <rect x="0" y="0" width="290" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1.5" />
+        <circle cx="34" cy="33" r="14" fill="#f59e0b" fill-opacity="0.25" />
+        <text x="34" y="39" font-family="system-ui, sans-serif" font-size="18" font-weight="900" fill="#fbbf24" text-anchor="middle">★</text>
+        <text x="62" y="40" font-family="'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="600" fill="#f1f5f9">Siap Ujian &amp; UTBK</text>
       </g>
     </g>
   </g>
@@ -100,41 +106,33 @@
     <rect x="0" y="0" width="640" height="640" rx="36" fill="url(#card-grad)" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2" />
 
     <!-- Card Header / Tab bar -->
-    <rect x="36" y="36" width="568" height="50" rx="16" fill="#0f172a" fill-opacity="0.7" />
+    <rect x="36" y="36" width="568" height="50" rx="16" fill="#0f172a" fill-opacity="0.85" />
     <circle cx="66" cy="61" r="7" fill="#ef4444" />
     <circle cx="90" cy="61" r="7" fill="#eab308" />
     <circle cx="114" cy="61" r="7" fill="#22c55e" />
-    <text x="144" y="68" font-family="monospace" font-size="18" fill="#94a3b8">mathdosman.my.id • interactive math</text>
+    <text x="140" y="68" font-family="'Segoe UI', system-ui, monospace" font-size="17" fill="#94a3b8">mathdosman.my.id • interactive math</text>
 
     <!-- Mathematical Visual Composition -->
-    <!-- 3D Geometric Cube with Glowing Edges -->
     <g transform="translate(320, 240)">
-      <!-- Cube Top -->
       <polygon points="0,-90 120,-30 0,30 -120,-30" fill="#3b82f6" fill-opacity="0.35" stroke="#60a5fa" stroke-width="3" />
-      <!-- Cube Left -->
       <polygon points="-120,-30 0,30 0,160 -120,100" fill="#1d4ed8" fill-opacity="0.5" stroke="#38bdf8" stroke-width="3" />
-      <!-- Cube Right -->
       <polygon points="0,30 120,-30 120,100 0,160" fill="#4338ca" fill-opacity="0.4" stroke="#818cf8" stroke-width="3" />
-
-      <!-- Center Glow Core -->
       <circle cx="0" cy="30" r="18" fill="#38bdf8" filter="url(#glow-cyan)" />
     </g>
 
     <!-- Floating Math Formulas -->
-    <g transform="translate(60, 420)">
-      <!-- Formula 1 Card -->
-      <rect x="0" y="0" width="240" height="74" rx="18" fill="#1e293b" fill-opacity="0.85" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="2" />
-      <text x="24" y="46" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#38bdf8">∫ f(x) dx = F(x)</text>
+    <g transform="translate(40, 420)">
+      <rect x="0" y="0" width="260" height="74" rx="18" fill="#1e293b" fill-opacity="0.9" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="2" />
+      <text x="130" y="47" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#38bdf8" text-anchor="middle">∫ f(x) dx = F(x)</text>
 
-      <!-- Formula 2 Card -->
-      <rect x="270" y="20" width="250" height="74" rx="18" fill="#1e293b" fill-opacity="0.85" stroke="#a855f7" stroke-opacity="0.5" stroke-width="2" />
-      <text x="294" y="66" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#c084fc">lim (1 + 1/n)ⁿ = e</text>
+      <rect x="290" y="10" width="270" height="74" rx="18" fill="#1e293b" fill-opacity="0.9" stroke="#a855f7" stroke-opacity="0.5" stroke-width="2" />
+      <text x="425" y="57" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#c084fc" text-anchor="middle">lim (1 + 1/n)ⁿ = e</text>
     </g>
 
-    <!-- Bottom Stat Strip -->
-    <g transform="translate(60, 540)">
-      <rect x="0" y="0" width="520" height="60" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5" />
-      <text x="260" y="38" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#38bdf8" text-anchor="middle">
+    <!-- Bottom Stat Strip (Centered) -->
+    <g transform="translate(36, 540)">
+      <rect x="0" y="0" width="568" height="60" rx="16" fill="#0284c7" fill-opacity="0.18" stroke="#38bdf8" stroke-opacity="0.35" stroke-width="1.5" />
+      <text x="284" y="38" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="700" fill="#38bdf8" text-anchor="middle">
         💡 Solusi Pintar &amp; Pembahasan Soal Interaktif
       </text>
     </g>

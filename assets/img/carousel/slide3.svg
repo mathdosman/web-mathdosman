@@ -37,50 +37,56 @@
 
   <!-- LEFT COLUMN: Typography -->
   <g transform="translate(140, 150)">
-    <rect x="0" y="0" width="410" height="54" rx="27" fill="#2d0b4d" stroke="#f43f5e" stroke-width="2" />
-    <circle cx="28" cy="27" r="9" fill="#f43f5e" />
-    <text x="50" y="35" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="#fce7f3" letter-spacing="1.5">📈 KALKULUS &amp; ANALISIS FUNGSI</text>
+    <!-- Badge Pill (Generous width 480 to easily fit all text) -->
+    <rect x="0" y="0" width="480" height="52" rx="26" fill="#2d0b4d" stroke="#f43f5e" stroke-width="2" />
+    <circle cx="26" cy="26" r="8" fill="#f43f5e" />
+    <!-- Vector Trendline Icon -->
+    <g transform="translate(44, 16) scale(0.85)" stroke="#f43f5e" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17l6 -6l4 4l8 -8" />
+      <path d="M14 7l7 0l0 7" />
+    </g>
+    <text x="76" y="33" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#fce7f3" letter-spacing="1">KALKULUS &amp; ANALISIS FUNGSI</text>
 
     <!-- Main Title -->
-    <text x="0" y="160" font-family="system-ui, sans-serif" font-size="90" font-weight="900" fill="#ffffff" letter-spacing="-1">
+    <text x="0" y="160" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="90" font-weight="900" fill="#ffffff" letter-spacing="-1">
       Limit, Turunan &amp; <tspan fill="#f43f5e">Integral</tspan>
     </text>
 
     <!-- Slogan -->
-    <text x="0" y="240" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="url(#grad-rose)">
+    <text x="0" y="240" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="url(#grad-rose)">
       Laju Perubahan, Garis Singgung &amp; Luas Daerah
     </text>
 
     <!-- Description -->
-    <text x="0" y="320" font-family="system-ui, sans-serif" font-size="26" font-weight="400" fill="#cbd5e1">
+    <text x="0" y="315" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="24" font-weight="400" fill="#cbd5e1">
       Pahami konsep kalkulus secara intuitif melalui grafik dinamis dan aplikasi perhitungan nyata.
     </text>
 
     <!-- Sub-topic Pills -->
-    <g transform="translate(0, 370)">
+    <g transform="translate(0, 365)">
       <g>
-        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#f43f5e" stroke-opacity="0.4" stroke-width="1.5" />
-        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#fdf2f8" text-anchor="middle">Limit Aljabar &amp; Tak Hingga</text>
+        <rect x="0" y="0" width="290" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#f43f5e" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="145" y="41" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#fdf2f8" text-anchor="middle">Limit Aljabar &amp; Tak Hingga</text>
       </g>
-      <g transform="translate(300, 0)">
-        <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1.5" />
-        <text x="155" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#fdf2f8" text-anchor="middle">Garis Singgung dy/dx</text>
+      <g transform="translate(310, 0)">
+        <rect x="0" y="0" width="300" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="150" y="41" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#fdf2f8" text-anchor="middle">Garis Singgung dy/dx</text>
       </g>
       <g transform="translate(630, 0)">
-        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1.5" />
-        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#fdf2f8" text-anchor="middle">Integral Luas &amp; Volume</text>
+        <rect x="0" y="0" width="290" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="145" y="41" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#fdf2f8" text-anchor="middle">Integral Luas &amp; Volume</text>
       </g>
     </g>
   </g>
 
   <!-- RIGHT COLUMN: Elegant Calculus Curve Visual Card -->
   <g transform="translate(1320, 120)">
-    <rect x="0" y="0" width="640" height="640" rx="36" fill="#1b0a38" fill-opacity="0.8" stroke="#f43f5e" stroke-opacity="0.3" stroke-width="2" />
+    <rect x="0" y="0" width="640" height="640" rx="36" fill="#1b0a38" fill-opacity="0.85" stroke="#f43f5e" stroke-opacity="0.3" stroke-width="2" />
 
     <!-- Card Header -->
     <rect x="36" y="36" width="568" height="50" rx="16" fill="#290f52" fill-opacity="0.9" />
     <circle cx="66" cy="61" r="7" fill="#f43f5e" />
-    <text x="90" y="68" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#fbcfe8">Calculus Visualizer • Definite Integral &amp; Slopes</text>
+    <text x="320" y="68" font-family="'Segoe UI', system-ui, sans-serif" font-size="17" font-weight="700" fill="#fbcfe8" text-anchor="middle">Calculus Visualizer • Definite Integral &amp; Slopes</text>
 
     <!-- Visual Area Under Curve -->
     <g transform="translate(60, 120)">
@@ -107,17 +113,17 @@
     </g>
 
     <!-- Big Formula Banner -->
-    <g transform="translate(40, 470)">
-      <rect x="0" y="0" width="560" height="76" rx="20" fill="#3b0764" fill-opacity="0.9" stroke="#c084fc" stroke-opacity="0.4" stroke-width="2" />
-      <text x="280" y="48" font-family="Georgia, serif" font-size="30" font-style="italic" fill="#ffffff" text-anchor="middle">
-        ∫<tspan font-size="20" dy="10">a</tspan><tspan font-size="20" dy="-20">b</tspan><tspan font-size="30" dy="10"> f(x) dx = F(b) - F(a)</tspan>
+    <g transform="translate(36, 470)">
+      <rect x="0" y="0" width="568" height="76" rx="20" fill="#3b0764" fill-opacity="0.9" stroke="#c084fc" stroke-opacity="0.4" stroke-width="2" />
+      <text x="284" y="48" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#ffffff" text-anchor="middle">
+        ∫<tspan font-size="18" dy="8">a</tspan><tspan font-size="18" dy="-16">b</tspan><tspan font-size="28" dy="8"> f(x) dx = F(b) - F(a)</tspan>
       </text>
     </g>
 
     <!-- Bottom Stat Strip -->
-    <g transform="translate(40, 565)">
-      <rect x="0" y="0" width="560" height="50" rx="16" fill="#4c0519" fill-opacity="0.4" stroke="#f43f5e" stroke-opacity="0.3" stroke-width="1.5" />
-      <text x="280" y="32" font-family="system-ui, sans-serif" font-size="19" font-weight="700" fill="#fda4af" text-anchor="middle">
+    <g transform="translate(36, 565)">
+      <rect x="0" y="0" width="568" height="50" rx="16" fill="#4c0519" fill-opacity="0.45" stroke="#f43f5e" stroke-opacity="0.3" stroke-width="1.5" />
+      <text x="284" y="32" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="700" fill="#fda4af" text-anchor="middle">
         💡 Dilengkapi Trik Turunan Cepat &amp; Integral Substitusi
       </text>
     </g>

@@ -32,38 +32,44 @@
 
   <!-- LEFT COLUMN: Typography -->
   <g transform="translate(140, 150)">
-    <rect x="0" y="0" width="440" height="54" rx="27" fill="#063242" stroke="#38bdf8" stroke-width="2" />
-    <circle cx="28" cy="27" r="9" fill="#38bdf8" />
-    <text x="50" y="35" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="#e0f2fe" letter-spacing="1.5">🔄 GEOMETRI &amp; TRANSFORMASI</text>
+    <!-- Badge Pill (Generous width 480 to easily fit all text) -->
+    <rect x="0" y="0" width="480" height="52" rx="26" fill="#063242" stroke="#38bdf8" stroke-width="2" />
+    <circle cx="26" cy="26" r="8" fill="#38bdf8" />
+    <!-- Vector Refresh / Rotation Icon -->
+    <g transform="translate(44, 16) scale(0.85)" stroke="#38bdf8" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+      <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+    </g>
+    <text x="76" y="33" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#e0f2fe" letter-spacing="1">GEOMETRI &amp; TRANSFORMASI</text>
 
     <!-- Main Title -->
-    <text x="0" y="160" font-family="system-ui, sans-serif" font-size="90" font-weight="900" fill="#ffffff" letter-spacing="-1">
+    <text x="0" y="160" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="90" font-weight="900" fill="#ffffff" letter-spacing="-1">
       Transformasi <tspan fill="#38bdf8">Geometri</tspan>
     </text>
 
     <!-- Slogan -->
-    <text x="0" y="240" font-family="system-ui, sans-serif" font-size="44" font-weight="700" fill="url(#grad-cyan)">
+    <text x="0" y="240" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="url(#grad-cyan)">
       Translasi, Refleksi, Rotasi &amp; Komposisi Matriks
     </text>
 
     <!-- Description -->
-    <text x="0" y="320" font-family="system-ui, sans-serif" font-size="26" font-weight="400" fill="#94a3b8">
+    <text x="0" y="315" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="24" font-weight="400" fill="#94a3b8">
       Pelajari cara menentukan bayangan titik, kurva, dan garis dengan matriks transformasi serta pusat (a, b).
     </text>
 
     <!-- Sub-topic Pills -->
-    <g transform="translate(0, 370)">
+    <g transform="translate(0, 365)">
       <g>
         <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="1.5" />
-        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f0f9ff" text-anchor="middle">Translasi Titik &amp; Garis</text>
+        <text x="140" y="41" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#f0f9ff" text-anchor="middle">Translasi Titik &amp; Garis</text>
       </g>
       <g transform="translate(300, 0)">
         <rect x="0" y="0" width="310" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#818cf8" stroke-opacity="0.4" stroke-width="1.5" />
-        <text x="155" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f0f9ff" text-anchor="middle">Rotasi Sudut θ (Pusat a,b)</text>
+        <text x="155" y="41" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#f0f9ff" text-anchor="middle">Rotasi Sudut θ (Pusat a,b)</text>
       </g>
       <g transform="translate(630, 0)">
-        <rect x="0" y="0" width="280" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1.5" />
-        <text x="140" y="42" font-family="system-ui, sans-serif" font-size="22" font-weight="600" fill="#f0f9ff" text-anchor="middle">Komposisi Transformasi</text>
+        <rect x="0" y="0" width="290" height="66" rx="20" fill="#ffffff" fill-opacity="0.08" stroke="#c084fc" stroke-opacity="0.4" stroke-width="1.5" />
+        <text x="145" y="41" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="600" fill="#f0f9ff" text-anchor="middle">Komposisi Transformasi</text>
       </g>
     </g>
   </g>
@@ -75,19 +81,17 @@
     <!-- Card Header -->
     <rect x="36" y="36" width="568" height="50" rx="16" fill="#031b26" fill-opacity="0.9" />
     <circle cx="66" cy="61" r="7" fill="#38bdf8" />
-    <text x="90" y="68" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#bae6fd">Coordinate Transformation • Rotation R[P, θ]</text>
+    <text x="320" y="68" font-family="'Segoe UI', system-ui, sans-serif" font-size="17" font-weight="700" fill="#bae6fd" text-anchor="middle">Coordinate Transformation • Rotation R[P, θ]</text>
 
     <!-- Visual Interactive Coordinate Grid -->
     <g transform="translate(60, 120)">
-      <!-- Crosshairs -->
       <line x1="280" y1="20" x2="280" y2="340" stroke="#475569" stroke-width="2" stroke-dasharray="6 6" />
       <line x1="20" y1="180" x2="540" y2="180" stroke="#475569" stroke-width="2" stroke-dasharray="6 6" />
 
-      <!-- Center (0,0) -->
       <circle cx="280" cy="180" r="6" fill="#ffffff" />
       <text x="290" y="205" font-family="system-ui, sans-serif" font-size="18" fill="#94a3b8">O(0,0)</text>
 
-      <!-- Original Shape (Blue Triangle) -->
+      <!-- Original Shape -->
       <polygon points="340,140 440,110 390,70" fill="#38bdf8" fill-opacity="0.25" stroke="#38bdf8" stroke-width="4" />
       <circle cx="340" cy="140" r="7" fill="#38bdf8" />
       <text x="350" y="150" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#38bdf8">A(x,y)</text>
@@ -96,24 +100,24 @@
       <path d="M 340,140 A 100,100 0 0,0 230,90" fill="none" stroke="#facc15" stroke-width="3" stroke-dasharray="6 4" />
       <text x="300" y="110" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#facc15">+θ</text>
 
-      <!-- Rotated Shape (Purple Triangle) -->
+      <!-- Rotated Shape -->
       <polygon points="230,90 200,-10 140,40" fill="#818cf8" fill-opacity="0.3" stroke="#818cf8" stroke-width="4" />
       <circle cx="230" cy="90" r="7" fill="#818cf8" />
       <text x="150" y="110" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#c084fc">A'(x',y')</text>
     </g>
 
     <!-- Rotation Matrix Formula Banner -->
-    <g transform="translate(40, 460)">
-      <rect x="0" y="0" width="560" height="84" rx="20" fill="#042230" fill-opacity="0.9" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="2" />
-      <text x="280" y="52" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#ffffff" text-anchor="middle">
+    <g transform="translate(36, 460)">
+      <rect x="0" y="0" width="568" height="84" rx="20" fill="#042230" fill-opacity="0.9" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="2" />
+      <text x="284" y="52" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#ffffff" text-anchor="middle">
         [ cos θ  -sin θ ; sin θ  cos θ ]
       </text>
     </g>
 
     <!-- Bottom Stat Strip -->
-    <g transform="translate(40, 565)">
-      <rect x="0" y="0" width="560" height="50" rx="16" fill="#082f49" fill-opacity="0.4" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5" />
-      <text x="280" y="32" font-family="system-ui, sans-serif" font-size="19" font-weight="700" fill="#7dd3fc" text-anchor="middle">
+    <g transform="translate(36, 565)">
+      <rect x="0" y="0" width="568" height="50" rx="16" fill="#082f49" fill-opacity="0.45" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5" />
+      <text x="284" y="32" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" font-weight="700" fill="#7dd3fc" text-anchor="middle">
         💡 50+ Soal HOTS Transformasi Geometri dengan Pembahasan
       </text>
     </g>
