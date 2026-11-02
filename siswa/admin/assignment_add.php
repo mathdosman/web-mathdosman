@@ -79,6 +79,7 @@ $hasUpdatedAtColumn = !empty($saCols['updated_at']);
 
 $hasShuffleQuestionsColumn = !empty($saCols['shuffle_questions']);
 $hasShuffleOptionsColumn = !empty($saCols['shuffle_options']);
+$hasTokenColumn = !empty($saCols['token_code']);
 $defaultShuffleQuestions = 0;
 $defaultShuffleOptions = 0;
 
@@ -172,14 +173,16 @@ try {
 
 try {
     if ($hasIsExamColumn) {
-        // Penugasan hanya boleh memakai paket yang dipilih di exam_packages.php (is_exam=1)
+        // Ambil paket yang didaftarkan sebagai Paket Ujian (is_exam=1) ATAU paket yang sudah dipublish
         $packages = $pdo->query('SELECT id, code, name, status, COALESCE(is_exam, 0) AS is_exam
             FROM packages
-            WHERE COALESCE(is_exam, 0) = 1
-            ORDER BY COALESCE(published_at, created_at) DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
+            WHERE COALESCE(is_exam, 0) = 1 OR status = "published"
+            ORDER BY COALESCE(is_exam, 0) DESC, COALESCE(published_at, created_at) DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
     } else {
-        $packages = [];
-        $errors[] = 'Kolom packages.is_exam belum tersedia. Buat dulu di menu Ujian → Paket Ujian.';
+        $packages = $pdo->query('SELECT id, code, name, status, 0 AS is_exam
+            FROM packages
+            WHERE status = "published"
+            ORDER BY COALESCE(published_at, created_at) DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (Throwable $e) {
     $packages = [];
@@ -242,15 +245,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Penugasan hanya boleh memakai paket yang dipilih di exam_packages.php (is_exam=1).
-    if (!$errors && $hasIsExamColumn && $values['package_id'] > 0) {
+    // Validasi pemilihan paket:
+    // - Mode Ujian: wajib terdaftar di Paket Ujian (is_exam = 1).
+    // - Mode Tugas: boleh paket terbit (published) maupun paket ujian (is_exam = 1).
+    if (!$errors && $values['package_id'] > 0) {
         try {
-            $stmt = $pdo->prepare('SELECT COALESCE(is_exam, 0) FROM packages WHERE id = :id');
+            $stmt = $pdo->prepare('SELECT status, COALESCE(is_exam, 0) AS is_exam FROM packages WHERE id = :id');
             $stmt->execute([':id' => $values['package_id']]);
-            $isExam = (int)$stmt->fetchColumn();
+            $pkgRow = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($isExam !== 1) {
-                $errors[] = 'Paket harus dipilih dari menu Ujian → Paket Ujian.';
+            if (!$pkgRow) {
+                $errors[] = 'Paket soal yang dipilih tidak ditemukan.';
+            } else {
+                $isExamPkg = (int)($pkgRow['is_exam'] ?? 0);
+                $pkgStatus = (string)($pkgRow['status'] ?? '');
+
+                if ($values['jenis'] === 'ujian') {
+                    if ($hasIsExamColumn && $isExamPkg !== 1) {
+                        $errors[] = 'Untuk jenis Ujian, paket harus didaftarkan di menu Ujian → Paket Ujian.';
+                    }
+                } else {
+                    if ($pkgStatus !== 'published' && $isExamPkg !== 1) {
+                        $errors[] = 'Untuk jenis Tugas, paket harus berstatus Terbit (Published) atau Paket Ujian.';
+                    }
+                }
             }
         } catch (Throwable $e) {
             // Ignore validation if schema not ready
@@ -345,15 +363,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $skipped = 0;
                 $skippedHasResult = 0;
 
-                $stmtNew = null;
-                $stmtOld = null;
-                $stmtDurOnly = null;
-                $stmtReviewOnly = null;
-				$stmtCountAnswers = null;
-				$stmtUpdateExisting = null;
+                // Otomatis generate Token 6-digit acak jika jenis adalah UJIAN
+                $tokenCode = null;
+                if ($values['jenis'] === 'ujian' && $hasTokenColumn) {
+                    for ($attempt = 0; $attempt < 25; $attempt++) {
+                        try {
+                            $candidateToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                        } catch (Throwable $e) {
+                            $candidateToken = str_pad((string)mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                        }
+
+                        try {
+                            $stmtTok = $pdo->prepare('SELECT 1 FROM student_assignments WHERE token_code = :t LIMIT 1');
+                            $stmtTok->execute([':t' => $candidateToken]);
+                            if (!$stmtTok->fetchColumn()) {
+                                $tokenCode = $candidateToken;
+                                break;
+                            }
+                        } catch (Throwable $e) {
+                            $tokenCode = $candidateToken;
+                            break;
+                        }
+                    }
+                    if ($tokenCode === null) {
+                        $tokenCode = str_pad((string)mt_rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+                    }
+                }
+
+                $stmtCountAnswers = null;
+                $stmtUpdateExisting = null;
 
                 $allowReviewSql = ($hasReviewDetailsColumn ? ((int)$values['allow_review_details'] === 1 ? 1 : 0) : null);
                 $allowCalcSql = ($hasAllowCalculatorColumn ? ((int)$values['allow_calculator'] === 1 ? 1 : 0) : null);
+
+                // Siapkan statement insert dinamis satu kali sebelum loop
+                $colsIns = ['student_id', 'package_id', 'jenis', 'status', 'due_at'];
+                $valsIns = [':sid', ':pid', ':j', '"assigned"', ':due'];
+
+                $colsIns[] = 'judul'; $valsIns[] = ':t';
+                $colsIns[] = 'catatan'; $valsIns[] = ':c';
+                if ($hasDurationMinutesColumn) { $colsIns[] = 'duration_minutes'; $valsIns[] = ':dur'; }
+                if ($hasReviewDetailsColumn) { $colsIns[] = 'allow_review_details'; $valsIns[] = ':rev'; }
+                if ($hasAllowCalculatorColumn) { $colsIns[] = 'allow_calculator'; $valsIns[] = ':calc'; }
+                if ($hasShuffleQuestionsColumn) { $colsIns[] = 'shuffle_questions'; $valsIns[] = ':sq'; }
+                if ($hasShuffleOptionsColumn) { $colsIns[] = 'shuffle_options'; $valsIns[] = ':so'; }
+                if ($hasTokenColumn) { $colsIns[] = 'token_code'; $valsIns[] = ':tok'; }
+
+                $sqlInsert = 'INSERT INTO student_assignments (' . implode(', ', $colsIns) . ') VALUES (' . implode(', ', $valsIns) . ')';
+                $stmtNew = $pdo->prepare($sqlInsert);
+
                 foreach ($studentIds as $sid) {
                     $existing = $existingMap[(int)$sid] ?? null;
                     if ($existing && !empty($existing['id'])) {
@@ -394,6 +452,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($hasAllowCalculatorColumn) $setParts[] = 'allow_calculator = :calc';
                             if ($hasShuffleQuestionsColumn) $setParts[] = 'shuffle_questions = :sq';
                             if ($hasShuffleOptionsColumn) $setParts[] = 'shuffle_options = :so';
+                            if ($hasTokenColumn) $setParts[] = 'token_code = :tok';
                             if ($hasStartedAtColumn) $setParts[] = 'started_at = NULL';
                             if ($hasExamRevokedAtColumn) $setParts[] = 'exam_revoked_at = NULL';
                             if ($hasGradedAtColumn) $setParts[] = 'graded_at = NULL';
@@ -420,200 +479,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($hasAllowCalculatorColumn) $paramsUp[':calc'] = $allowCalcSql;
                         if ($hasShuffleQuestionsColumn) $paramsUp[':sq'] = $defaultShuffleQuestions;
                         if ($hasShuffleOptionsColumn) $paramsUp[':so'] = $defaultShuffleOptions;
+                        if ($hasTokenColumn) $paramsUp[':tok'] = $tokenCode;
                         $stmtUpdateExisting->execute($paramsUp);
                         $updated++;
                         continue;
                     }
 
-                    if ($hasDurationMinutesColumn && $hasReviewDetailsColumn && $hasAllowCalculatorColumn) {
-                        if ($stmtNew === null) {
-                            $extraCols = '';
-                            $extraVals = '';
-                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_review_details, allow_calculator' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c, :rev, :calc' . $extraVals . ', "assigned", :due)');
-                        }
-                        $paramsIns = [
-                            ':sid' => (int)$sid,
-                            ':pid' => (int)$values['package_id'],
-                            ':j' => (string)$values['jenis'],
-                            ':dur' => $durSql,
-                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                            ':rev' => $allowReviewSql,
-                            ':calc' => $allowCalcSql,
-                            ':due' => $dueSql,
-                        ];
-                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
-                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                        $stmtNew->execute($paramsIns);
-                        $created++;
-                        continue;
-                    }
-
-                    if ($hasDurationMinutesColumn && $hasReviewDetailsColumn && !$hasAllowCalculatorColumn) {
-                        if ($stmtNew === null) {
-                            $extraCols = '';
-                            $extraVals = '';
-                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                            $stmtNew = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_review_details' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c, :rev' . $extraVals . ', "assigned", :due)');
-                        }
-                        $paramsIns = [
-                            ':sid' => (int)$sid,
-                            ':pid' => (int)$values['package_id'],
-                            ':j' => (string)$values['jenis'],
-                            ':dur' => $durSql,
-                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                            ':rev' => $allowReviewSql,
-                            ':due' => $dueSql,
-                        ];
-                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
-                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                        $stmtNew->execute($paramsIns);
-                        $created++;
-                        continue;
-                    }
-
-                    if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn && $hasAllowCalculatorColumn) {
-                        if ($stmtDurOnly === null) {
-                            $extraCols = '';
-                            $extraVals = '';
-                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                            $stmtDurOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan, allow_calculator' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c, :calc' . $extraVals . ', "assigned", :due)');
-                        }
-                        $paramsIns = [
-                            ':sid' => (int)$sid,
-                            ':pid' => (int)$values['package_id'],
-                            ':j' => (string)$values['jenis'],
-                            ':dur' => $durSql,
-                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                            ':calc' => $allowCalcSql,
-                            ':due' => $dueSql,
-                        ];
-                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
-                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                        $stmtDurOnly->execute($paramsIns);
-                        $created++;
-                        continue;
-                    }
-
-                    if ($hasDurationMinutesColumn && !$hasReviewDetailsColumn && !$hasAllowCalculatorColumn) {
-                        if ($stmtDurOnly === null) {
-                            $extraCols = '';
-                            $extraVals = '';
-                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                            $stmtDurOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, duration_minutes, judul, catatan' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :dur, :t, :c' . $extraVals . ', "assigned", :due)');
-                        }
-                        $paramsIns = [
-                            ':sid' => (int)$sid,
-                            ':pid' => (int)$values['package_id'],
-                            ':j' => (string)$values['jenis'],
-                            ':dur' => $durSql,
-                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                            ':due' => $dueSql,
-                        ];
-                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
-                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                        $stmtDurOnly->execute($paramsIns);
-                        $created++;
-                        continue;
-                    }
-
-                    if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn && $hasAllowCalculatorColumn) {
-                        if ($stmtReviewOnly === null) {
-                            $extraCols = '';
-                            $extraVals = '';
-                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                            $stmtReviewOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_review_details, allow_calculator' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :t, :c, :rev, :calc' . $extraVals . ', "assigned", :due)');
-                        }
-                        $paramsIns = [
-                            ':sid' => (int)$sid,
-                            ':pid' => (int)$values['package_id'],
-                            ':j' => (string)$values['jenis'],
-                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                            ':rev' => $allowReviewSql,
-                            ':calc' => $allowCalcSql,
-                            ':due' => $dueSql,
-                        ];
-                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
-                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                        $stmtReviewOnly->execute($paramsIns);
-                        $created++;
-                        continue;
-                    }
-
-                    if (!$hasDurationMinutesColumn && $hasReviewDetailsColumn && !$hasAllowCalculatorColumn) {
-                        if ($stmtReviewOnly === null) {
-                            $extraCols = '';
-                            $extraVals = '';
-                            if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                            if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                            $stmtReviewOnly = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_review_details' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :t, :c, :rev' . $extraVals . ', "assigned", :due)');
-                        }
-                        $paramsIns = [
-                            ':sid' => (int)$sid,
-                            ':pid' => (int)$values['package_id'],
-                            ':j' => (string)$values['jenis'],
-                            ':t' => $values['judul'] !== '' ? $values['judul'] : null,
-                            ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                            ':rev' => $allowReviewSql,
-                            ':due' => $dueSql,
-                        ];
-                        if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
-                        if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                        $stmtReviewOnly->execute($paramsIns);
-                        $created++;
-                        continue;
-                    }
-
-                    // Backward compatible: older schema.
-                    if ($stmtOld === null) {
-                        $extraCols = '';
-                        $extraVals = '';
-                        if ($hasShuffleQuestionsColumn) { $extraCols .= ', shuffle_questions'; $extraVals .= ', :sq'; }
-                        if ($hasShuffleOptionsColumn) { $extraCols .= ', shuffle_options'; $extraVals .= ', :so'; }
-
-                        if ($hasAllowCalculatorColumn) {
-                            $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan, allow_calculator' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :t, :c, :calc' . $extraVals . ', "assigned", :due)');
-                        } else {
-                            $stmtOld = $pdo->prepare('INSERT INTO student_assignments (student_id, package_id, jenis, judul, catatan' . $extraCols . ', status, due_at)
-                                VALUES (:sid, :pid, :j, :t, :c' . $extraVals . ', "assigned", :due)');
-                        }
-                    }
-
+                    // Insert baru
                     $paramsIns = [
                         ':sid' => (int)$sid,
                         ':pid' => (int)$values['package_id'],
                         ':j' => (string)$values['jenis'],
+                        ':due' => $dueSql,
                         ':t' => $values['judul'] !== '' ? $values['judul'] : null,
                         ':c' => $values['catatan'] !== '' ? $values['catatan'] : null,
-                        ':due' => $dueSql,
                     ];
+                    if ($hasDurationMinutesColumn) $paramsIns[':dur'] = $durSql;
+                    if ($hasReviewDetailsColumn) $paramsIns[':rev'] = $allowReviewSql;
                     if ($hasAllowCalculatorColumn) $paramsIns[':calc'] = $allowCalcSql;
                     if ($hasShuffleQuestionsColumn) $paramsIns[':sq'] = $defaultShuffleQuestions;
                     if ($hasShuffleOptionsColumn) $paramsIns[':so'] = $defaultShuffleOptions;
-                    $stmtOld->execute($paramsIns);
+                    if ($hasTokenColumn) $paramsIns[':tok'] = $tokenCode;
+
+                    $stmtNew->execute($paramsIns);
                     $created++;
                 }
 
@@ -769,18 +657,21 @@ include __DIR__ . '/../../includes/header.php';
                             <div class="px-2 py-1 mb-2 rounded bg-body-secondary">
                                 <label class="form-label mb-0 fw-semibold text-body">Paket Soal</label>
                             </div>
-                            <select class="form-select" name="package_id" required>
+                            <select class="form-select" name="package_id" id="packageSelect" required>
                                 <option value="0">-- pilih paket --</option>
                                 <?php foreach ($packages as $p): ?>
-                                    <?php $pid = (int)$p['id']; ?>
-                                    <?php $isExamOpt = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false; ?>
+                                    <?php
+                                    $pid = (int)$p['id'];
+                                    $isExamOpt = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false;
+                                    $tag = $isExamOpt ? '[Ujian]' : '[Materi]';
+                                    ?>
                                     <option value="<?php echo $pid; ?>" data-is-exam="<?php echo $isExamOpt ? '1' : '0'; ?>" <?php echo ($values['package_id'] === $pid) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars((string)$p['name']); ?> (<?php echo htmlspecialchars((string)$p['code']); ?>)
+                                        <?php echo $tag . ' ' . htmlspecialchars((string)$p['name']); ?> (<?php echo htmlspecialchars((string)$p['code']); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text">
-                                Paket yang bisa dipilih hanya paket dari menu <b>Ujian → Paket Ujian</b>.
+                            <div class="form-text" id="packageHelpText">
+                                Mode Tugas: Bebas memilih semua paket soal materi pembelajaran maupun paket ujian.
                             </div>
                         </div>
                     </div>
@@ -908,9 +799,38 @@ include __DIR__ . '/../../includes/header.php';
     const paketSelect = document.querySelector('select[name="package_id"]');
     const form = document.querySelector('form[method="post"]');
 
+    const packageHelpText = document.getElementById('packageHelpText');
+
     const applyJenisRules = () => {
-        // Perilaku seperti "allow_review_details": checkbox tetap bisa dicentang.
-        // Validasi server yang memastikan kalkulator hanya berlaku untuk Jenis=Ujian.
+        const isExam = (String((jenisSelect && jenisSelect.value) || 'tugas').toLowerCase() === 'ujian');
+
+        if (paketSelect) {
+            const options = Array.from(paketSelect.options);
+            options.forEach((opt) => {
+                if (opt.value === '0') return;
+                const isExamPkg = opt.getAttribute('data-is-exam') === '1';
+                if (isExam) {
+                    opt.disabled = !isExamPkg;
+                    opt.hidden = !isExamPkg;
+                } else {
+                    opt.disabled = false;
+                    opt.hidden = false;
+                }
+            });
+
+            const currentSelected = paketSelect.selectedOptions[0];
+            if (isExam && currentSelected && currentSelected.getAttribute('data-is-exam') !== '1') {
+                paketSelect.value = '0';
+            }
+        }
+
+        if (packageHelpText) {
+            if (isExam) {
+                packageHelpText.innerHTML = '<span class="text-primary fw-semibold">Mode Ujian:</span> Hanya paket dari menu <b>Ujian → Paket Ujian</b> yang dapat dipilih. Token ujian & pengacakan soal dibuat otomatis.';
+            } else {
+                packageHelpText.innerHTML = '<span class="text-body fw-semibold">Mode Tugas:</span> Bebas memilih semua paket soal materi pembelajaran maupun paket ujian.';
+            }
+        }
     };
 
     const updateStudentPickerLabel = () => {

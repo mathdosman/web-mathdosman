@@ -132,6 +132,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $assignmentId = (int)($_POST['assignment_id'] ?? 0);
     $studentId = (int)($_POST['student_id'] ?? 0);
 
+    if ($action === 'unlock_exam_bulk') {
+        $idsRaw = $_POST['assignment_ids'] ?? [];
+        if (!is_array($idsRaw)) {
+            $idsRaw = [];
+        }
+
+        $ids = [];
+        foreach ($idsRaw as $v) {
+            $idv = (int)$v;
+            if ($idv > 0) {
+                $ids[] = $idv;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+
+        if (!$ids) {
+            $errors[] = 'Pilih minimal 1 akun/ujian untuk dibuka kuncinya.';
+        } elseif (count($ids) > 500) {
+            $errors[] = 'Terlalu banyak data dipilih (maks 500).';
+        } else {
+            try {
+                $pdo->beginTransaction();
+
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $sqlSel = 'SELECT id, student_id, jenis';
+                if ($hasRevoked) {
+                    $sqlSel .= ', exam_revoked_at';
+                }
+                if ($hasStartedAt) {
+                    $sqlSel .= ', started_at';
+                }
+                if ($hasDuration) {
+                    $sqlSel .= ', duration_minutes';
+                }
+                if ($hasDueAt) {
+                    $sqlSel .= ', due_at';
+                }
+                $sqlSel .= ' FROM student_assignments WHERE id IN (' . $placeholders . ')';
+                $stmtSel = $pdo->prepare($sqlSel);
+                $stmtSel->execute($ids);
+                $targets = $stmtSel->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+                if (!$targets) {
+                    throw new RuntimeException('No targets');
+                }
+
+                $setParts = [
+                    'status = "assigned"',
+                    'updated_at = NOW()',
+                ];
+                if ($hasRevoked) {
+                    $setParts[] = 'exam_revoked_at = NULL';
+                }
+                $sqlUpd = 'UPDATE student_assignments SET ' . implode(', ', $setParts) . ' WHERE id = :id AND student_id = :sid';
+                $stmtUpd = $pdo->prepare($sqlUpd);
+
+                $countDone = 0;
+                foreach ($targets as $t) {
+                    $aid = (int)($t['id'] ?? 0);
+                    $sid = (int)($t['student_id'] ?? 0);
+                    $jenis = strtolower(trim((string)($t['jenis'] ?? '')));
+                    if ($aid <= 0 || $sid <= 0) continue;
+                    if ($jenis !== 'ujian') continue;
+
+                    if ($hasRevoked) {
+                        $examRevokedAtRow = trim((string)($t['exam_revoked_at'] ?? ''));
+                        if ($examRevokedAtRow === '') {
+                            continue;
+                        }
+                    }
+
+                    $dueRaw = $hasDueAt ? (string)($t['due_at'] ?? '') : '';
+                    $startedRaw = $hasStartedAt ? (string)($t['started_at'] ?? '') : '';
+                    $durMin = $hasDuration ? (int)($t['duration_minutes'] ?? 0) : 0;
+                    if ($isExamTimeExpired($dueRaw, $startedRaw, $durMin > 0 ? $durMin : null, $serverNowTs)) {
+                        continue;
+                    }
+
+                    $stmtUpd->execute([':id' => $aid, ':sid' => $sid]);
+                    $countDone++;
+                }
+
+                $pdo->commit();
+                if ($countDone <= 0) {
+                    $errors[] = 'Tidak ada akun ujian terkunci yang memenuhi syarat untuk dibuka.';
+                } else {
+                    header('Location: ' . build_monitoring_ujian_return_url($_GET, true));
+                    exit;
+                }
+            } catch (Throwable $e) {
+                try { $pdo->rollBack(); } catch (Throwable $e2) {}
+                $errors[] = 'Gagal membuka kunci ujian massal.';
+            }
+        }
+    }
+
     if ($action === 'reset_exam_bulk') {
         $idsRaw = $_POST['assignment_ids'] ?? [];
         if (!is_array($idsRaw)) {
@@ -427,6 +523,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'unlock_exam') {
+        if ($assignmentId <= 0 || $studentId <= 0) {
+            $errors[] = 'Parameter tidak valid.';
+        } else {
+            try {
+                $pdo->beginTransaction();
+                $sqlSel = 'SELECT id, student_id, jenis';
+                if ($hasRevoked) {
+                    $sqlSel .= ', exam_revoked_at';
+                }
+                if ($hasStartedAt) {
+                    $sqlSel .= ', started_at';
+                }
+                if ($hasDuration) {
+                    $sqlSel .= ', duration_minutes';
+                }
+                if ($hasDueAt) {
+                    $sqlSel .= ', due_at';
+                }
+                $sqlSel .= ' FROM student_assignments WHERE id = :id AND student_id = :sid LIMIT 1';
+                $stmt = $pdo->prepare($sqlSel);
+                $stmt->execute([':id' => $assignmentId, ':sid' => $studentId]);
+                $as = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$as) {
+                    throw new RuntimeException('Assignment not found');
+                }
+
+                $jenis = strtolower(trim((string)($as['jenis'] ?? '')));
+                if ($jenis !== 'ujian') {
+                    throw new RuntimeException('Bukan ujian');
+                }
+
+                $isLocked = true;
+                if ($hasRevoked) {
+                    $examRevokedAtRow = trim((string)($as['exam_revoked_at'] ?? ''));
+                    $isLocked = ($examRevokedAtRow !== '');
+                }
+
+                if (!$isLocked) {
+                    $pdo->commit();
+                    header('Location: ' . build_monitoring_ujian_return_url($_GET, true));
+                    exit;
+                }
+
+                $dueRaw = $hasDueAt ? (string)($as['due_at'] ?? '') : '';
+                $startedRaw = $hasStartedAt ? (string)($as['started_at'] ?? '') : '';
+                $durMin = $hasDuration ? (int)($as['duration_minutes'] ?? 0) : 0;
+                if ($isExamTimeExpired($dueRaw, $startedRaw, $durMin > 0 ? $durMin : null, $serverNowTs)) {
+                    try { $pdo->rollBack(); } catch (Throwable $e2) {}
+                    $errors[] = 'Waktu ujian sudah habis. Buka kunci tidak tersedia.';
+                } else {
+                    $setParts = [
+                        'status = "assigned"',
+                        'updated_at = NOW()',
+                    ];
+                    if ($hasRevoked) {
+                        $setParts[] = 'exam_revoked_at = NULL';
+                    }
+
+                    $sql = 'UPDATE student_assignments SET ' . implode(', ', $setParts) . ' WHERE id = :id AND student_id = :sid';
+                    $stmtUpd = $pdo->prepare($sql);
+                    $stmtUpd->execute([':id' => $assignmentId, ':sid' => $studentId]);
+
+                    $pdo->commit();
+                    header('Location: ' . build_monitoring_ujian_return_url($_GET, true));
+                    exit;
+                }
+            } catch (Throwable $e) {
+                try { $pdo->rollBack(); } catch (Throwable $e2) {}
+                $errors[] = 'Gagal membuka kunci ujian.';
+            }
+        }
+    }
+
     if ($action === 'reset_exam') {
         if ($assignmentId <= 0 || $studentId <= 0) {
             $errors[] = 'Parameter tidak valid.';
@@ -689,12 +859,19 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
             </form>
             <?php if ($tab === 'ujian' && $hasEligibleBulkReset): ?>
-                <form id="bulkResetForm" method="post" class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center mb-3" data-swal-confirm data-swal-title="Reset terpilih?" data-swal-text="Reset semua ujian yang dipilih? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
-                    <input type="hidden" name="action" value="reset_exam_bulk">
-                    <button type="submit" class="btn btn-outline-danger">Reset Terpilih</button>
-                    <div class="form-text text-muted m-0">Centang beberapa siswa lalu klik Reset Terpilih.</div>
-                </form>
+                <div class="card p-2 mb-3 bg-light-subtle border">
+                    <form id="bulkResetForm" method="post" class="d-flex flex-wrap gap-2 align-items-center mb-0">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                        <span class="small fw-semibold text-body"><i class="ti ti-checkbox me-1"></i>Aksi Terpilih:</span>
+                        <button type="submit" name="action" value="unlock_exam_bulk" class="btn btn-outline-success btn-sm" data-swal-confirm data-swal-title="Buka Kunci Terpilih?" data-swal-text="Buka kunci ujian untuk semua siswa yang dipilih? Siswa dapat melanjutkan ujian tanpa kehilangan jawaban." data-swal-confirm-text="Buka Kunci" data-swal-cancel-text="Batal">
+                            <i class="ti ti-lock-open me-1"></i>Buka Kunci Terpilih
+                        </button>
+                        <button type="submit" name="action" value="reset_exam_bulk" class="btn btn-outline-danger btn-sm" data-swal-confirm data-swal-title="Reset Ulang Terpilih?" data-swal-text="PERINGATAN: Seluruh jawaban siswa terpilih akan DIHAPUS dan timer ujian diulang dari nol." data-swal-confirm-text="Reset Ulang" data-swal-cancel-text="Batal">
+                            <i class="ti ti-rotate me-1"></i>Reset Ulang Terpilih
+                        </button>
+                        <div class="form-text text-muted ms-md-auto mb-0">Centang siswa pada tabel untuk melakukan aksi massal.</div>
+                    </form>
+                </div>
             <?php endif; ?>
 
             <div class="alert alert-info py-2 mb-2" data-no-swal="1">
@@ -724,7 +901,7 @@ include __DIR__ . '/../../includes/header.php';
                     <table class="table table-striped table-hover table-compact align-middle">
                         <thead>
                             <tr>
-                                <th style="width:44px">Pilih</th>
+                                <th style="width:44px"><input class="form-check-input" type="checkbox" id="checkAllAssignments" aria-label="Pilih semua untuk aksi massal"></th>
                                 <th style="width:120px">Menit</th>
                                 <th>Nama Siswa</th>
                                 <th>Judul Paket</th>
@@ -835,12 +1012,23 @@ include __DIR__ . '/../../includes/header.php';
                                         </form>
                                         <?php if ($canReset): ?>
                                             <span class="mx-1"></span>
-                                            <form method="post" class="d-inline" data-swal-confirm data-swal-title="Reset?" data-swal-text="Reset ujian ini? Jawaban & timer siswa akan dihapus." data-swal-confirm-text="Reset" data-swal-cancel-text="Batal">
+                                            <form method="post" class="d-inline" data-swal-confirm data-swal-title="Buka Kunci Ujian?" data-swal-text="Buka status terkunci siswa ini? Siswa dapat melanjutkan pengerjaan tanpa kehilangan jawaban yang sudah tersimpan." data-swal-confirm-text="Buka Kunci" data-swal-cancel-text="Batal">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                                <input type="hidden" name="action" value="unlock_exam">
+                                                <input type="hidden" name="assignment_id" value="<?php echo (int)$r['assignment_id']; ?>">
+                                                <input type="hidden" name="student_id" value="<?php echo (int)$r['student_id']; ?>">
+                                                <button type="submit" class="btn btn-outline-success btn-sm" title="Lanjutkan ujian (jawaban tetap aman)">
+                                                    <i class="ti ti-lock-open me-1" aria-hidden="true"></i>Buka Kunci
+                                                </button>
+                                            </form>
+                                            <form method="post" class="d-inline ms-1" data-swal-confirm data-swal-title="Reset Ulang Total?" data-swal-text="PERINGATAN: Seluruh jawaban siswa akan DIHAPUS dan timer ujian diulang dari awal (0 menit)." data-swal-confirm-text="Reset Ulang" data-swal-cancel-text="Batal">
                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                                                 <input type="hidden" name="action" value="reset_exam">
                                                 <input type="hidden" name="assignment_id" value="<?php echo (int)$r['assignment_id']; ?>">
                                                 <input type="hidden" name="student_id" value="<?php echo (int)$r['student_id']; ?>">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm">Reset</button>
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Hapus jawaban & reset waktu dari nol">
+                                                    <i class="ti ti-rotate me-1" aria-hidden="true"></i>Reset
+                                                </button>
                                             </form>
                                         <?php endif; ?>
                                     </td>
@@ -905,4 +1093,17 @@ include __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
+<script>
+(() => {
+    const checkAll = document.getElementById('checkAllAssignments');
+    if (checkAll) {
+        checkAll.addEventListener('change', () => {
+            const boxes = document.querySelectorAll('input[name="assignment_ids[]"]');
+            boxes.forEach((b) => {
+                b.checked = checkAll.checked;
+            });
+        });
+    }
+})();
+</script>
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

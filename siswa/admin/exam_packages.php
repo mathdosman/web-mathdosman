@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pid = (int)($_POST['package_id'] ?? 0);
         if ($pid > 0) {
             try {
-                $stmt = $pdo->prepare('UPDATE packages SET is_exam = 1 WHERE id = :id AND status = "draft"');
+                $stmt = $pdo->prepare('UPDATE packages SET is_exam = 1 WHERE id = :id');
                 $stmt->execute([':id' => $pid]);
                 header('Location: exam_packages.php?success=added');
                 exit;
@@ -96,10 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $rows = [];
 try {
     if ($hasIsExamColumn) {
-        // Dropdown source: draft packages not yet selected.
-        $availablePackages = $pdo->query('SELECT id, code, name, COALESCE(published_at, created_at) AS dt
+        // Dropdown source: packages not yet selected as exam package.
+        $availablePackages = $pdo->query('SELECT id, code, name, status, COALESCE(published_at, created_at) AS dt
             FROM packages
-            WHERE status = "draft" AND (is_exam IS NULL OR is_exam = 0)
+            WHERE (is_exam IS NULL OR is_exam = 0)
             ORDER BY COALESCE(published_at, created_at) DESC, id DESC
             LIMIT 500')->fetchAll(PDO::FETCH_ASSOC);
 
@@ -266,12 +266,16 @@ include __DIR__ . '/../../includes/header.php';
                         <select class="form-select" name="package_id" required>
                             <option value="0">-- pilih paket --</option>
                             <?php foreach ($availablePackages as $p): ?>
+                                <?php
+                                $pStatus = strtoupper((string)($p['status'] ?? ''));
+                                $badgeTag = ($pStatus === 'PUBLISHED') ? '[Terbit]' : '[Draft]';
+                                ?>
                                 <option value="<?php echo (int)($p['id'] ?? 0); ?>">
-                                    <?php echo htmlspecialchars((string)($p['code'] ?? '')); ?> — <?php echo htmlspecialchars((string)($p['name'] ?? '')); ?>
+                                    <?php echo $badgeTag; ?> <?php echo htmlspecialchars((string)($p['name'] ?? '')); ?> (<?php echo htmlspecialchars((string)($p['code'] ?? '')); ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <div class="form-text">Hanya paket <b>draft</b> yang bisa dipilih.</div>
+                        <div class="form-text">Pilih paket soal (draft maupun terbit) untuk dijadikan paket ujian khusus.</div>
                     </div>
                     <div class="col-12 col-md-3 d-grid">
                         <button type="submit" class="btn btn-warning"<?php echo $availablePackages ? '' : ' disabled'; ?>>Tambah</button>
