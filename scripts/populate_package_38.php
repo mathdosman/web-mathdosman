@@ -181,3 +181,4 @@ foreach ($solutions as $id => $html) {
 }
 
 echo "Successfully updated package 38 with {$count} solutions!\n";
+
