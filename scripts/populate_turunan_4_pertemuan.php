@@ -49,8 +49,9 @@ $navHtml = static function (int $activeMeeting): string {
         2 => ['code' => 'turunan-p2-aturan-dasar', 'label' => 'Pertemuan 2: Aturan Pangkat, Bentuk Akar/Pecahan, Hasil Kali & Bagi'],
         3 => ['code' => 'turunan-p3-aturan-rantai', 'label' => 'Pertemuan 3: Aturan Rantai (Komposisi) & Turunan Tingkat Tinggi'],
         4 => ['code' => 'turunan-p4-aplikasi-optimasi', 'label' => 'Pertemuan 4: Aplikasi Garis Singgung, Titik Stasioner & Optimasi'],
+        5 => ['code' => 'turunan-p5-utbk-sbmptn', 'label' => 'Paket 5 (Khusus UTBK/SBMPTN): Bank Soal Asli Seleksi PTN Tahun-Tahun Sebelumnya'],
     ];
-    $html = '<p><strong>Peta Navigasi Seri Pembelajaran Turunan SMA (4 Pertemuan):</strong></p><ol>';
+    $html = '<p><strong>Peta Navigasi Seri Pembelajaran Turunan SMA (4 Pertemuan + 1 Paket UTBK):</strong></p><ol>';
     foreach ($items as $num => $item) {
         if ($num === $activeMeeting) {
             $html .= '<li><strong>' . $item['label'] . ' <em>(Sedang Dipelajari)</em></strong></li>';
@@ -1514,6 +1515,439 @@ HTML
   <li><em>Cek turunan kedua:</em> \(B''(x) = 4 > 0\) (benar menghasilkan nilai minimum). Jadi proyek harus diselesaikan dalam waktu \(15\text{ hari}\).</li>
 </ol>
 <div><strong>Jawaban: B</strong></div>
+HTML
+            ],
+        ],
+    ],
+
+    // ========================================================================
+    // PAKET 5: BANK SOAL ASLI UTBK / SBMPTN / SELEKSI PTN
+    // ========================================================================
+    5 => [
+        'code' => 'turunan-p5-utbk-sbmptn',
+        'name' => 'Turunan (Paket 5 - UTBK/SBMPTN) - Latihan Soal Asli Seleksi PTN',
+        'slug' => 'materi-turunan-p5-utbk-sbmptn',
+        'title' => 'Panduan Strategis & Bedah Pola Soal Asli UTBK / SBMPTN Turunan Fungsi Aljabar',
+        'published_at' => '2026-11-02 19:00:00',
+        'excerpt' => 'Kumpulan soal asli UTBK, SBMPTN, SNMPTN, dan SIMAK UI dari tahun-tahun sebelumnya tentang Turunan Fungsi Aljabar, dilengkapi peta pola soal dan pembahasan langkah demi langkah.',
+        'description' => <<<HTML
+<h3>Identitas &amp; Tujuan Pembelajaran (Paket Pengayaan Khusus UTBK / SBMPTN)</h3>
+<p>Paket ke-5 ini disusun khusus sebagai <strong>Pengayaan &amp; Pemantapan Seleksi Masuk PTN (UTBK-SNBT / SBMPTN / Mandiri)</strong> setelah siswa menuntaskan Pertemuan 1 hingga Pertemuan 4. Seluruh soal di dalam paket ini diambil dari <strong>naskah asli SBMPTN, UTBK, SNMPTN, dan SIMAK UI tahun-tahun sebelumnya</strong>.</p>
+<p><strong>Tujuan Pembelajaran (TP):</strong> Setelah mempelajari ringkasan strategi dan mengerjakan 12 soal asli UTBK/SBMPTN pada paket ini, siswa diharapkan mampu:</p>
+<ol>
+  <li>Mengenali <strong>5 Pola Soal Langganan UTBK/SBMPTN</strong> pada topik Turunan Fungsi Aljabar (fungsi berparameter \(a, b\), aturan rantai abstrak, garis singgung sejajar/berjarak, definit fungsi naik/turun, dan ekstrem terapan).</li>
+  <li>Menentukan nilai parameter tak diketahui (\(a, b, p, k\)) dari informasi nilai fungsi \(f(x_0)\), gradien \(f'(x_0)\), maupun titik belok \(f''(x_0) = 0\).</li>
+  <li>Menyelesaikan masalah turunan fungsi komposisi implisit seperti \(f(2x - 3)\) dan \(g(x) = f(1 - x)\) secara efisien.</li>
+  <li>Menganalisis masalah HOTS geometri garis singgung kurva dan optimasi akar-akar persamaan kuadrat.</li>
+</ol>
+<p><strong>Alur Belajar yang Disarankan:</strong></p>
+<ul>
+  <li><strong>Tahap 1 (15 Menit):</strong> Baca <em>Peta 5 Pola Soal Langganan UTBK/SBMPTN</em> dan <em>Trik Menghemat Waktu</em> pada bagian Materi di bawah ini.</li>
+  <li><strong>Tahap 2 (45 Menit):</strong> Kerjakan <strong>12 Soal Asli UTBK/SBMPTN</strong> secara mandiri (target waktu \(\pm 3{,}5\) menit per soal).</li>
+  <li><strong>Tahap 3 (20 Menit):</strong> Buka bagian <em>Penyelesaian</em> pada setiap nomor untuk mempelajari cara formal maupun alternatif cara cepatnya.</li>
+</ul>
+{$navHtml(5)}
+HTML,
+        'content_html' => <<<'HTML'
+<h2>1. Peta 5 Pola Soal Turunan yang Paling Sering Muncul di UTBK &amp; SBMPTN</h2>
+<p>Jika kita membedah arsip soal seleksi masuk PTN (SNMPTN, SBMPTN, UTBK, hingga SIMAK UI) selama lebih dari satu dekade terakhir, soal <strong>Turunan Fungsi Aljabar</strong> hampir tidak pernah menanyakan <em>"tentukan turunan dari \(f(x) = 3x^4\)"</em> secara polos. Sebaliknya, pembuat soal UTBK mengemas konsep Pertemuan 1&ndash;4 ke dalam <strong>5 pola favorit</strong> berikut:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Pola UTBK</th>
+      <th>Ciri Khas Soal</th>
+      <th>Kunci Penyelesaian Cepat</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Pola 1: Fungsi Berparameter \((a, b)\) pada Perkalian/Pembagian</strong><br><em>(SBMPTN 2014, 2018)</em></td>
+      <td>Diketahui \(h(x) = \frac{f(x)}{g(x)}\) atau \(k(x) = f(x)g(x)\) yang memuat parameter \(a\), lalu diberikan nilai \(h'(0) = c\).</td>
+      <td><strong>Jangan jabarkan rumus \(h'(x)\) dalam \(x\)!</strong> Langsung hitung angka \(f(0), f'(0), g(0), g'(0)\) terlebih dahulu, baru masukkan ke rumus \(\frac{f'(0)g(0) - f(0)g'(0)}{[g(0)]^2}\).</td>
+    </tr>
+    <tr>
+      <td><strong>Pola 2: Aturan Rantai Fungsi Abstrak / Implisit</strong><br><em>(SNMPTN 2010, SIMAK 2010, SBMPTN 2014)</em></td>
+      <td>Diketahui \(g(x) = f(x^2 + 2)\) atau \(f(2x - 3) = 4x^2 + 2x - 5\), ditanya \(f'(3)\) atau \(f'(2x - 3)\).</td>
+      <td>Turunkan kedua ruas terhadap \(x\) dengan Aturan Rantai: \(\frac{d}{dx}[f(u(x))] = f'(u(x)) \cdot u'(x)\).</td>
+    </tr>
+    <tr>
+      <td><strong>Pola 3: Geometri Garis Singgung Kurva</strong><br><em>(SBMPTN 2014, UTBK 2019)</em></td>
+      <td>Garis singgung di dua titik saling sejajar, atau garis \(y = mx + c\) menyinggung kurva berparameter di \(x = x_1\).</td>
+      <td>Gunakan dua syarat sekaligus di titik singgung \((x_1, y_1)\):<br>
+      (1) Titik terletak pada kurva &amp; garis: \(y_{\text{kurva}}(x_1) = y_{\text{garis}}(x_1)\).<br>
+      (2) Gradien sama: \(f'(x_1) = m_{\text{garis}}\).</td>
+    </tr>
+    <tr>
+      <td><strong>Pola 4: Fungsi Naik/Turun &amp; Syarat Definit</strong><br><em>(SBMPTN 2013, 2014)</em></td>
+      <td>Menanyakan interval naik dari \(g(x) = f(1 - x)\) atau syarat agar kurva kubik <em>selalu turun</em> untuk setiap \(x \in \mathbb{R}\).</td>
+      <td>Ingat turunan dalam dari \((1-x)\) adalah \(-1\) (membalik tanda!). Untuk "selalu naik/turun", gunakan syarat definit kuadrat: <strong>Diskriminan \(D = b^2 - 4ac < 0\)</strong>.</td>
+    </tr>
+    <tr>
+      <td><strong>Pola 5: Nilai Ekstrem, Titik Belok &amp; Lintas Topik</strong><br><em>(SBMPTN 2016, UTBK 2019)</em></td>
+      <td>Mencari nilai maksimum/minimum lokal, titik belok (\(f''(x) = 0\)), atau memaksimumkan ekspresi akar persamaan kuadrat \(x_1 + x_2 + x_1x_2\).</td>
+      <td>Gunakan rumus Vieta (\(x_1 + x_2 = -\frac{b}{a}\), \(x_1x_2 = \frac{c}{a}\)) untuk membentuk fungsi 1 variabel \(N(a)\), lalu terapkan syarat stasioner \(N'(a) = 0\).</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>2. Contoh Bedah Soal Asli UTBK / SBMPTN Sebelum Latihan</h2>
+
+<h3>Bedah Contoh 1 (Asli SBMPTN 2014 Kode 677)</h3>
+<p><strong>Soal:</strong> Jika \(m\) dan \(n\) bilangan real dan fungsi \(f(x) = mx^3 + 2x^2 - nx + 5\) memenuhi \(f'(1) = f'(-5) = 0\), maka nilai \(3m - n = \dots\)</p>
+<p><strong>Strategi &amp; Penyelesaian Cepat:</strong></p>
+<ol>
+  <li>Turunkan fungsi \(f(x)\) terhadap \(x\):
+  \[ f'(x) = 3mx^2 + 4x - n \]</li>
+  <li>Karena \(f'(1) = 0\) dan \(f'(-5) = 0\), artinya \(x_1 = 1\) dan \(x_2 = -5\) adalah <strong>akar-akar persamaan kuadrat</strong> \(3mx^2 + 4x - n = 0\).</li>
+  <li>Gunakan sifat jumlah dan hasil kali akar persamaan kuadrat \(Ax^2 + Bx + C = 0\):
+  <ul>
+    <li>Jumlah akar: \(x_1 + x_2 = -\frac{B}{A} \implies 1 + (-5) = -\frac{4}{3m} \implies -4 = -\frac{4}{3m} \implies 3m = 1 \implies m = \frac{1}{3}\).</li>
+    <li>Substitusikan \(3m = 1\) ke \(f'(1) = 0\):
+    \[ 3m(1)^2 + 4(1) - n = 0 \implies 1 + 4 - n = 0 \implies n = 5 \]
+    <em>(Atau gunakan eliminasi biasa jika ingin mengecek: tunggu, mari cek dengan eliminasi: \(3m + 4 - n = 0\) dan \(75m - 20 - n = 0\). Kurangkan: \(-72m + 24 = 0 \implies m = \frac{24}{72} = \frac{1}{3}\) dan \(n = 3\left(\frac{1}{3}\right) + 4 = 5\).)</em></li>
+  </ul></li>
+  <li>Maka nilai yang ditanyakan adalah:
+  \[ 3m - n = 3\left(\frac{1}{3}\right) - 5 = 1 - 5 = -4 \]</li>
+</ol>
+
+<hr>
+
+<h3>Bedah Contoh 2 (Asli SNMPTN 2009 Kode 276)</h3>
+<p><strong>Soal:</strong> Diketahui fungsi \(f\) dan \(g\) dengan \(f(x) = x^2 + 4x + 1\) dan \(g'(x) = \sqrt{10 - x^2}\). Nilai turunan pertama dari fungsi komposisi \((g \circ f)(x)\) di \(x = 0\) adalah...</p>
+<p><strong>Strategi &amp; Penyelesaian Cepat:</strong></p>
+<ol>
+  <li>Menurut Aturan Rantai, turunan dari \(h(x) = (g \circ f)(x) = g(f(x))\) adalah:
+  \[ h'(x) = g'(f(x)) \cdot f'(x) \]</li>
+  <li>Untuk \(x = 0\):
+  \[ h'(0) = g'(f(0)) \cdot f'(0) \]</li>
+  <li>Hitung \(f(0)\) dan \(f'(0)\) dari \(f(x) = x^2 + 4x + 1 \implies f'(x) = 2x + 4\):
+  <ul>
+    <li>\(f(0) = 0^2 + 4(0) + 1 = 1\)</li>
+    <li>\(f'(0) = 2(0) + 4 = 4\)</li>
+  </ul></li>
+  <li>Hitung \(g'(f(0)) = g'(1)\) menggunakan rumus \(g'(x) = \sqrt{10 - x^2}\):
+  \[ g'(1) = \sqrt{10 - 1^2} = \sqrt{9} = 3 \]</li>
+  <li>Kalikan keduanya:
+  \[ h'(0) = g'(1) \cdot f'(0) = 3 \times 4 = 12 \]</li>
+</ol>
+<p>Sekarang, silakan uji kemampuanmu pada <strong>12 Soal Asli UTBK/SBMPTN</strong> di bawah ini!</p>
+HTML,
+        'questions' => [
+            1 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2018 Kode 527]</strong><br>Diketahui \(f(x) = ax^2 - 4x + 1\) dan \(g(x) = 3x^2 + ax + 2\). Jika \(h(x) = f(x) + g(x)\) dan \(k(x) = f(x)g(x)\) dengan \(h\'(0) = -3\), maka nilai \(k\'(0)\) adalah...</p>',
+                'p1' => '<p>\(-7\)</p>',
+                'p2' => '<p>\(-4\)</p>',
+                'p3' => '<p>\(-3\)</p>',
+                'p4' => '<p>\(0\)</p>',
+                'p5' => '<p>\(2\)</p>',
+                'jb' => 'pilihan_1',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Tentukan nilai fungsi dan turunan pertama dari \(f(x)\) dan \(g(x)\) di titik \(x = 0\):
+  <ul>
+    <li>\(f(x) = ax^2 - 4x + 1 \implies f(0) = 1\)</li>
+    <li>\(f'(x) = 2ax - 4 \implies f'(0) = -4\)</li>
+    <li>\(g(x) = 3x^2 + ax + 2 \implies g(0) = 2\)</li>
+    <li>\(g'(x) = 6x + a \implies g'(0) = a\)</li>
+  </ul></li>
+  <li>Gunakan informasi \(h(x) = f(x) + g(x)\) dengan \(h'(0) = -3\):
+  \[ h'(0) = f'(0) + g'(0) \implies -3 = -4 + a \implies a = 1 \]
+  Sehingga diperoleh \(g'(0) = a = 1\).</li>
+  <li>Gunakan aturan hasil kali untuk \(k(x) = f(x)g(x)\) di \(x = 0\):
+  \[ k'(0) = f'(0)g(0) + f(0)g'(0) = (-4)(2) + (1)(1) = -8 + 1 = -7 \]</li>
+</ol>
+<div><strong>Jawaban: A</strong></div>
+HTML
+            ],
+            2 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2018 Kode 526]</strong><br>Diketahui \(f(x) = ax^2 + 2x + 4\) dan \(g(x) = x^2 + ax - 2\). Jika \(h(x) = \frac{f(x)}{g(x)}\) dengan \(h\'(0) = 1\), maka nilai \(a\) adalah...</p>',
+                'p1' => '<p>\(2\)</p>',
+                'p2' => '<p>\(\frac{1}{2}\)</p>',
+                'p3' => '<p>\(0\)</p>',
+                'p4' => '<p>\(-\frac{1}{2}\)</p>',
+                'p5' => '<p>\(-2\)</p>',
+                'jb' => 'pilihan_5',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Hitung nilai \(f(0), f'(0), g(0), g'(0)\) terlebih dahulu:
+  <ul>
+    <li>\(f(x) = ax^2 + 2x + 4 \implies f(0) = 4\)</li>
+    <li>\(f'(x) = 2ax + 2 \implies f'(0) = 2\)</li>
+    <li>\(g(x) = x^2 + ax - 2 \implies g(0) = -2\)</li>
+    <li>\(g'(x) = 2x + a \implies g'(0) = a\)</li>
+  </ul></li>
+  <li>Gunakan rumus aturan hasil bagi pada \(x = 0\):
+  \[ h'(0) = \frac{f'(0)g(0) - f(0)g'(0)}{[g(0)]^2} \]
+  \[ 1 = \frac{(2)(-2) - (4)(a)}{(-2)^2} = \frac{-4 - 4a}{4} \]</li>
+  <li>Selesaikan persamaan linear untuk mencari \(a\):
+  \[ 4 = -4 - 4a \implies 4a = -8 \implies a = -2 \]</li>
+</ol>
+<div><strong>Jawaban: E</strong></div>
+HTML
+            ],
+            3 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2014 Kode 651 / 654]</strong><br>Diketahui \(f(0) = 1\) dan \(f\'(0) = 2\). Jika \(g(x) = \frac{1}{\left(2f(x) - 1\right)^3}\), maka nilai \(g\'(0)\) adalah...</p>',
+                'p1' => '<p>\(-12\)</p>',
+                'p2' => '<p>\(-6\)</p>',
+                'p3' => '<p>\(-3\)</p>',
+                'p4' => '<p>\(6\)</p>',
+                'p5' => '<p>\(12\)</p>',
+                'jb' => 'pilihan_1',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Ubah fungsi \(g(x)\) menjadi bentuk pangkat negatif:
+  \[ g(x) = \left(2f(x) - 1\right)^{-3} \]</li>
+  <li>Turunkan menggunakan <strong>Aturan Rantai</strong>:
+  \[ g'(x) = -3\left(2f(x) - 1\right)^{-4} \cdot \frac{d}{dx}\left(2f(x) - 1\right) \]
+  \[ g'(x) = -3\left(2f(x) - 1\right)^{-4} \cdot 2f'(x) = -\frac{6f'(x)}{\left(2f(x) - 1\right)^4} \]</li>
+  <li>Substitusikan \(x = 0\) beserta \(f(0) = 1\) dan \(f'(0) = 2\):
+  \[ g'(0) = -\frac{6f'(0)}{\left(2f(0) - 1\right)^4} = -\frac{6(2)}{\left(2(1) - 1\right)^4} = -\frac{12}{1^4} = -12 \]</li>
+</ol>
+<div><strong>Jawaban: A</strong></div>
+HTML
+            ],
+            4 => [
+                'pertanyaan' => '<p><strong>[SNMPTN 2010 Kode 526 / Tipe UTBK]</strong><br>Diketahui fungsi \(f\) dan \(g\) yang dapat diturunkan dengan hubungan \(g(x) = f(x^2 + 2)\). Jika diketahui bahwa \(g\'(1) = 8\), maka nilai \(f\'(3)\) adalah...</p>',
+                'p1' => '<p>\(1\)</p>',
+                'p2' => '<p>\(2\)</p>',
+                'p3' => '<p>\(4\)</p>',
+                'p4' => '<p>\(6\)</p>',
+                'p5' => '<p>\(8\)</p>',
+                'jb' => 'pilihan_3',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Turunkan kedua ruas persamaan \(g(x) = f(x^2 + 2)\) terhadap \(x\) menggunakan Aturan Rantai:
+  \[ g'(x) = f'(x^2 + 2) \cdot \frac{d}{dx}(x^2 + 2) \]
+  \[ g'(x) = f'(x^2 + 2) \cdot 2x \]</li>
+  <li>Agar di dalam \(f'\) muncul angka \(3\) (yaitu \(x^2 + 2 = 3\)), substitusikan \(x = 1\):
+  \[ g'(1) = f'(1^2 + 2) \cdot 2(1) \]
+  \[ 8 = f'(3) \cdot 2 \implies f'(3) = \frac{8}{2} = 4 \]</li>
+</ol>
+<div><strong>Jawaban: C</strong></div>
+HTML
+            ],
+            5 => [
+                'pertanyaan' => '<p><strong>[SIMAK UI 2010 Kode 206 / Tipe UTBK Penalaran Kuantitatif]</strong><br>Misalkan fungsi \(f : \mathbb{R} \to \mathbb{R}\) didefinisikan dengan \(f(2x - 3) = 4x^2 + 2x - 5\) dan \(f\'\) adalah turunan pertama dari \(f\). Hasil dari \(f\'(2x - 3)\) adalah...</p>',
+                'p1' => '<p>\(2x - 7\)</p>',
+                'p2' => '<p>\(2x - 1\)</p>',
+                'p3' => '<p>\(2x + 7\)</p>',
+                'p4' => '<p>\(4x + 1\)</p>',
+                'p5' => '<p>\(8x + 2\)</p>',
+                'jb' => 'pilihan_4',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li><strong>Perhatikan jebakan soal:</strong> Yang ditanyakan adalah bentuk \(f'(2x - 3)\), bukan \(\frac{d}{dx}[f(2x - 3)]\).</li>
+  <li>Turunkan kedua ruas persamaan \(f(2x - 3) = 4x^2 + 2x - 5\) terhadap \(x\) menggunakan Aturan Rantai:
+  \[ \frac{d}{dx}\left[f(2x - 3)\right] = \frac{d}{dx}\left(4x^2 + 2x - 5\right) \]
+  \[ f'(2x - 3) \cdot \underbrace{2}_{\text{turunan dari }(2x-3)} = 8x + 2 \]</li>
+  <li>Bagi kedua ruas dengan \(2\):
+  \[ f'(2x - 3) = \frac{8x + 2}{2} = 4x + 1 \]</li>
+</ol>
+<div><strong>Jawaban: D</strong></div>
+HTML
+            ],
+            6 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2014 Kode 663]</strong><br>Jika \(f(x) = \frac{ax + b}{x^2 + 1}\) dengan \(f(0) = f\'(0)\) dan \(f\'(-1) = 1\), maka nilai \(a + b\) adalah...</p>',
+                'p1' => '<p>\(4\)</p>',
+                'p2' => '<p>\(2\)</p>',
+                'p3' => '<p>\(0\)</p>',
+                'p4' => '<p>\(-2\)</p>',
+                'p5' => '<p>\(-4\)</p>',
+                'jb' => 'pilihan_1',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Cari nilai \(f(0)\) dari fungsi awal:
+  \[ f(0) = \frac{a(0) + b}{0^2 + 1} = b \]</li>
+  <li>Tentukan turunan pertama \(f'(x)\) dengan aturan hasil bagi (\(u = ax + b \implies u' = a\), \(v = x^2 + 1 \implies v' = 2x\)):
+  \[ f'(x) = \frac{a(x^2 + 1) - (ax + b)(2x)}{(x^2 + 1)^2} = \frac{-ax^2 - 2bx + a}{(x^2 + 1)^2} \]</li>
+  <li>Substitusikan \(x = 0\) ke \(f'(x)\):
+  \[ f'(0) = \frac{0 - 0 + a}{(0 + 1)^2} = a \]
+  Karena diketahui \(f(0) = f'(0)\), maka diperoleh \(b = a\).</li>
+  <li>Gunakan syarat kedua \(f'(-1) = 1\):
+  \[ f'(-1) = \frac{-a(-1)^2 - 2b(-1) + a}{((-1)^2 + 1)^2} = \frac{-a + 2b + a}{4} = \frac{2b}{4} = \frac{b}{2} \]
+  \[ \frac{b}{2} = 1 \implies b = 2 \implies a = 2 \]</li>
+  <li>Jadi, nilai \(a + b = 2 + 2 = 4\).</li>
+</ol>
+<div><strong>Jawaban: A</strong></div>
+HTML
+            ],
+            7 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2014 Kode 611]</strong><br>Garis \(l\) mempunyai gradien \(2\). Jika garis \(l\) menyinggung grafik fungsi \(f(x) = -x^2 + px + 1\) di \(x = 1\), maka persamaan garis \(l\) adalah...</p>',
+                'p1' => '<p>\(y = 2x\)</p>',
+                'p2' => '<p>\(y = 2x + 1\)</p>',
+                'p3' => '<p>\(y = 2x + 2\)</p>',
+                'p4' => '<p>\(y = 2x + 3\)</p>',
+                'p5' => '<p>\(y = 2x - 2\)</p>',
+                'jb' => 'pilihan_3',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Gradien garis singgung \(l\) di \(x = 1\) adalah \(m = f'(1) = 2\).</li>
+  <li>Turunkan \(f(x) = -x^2 + px + 1\):
+  \[ f'(x) = -2x + p \]
+  Substitusikan \(x = 1\) dan \(f'(1) = 2\):
+  \[ -2(1) + p = 2 \implies p = 4 \]</li>
+  <li>Sehingga rumus fungsi kuadratnya adalah \(f(x) = -x^2 + 4x + 1\). Cari ordinat titik singgung saat \(x = 1\):
+  \[ y_1 = f(1) = -(1)^2 + 4(1) + 1 = 4 \implies \text{Titik singgung } (1, 4) \]</li>
+  <li>Susun persamaan garis singgung \(l\) yang bergradien \(m = 2\) melalui \((1, 4)\):
+  \[ y - 4 = 2(x - 1) \implies y = 2x - 2 + 4 \implies y = 2x + 2 \]</li>
+</ol>
+<div><strong>Jawaban: C</strong></div>
+HTML
+            ],
+            8 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2013 Kode 436]</strong><br>Diketahui \(f(x) = \frac{2}{3}x^3 - \frac{1}{2}x^2 - 3x + \frac{1}{6}\). Jika \(g(x) = f(1 - x)\), maka grafik fungsi \(g\) <strong>naik</strong> pada selang...</p>',
+                'p1' => '<p>\(-\frac{1}{2} < x < 2\)</p>',
+                'p2' => '<p>\(-2 < x < \frac{1}{2}\)</p>',
+                'p3' => '<p>\(-1 < x < \frac{3}{2}\)</p>',
+                'p4' => '<p>\(x < -\frac{1}{2}\text{ atau }x > 2\)</p>',
+                'p5' => '<p>\(x < -2\text{ atau }x > \frac{1}{2}\)</p>',
+                'jb' => 'pilihan_1',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Tentukan turunan pertama dari \(f(x)\) lalu faktorkan:
+  \[ f'(x) = 2x^2 - x - 3 = (2x - 3)(x + 1) \]</li>
+  <li>Karena \(g(x) = f(1 - x)\), gunakan <strong>Aturan Rantai</strong> untuk mencari \(g'(x)\) (jangan lupa turunan dari \((1 - x)\) adalah \(-1\)):
+  \[ g'(x) = f'(1 - x) \cdot (-1) = -f'(1 - x) \]</li>
+  <li>Substitusikan \(x \to (1 - x)\) ke dalam faktor \(f'\):
+  \[ f'(1 - x) = \left[2(1 - x) - 3\right]\left[(1 - x) + 1\right] = (-2x - 1)(2 - x) = (2x + 1)(x - 2) \]
+  Maka:
+  \[ g'(x) = -(2x + 1)(x - 2) \]</li>
+  <li>Syarat fungsi \(g(x)\) naik adalah \(g'(x) > 0\):
+  \[ -(2x + 1)(x - 2) > 0 \iff (2x + 1)(x - 2) < 0 \]
+  Diperoleh interval penyelesaian:
+  \[ -\frac{1}{2} < x < 2 \]</li>
+</ol>
+<div><strong>Jawaban: A</strong></div>
+HTML
+            ],
+            9 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2014 Kode 631]</strong><br>Syarat agar fungsi \(f(x) = -x^3 + \frac{1}{2}ax^2 - \frac{1}{2}x^2 - 3x + 8\) <strong>selalu turun</strong> untuk semua nilai real \(x\) adalah...</p>',
+                'p1' => '<p>\(a < -5\text{ atau }a > 7\)</p>',
+                'p2' => '<p>\(a < 0\text{ atau }a > 4\)</p>',
+                'p3' => '<p>\(-5 < a < 7\)</p>',
+                'p4' => '<p>\(-7 < a < 5\)</p>',
+                'p5' => '<p>\(-7 < a < 0\text{ atau }4 < a < 7\)</p>',
+                'jb' => 'pilihan_3',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Gabungkan suku \(x^2\) pada \(f(x)\):
+  \[ f(x) = -x^3 + \frac{1}{2}(a - 1)x^2 - 3x + 8 \]</li>
+  <li>Tentukan turunan pertama \(f'(x)\):
+  \[ f'(x) = -3x^2 + (a - 1)x - 3 \]</li>
+  <li>Agar \(f(x)\) selalu turun untuk seluruh \(x \in \mathbb{R}\), fungsi kuadrat \(f'(x)\) harus <strong>definit negatif</strong> (\(f'(x) < 0\)). Karena koefisien \(x^2\) sudah negatif (\(-3 < 0\)), syarat yang harus dipenuhi adalah diskriminan \(D < 0\):
+  \[ D = b^2 - 4ac < 0 \]
+  \[ (a - 1)^2 - 4(-3)(-3) < 0 \]
+  \[ (a - 1)^2 - 36 < 0 \]</li>
+  <li>Faktorkan dengan selisih kuadrat \((A^2 - B^2) = (A - B)(A + B)\):
+  \[ (a - 1 - 6)(a - 1 + 6) < 0 \implies (a - 7)(a + 5) < 0 \]
+  Diperoleh batas nilai \(-5 < a < 7\).</li>
+</ol>
+<div><strong>Jawaban: C</strong></div>
+HTML
+            ],
+            10 => [
+                'pertanyaan' => '<p><strong>[UTBK 2019 Matematika]</strong><br>Diketahui fungsi \(f(x) = x^3 + 3x^2 - 9x + k\) melalui titik \((0, 1)\). Nilai minimum lokal dari fungsi tersebut adalah...</p>',
+                'p1' => '<p>\(28\)</p>',
+                'p2' => '<p>\(1\)</p>',
+                'p3' => '<p>\(-9\)</p>',
+                'p4' => '<p>\(-6\)</p>',
+                'p5' => '<p>\(-4\)</p>',
+                'jb' => 'pilihan_5',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Karena grafik fungsi \(f(x)\) melalui titik \((0, 1)\), maka \(f(0) = 1\):
+  \[ 0^3 + 3(0)^2 - 9(0) + k = 1 \implies k = 1 \]
+  Sehingga fungsi lengkapnya adalah \(f(x) = x^3 + 3x^2 - 9x + 1\).</li>
+  <li>Cari titik stasioner dengan syarat \(f'(x) = 0\):
+  \[ f'(x) = 3x^2 + 6x - 9 = 0 \implies x^2 + 2x - 3 = 0 \]
+  \[ (x + 3)(x - 1) = 0 \implies x = -3 \text{ atau } x = 1 \]</li>
+  <li>Uji dengan turunan kedua \(f''(x) = 6x + 6\):
+  <ul>
+    <li>Untuk \(x = -3 \implies f''(-3) = -12 < 0\) (maksimum lokal).</li>
+    <li>Untuk \(x = 1 \implies f''(1) = +12 > 0\) (<strong>minimum lokal</strong>).</li>
+  </ul></li>
+  <li>Substitusikan \(x = 1\) ke \(f(x)\) untuk mendapatkan nilai minimum lokal:
+  \[ f(1) = (1)^3 + 3(1)^2 - 9(1) + 1 = 1 + 3 - 9 + 1 = -4 \]</li>
+</ol>
+<div><strong>Jawaban: E</strong></div>
+HTML
+            ],
+            11 => [
+                'pertanyaan' => '<p><strong>[SBMPTN 2016 Kode 217 &amp; 255]</strong><br>Diketahui \(x_1\) dan \(x_2\) adalah akar-akar dari persamaan kuadrat \(x^2 + 5ax + a^3 - 4a + 1 = 0\). Nilai \(a\) sehingga ekspresi \(\left(x_1 + x_1x_2 + x_2\right)\) mencapai nilai <strong>maksimum</strong> pada interval \([-3, 3]\) adalah...</p>',
+                'p1' => '<p>\(-3\)</p>',
+                'p2' => '<p>\(-\sqrt{3}\)</p>',
+                'p3' => '<p>\(0\)</p>',
+                'p4' => '<p>\(\sqrt{3}\)</p>',
+                'p5' => '<p>\(3\)</p>',
+                'jb' => 'pilihan_2',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Dari persamaan kuadrat \(x^2 + 5ax + (a^3 - 4a + 1) = 0\), gunakan teorema Vieta:
+  <ul>
+    <li>Jumlah akar: \(x_1 + x_2 = -\frac{b}{a} = -5a\)</li>
+    <li>Hasil kali akar: \(x_1x_2 = \frac{c}{a} = a^3 - 4a + 1\)</li>
+  </ul></li>
+  <li>Misalkan fungsi yang ingin dimaksimumkan adalah \(N(a)\):
+  \[ N(a) = (x_1 + x_2) + x_1x_2 = -5a + (a^3 - 4a + 1) = a^3 - 9a + 1 \]</li>
+  <li>Gunakan syarat stasioner \(N'(a) = 0\):
+  \[ N'(a) = 3a^2 - 9 = 0 \implies a^2 = 3 \implies a = -\sqrt{3} \text{ atau } a = \sqrt{3} \]</li>
+  <li>Uji turunan kedua \(N''(a) = 6a\):
+  <ul>
+    <li>Saat \(a = -\sqrt{3} \implies N''(-\sqrt{3}) = -6\sqrt{3} < 0\) (pembuat maksimum lokal, dengan \(N(-\sqrt{3}) = -3\sqrt{3} + 9\sqrt{3} + 1 = 6\sqrt{3} + 1 \approx 11{,}39\)).</li>
+    <li>Cek juga ujung kanan interval \(a = 3 \implies N(3) = 27 - 27 + 1 = 1\).</li>
+  </ul>
+  Maka nilai maksimum pada \([-3, 3]\) tercapai pada saat \(a = -\sqrt{3}\).</li>
+</ol>
+<div><strong>Jawaban: B</strong></div>
+HTML
+            ],
+            12 => [
+                'pertanyaan' => '<p><strong>[UTBK 2019 Matematika Saintek - HOTS]</strong><br>Diberikan fungsi \(f(x) = 2x^3 + 3x^2 + 6x + 5\). Garis singgung kurva \(y = f(x)\) di titik dengan absis \(x = a\) dan \(x = a + 1\) saling sejajar. Jarak antara kedua garis singgung tersebut adalah...</p>',
+                'p1' => '<p>\(\frac{5}{\sqrt{37}}\)</p>',
+                'p2' => '<p>\(\frac{4}{\sqrt{37}}\)</p>',
+                'p3' => '<p>\(\frac{3}{\sqrt{37}}\)</p>',
+                'p4' => '<p>\(\frac{2}{\sqrt{37}}\)</p>',
+                'p5' => '<p>\(\frac{1}{\sqrt{37}}\)</p>',
+                'jb' => 'pilihan_5',
+                'penyelesaian' => <<<'HTML'
+<p><strong>Langkah Penyelesaian:</strong></p>
+<ol>
+  <li>Gradien garis singgung kurva adalah \(f'(x) = 6x^2 + 6x + 6\).</li>
+  <li>Karena garis singgung di \(x = a\) dan \(x = a + 1\) saling sejajar, maka gradien keduanya sama (\(f'(a) = f'(a+1)\)):
+  \[ 6a^2 + 6a + 6 = 6(a + 1)^2 + 6(a + 1) + 6 \]
+  Bagi kedua ruas dengan \(6\):
+  \[ a^2 + a + 1 = (a^2 + 2a + 1) + (a + 1) + 1 \]
+  \[ a^2 + a + 1 = a^2 + 3a + 3 \implies 2a = -2 \implies a = -1 \]
+  Dengan demikian, kedua absis titik singgung tersebut adalah \(x_1 = -1\) dan \(x_2 = a + 1 = 0\).</li>
+  <li>Hitung gradien kedua garis singgung tersebut:
+  \[ m = f'(0) = 6(0)^2 + 6(0) + 6 = 6 \]</li>
+  <li>Tentukan titik singgung dan persamaan masing-masing garis singgung:
+  <ul>
+    <li>Di \(x_1 = -1 \implies y_1 = f(-1) = 2(-1)^3 + 3(-1)^2 + 6(-1) + 5 = -2 + 3 - 6 + 5 = 0\).<br>
+    Persamaan garis singgung pertama melalui \((-1, 0)\):
+    \[ y - 0 = 6(x + 1) \implies 6x - y + 6 = 0 \]</li>
+    <li>Di \(x_2 = 0 \implies y_2 = f(0) = 5\).<br>
+    Persamaan garis singgung kedua melalui \((0, 5)\):
+    \[ y - 5 = 6(x - 0) \implies 6x - y + 5 = 0 \]</li>
+  </ul></li>
+  <li>Gunakan rumus jarak antara dua garis sejajar \(Ax + By + C_1 = 0\) dan \(Ax + By + C_2 = 0\):
+  \[ d = \frac{|C_1 - C_2|}{\sqrt{A^2 + B^2}} = \frac{|6 - 5|}{\sqrt{6^2 + (-1)^2}} = \frac{1}{\sqrt{37}} \]</li>
+</ol>
+<div><strong>Jawaban: E</strong></div>
 HTML
             ],
         ],
