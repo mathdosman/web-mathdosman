@@ -535,18 +535,11 @@ pre {
 }
 
 .content-card {
-    background: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: .75rem;
-    padding: 1rem;
-    box-shadow: var(--md-surface-shadow);
-    transition: box-shadow .18s ease;
-}
-
-@media (min-width: 768px) {
-    .content-card {
-        padding: 1.25rem;
-    }
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
 .brand-mark {

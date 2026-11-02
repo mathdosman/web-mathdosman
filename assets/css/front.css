@@ -51,9 +51,10 @@
     }
 
     body.front-page .content-card {
-        background: transparent;
-        border: 0;
-        padding: 0;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
     }
 
     /* The homepage layout starts with a `.row` directly under `.app-container`.

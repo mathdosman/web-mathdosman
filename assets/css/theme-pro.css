@@ -61,7 +61,7 @@ html[data-bs-theme="dark"] .app-navbar {
 }
 
 /* 2. Kartu Konten & Paket (Modern Card Hover) */
-.card, .content-card, .md-package-card, .brand-banner {
+.card, .md-package-card, .brand-banner {
     border-radius: var(--md-radius-lg) !important;
     border: 1px solid var(--bs-border-color) !important;
     transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;

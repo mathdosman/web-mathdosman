@@ -88,7 +88,7 @@ html[data-bs-theme="dark"] .app-navbar {
 }
 
 /* --- 4. Cards & Content Tiles --- */
-.card, .content-card, .admin-tile, .package-card, .md-package-card {
+.card, .admin-tile, .package-card, .md-package-card {
     background-color: var(--bs-card-bg, #ffffff);
     border: 1px solid var(--tblr-border-color) !important;
     border-radius: var(--tblr-card-border-radius) !important;
