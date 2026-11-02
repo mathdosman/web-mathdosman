@@ -460,3 +460,61 @@ body.admin-layout .content-card {
     box-shadow: none !important;
     padding: 0 !important;
 }
+
+
+/* ==============================================================================
+   12. DARK TOPBAR (Header Atas Senada Hitam Elegan dengan Sidebar)
+   ============================================================================== */
+
+/* Samakan background navbar atas dengan background sidebar (#1a2234) */
+body.admin-layout .app-navbar {
+    background-color: #1a2234 !important;
+    border-bottom: 1px solid #111827 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Warna brand/logo dan teks nama web di navbar saat gelap */
+body.admin-layout .app-navbar .navbar-brand,
+body.admin-layout .app-navbar .navbar-brand .brand-name {
+    color: #ffffff !important;
+}
+
+body.admin-layout .app-navbar .navbar-brand .brand-mark {
+    color: #38bdf8 !important; /* Aksen Cyan senada */
+}
+
+/* Tombol hamburger sidebar toggle */
+body.admin-layout .app-navbar #sidebarToggle {
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.admin-layout .app-navbar #sidebarToggle:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+/* Tombol theme toggle (bulan/matahari) */
+body.admin-layout .app-navbar .md-theme-toggle {
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.admin-layout .app-navbar .md-theme-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #38bdf8 !important;
+}
+
+/* Tombol Akun / User di kanan atas */
+body.admin-layout .app-navbar .dropdown-toggle {
+    color: #f8fafc !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+body.admin-layout .app-navbar .dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
