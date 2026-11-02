@@ -370,3 +370,93 @@ html[data-bs-theme="dark"] .app-navbar {
         box-shadow: 0 0 25px rgba(0, 0, 0, 0.5) !important;
     }
 }
+
+
+/* ==============================================================================
+   11. TOPBAR & ADMIN PAGE REFINEMENTS (Sesuai Feedback Visual)
+   ============================================================================== */
+
+/* Topbar Header Bersih */
+.app-navbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--tblr-border-color) !important;
+    padding-top: 0.65rem !important;
+    padding-bottom: 0.65rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-bs-theme="dark"] .app-navbar {
+    background: #111827 !important;
+    border-bottom: 1px solid #1f2937 !important;
+}
+
+/* Sembunyikan teks label tema samping ("Terang") yang mengganggu */
+.theme-indicator {
+    display: none !important;
+}
+
+/* Judul Header Halaman Admin */
+.admin-page-title {
+    font-size: 1.5rem !important;
+    font-weight: 750 !important;
+    color: var(--bs-body-color) !important;
+    letter-spacing: -0.02em !important;
+}
+
+.admin-page-subtitle {
+    font-size: 0.885rem !important;
+    color: var(--bs-secondary-color) !important;
+    margin-top: 0.25rem !important;
+}
+
+/* Kotak Filter & Search Input */
+.card .form-control, .card .form-select {
+    font-size: 0.875rem !important;
+    border-color: #d1d5db !important;
+}
+
+/* Tabel Paket & Butir Soal: Rapi, Modern, dan Kontras */
+.packages-table {
+    margin-top: 0.5rem;
+}
+
+.packages-table thead th {
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #cbd5e1 !important;
+}
+
+html[data-bs-theme="dark"] .packages-table thead th {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+
+.packages-table tbody tr td {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    vertical-align: middle;
+}
+
+/* Badge Status Draft & Terbit */
+.badge.bg-secondary, .badge-draft {
+    background-color: #64748b !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* Tombol Aksi di Baris Tabel */
+.packages-table .btn {
+    border-radius: 6px !important;
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.8rem !important;
+}
+
+/* Hilangkan bayangan/card ganda yang membuat halaman tampak sempit */
+body.admin-layout .content-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}

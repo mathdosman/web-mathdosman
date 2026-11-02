@@ -497,24 +497,18 @@ if ($useAdminSidebar) {
             <div class="<?php echo $useSidebar ? 'container-fluid' : 'container'; ?>">
                 <?php if ($useSidebar && !$useStudentSidebar): ?>
                     <button class="btn btn-outline-secondary me-2" type="button" id="sidebarToggle" aria-controls="adminSidebar" aria-label="Toggle sidebar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        </svg>
+                        <i class="ti ti-menu-2"></i>
                     </button>
                 <?php endif; ?>
-                <a class="navbar-brand d-inline-flex align-items-center gap-2<?php echo $isStudentArea ? '' : ' mx-auto'; ?>" href="<?php echo $base_url; ?>/index.php" aria-label="MATHDOSMAN">
-                    <span class="brand-mark" aria-hidden="true">
+                <a class="navbar-brand d-inline-flex align-items-center gap-2" href="<?php echo $base_url; ?>/index.php" aria-label="MATHDOSMAN">
+                    <span class="brand-mark text-primary" aria-hidden="true">
                         <?php if (!empty($brandLogoPath)): ?>
                             <img class="brand-logo" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="28" height="28" alt="" loading="eager" decoding="async">
                         <?php else: ?>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 2.5l8.8 5.1v8.8L12 21.5 3.2 16.4V7.6L12 2.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-                                <path d="M7.6 14.2V9.2l4.4 2.6 4.4-2.6v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M7.6 14.2l4.4 2.6 4.4-2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
+                            <i class="ti ti-math-symbols" style="font-size: 1.6rem;"></i>
                         <?php endif; ?>
                     </span>
-                    <span class="brand-name">MATHDOSMAN</span>
+                    <span class="brand-name fw-bold">MATHDOSMAN</span>
                 </a>
                 <div class="d-flex align-items-center gap-2 ms-auto">
                     <?php if ($useSidebar): ?>
@@ -524,9 +518,8 @@ if ($useAdminSidebar) {
                             id="themeToggle"
                             aria-label="Ganti tema"
                             title="Dark/Light">
-                            <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+                            <i class="ti ti-moon" aria-hidden="true"></i>
                         </button>
-                        <span class="theme-indicator small text-muted ms-2 d-none d-sm-inline">-</span>
                     <?php endif; ?>
 
                     <?php if ($isStudentArea && $isStudent && $studentHasPhoto && $studentPhotoUrl !== ''): ?>
@@ -639,21 +632,29 @@ if ($useAdminSidebar) {
                                 </li>
                             <?php endif; ?>
                             <li class="nav-item dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Akun
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ti ti-user"></i>
+                                    <span><?php echo htmlspecialchars($_SESSION['user']['name'] ?? 'Akun'); ?></span>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                     <li>
                                         <span class="dropdown-item-text">
-                                            Halo, <?php echo htmlspecialchars($_SESSION['user']['name']); ?>
-                                            <small class="d-block opacity-75"><?php echo htmlspecialchars($_SESSION['user']['role']); ?></small>
+                                            <div class="fw-bold"><?php echo htmlspecialchars($_SESSION['user']['name']); ?></div>
+                                            <small class="text-muted text-uppercase"><?php echo htmlspecialchars($_SESSION['user']['role']); ?></small>
                                         </span>
                                     </li>
                                     <li>
                                         <hr class="dropdown-divider">
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="<?php echo $base_url; ?>/logout.php">Logout</a>
+                                        <a class="dropdown-item d-flex align-items-center gap-2" href="<?php echo $base_url; ?>/admin/change_password.php">
+                                            <i class="ti ti-key"></i> Ganti Password
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="<?php echo $base_url; ?>/logout.php">
+                                            <i class="ti ti-logout"></i> Logout
+                                        </a>
                                     </li>
                                 </ul>
                             </li>
