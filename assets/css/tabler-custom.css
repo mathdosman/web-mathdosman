@@ -221,3 +221,152 @@ html[data-bs-theme="dark"] .app-navbar {
     padding: 0.35em 0.65em;
     border-radius: 4px;
 }
+
+
+/* ==============================================================================
+   9. TABLER DARK SIDEBAR (Tema Gelap Premium untuk Sidebar Admin)
+   ============================================================================== */
+
+/* Background Sidebar Hitam Pekat Elegan ala Tabler Dark */
+.app-sidebar, #adminSidebar {
+    background-color: #1a2234 !important; /* Tabler dark sidebar background */
+    border-right: 1px solid #111827 !important;
+    color: #e2e8f0 !important;
+}
+
+.app-sidebar .sidebar-heading, 
+.app-sidebar .sidebar-header,
+.app-sidebar .sidebar-title {
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    font-weight: 700 !important;
+    padding-left: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Link Menu Sidebar saat Dark */
+.app-sidebar .sidebar-link {
+    color: #cbd5e1 !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 0.2rem 0 !important;
+    border-radius: 8px !important;
+    padding: 0.6rem 0.85rem !important;
+    font-weight: 500 !important;
+    transition: all 0.18s ease-in-out !important;
+}
+
+.app-sidebar .sidebar-link i, 
+.app-sidebar .sidebar-link svg {
+    color: #94a3b8 !important;
+    transition: color 0.18s ease-in-out;
+}
+
+/* Hover Menu */
+.app-sidebar .sidebar-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.app-sidebar .sidebar-link:hover i,
+.app-sidebar .sidebar-link:hover svg {
+    color: #38bdf8 !important; /* Cyan accent on hover */
+}
+
+/* Menu yang sedang Aktif (Active Item) */
+.app-sidebar .sidebar-link.active,
+.app-sidebar .sidebar-link[aria-current="page"] {
+    color: #ffffff !important;
+    background: #0054a6 !important; /* Tabler signature blue */
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(0, 84, 166, 0.4) !important;
+}
+
+.app-sidebar .sidebar-link.active i,
+.app-sidebar .sidebar-link.active svg {
+    color: #ffffff !important;
+}
+
+/* Judul Bagian (Web, Ujian, Absen) - Ganti Merah Kasar menjadi Elegan */
+.app-sidebar .sidebar-section-emphasis {
+    color: #94a3b8 !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
+    -webkit-text-stroke: 0 !important;
+}
+
+.app-sidebar hr {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    opacity: 1 !important;
+}
+
+/* ==============================================================================
+   10. RESPONSIVE MOBILE OPTIMIZATION (Tampilan HP Sempurna)
+   ============================================================================== */
+
+@media (max-width: 767.98px) {
+    /* Navbar di HP */
+    .app-navbar {
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    .app-navbar .navbar-brand {
+        font-size: 1.1rem !important;
+    }
+
+    /* Padding Halaman Admin di HP agar tidak mepet */
+    body.admin-layout .app-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* Header Halaman (Judul & Tombol Tambah) tersusun rapi secara vertikal */
+    .admin-page-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+    }
+
+    .admin-page-actions {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: flex-start !important;
+        gap: 0.5rem !important;
+        flex-wrap: wrap !important;
+    }
+
+    .admin-page-actions .btn {
+        flex: 1 1 auto !important;
+    }
+
+    /* Tabel di Layar HP: Tetap rapi dengan scroll horizontal halus */
+    .card-table, .table-responsive, .packages-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Sembunyikan kolom sekunder di layar kecil jika terlalu padat */
+    .packages-table td, .packages-table th {
+        white-space: nowrap;
+    }
+
+    /* Card Padding di HP */
+    .card-body {
+        padding: 1rem !important;
+    }
+
+    /* Sidebar di HP: Muncul sebagai overlay saat dibuka */
+    body.admin-layout .app-sidebar {
+        width: 280px !important;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.5) !important;
+    }
+}
