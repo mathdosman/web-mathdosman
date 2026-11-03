@@ -1312,7 +1312,7 @@ function get_home_carousel_slides(): array
                 </div>
 
                 <div class="col-12 col-lg-5">
-                    <div class="home-vision border rounded-4 p-3 p-sm-4">
+                    <div class="home-vision border rounded-4">
                         <div class="d-flex align-items-center gap-2 fw-bold text-primary mb-2">
                             <span class="vision-icon-wrap"><i class="ti ti-target"></i></span>
                             <span class="fs-6">Visi</span>
