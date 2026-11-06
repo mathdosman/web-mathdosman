@@ -1209,6 +1209,8 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                         <?php endforeach; ?>
                     <?php endif; ?>
 
+                    <?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_content'); ?>
+
                     <?php
                     require_once __DIR__ . '/includes/disqus.php';
                     $disqusIdentifier = 'paket-' . (string)$code;

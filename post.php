@@ -534,6 +534,9 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 				$renderSidebarKonten('Konten Terkait', $sidebarRelated, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
 				$renderSidebarKonten('Konten Terbaru', $sidebarLatest, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
 				$renderSidebarKonten('Konten Random', $sidebarRandom, $currentKindSidebar, $currentIdSidebar, (string)$slug, $currentCodeSidebar);
+				if (function_exists('mathdosman_render_ad')) {
+					echo mathdosman_render_ad('sidebar');
+				}
 				?>
 			</div>
 
@@ -600,6 +603,8 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 								<div class="richtext-content"><?php echo $safeHtml; ?></div>
 							</div>
 						</div>
+
+						<?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_content'); ?>
 
 						<?php
 						require_once __DIR__ . '/includes/disqus.php';

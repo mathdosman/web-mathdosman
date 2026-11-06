@@ -1628,3 +1628,104 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
         --bs-offcanvas-transition: transform 0.01ms;
     }
 }
+
+/* ==========================================================================
+   Mathdosman Non-Intrusive Ad Banner Containers (Google AdSense Compliant)
+   - Prevents Cumulative Layout Shift (CLS)
+   - Subtle, elegant, integrated with dark/light themes
+   - Hides on print (d-print-none) & respects exam sessions
+   ========================================================================== */
+.math-ad-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 1.5rem auto;
+    padding: 0.5rem 0.75rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--math-ad-min-h, 90px);
+    background: rgba(15, 23, 42, 0.02);
+    border: 1px dashed rgba(100, 116, 139, 0.22);
+    border-radius: 12px;
+    text-align: center;
+    transition: border-color 0.2s ease;
+}
+
+[data-bs-theme="dark"] .math-ad-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.09);
+}
+
+.math-ad-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 6px;
+    user-select: none;
+}
+
+.math-ad-badge-text {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color, #64748b);
+    opacity: 0.65;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.math-ad-content {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(var(--math-ad-min-h, 90px) - 24px);
+    overflow: hidden;
+}
+
+.math-ad-content ins.adsbygoogle {
+    max-width: 100% !important;
+}
+
+/* Slot Specific Layout Adjustments */
+.math-ad-header {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 970px;
+}
+
+.math-ad-incontent {
+    margin: 2.25rem auto;
+    max-width: 750px;
+}
+
+.math-ad-sidebar {
+    margin: 0 0 1.25rem 0;
+    padding: 0.5rem;
+    min-height: 250px;
+}
+
+.math-ad-infeed {
+    margin-bottom: 1rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--bs-border-color, rgba(0, 0, 0, 0.08));
+    background: var(--bs-body-bg, #ffffff);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+[data-bs-theme="dark"] .math-ad-infeed {
+    background: rgba(30, 41, 59, 0.4);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.math-ad-footer {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    max-width: 970px;
+}

@@ -26,6 +26,7 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 	$scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
 	$isHomePage = (bool)preg_match('~/index\\.php$~', $scriptName);
 	?>
+	<?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('footer'); ?>
 	<footer class="mt-4 py-3 border-top px-3">
 		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
 			<div>

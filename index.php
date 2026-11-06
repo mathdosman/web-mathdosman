@@ -1049,6 +1049,7 @@ function render_home_sidebar_widgets(
             <?php endif; ?>
         </div>
     </div>
+    <?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('sidebar'); ?>
 </div>
 <?php
 }
@@ -1385,7 +1386,7 @@ function get_home_carousel_slides(): array
         <?php endif; ?>
         <?php else: ?>
         <div class="row row-cols-1 g-3 package-grid">
-            <?php foreach ($feedItems as $item): ?>
+            <?php $feedItemIndex = 0; foreach ($feedItems as $item): $feedItemIndex++; ?>
             <?php
                     $kind = (string)($item['kind'] ?? '');
                     $row = is_array($item['row'] ?? null) ? (array)$item['row'] : [];
@@ -1448,6 +1449,11 @@ function get_home_carousel_slides(): array
                     </div>
                 </div>
             </div>
+            <?php if ($feedItemIndex === 3 && count($feedItems) >= 4): ?>
+            <div class="col">
+                <?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_feed'); ?>
+            </div>
+            <?php endif; ?>
             <?php endforeach; ?>
         </div>
 
