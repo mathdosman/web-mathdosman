@@ -113,3 +113,4 @@ if (!function_exists('mathdosman_render_ad')) {
         return (string)ob_get_clean();
     }
 }
+

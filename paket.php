@@ -1209,6 +1209,8 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                         <?php endforeach; ?>
                     <?php endif; ?>
 
+                    <?php if (function_exists('mathdosman_render_author_box')) echo mathdosman_render_author_box(); ?>
+
                     <?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_content'); ?>
 
                     <?php

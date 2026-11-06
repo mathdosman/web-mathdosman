@@ -13,10 +13,13 @@ include __DIR__ . '/includes/header.php';
             <p class="text-muted mb-0">Website pembelajaran yang memuat materi dan latihan soal, dikelola oleh admin untuk publik.</p>
         </div>
 
-        <div class="card post-detail">
+        <div class="card post-detail mb-4">
             <div class="card-body">
-                <h2 class="h6">Ringkasan</h2>
-                <p class="text-muted">MATHDOSMAN dibuat untuk membantu belajar secara mandiri melalui materi singkat dan paket latihan soal. Konten dapat diakses tanpa login. Login hanya diperlukan untuk admin yang mengelola konten.</p>
+                <h2 class="h6">Profil Penulis &amp; Pengembang</h2>
+                <?php if (function_exists('mathdosman_render_author_box')) echo mathdosman_render_author_box(); ?>
+
+                <h2 class="h6 mt-4">Ringkasan</h2>
+                <p class="text-muted">MATHDOSMAN adalah portal edukasi matematika yang dikembangkan untuk membantu siswa, guru, dan pembelajar mandiri dalam memahami konsep matematika secara ringkas, bertahap, dan terstruktur. Seluruh materi dan paket latihan soal dapat diakses secara bebas tanpa keharusan mendaftar.</p>
 
                 <h2 class="h6">Yang tersedia di website</h2>
                 <ul class="text-muted mb-3">

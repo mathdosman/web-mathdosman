@@ -384,7 +384,7 @@ if ($content) {
 		$meta_description,
 		$publishedDate,
 		null,
-		'MATHDOSMAN',
+		'I Putu Darma Putra',
 		rtrim((string)$base_url, '/') . '/assets/img/icon.svg'
 	);
 	
@@ -603,6 +603,8 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 								<div class="richtext-content"><?php echo $safeHtml; ?></div>
 							</div>
 						</div>
+
+						<?php if (function_exists('mathdosman_render_author_box')) echo mathdosman_render_author_box(); ?>
 
 						<?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_content'); ?>
 

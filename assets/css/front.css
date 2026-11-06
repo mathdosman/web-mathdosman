@@ -1729,3 +1729,58 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     margin-bottom: 1rem;
     max-width: 970px;
 }
+
+/* ==========================================================================
+   Mathdosman Author Profile Card (E-E-A-T & Professional Credibility)
+   ========================================================================== */
+.math-author-card {
+    background: var(--bs-body-bg, #ffffff);
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.09));
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-bs-theme="dark"] .math-author-card {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.math-author-card:hover {
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+}
+
+.math-author-avatar-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.math-author-avatar {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d9488 0%, #2563eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    border: 3px solid #ffffff;
+    user-select: none;
+}
+
+[data-bs-theme="dark"] .math-author-avatar {
+    border-color: #1e293b;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+}
+
+.math-author-initials {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+

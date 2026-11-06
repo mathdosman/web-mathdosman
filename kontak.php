@@ -16,19 +16,29 @@ include __DIR__ . '/includes/header.php';
         <div class="card post-detail">
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <div class="border rounded p-3 h-100">
-                            <div class="fw-semibold mb-1">Email</div>
-                            <div class="text-muted small">Silakan sesuaikan alamat email di halaman ini.</div>
-                            <a class="d-inline-block mt-2" href="mailto:mathdosman@gmail.com">mathdosman@gmail.com</a>
-                            <div class="text-muted small mt-2">Sertakan link halaman/ID soal agar mudah dicek.</div>
+                            <div class="fw-semibold mb-1"><i class="ti ti-mail me-1 text-primary"></i>Email Resmi</div>
+                            <div class="text-muted small">Untuk kerja sama, saran materi, dan masukan umum.</div>
+                            <a class="d-inline-block mt-2 fw-semibold" href="mailto:mathdosman@gmail.com">mathdosman@gmail.com</a>
+                            <div class="text-muted small mt-2">Sertakan link halaman/ID soal bila terkait perbaikan materi.</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <div class="border rounded p-3 h-100">
-                            <div class="fw-semibold mb-1">Jam Layanan</div>
-                            <div class="text-muted">Senin–Jumat, 08:00–16:00</div>
-                            <div class="text-muted small mt-2">Respon dapat menyesuaikan antrian.</div>
+                            <div class="fw-semibold mb-1"><i class="ti ti-brand-instagram me-1 text-danger"></i>Instagram Penulis</div>
+                            <div class="text-muted small">Terhubung langsung dengan penulis Mathdosman.</div>
+                            <a class="d-inline-block mt-2 fw-semibold text-danger text-decoration-none" href="https://www.instagram.com/iptdarmaputra/" target="_blank" rel="noopener noreferrer">
+                                <i class="ti ti-arrow-up-right"></i> @iptdarmaputra
+                            </a>
+                            <div class="text-muted small mt-2">Update seputar dunia edukasi &amp; matematika.</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-1"><i class="ti ti-clock me-1 text-info"></i>Jam Layanan</div>
+                            <div class="text-muted">Senin–Jumat, 08:00–16:00 WITA</div>
+                            <div class="text-muted small mt-2">Respon pesan akan disesuaikan dengan antrean.</div>
                         </div>
                     </div>
                 </div>
