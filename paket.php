@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/richtext.php';
 require_once __DIR__ . '/includes/seo.php';
+require_once __DIR__ . '/includes/concept_briefs.php';
 
 // Ensure $base_url is available
 global $base_url;
@@ -847,6 +848,8 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                             <div class="px-4 py-2 fw-bold fs-4 text-dark bg-body-secondary border rounded-pill">Soal-soal</div>
                             <hr class="flex-grow-1" />
                         </div>
+                    <?php else: ?>
+                        <?php echo render_smart_concept_spotlight((string)($package['materi'] ?? ''), (string)($package['submateri'] ?? ''), (string)($package['name'] ?? '')); ?>
                     <?php endif; ?>
 
                     <?php if (!$items): ?>

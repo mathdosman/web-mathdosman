@@ -1405,29 +1405,29 @@ function get_home_carousel_slides(): array
                         $row = is_array($item['row'] ?? null) ? (array)$item['row'] : [];
                         $publishedAt = (string)($item['date'] ?? '');
 
-                        $titlePrefix = '';
                         $cardTitle = '';
                         $href = '#';
                         $metaLeft = '';
                         $excerpt = '';
                         $needsEllipsis = false;
 
+                        $materi = trim((string)($row['materi'] ?? ''));
+                        $submateri = trim((string)($row['submateri'] ?? ''));
+                        $meta = get_sidebar_category_meta($materi);
+
                         if ($kind === 'content') {
                             $t = (string)($row['type'] ?? 'materi');
-                            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
-                            $titlePrefix = $badge . ' - ';
-                            $cardTitle = $titlePrefix . (string)($row['title'] ?? '');
+                            $cardTitle = (string)($row['title'] ?? '');
                             $href = seo_post_url((string)($row['slug'] ?? ''), (string)$base_url);
-                            $metaLeft = $badge;
+                            $metaLeft = 'Materi Bacaan';
                             $rawExcerpt = html_entity_decode(strip_tags((string)($row['excerpt'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                             $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
                             $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
                             $needsEllipsis = mb_strlen($rawExcerpt) > 160;
                         } else {
-                            $titlePrefix = 'Paket Soal - ';
-                            $cardTitle = $titlePrefix . (string)($row['name'] ?? '');
+                            $cardTitle = (string)($row['name'] ?? '');
                             $href = seo_package_url((string)($row['code'] ?? ''), (string)$base_url);
-                            $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
+                            $metaLeft = (int)($row['published_questions'] ?? 0) . ' Soal Latihan';
                             $raw = html_entity_decode(strip_tags((string)($row['description'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                             $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
                             $excerpt = (string)mb_substr($raw, 0, 160);
@@ -1435,29 +1435,56 @@ function get_home_carousel_slides(): array
                         }
                         ?>
                 <div class="col">
-                    <div class="card h-100 post-card package-card">
-                        <div class="card-body">
-                            <div class="d-flex flex-column h-100">
-                                <div class="mb-2">
-                                    <h3 class="package-card-title mb-1">
-                                        <a class="stretched-link text-decoration-none"
-                                            href="<?php echo htmlspecialchars($href); ?>">
-                                            <?php echo htmlspecialchars($cardTitle); ?>
-                                        </a>
-                                    </h3>
-                                    <div class="package-card-meta text-muted small">
-                                        <?php echo htmlspecialchars($metaLeft); ?>
-                                        • Publish:
-                                        <strong><?php echo htmlspecialchars(format_id_date($publishedAt)); ?></strong>
-                                    </div>
+                    <div class="card h-100 post-card package-card-pro shadow-sm">
+                        <div class="card-body d-flex flex-column p-3 p-md-4">
+                            <!-- Topic and Kind Badges -->
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
+                                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                    <?php if ($materi !== ''): ?>
+                                    <span class="badge topic-chip <?php echo htmlspecialchars($meta['theme']); ?>">
+                                        <i class="<?php echo htmlspecialchars($meta['icon']); ?> me-1"></i><?php echo htmlspecialchars($meta['label']); ?>
+                                    </span>
+                                    <?php endif; ?>
+                                    <?php if ($submateri !== ''): ?>
+                                    <span class="badge bg-light text-secondary border subtopic-chip">
+                                        <?php echo htmlspecialchars($submateri); ?>
+                                    </span>
+                                    <?php endif; ?>
                                 </div>
+                                <span class="badge <?php echo $kind === 'content' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-primary-subtle text-primary border border-primary-subtle'; ?> rounded-pill px-2.5 py-1 small">
+                                    <i class="<?php echo $kind === 'content' ? 'ti ti-book-2' : 'ti ti-pencil'; ?> me-1"></i>
+                                    <?php echo $kind === 'content' ? 'Bahan Ajar' : 'Paket Soal'; ?>
+                                </span>
+                            </div>
 
-                                <?php if ($excerpt !== ''): ?>
-                                <p class="text-muted mb-0 package-card-excerpt">
-                                    <?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
-                                <?php else: ?>
-                                <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
-                                <?php endif; ?>
+                            <!-- Card Title -->
+                            <h3 class="package-card-title mb-2">
+                                <a class="stretched-link text-decoration-none"
+                                    href="<?php echo htmlspecialchars($href); ?>">
+                                    <?php echo htmlspecialchars($cardTitle); ?>
+                                </a>
+                            </h3>
+
+                            <!-- Excerpt Description -->
+                            <?php if ($excerpt !== ''): ?>
+                            <p class="package-card-excerpt text-secondary mb-3 small">
+                                <?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?>
+                            </p>
+                            <?php else: ?>
+                            <p class="package-card-excerpt text-muted mb-3 small">
+                                Klik untuk membuka modul pembelajaran dan paket soal lengkap.
+                            </p>
+                            <?php endif; ?>
+
+                            <!-- Card Footer -->
+                            <div class="package-card-footer mt-auto pt-2.5 border-top border-light-subtle d-flex align-items-center justify-content-between small">
+                                <div class="d-flex align-items-center gap-3 text-muted">
+                                    <span class="d-inline-flex align-items-center gap-1"><i class="ti ti-list-check text-primary"></i> <?php echo htmlspecialchars($metaLeft); ?></span>
+                                    <span class="d-inline-flex align-items-center gap-1"><i class="ti ti-calendar text-muted"></i> <?php echo htmlspecialchars(format_id_date($publishedAt)); ?></span>
+                                </div>
+                                <span class="package-card-action fw-bold text-primary d-inline-flex align-items-center gap-1">
+                                    Buka <i class="ti ti-arrow-right"></i>
+                                </span>
                             </div>
                         </div>
                     </div>

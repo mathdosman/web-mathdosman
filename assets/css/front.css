@@ -1977,4 +1977,69 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     transition: opacity 0.2s ease;
 }
 
+/* ====== Modern Package Card Design (Card Pro) ====== */
+body.front-page .package-card-pro {
+    border-radius: 1rem;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.12);
+    background: var(--bs-body-bg);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s ease;
+}
+
+body.front-page .package-card-pro::before {
+    display: none !important; /* override the old solid 10px blue bar */
+}
+
+body.front-page .package-card-pro::after {
+    display: none !important; /* override the old blue tint overlay */
+}
+
+body.front-page .package-card-pro:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.1), 0 8px 16px -6px rgba(0, 0, 0, 0.06);
+    border-color: rgba(var(--bs-primary-rgb), 0.35);
+}
+
+body.front-page .package-card-pro .package-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+body.front-page .package-card-pro .package-card-title a {
+    color: var(--bs-heading-color, #1e293b);
+    transition: color 0.18s ease;
+}
+
+body.front-page .package-card-pro:hover .package-card-title a {
+    color: var(--bs-primary, #2563eb);
+}
+
+body.front-page .package-card-pro .topic-chip {
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+}
+
+body.front-page .package-card-pro .subtopic-chip {
+    font-size: 0.72rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+body.front-page .package-card-pro .package-card-action {
+    transition: transform 0.2s ease;
+}
+
+body.front-page .package-card-pro:hover .package-card-action {
+    transform: translateX(3px);
+}
+
+
 

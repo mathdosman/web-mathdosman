@@ -15,3 +15,4 @@ print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
 echo "\n=== DRAFTS / UNPUBLISHED ===\n";
 $stmt = $pdo->query('SELECT status, COUNT(*) as c FROM packages GROUP BY status');
 print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
+
