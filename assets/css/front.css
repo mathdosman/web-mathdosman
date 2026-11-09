@@ -1968,3 +1968,13 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
+/* Feed Container AJAX Transitions */
+#feed-container {
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-submateri-dynamic {
+    transition: opacity 0.2s ease;
+}
+
+

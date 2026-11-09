@@ -4,3 +4,4 @@ $rows = $pdo->query('SELECT code, name, published_at FROM packages WHERE materi=
 foreach ($rows as $r) {
     echo $r['published_at'] . " | " . $r['code'] . " | " . $r['name'] . "\n";
 }
+

@@ -223,27 +223,35 @@ if ($dbPreflightOk && isset($pdo) && $pdo instanceof PDO) {
             $materiCategories = [];
         }
 
-        if ($filterMateri !== '') {
-            try {
-                $sql = 'SELECT p.submateri, COUNT(*) AS package_count
-                FROM packages p
-                WHERE p.status = "published"
-                  AND p.materi = :m
-                  AND p.submateri IS NOT NULL AND p.submateri <> ""';
-                if ($hasStudentAssignmentsTable) {
-                    $sql .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
-                }
-                if ($hasIsExamColumn) {
-                    $sql .= ' AND COALESCE(p.is_exam, 0) = 0';
-                }
-                $sql .= ' GROUP BY p.submateri ORDER BY p.submateri ASC';
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([':m' => $filterMateri]);
-                $submateriCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } catch (Throwable $e3) {
-                $submateriCategories = [];
+        $allSubmateriGrouped = [];
+        try {
+            $sql = 'SELECT p.materi, p.submateri, COUNT(p.id) AS package_count
+            FROM packages p
+            WHERE p.status = "published"
+              AND p.materi IS NOT NULL AND p.materi <> ""
+              AND p.submateri IS NOT NULL AND p.submateri <> ""';
+            if ($hasStudentAssignmentsTable) {
+                $sql .= ' AND NOT EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.package_id = p.id AND sa.jenis = "ujian")';
             }
+            if ($hasIsExamColumn) {
+                $sql .= ' AND COALESCE(p.is_exam, 0) = 0';
+            }
+            $sql .= ' GROUP BY p.materi, p.submateri ORDER BY p.materi ASC, p.submateri ASC';
+            $stmt = $pdo->query($sql);
+            $allSubmateriRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($allSubmateriRows as $row) {
+                $allSubmateriGrouped[$row['materi']][] = [
+                    'submateri' => (string)$row['submateri'],
+                    'package_count' => (int)$row['package_count'],
+                ];
+            }
+        } catch (Throwable $e3) {
+            $allSubmateriGrouped = [];
         }
+
+        $submateriCategories = ($filterMateri !== '' && isset($allSubmateriGrouped[$filterMateri]))
+            ? $allSubmateriGrouped[$filterMateri]
+            : [];
 
         // Sidebar: Popular Post (gabungan paket + materi/berita), maksimal 5 item.
         // Best-effort: jika table page_views belum ada, fallback ke urutan terbaru.
@@ -680,7 +688,8 @@ function render_home_sidebar_widgets(
     array $popularItems,
     string $filterMateri,
     string $filterSubmateri,
-    string $q
+    string $q,
+    array $allSubmateriGrouped = []
 ): void {
     global $pdo;
 
@@ -792,7 +801,7 @@ function render_home_sidebar_widgets(
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div class="fw-bold small text-body-secondary text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Materi Pokok</div>
                 <?php if ($filterMateri !== ''): ?>
-                <a href="<?php echo htmlspecialchars('index.php?' . http_build_query(['q' => ($q !== '' ? $q : null)])); ?>" class="small text-decoration-none text-danger fw-semibold" style="font-size: 0.75rem;">
+                <a href="<?php echo htmlspecialchars('index.php?' . http_build_query(['q' => ($q !== '' ? $q : null)])); ?>#konten-paket" class="small text-decoration-none text-danger fw-semibold js-feed-ajax-link js-reset-cat" style="font-size: 0.75rem;">
                     <i class="ti ti-x"></i> Reset
                 </a>
                 <?php endif; ?>
@@ -801,7 +810,7 @@ function render_home_sidebar_widgets(
             <?php if (!$materiCategories): ?>
             <div class="text-muted small">Belum ada materi.</div>
             <?php else: ?>
-            <div class="sidebar-cat-list">
+            <div class="sidebar-cat-list js-materi-list">
                 <?php foreach ($materiCategories as $m): ?>
                 <?php
                     $rawLabel = trim((string)($m['materi'] ?? ''));
@@ -815,10 +824,11 @@ function render_home_sidebar_widgets(
                         'materi' => $rawLabel,
                         'submateri' => null,
                         'page' => 1,
-                    ]);
+                    ]) . '#konten-paket';
                     $active = ($filterMateri === $rawLabel);
                 ?>
-                <a class="sidebar-cat-item <?php echo $active ? 'active' : ''; ?>"
+                <a class="sidebar-cat-item js-cat-filter <?php echo $active ? 'active' : ''; ?>"
+                    data-materi="<?php echo htmlspecialchars($rawLabel); ?>"
                     href="<?php echo htmlspecialchars($href); ?>">
                     <div class="d-flex align-items-center gap-2 text-truncate me-2">
                         <span class="cat-icon-badge <?php echo htmlspecialchars($meta['theme']); ?>">
@@ -833,18 +843,17 @@ function render_home_sidebar_widgets(
             <?php endif; ?>
         </div>
 
-        <div class="pt-2 border-top border-light-subtle">
+        <div class="pt-2 border-top border-light-subtle js-submateri-section">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div class="fw-bold small text-body-secondary text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Submateri</div>
-                <?php if ($filterMateri !== ''): ?>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill" style="font-size: 0.7rem;">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill js-active-materi-badge" style="font-size: 0.7rem; <?php echo $filterMateri === '' ? 'display: none;' : ''; ?>">
                     <?php echo htmlspecialchars(str_replace('_', ' ', $filterMateri)); ?>
                 </span>
-                <?php endif; ?>
             </div>
 
+            <div class="sidebar-submateri-dynamic js-submateri-container">
             <?php if ($filterMateri === ''): ?>
-            <div class="sidebar-empty-hint p-3 text-center rounded-3">
+            <div class="sidebar-empty-hint p-3 text-center rounded-3 js-submateri-placeholder">
                 <i class="ti ti-hand-click fs-4 text-primary opacity-50 mb-1 d-block"></i>
                 <div class="small text-body-secondary">Pilih salah satu kategori materi di atas untuk melihat submateri terkait.</div>
             </div>
@@ -867,10 +876,12 @@ function render_home_sidebar_widgets(
                         'materi' => $filterMateri,
                         'submateri' => $label,
                         'page' => 1,
-                    ]);
+                    ]) . '#konten-paket';
                     $active = ($filterSubmateri === $label);
                 ?>
-                <a class="sidebar-subcat-item <?php echo $active ? 'active' : ''; ?>"
+                <a class="sidebar-subcat-item js-subcat-filter <?php echo $active ? 'active' : ''; ?>"
+                    data-materi="<?php echo htmlspecialchars($filterMateri); ?>"
+                    data-submateri="<?php echo htmlspecialchars($label); ?>"
                     href="<?php echo htmlspecialchars($href); ?>">
                     <div class="d-flex align-items-center gap-2 text-truncate me-2">
                         <i class="ti ti-corner-down-right fs-6 text-muted subcat-indicator"></i>
@@ -881,6 +892,7 @@ function render_home_sidebar_widgets(
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>
@@ -1345,147 +1357,149 @@ function get_home_carousel_slides(): array
         </div>
         <?php endif; ?>
 
-        <div id="konten-paket" class="d-flex align-items-end justify-content-between gap-2 mb-2 section-heading">
-            <div>
-                <h2 class="h5 mb-1">Konten & Paket Soal</h2>
-                <div class="text-muted small">Urutan berdasarkan waktu publish (atau waktu dibuat jika belum ada
-                    publish).</div>
+        <div id="feed-container">
+            <div id="konten-paket" class="d-flex align-items-end justify-content-between gap-2 mb-2 section-heading">
+                <div>
+                    <h2 class="h5 mb-1">Konten & Paket Soal</h2>
+                    <div class="text-muted small">Urutan berdasarkan waktu publish (atau waktu dibuat jika belum ada
+                        publish).</div>
+                </div>
             </div>
-        </div>
 
-        <?php if ($q !== '' || $filterSubjectId > 0 || $filterMateri !== '' || $filterSubmateri !== ''): ?>
-        <div
-            class="alert alert-light border py-2 small d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-            <div>
-                Filter aktif:
-                <?php if ($q !== ''): ?>
-                <span class="badge text-bg-secondary">Cari: <?php echo htmlspecialchars($q); ?></span>
-                <?php endif; ?>
-                <?php if ($filterSubjectId > 0): ?>
-                <span class="badge text-bg-secondary">Mapel ID: <?php echo (int)$filterSubjectId; ?></span>
-                <?php endif; ?>
-                <?php if ($filterMateri !== ''): ?>
-                <span class="badge text-bg-secondary">Materi: <?php echo htmlspecialchars($filterMateri); ?></span>
-                <?php endif; ?>
-                <?php if ($filterSubmateri !== ''): ?>
-                <span class="badge text-bg-secondary">Submateri:
-                    <?php echo htmlspecialchars($filterSubmateri); ?></span>
-                <?php endif; ?>
+            <?php if ($q !== '' || $filterSubjectId > 0 || $filterMateri !== '' || $filterSubmateri !== ''): ?>
+            <div
+                class="alert alert-light border py-2 small d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                <div>
+                    Filter aktif:
+                    <?php if ($q !== ''): ?>
+                    <span class="badge text-bg-secondary">Cari: <?php echo htmlspecialchars($q); ?></span>
+                    <?php endif; ?>
+                    <?php if ($filterSubjectId > 0): ?>
+                    <span class="badge text-bg-secondary">Mapel ID: <?php echo (int)$filterSubjectId; ?></span>
+                    <?php endif; ?>
+                    <?php if ($filterMateri !== ''): ?>
+                    <span class="badge text-bg-secondary">Materi: <?php echo htmlspecialchars($filterMateri); ?></span>
+                    <?php endif; ?>
+                    <?php if ($filterSubmateri !== ''): ?>
+                    <span class="badge text-bg-secondary">Submateri:
+                        <?php echo htmlspecialchars($filterSubmateri); ?></span>
+                    <?php endif; ?>
+                </div>
+                <a class="btn btn-outline-secondary btn-sm js-feed-ajax-link js-reset-cat" href="index.php#konten-paket">Reset</a>
             </div>
-            <a class="btn btn-outline-secondary btn-sm" href="index.php">Reset</a>
-        </div>
-        <?php endif; ?>
+            <?php endif; ?>
 
-        <?php if (!$feedItems): ?>
-        <?php if (!$dbPreflightOk): ?>
-        <div class="alert alert-warning mb-0">
-            Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.
-        </div>
-        <?php else: ?>
-        <div class="alert alert-info mb-0">Belum ada konten atau paket soal yang tersedia.</div>
-        <?php endif; ?>
-        <?php else: ?>
-        <div class="row row-cols-1 g-3 package-grid">
-            <?php $feedItemIndex = 0; foreach ($feedItems as $item): $feedItemIndex++; ?>
-            <?php
-                    $kind = (string)($item['kind'] ?? '');
-                    $row = is_array($item['row'] ?? null) ? (array)$item['row'] : [];
-                    $publishedAt = (string)($item['date'] ?? '');
+            <?php if (!$feedItems): ?>
+            <?php if (!$dbPreflightOk): ?>
+            <div class="alert alert-warning mb-0">
+                Database belum siap. Pastikan MySQL/MariaDB di XAMPP sudah berjalan.
+            </div>
+            <?php else: ?>
+            <div class="alert alert-info mb-0">Belum ada konten atau paket soal yang tersedia.</div>
+            <?php endif; ?>
+            <?php else: ?>
+            <div class="row row-cols-1 g-3 package-grid">
+                <?php $feedItemIndex = 0; foreach ($feedItems as $item): $feedItemIndex++; ?>
+                <?php
+                        $kind = (string)($item['kind'] ?? '');
+                        $row = is_array($item['row'] ?? null) ? (array)$item['row'] : [];
+                        $publishedAt = (string)($item['date'] ?? '');
 
-                    $titlePrefix = '';
-                    $cardTitle = '';
-                    $href = '#';
-                    $metaLeft = '';
-                    $excerpt = '';
-                    $needsEllipsis = false;
+                        $titlePrefix = '';
+                        $cardTitle = '';
+                        $href = '#';
+                        $metaLeft = '';
+                        $excerpt = '';
+                        $needsEllipsis = false;
 
-                    if ($kind === 'content') {
-                        $t = (string)($row['type'] ?? 'materi');
-                        $badge = ($t === 'berita') ? 'Berita' : 'Materi';
-                        $titlePrefix = $badge . ' - ';
-                        $cardTitle = $titlePrefix . (string)($row['title'] ?? '');
-                        $href = seo_post_url((string)($row['slug'] ?? ''), (string)$base_url);
-                        $metaLeft = $badge;
-                        $rawExcerpt = html_entity_decode(strip_tags((string)($row['excerpt'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                        $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
-                        $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
-                        $needsEllipsis = mb_strlen($rawExcerpt) > 160;
-                    } else {
-                        $titlePrefix = 'Paket Soal - ';
-                        $cardTitle = $titlePrefix . (string)($row['name'] ?? '');
-                        $href = seo_package_url((string)($row['code'] ?? ''), (string)$base_url);
-                        $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
-                        $raw = html_entity_decode(strip_tags((string)($row['description'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                        $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
-                        $excerpt = (string)mb_substr($raw, 0, 160);
-                        $needsEllipsis = mb_strlen((string)$raw) > 160;
-                    }
-                    ?>
-            <div class="col">
-                <div class="card h-100 post-card package-card">
-                    <div class="card-body">
-                        <div class="d-flex flex-column h-100">
-                            <div class="mb-2">
-                                <h3 class="package-card-title mb-1">
-                                    <a class="stretched-link text-decoration-none"
-                                        href="<?php echo htmlspecialchars($href); ?>">
-                                        <?php echo htmlspecialchars($cardTitle); ?>
-                                    </a>
-                                </h3>
-                                <div class="package-card-meta text-muted small">
-                                    <?php echo htmlspecialchars($metaLeft); ?>
-                                    • Publish:
-                                    <strong><?php echo htmlspecialchars(format_id_date($publishedAt)); ?></strong>
+                        if ($kind === 'content') {
+                            $t = (string)($row['type'] ?? 'materi');
+                            $badge = ($t === 'berita') ? 'Berita' : 'Materi';
+                            $titlePrefix = $badge . ' - ';
+                            $cardTitle = $titlePrefix . (string)($row['title'] ?? '');
+                            $href = seo_post_url((string)($row['slug'] ?? ''), (string)$base_url);
+                            $metaLeft = $badge;
+                            $rawExcerpt = html_entity_decode(strip_tags((string)($row['excerpt'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                            $rawExcerpt = preg_replace('/\s+/', ' ', trim((string)$rawExcerpt));
+                            $excerpt = (string)mb_substr($rawExcerpt, 0, 160);
+                            $needsEllipsis = mb_strlen($rawExcerpt) > 160;
+                        } else {
+                            $titlePrefix = 'Paket Soal - ';
+                            $cardTitle = $titlePrefix . (string)($row['name'] ?? '');
+                            $href = seo_package_url((string)($row['code'] ?? ''), (string)$base_url);
+                            $metaLeft = 'Soal: ' . (int)($row['published_questions'] ?? 0);
+                            $raw = html_entity_decode(strip_tags((string)($row['description'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                            $raw = preg_replace('/\s+/', ' ', trim((string)$raw));
+                            $excerpt = (string)mb_substr($raw, 0, 160);
+                            $needsEllipsis = mb_strlen((string)$raw) > 160;
+                        }
+                        ?>
+                <div class="col">
+                    <div class="card h-100 post-card package-card">
+                        <div class="card-body">
+                            <div class="d-flex flex-column h-100">
+                                <div class="mb-2">
+                                    <h3 class="package-card-title mb-1">
+                                        <a class="stretched-link text-decoration-none"
+                                            href="<?php echo htmlspecialchars($href); ?>">
+                                            <?php echo htmlspecialchars($cardTitle); ?>
+                                        </a>
+                                    </h3>
+                                    <div class="package-card-meta text-muted small">
+                                        <?php echo htmlspecialchars($metaLeft); ?>
+                                        • Publish:
+                                        <strong><?php echo htmlspecialchars(format_id_date($publishedAt)); ?></strong>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <?php if ($excerpt !== ''): ?>
-                            <p class="text-muted mb-0 package-card-excerpt">
-                                <?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
-                            <?php else: ?>
-                            <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
-                            <?php endif; ?>
+                                <?php if ($excerpt !== ''): ?>
+                                <p class="text-muted mb-0 package-card-excerpt">
+                                    <?php echo htmlspecialchars($excerpt); ?><?php echo $needsEllipsis ? '...' : ''; ?></p>
+                                <?php else: ?>
+                                <p class="text-muted mb-0 package-card-excerpt">Klik untuk membuka.</p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <?php if ($feedItemIndex === 3 && count($feedItems) >= 4): ?>
+                <div class="col">
+                    <?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_feed'); ?>
+                </div>
+                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
-            <?php if ($feedItemIndex === 3 && count($feedItems) >= 4): ?>
-            <div class="col">
-                <?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_feed'); ?>
-            </div>
+
+            <?php if ($totalPages > 1): ?>
+            <nav class="mt-4" aria-label="Pagination">
+                <ul class="pagination justify-content-center flex-wrap">
+                    <?php
+                            $prev = $page - 1;
+                            $next = $page + 1;
+                            $start = max(1, $page - 3);
+                            $end = min($totalPages, $page + 3);
+                            ?>
+
+                    <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
+                        <a class="page-link d-inline-flex align-items-center justify-content-center js-feed-ajax-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>#konten-paket"
+                            aria-label="Sebelumnya"><i class="ti ti-chevron-left" aria-hidden="true"></i></a>
+                    </li>
+
+                    <?php for ($i = $start; $i <= $end; $i++): ?>
+                    <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
+                        <a class="page-link js-feed-ajax-link"
+                            href="index.php?<?php echo htmlspecialchars($qs(['page' => $i])); ?>#konten-paket"><?php echo (int)$i; ?></a>
+                    </li>
+                    <?php endfor; ?>
+
+                    <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
+                        <a class="page-link d-inline-flex align-items-center justify-content-center js-feed-ajax-link" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>#konten-paket"
+                            aria-label="Berikutnya"><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
+                    </li>
+                </ul>
+            </nav>
             <?php endif; ?>
-            <?php endforeach; ?>
-        </div>
-
-        <?php if ($totalPages > 1): ?>
-        <nav class="mt-4" aria-label="Pagination">
-            <ul class="pagination justify-content-center flex-wrap">
-                <?php
-                        $prev = $page - 1;
-                        $next = $page + 1;
-                        $start = max(1, $page - 3);
-                        $end = min($totalPages, $page + 3);
-                        ?>
-
-                <li class="page-item<?php echo $page <= 1 ? ' disabled' : ''; ?>">
-                    <a class="page-link d-inline-flex align-items-center justify-content-center" href="index.php?<?php echo htmlspecialchars($qs(['page' => $prev])); ?>"
-                        aria-label="Sebelumnya"><i class="ti ti-chevron-left" aria-hidden="true"></i></a>
-                </li>
-
-                <?php for ($i = $start; $i <= $end; $i++): ?>
-                <li class="page-item<?php echo $i === $page ? ' active' : ''; ?>">
-                    <a class="page-link"
-                        href="index.php?<?php echo htmlspecialchars($qs(['page' => $i])); ?>"><?php echo (int)$i; ?></a>
-                </li>
-                <?php endfor; ?>
-
-                <li class="page-item<?php echo $page >= $totalPages ? ' disabled' : ''; ?>">
-                    <a class="page-link d-inline-flex align-items-center justify-content-center" href="index.php?<?php echo htmlspecialchars($qs(['page' => $next])); ?>"
-                        aria-label="Berikutnya"><i class="ti ti-chevron-right" aria-hidden="true"></i></a>
-                </li>
-            </ul>
-        </nav>
-        <?php endif; ?>
+        </div> <!-- /#feed-container -->
 
         <?php
             require_once __DIR__ . '/includes/disqus.php';
@@ -1501,7 +1515,7 @@ function get_home_carousel_slides(): array
     </div>
 
     <div class="col-12 col-lg-4 d-none d-lg-block">
-        <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q); ?>
+        <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q, $allSubmateriGrouped); ?>
     </div>
 </div>
 
@@ -1513,7 +1527,226 @@ function get_home_carousel_slides(): array
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-3">
-        <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q); ?>
+        <?php render_home_sidebar_widgets($materiCategories, $submateriCategories, $popularItems, $filterMateri, $filterSubmateri, $q, $allSubmateriGrouped); ?>
     </div>
 </div>
+
+<script id="all-submateri-data" type="application/json">
+<?php echo json_encode($allSubmateriGrouped, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>
+</script>
+
+<script>
+(function() {
+    let allSubmateri = {};
+    try {
+        const raw = document.getElementById('all-submateri-data');
+        if (raw) allSubmateri = JSON.parse(raw.textContent || '{}');
+    } catch(e) {}
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function syncSidebarSubmateri(materi, activeSubmateri) {
+        const containers = document.querySelectorAll('.js-submateri-container');
+        const badges = document.querySelectorAll('.js-active-materi-badge');
+
+        badges.forEach(b => {
+            if (materi) {
+                b.textContent = materi.replace(/_/g, ' ');
+                b.style.display = 'inline-block';
+            } else {
+                b.style.display = 'none';
+            }
+        });
+
+        containers.forEach(container => {
+            if (!materi) {
+                container.innerHTML = `
+                    <div class="sidebar-empty-hint p-3 text-center rounded-3 js-submateri-placeholder">
+                        <i class="ti ti-hand-click fs-4 text-primary opacity-50 mb-1 d-block"></i>
+                        <div class="small text-body-secondary">Pilih salah satu kategori materi di atas untuk melihat submateri terkait.</div>
+                    </div>`;
+                return;
+            }
+
+            const items = allSubmateri[materi] || [];
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="sidebar-empty-hint p-3 text-center rounded-3">
+                        <i class="ti ti-folder-off fs-4 text-muted opacity-50 mb-1 d-block"></i>
+                        <div class="small text-muted">Belum ada submateri untuk kategori ini.</div>
+                    </div>`;
+                return;
+            }
+
+            let html = '<div class="sidebar-subcat-list">';
+            items.forEach(sm => {
+                const label = sm.submateri;
+                const count = sm.package_count || 0;
+                const isActive = (activeSubmateri && activeSubmateri === label);
+                const url = 'index.php?materi=' + encodeURIComponent(materi) + '&submateri=' + encodeURIComponent(label) + '&page=1#konten-paket';
+                html += `
+                    <a class="sidebar-subcat-item js-subcat-filter ${isActive ? 'active' : ''}"
+                        data-materi="${escapeHtml(materi)}"
+                        data-submateri="${escapeHtml(label)}"
+                        href="${url}">
+                        <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                            <i class="ti ti-corner-down-right fs-6 text-muted subcat-indicator"></i>
+                            <span class="subcat-name text-truncate">${escapeHtml(label)}</span>
+                        </div>
+                        <span class="badge cat-counter">${count}</span>
+                    </a>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        });
+    }
+
+    function syncSidebarCatActive(materi) {
+        document.querySelectorAll('.js-cat-filter').forEach(el => {
+            if (el.dataset.materi === materi) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+    }
+
+    function syncSidebarSubcatActive(submateri) {
+        document.querySelectorAll('.js-subcat-filter').forEach(el => {
+            if (el.dataset.submateri === submateri) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+    }
+
+    let isFetchingFeed = false;
+    function loadFeed(url, updateHistory = true, shouldScroll = false) {
+        if (isFetchingFeed) return;
+        isFetchingFeed = true;
+
+        const feedContainer = document.getElementById('feed-container');
+        if (feedContainer) {
+            feedContainer.style.opacity = '0.45';
+            feedContainer.style.pointerEvents = 'none';
+        }
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newFeed = doc.getElementById('feed-container');
+
+                if (newFeed && feedContainer) {
+                    feedContainer.innerHTML = newFeed.innerHTML;
+                    feedContainer.style.opacity = '1';
+                    feedContainer.style.pointerEvents = '';
+                }
+
+                if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                    window.MathJax.typesetPromise([feedContainer]).catch(() => {});
+                }
+
+                if (updateHistory) {
+                    window.history.pushState({ url: url }, '', url);
+                }
+
+                if (shouldScroll) {
+                    const kp = document.getElementById('konten-paket');
+                    if (kp) {
+                        const rect = kp.getBoundingClientRect();
+                        if (rect.top < 0 || rect.top > window.innerHeight) {
+                            window.scrollTo({
+                                top: kp.getBoundingClientRect().top + window.pageYOffset - 80,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('AJAX feed error:', err);
+                if (feedContainer) {
+                    feedContainer.style.opacity = '1';
+                    feedContainer.style.pointerEvents = '';
+                }
+                window.location.href = url;
+            })
+            .finally(() => {
+                isFetchingFeed = false;
+            });
+    }
+
+    document.addEventListener('click', function(e) {
+        // 1. Click Materi Pokok
+        const catBtn = e.target.closest('.js-cat-filter');
+        if (catBtn) {
+            e.preventDefault();
+            const materi = catBtn.dataset.materi || '';
+            const isAlreadyActive = catBtn.classList.contains('active');
+
+            if (isAlreadyActive) {
+                // Click active materi again -> reset to all
+                syncSidebarCatActive('');
+                syncSidebarSubmateri('', '');
+                loadFeed('index.php#konten-paket', true, false);
+            } else {
+                syncSidebarCatActive(materi);
+                syncSidebarSubmateri(materi, '');
+                loadFeed(catBtn.href, true, false);
+            }
+            return;
+        }
+
+        // 2. Click Submateri
+        const subcatBtn = e.target.closest('.js-subcat-filter');
+        if (subcatBtn) {
+            e.preventDefault();
+            const materi = subcatBtn.dataset.materi || '';
+            const submateri = subcatBtn.dataset.submateri || '';
+            syncSidebarSubcatActive(submateri);
+            loadFeed(subcatBtn.href, true, false);
+
+            const offcanvasEl = document.getElementById('homeSidebar');
+            if (offcanvasEl && window.bootstrap && window.bootstrap.Offcanvas) {
+                const inst = window.bootstrap.Offcanvas.getInstance(offcanvasEl);
+                if (inst) inst.hide();
+            }
+            return;
+        }
+
+        // 3. Reset Button or Pagination Links
+        const ajaxLink = e.target.closest('.js-feed-ajax-link');
+        if (ajaxLink) {
+            e.preventDefault();
+            if (ajaxLink.classList.contains('js-reset-cat')) {
+                syncSidebarCatActive('');
+                syncSidebarSubmateri('', '');
+            }
+            loadFeed(ajaxLink.href, true, ajaxLink.classList.contains('page-link'));
+            return;
+        }
+    });
+
+    window.addEventListener('popstate', function() {
+        const params = new URLSearchParams(window.location.search);
+        const materi = params.get('materi') || '';
+        const submateri = params.get('submateri') || '';
+
+        syncSidebarCatActive(materi);
+        syncSidebarSubmateri(materi, submateri);
+        loadFeed(window.location.href, false, false);
+    });
+})();
+</script>
 <?php include __DIR__ . '/includes/footer.php'; ?>
