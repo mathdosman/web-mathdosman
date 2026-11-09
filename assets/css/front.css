@@ -1285,12 +1285,28 @@
 
     body.paket-preview .kop-header .brand-name {
         font-size: 30px;
-        font-weight: 800;
-        color: #1a237e;
+        font-weight: 850;
         margin: 0;
-        letter-spacing: 1.5px;
+        letter-spacing: -0.02em;
         line-height: 1;
         text-transform: uppercase;
+        display: inline-flex;
+        align-items: baseline;
+    }
+
+    body.paket-preview .kop-header .brand-name .brand-math {
+        color: #0f172a;
+        font-weight: 900;
+    }
+
+    body.paket-preview .kop-header .brand-name .brand-dosman {
+        color: #0284c7;
+        font-weight: 900;
+    }
+
+    body.paket-preview .kop-header .logo-svg {
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2);
     }
 
     body.paket-preview .kop-header .slogan {

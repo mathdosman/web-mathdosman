@@ -500,12 +500,20 @@ body.admin-layout .app-navbar {
 
 /* Warna brand/logo dan teks nama web di navbar saat gelap */
 body.admin-layout .app-navbar .navbar-brand,
-body.admin-layout .app-navbar .navbar-brand .brand-name {
+body.admin-layout .app-navbar .navbar-brand .brand-name,
+body.admin-layout .app-navbar .navbar-brand .brand-math {
     color: #ffffff !important;
+}
+
+body.admin-layout .app-navbar .navbar-brand .brand-dosman {
+    color: #38bdf8 !important;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
 }
 
 body.admin-layout .app-navbar .navbar-brand .brand-mark {
     color: #38bdf8 !important; /* Aksen Cyan senada */
+    background: transparent !important;
+    border: none !important;
 }
 
 /* Tombol hamburger sidebar toggle */

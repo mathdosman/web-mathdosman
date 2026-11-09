@@ -508,14 +508,14 @@ if ($useAdminSidebar) {
                     </button>
                 <?php endif; ?>
                 <a class="navbar-brand d-inline-flex align-items-center gap-2" href="<?php echo $base_url; ?>/index.php" aria-label="MATHDOSMAN">
-                    <span class="brand-mark text-primary" aria-hidden="true">
+                    <span class="brand-mark" aria-hidden="true">
                         <?php if (!empty($brandLogoPath)): ?>
-                            <img class="brand-logo" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="28" height="28" alt="" loading="eager" decoding="async">
+                            <img class="brand-logo" src="<?php echo htmlspecialchars($brandLogoPath); ?>" width="32" height="32" alt="Logo MATHDOSMAN" loading="eager" decoding="async">
                         <?php else: ?>
                             <i class="ti ti-math-symbols" style="font-size: 1.6rem;"></i>
                         <?php endif; ?>
                     </span>
-                    <span class="brand-name fw-bold">MATHDOSMAN</span>
+                    <span class="brand-name"><span class="brand-math">MATH</span><span class="brand-dosman">DOSMAN</span></span>
                 </a>
                 <div class="d-flex align-items-center gap-2 ms-auto">
                     <?php if ($useSidebar): ?>

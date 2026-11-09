@@ -779,7 +779,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
                             <?php endif; ?>
 
                             <div class="text-area">
-                                <div class="brand-name">MathDosman</div>
+                                <div class="brand-name"><span class="brand-math">MATH</span><span class="brand-dosman">DOSMAN</span></div>
                                 <div class="slogan">Pusat Latihan Soal &amp; Referensi Matematika Terpadu</div>
                                 <div class="jenjang-pendidikan">SD &bull; SMP &bull; SMA &bull; SMK &bull; PERGURUAN TINGGI</div>
                             </div>

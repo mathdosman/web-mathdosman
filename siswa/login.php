@@ -178,7 +178,7 @@ include __DIR__ . '/../includes/header.php';
                     alt="Mathdosman"
                 >
             </span>
-            <span class="login-brand-text">MATHDOSMAN</span>
+            <span class="login-brand-text"><span class="brand-math">MATH</span><span class="brand-dosman">DOSMAN</span></span>
         </a>
     </div>
 

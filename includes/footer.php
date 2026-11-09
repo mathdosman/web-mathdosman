@@ -31,9 +31,9 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 		<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 small text-muted">
 			<div>
 				<?php if ($isHomePage): ?>
-					<a href="<?php echo htmlspecialchars((string)$base_url); ?>/login.php" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> MATHDOSMAN</a>
+					<a href="<?php echo htmlspecialchars((string)$base_url); ?>/login.php" class="footer-brand-link" style="color: inherit; text-decoration: none;">&copy; <?php echo date('Y'); ?> <span class="brand-math fw-bold">MATH</span><span class="brand-dosman fw-bold">DOSMAN</span></a>
 				<?php else: ?>
-					<span>&copy; <?php echo date('Y'); ?> MATHDOSMAN</span>
+					<span>&copy; <?php echo date('Y'); ?> <span class="brand-math fw-bold">MATH</span><span class="brand-dosman fw-bold">DOSMAN</span></span>
 				<?php endif; ?>
 			</div>
 			<?php if (empty($hide_public_footer_links)): ?>

@@ -1289,7 +1289,7 @@ function get_home_carousel_slides(): array
                         <span class="small fw-semibold text-body-secondary">Materi &amp; Bank Soal SMA</span>
                     </div>
                     <h1 class="display-6 fw-bolder mb-2 hero-heading">
-                        Selamat datang di <span class="brand-gradient-text">MATHDOSMAN</span>
+                        Selamat datang di <span class="brand-hero-inline"><span class="brand-math">MATH</span><span class="brand-dosman">DOSMAN</span></span>
                     </h1>
                     <p class="lead text-secondary mb-3 hero-lead">
                         Belajar matematika nggak harus ribet—ringkas, rapi, dan siap latihan kapan pun.
