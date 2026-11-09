@@ -1,6 +1,6 @@
 <?php
 $meetings[1] = [
-    'code' => 'limit-p1-konsep-sifat',
+'code' => 'limit-p1-konsep-sifat',
     'name' => 'Limit (Pertemuan 1) - Konsep Pendekatan & Sifat Aljabar',
     'slug' => 'materi-limit-p1-konsep-sifat',
     'title' => 'Bahan Ajar Pertemuan 1: Konsep Intuitif Limit, Nilai Pendekatan Kiri/Kanan, dan 8 Teorema Sifat Aljabar',
@@ -162,8 +162,7 @@ HTML,
 <div><strong>Jawaban: C</strong></div>
 HTML,
         ],
-];
-$meetings[3] = [
+        3 => [
             'pertanyaan' => '<p>Diketahui \(\lim_{x \to 1} f(x) = 4\) dan \(\lim_{x \to 1} g(x) = -2\). Nilai dari \(\lim_{x \to 1} [2f(x) - (g(x))^2]\) adalah...</p>',
             'p1' => '<p>\(0\)</p>',
             'p2' => '<p>\(4\)</p>',
@@ -182,8 +181,7 @@ $meetings[3] = [
 <div><strong>Jawaban: B</strong></div>
 HTML,
         ],
-];
-$meetings[4] = [
+        4 => [
             'pertanyaan' => '<p>Nilai dari \(\lim_{x \to 4} \sqrt{\frac{3x + 4}{2x - 7}}\) adalah...</p>',
             'p1' => '<p>\(2\)</p>',
             'p2' => '<p>\(\sqrt{8}\)</p>',
@@ -203,8 +201,7 @@ $meetings[4] = [
 <div><strong>Jawaban: C</strong></div>
 HTML,
         ],
-];
-$meetings[5] = [
+        5 => [
             'pertanyaan' => '<p>Diberikan fungsi sepotong (piecewise):<br>\[ f(x) = \begin{cases} 3x - 1, & x < 2 \\ x^2 + 1, & x \ge 2 \end{cases} \]<br>Nilai dari \(\lim_{x \to 2} f(x)\) adalah...</p>',
             'p1' => '<p>\(3\)</p>',
             'p2' => '<p>\(4\)</p>',
@@ -224,8 +221,7 @@ $meetings[5] = [
 <div><strong>Jawaban: C</strong></div>
 HTML,
         ],
-];
-$meetings[6] = [
+        6 => [
             'pertanyaan' => '<p>Diketahui fungsi \(g(x) = \begin{cases} 2x + k, & x \le 3 \\ x^2 - 2, & x > 3 \end{cases}\). Agar \(\lim_{x \to 3} g(x)\) mempunyai nilai, nilai konstanta \(k\) haruslah...</p>',
             'p1' => '<p>\(-1\)</p>',
             'p2' => '<p>\(0\)</p>',
@@ -245,8 +241,7 @@ $meetings[6] = [
 <div><strong>Jawaban: C</strong></div>
 HTML,
         ],
-];
-$meetings[7] = [
+        7 => [
             'pertanyaan' => '<p>Nilai dari limit kiri \(\lim_{x \to 1^-} \frac{|x - 1|}{x - 1}\) adalah...</p>',
             'p1' => '<p>\(-2\)</p>',
             'p2' => '<p>\(-1\)</p>',
@@ -289,5 +284,3 @@ HTML,
         ],
     ],
 ];
-// ============================================================================
-// PERTEMUAN 2: BENTUK TAK TENTU (0/0) - METODE PEMFAKTORAN POLINOMIAL
