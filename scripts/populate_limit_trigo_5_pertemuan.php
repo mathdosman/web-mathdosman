@@ -196,6 +196,10 @@ try {
             $stmtFindPq->execute([':pid' => $packageId, ':qnum' => $qNum]);
             $questionId = (int)($stmtFindPq->fetchColumn() ?: 0);
 
+            $qText = $qData['pertanyaan'] ?? $qData['q'];
+            $jb = $qData['jb'] ?? $qData['jawaban'];
+            $peny = $qData['penyelesaian'] ?? $qData['sol'];
+
             if ($questionId > 0) {
                 $stmtUpdQ = $pdo->prepare('
                     UPDATE questions
@@ -207,46 +211,52 @@ try {
                         pilihan_3 = :p3,
                         pilihan_4 = :p4,
                         pilihan_5 = :p5,
-                        jawaban_benar = :jawaban,
-                        pembahasan = :sol,
+                        jawaban_benar = :jb,
+                        penyelesaian = :peny,
+                        status_soal = "published",
+                        materi = :materi,
+                        submateri = :submateri,
                         updated_at = NOW()
                     WHERE id = :id
                 ');
                 $stmtUpdQ->execute([
                     ':sid' => $subjectId,
-                    ':q' => $qData['q'],
+                    ':q' => $qText,
                     ':p1' => $qData['p1'],
                     ':p2' => $qData['p2'],
                     ':p3' => $qData['p3'],
                     ':p4' => $qData['p4'],
                     ':p5' => $qData['p5'],
-                    ':jawaban' => $qData['jawaban'],
-                    ':sol' => $qData['sol'],
+                    ':jb' => $jb,
+                    ':peny' => $peny,
+                    ':materi' => $materi,
+                    ':submateri' => $submateri,
                     ':id' => $questionId,
                 ]);
             } else {
                 $stmtInsQ = $pdo->prepare('
-                    INSERT INTO questions (subject_id, materi, submateri, tipe_soal, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, pembahasan, created_at)
-                    VALUES (:sid, :m, :sm, "Pilihan Ganda", :q, :p1, :p2, :p3, :p4, :p5, :jawaban, :sol, NOW())
+                    INSERT INTO questions (subject_id, pertanyaan, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, penyelesaian, status_soal, materi, submateri, created_at)
+                    VALUES (:sid, :q, "Pilihan Ganda", :p1, :p2, :p3, :p4, :p5, :jb, :peny, "published", :materi, :submateri, :created_at)
                 ');
                 $stmtInsQ->execute([
                     ':sid' => $subjectId,
-                    ':m' => $materi,
-                    ':sm' => $submateri,
-                    ':q' => $qData['q'],
+                    ':q' => $qText,
                     ':p1' => $qData['p1'],
                     ':p2' => $qData['p2'],
                     ':p3' => $qData['p3'],
                     ':p4' => $qData['p4'],
                     ':p5' => $qData['p5'],
-                    ':jawaban' => $qData['jawaban'],
-                    ':sol' => $qData['sol'],
+                    ':jb' => $jb,
+                    ':peny' => $peny,
+                    ':materi' => $materi,
+                    ':submateri' => $submateri,
+                    ':created_at' => $m['published_at'],
                 ]);
                 $questionId = (int)$pdo->lastInsertId();
 
                 $stmtInsPq = $pdo->prepare('
-                    INSERT INTO package_questions (package_id, question_id, question_number, bobot)
-                    VALUES (:pid, :qid, :qnum, 1.0)
+                    INSERT INTO package_questions (package_id, question_id, question_number, added_at)
+                    VALUES (:pid, :qid, :qnum, NOW())
                 ');
                 $stmtInsPq->execute([
                     ':pid' => $packageId,
