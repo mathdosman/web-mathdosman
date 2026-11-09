@@ -12,3 +12,4 @@ convert -background none -density 300 -resize 2048x2048 assets/img/icon.svg asse
 
 echo "Done! Generated:"
 ls -lh assets/img/icon-192.png assets/img/icon-512.png assets/img/logo_mathdosman.png assets/img/logo_mathdosman_1024.png assets/img/logo_mathdosman_2048.png
+

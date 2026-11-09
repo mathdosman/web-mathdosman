@@ -29,6 +29,7 @@ $today = date('Y-m-d');
 $addUrl($base . '/', $today, 'daily', '1.0');
 $addUrl($base . '/daftar-isi.php', $today, 'daily', '0.9');
 $addUrl($base . '/tentang.php', $today, 'monthly', '0.6');
+$addUrl($base . '/tentang-logo.php', $today, 'monthly', '0.6');
 $addUrl($base . '/kontak.php', $today, 'monthly', '0.5');
 $addUrl($base . '/kebijakan-privasi.php', $today, 'yearly', '0.4');
 $addUrl($base . '/syarat-ketentuan.php', $today, 'yearly', '0.4');

@@ -39,6 +39,7 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 			<?php if (empty($hide_public_footer_links)): ?>
 				<div class="d-flex flex-wrap gap-3">
 					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang.php">Tentang</a>
+					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/tentang-logo.php">Filosofi Logo</a>
 					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kontak.php">Kontak</a>
 					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/kebijakan-privasi.php">Kebijakan Privasi</a>
 					<a class="link-secondary text-decoration-none" href="<?php echo $base_url; ?>/syarat-ketentuan.php">Syarat &amp; Ketentuan</a>
