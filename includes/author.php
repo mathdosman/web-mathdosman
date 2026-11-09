@@ -82,3 +82,4 @@ if (!function_exists('mathdosman_render_author_box')) {
         return (string)ob_get_clean();
     }
 }
+
