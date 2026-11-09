@@ -12,43 +12,43 @@ function sanitize_rich_text(string $html): string
     }
 
     $allowedTags = [
-        'div' => [],
-        'p' => [],
-        'h1' => [],
-        'h2' => [],
-        'h3' => [],
-        'h4' => [],
-        'h5' => [],
-        'h6' => [],
+        'div' => ['class'],
+        'p' => ['class'],
+        'h1' => ['class'],
+        'h2' => ['class'],
+        'h3' => ['class'],
+        'h4' => ['class'],
+        'h5' => ['class'],
+        'h6' => ['class'],
         'br' => [],
-        'hr' => [],
-        'b' => [],
-        'strong' => [],
-        'i' => [],
-        'em' => [],
-        'u' => [],
-        'ul' => [],
-        'ol' => [],
-        'li' => [],
-        'blockquote' => [],
-        'code' => [],
-        'pre' => [],
-        'sub' => [],
-        'sup' => [],
-        'span' => [],
+        'hr' => ['class'],
+        'b' => ['class'],
+        'strong' => ['class'],
+        'i' => ['class'],
+        'em' => ['class'],
+        'u' => ['class'],
+        'ul' => ['class'],
+        'ol' => ['class'],
+        'li' => ['class'],
+        'blockquote' => ['class'],
+        'code' => ['class'],
+        'pre' => ['class'],
+        'sub' => ['class'],
+        'sup' => ['class'],
+        'span' => ['class'],
         // Keep basic table attributes so tables remain visually recognizable.
         // We also allow a very small safe subset of inline styles (border-color only)
         // to support TinyMCE's table border color settings.
-        'table' => ['border', 'cellpadding', 'cellspacing', 'bordercolor', 'style'],
-        'thead' => [],
-        'tbody' => [],
-        'tfoot' => [],
-        'tr' => ['style'],
-        'th' => ['colspan', 'rowspan', 'bordercolor', 'style'],
-        'td' => ['colspan', 'rowspan', 'bordercolor', 'style'],
-        'caption' => [],
-        'a' => ['href', 'title', 'target', 'rel'],
-        'img' => ['src', 'alt', 'width', 'height'],
+        'table' => ['border', 'cellpadding', 'cellspacing', 'bordercolor', 'style', 'class'],
+        'thead' => ['class'],
+        'tbody' => ['class'],
+        'tfoot' => ['class'],
+        'tr' => ['style', 'class'],
+        'th' => ['colspan', 'rowspan', 'bordercolor', 'style', 'class'],
+        'td' => ['colspan', 'rowspan', 'bordercolor', 'style', 'class'],
+        'caption' => ['class'],
+        'a' => ['href', 'title', 'target', 'rel', 'class'],
+        'img' => ['src', 'alt', 'width', 'height', 'class'],
     ];
 
     $isSafeColorValue = static function (string $val): bool {
@@ -364,6 +364,19 @@ function sanitize_rich_text(string $html): string
                             $toRemove[] = $attr->name;
                         } else {
                             $node->setAttribute('style', $cleanStyle);
+                        }
+                        continue;
+                    }
+
+                    // class: allow only safe alphanumeric CSS classes
+                    if ($name === 'class') {
+                        if (!in_array('class', $allowedAttrs, true)) {
+                            $toRemove[] = $attr->name;
+                            continue;
+                        }
+                        $classVal = trim((string)$node->getAttribute('class'));
+                        if ($classVal === '' || !preg_match('/^[a-zA-Z0-9_\-\s]+$/', $classVal)) {
+                            $toRemove[] = $attr->name;
                         }
                         continue;
                     }
