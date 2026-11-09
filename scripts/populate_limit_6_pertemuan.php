@@ -70,7 +70,7 @@ $navHtml = static function (int $activeMeeting): string {
         }
     }
     $html .= '</ol>';
-    $html .= '<div class="mt-2 pt-2 border-top small text-muted"><i class="ti ti-arrow-right me-1"></i> Setelah menuntaskan seluruh seri Limit, lanjutkan ke: <a href="/paket.php?code=turunan-p1-konsep-limit" class="fw-bold text-decoration-none text-success">Materi Turunan Fungsi (Pertemuan 1)</a></div>';
+    $html .= '<div class="mt-2 pt-2 border-top small text-muted"><i class="ti ti-arrow-right me-1"></i> Setelah menuntaskan seluruh seri Limit Aljabar, lanjutkan ke: <a href="/paket.php?code=limit-trigo-p1-dasar-sifat" class="fw-bold text-decoration-none text-primary">Limit Trigonometri (Pertemuan 1)</a> atau <a href="/paket.php?code=turunan-p1-konsep-limit" class="fw-bold text-decoration-none text-success">Turunan Fungsi (Pertemuan 1)</a></div>';
     $html .= '</div>';
     return $html;
 };

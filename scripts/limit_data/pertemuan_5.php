@@ -1,6 +1,6 @@
 <?php
 // ============================================================================
-// PERTEMUAN 5: LIMIT DI TAK HINGGA SELISIH BENTUK AKAR (inf - inf)
+// PERTEMUAN 5: LIMIT DI TAK HINGGA SELISIH BENTUK AKAR (inf - inf) (ENHANCED UI)
 // ============================================================================
 $meetings[5] = [
     'code' => 'limit-p5-tak-hingga-selisih-akar',
@@ -17,14 +17,18 @@ $meetings[5] = [
 </div>
 <p class="lead">Selamat datang di <strong>Pertemuan 5 Seri Limit Fungsi Aljabar</strong>. Salah satu tipe soal kalkulus yang paling populer dan sering keluar di ujian sekolah maupun UTBK-SNBT adalah bentuk selisih akar tak tentu \(\infty - \infty\). Pada sesi ini, kita akan mempelajari prinsip perkalian sekawan di tak hingga serta pembuktian dan trik instan rumus sakti \(\frac{b - p}{2\sqrt{a}}\).</p>
 <hr>
-<p><strong>Tujuan Pembelajaran (TP) Pertemuan 5:</strong></p>
-<ol>
-  <li>Memahami karakteristik bentuk tak tentu \(\infty - \infty\) dan alasan mengapa hasilnya tidak otomatis bernilai nol.</li>
-  <li>Menerapkan metode perkalian akar sekawan untuk merasionalkan selisih bentuk akar kuadrat di tak hingga.</li>
-  <li>Memahami pembuktian rumus cepat limit selisih dua akar kuadrat berderajat dua: \(\lim_{x \to \infty} (\sqrt{ax^2+bx+c} - \sqrt{ax^2+px+q}) = \frac{b - p}{2\sqrt{a}}\).</li>
-  <li>Menganalisis hasil limit jika koefisien utama berbeda (\(a > p\) bernilai \(\infty\) dan \(a < p\) bernilai \(-\infty\)).</li>
-  <li>Memanipulasi variasi bentuk linear di luar akar, seperti \(\sqrt{ax^2+bx+c} - (mx + n)\), agar dapat diselesaikan dengan rumus cepat.</li>
-</ol>
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center fs-6">
+    <i class="ti ti-target-arrow me-2 fs-5"></i>Tujuan Pembelajaran (TP) Pertemuan 5:
+  </div>
+  <ol class="mb-0 ps-3">
+    <li class="mb-1">Memahami karakteristik bentuk tak tentu \(\infty - \infty\) dan alasan mengapa hasilnya tidak otomatis bernilai nol.</li>
+    <li class="mb-1">Menerapkan metode perkalian akar sekawan untuk merasionalkan selisih bentuk akar kuadrat di tak hingga.</li>
+    <li class="mb-1">Memahami pembuktian rumus cepat limit selisih dua akar kuadrat berderajat dua: \(\lim_{x \to \infty} (\sqrt{ax^2+bx+c} - \sqrt{ax^2+px+q}) = \frac{b - p}{2\sqrt{a}}\).</li>
+    <li class="mb-1">Menganalisis hasil limit jika koefisien utama berbeda (\(a > p\) bernilai \(\infty\) dan \(a < p\) bernilai \(-\infty\)).</li>
+    <li class="mb-0">Memanipulasi variasi bentuk linear di luar akar, seperti \(\sqrt{ax^2+bx+c} - (mx + n)\), agar dapat diselesaikan dengan rumus cepat.</li>
+  </ol>
+</div>
 <p><strong>Rekomendasi Alur Belajar Terarah (2 &times; 45 Menit):</strong></p>
 <ul>
   <li><strong>Tahap 1 (15 Menit):</strong> Pahami konsep \(\infty - \infty\) dan syarat koefisien \(a = p\).</li>
@@ -40,7 +44,9 @@ HTML
 
 <h2>2. Bentuk Umum Limit Selisih Dua Akar Kuadrat</h2>
 <p>Bentuk baku yang paling sering ditemui dalam kalkulus SMA adalah:</p>
-\[ L = \lim_{x \to \infty} \left( \sqrt{ax^2 + bx + c} - \sqrt{px^2 + qx + r} \right) \]
+<div class="math-formula-spotlight">
+  \[ L = \lim_{x \to \infty} \left( \sqrt{ax^2 + bx + c} - \sqrt{px^2 + qx + r} \right) \]
+</div>
 
 <div class="table-responsive my-3">
   <table class="table table-bordered table-hover align-middle">
@@ -76,78 +82,161 @@ HTML
 \[ \lim_{x \to \infty} \frac{(\sqrt{ax^2 + bx + c} - \sqrt{ax^2 + qx + r})(\sqrt{ax^2 + bx + c} + \sqrt{ax^2 + qx + r})}{\sqrt{ax^2 + bx + c} + \sqrt{ax^2 + qx + r}} \]
 <p>Pembilang disederhanakan:</p>
 \[ (ax^2 + bx + c) - (ax^2 + qx + r) = (b - q)x + (c - r) \]
-<p>Penyebut di tak hingga didominasi oleh \(\sqrt{ax^2} + \sqrt{ax^2} = 2\sqrt{a} \cdot x\). Maka bagi seluruh suku dengan \(x\):</p>
-\[ \lim_{x \to \infty} \frac{(b - q) + \frac{c - r}{x}}{\sqrt{a + \frac{b}{x} + \frac{c}{x^2}} + \sqrt{a + \frac{q}{x} + \frac{r}{x^2}}} = \frac{b - q}{\sqrt{a} + \sqrt{a}} = \frac{b - q}{2\sqrt{a}} \]
+<p>Penyebut di tak hingga didominasi oleh \(\sqrt{ax^2} + \sqrt{ax^2} = 2\sqrt{a} \cdot x\). Bagi seluruh suku dengan \(x\):</p>
+<div class="math-formula-spotlight">
+  \[ \lim_{x \to \infty} \frac{(b - q) + \frac{c - r}{x}}{\sqrt{a + \frac{b}{x} + \frac{c}{x^2}} + \sqrt{a + \frac{q}{x} + \frac{r}{x^2}}} = \frac{b - q}{\sqrt{a} + \sqrt{a}} = \frac{b - q}{2\sqrt{a}} \]
+</div>
 
 <h2>4. Teknik Manipulasi Bentuk Linear Non-Akar</h2>
-<p>Sering kali soal ditulis dalam bentuk \(\sqrt{ax^2 + bx + c} - (mx + n)\). Langkah kuncinya:</p>
-<ol>
-  <li>Keluarkan tanda minus dan kelompokkan suku linear dalam tanda kurung:
-  \[ -(mx + n) \]</li>
-  <li>Ubah suku kurung tersebut menjadi bentuk akar kuadrat:
-  \[ (mx + n) = \sqrt{(mx + n)^2} = \sqrt{m^2 x^2 + 2mnx + n^2} \]</li>
-  <li>Gunakan rumus cepat dengan \(a = m^2\), \(b = b\), dan \(q = 2mn\).</li>
-</ol>
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center">
+    <i class="ti ti-wand me-2 fs-5"></i>Trik Mengubah Bentuk Linear ke Bentuk Akar:
+  </div>
+  <ol class="mb-0 ps-3">
+    <li>Keluarkan tanda minus: \(-(mx + n)\)</li>
+    <li>Ubah ke akar kuadrat: \((mx + n) = \sqrt{(mx + n)^2} = \sqrt{m^2 x^2 + 2mnx + n^2}\)</li>
+    <li>Gunakan rumus sakti dengan \(a = m^2\), \(b = b\), dan \(q = 2mn\).</li>
+  </ol>
+</div>
 
 <hr class="my-4">
 <h2>5. Empat Contoh Soal Terbimbing &amp; Cara Pengerjaan</h2>
 
-<h3>Contoh 1: Bentuk Dasar Dua Akar Kuadrat</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (\sqrt{4x^2 + 8x - 5} - \sqrt{4x^2 - 4x + 1})\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Identifikasi Koefisien:</strong></p>
-    <ul>
-      <li>Akar kiri: \(a = 4\), \(b = 8\), \(c = -5\)</li>
-      <li>Akar kanan: \(p = 4\), \(q = -4\), \(r = 1\)</li>
-    </ul>
-    <p>Karena \(a = p = 4\), gunakan rumus cepat:</p>
-    \[ L = \frac{b - q}{2\sqrt{a}} = \frac{8 - (-4)}{2\sqrt{4}} = \frac{8 + 4}{2 \times 2} = \frac{12}{4} = 3 \]
-    <p><strong>Jawaban: \(3\)</strong></p>
+<!-- CONTOH 1 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Dasar Dua Akar Kuadrat</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 1</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (\sqrt{4x^2 + 8x - 5} - \sqrt{4x^2 - 4x + 1})\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Akar kiri: \(a = 4, b = 8, c = -5\)</li>
+        <li>Akar kanan: \(p = 4, q = -4, r = 1\)</li>
+        <li>Karena \(a = p = 4\), gunakan rumus cepat:
+        \[ L = \frac{b - q}{2\sqrt{a}} = \frac{8 - (-4)}{2\sqrt{4}} = \frac{8 + 4}{2 \times 2} = \frac{12}{4} = 3 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(3\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 2: Bentuk Akar Dikurangi Linear Tunggal</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (\sqrt{x^2 + 6x - 2} - (x - 2))\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Ubah bentuk linear \((x - 2)\) ke dalam akar kuadrat:</p>
-    \[ (x - 2) = \sqrt{(x - 2)^2} = \sqrt{x^2 - 4x + 4} \]
-    <p><strong>Langkah 2:</strong> Tulis ulang limit:</p>
-    \[ \lim_{x \to \infty} (\sqrt{x^2 + 6x - 2} - \sqrt{x^2 - 4x + 4}) \]
-    <p><strong>Langkah 3:</strong> Nilai \(a = 1, b = 6, q = -4\):</p>
-    \[ L = \frac{6 - (-4)}{2\sqrt{1}} = \frac{10}{2} = 5 \]
-    <p><strong>Jawaban: \(5\)</strong></p>
+<!-- CONTOH 2 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Akar Dikurangi Linear Tunggal</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 2</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (\sqrt{x^2 + 6x - 2} - (x - 2))\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Ubah bentuk linear \((x - 2)\) ke dalam akar kuadrat:
+        \[ (x - 2) = \sqrt{(x - 2)^2} = \sqrt{x^2 - 4x + 4} \]</li>
+        <li>Tulis ulang limit:
+        \[ \lim_{x \to \infty} (\sqrt{x^2 + 6x - 2} - \sqrt{x^2 - 4x + 4}) \]</li>
+        <li>Bandingkan koefisien: \(a = 1, b = 6, q = -4\):
+        \[ L = \frac{6 - (-4)}{2\sqrt{1}} = \frac{10}{2} = 5 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(5\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 3: Linear Tanpa Tanda Kurung</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (\sqrt{9x^2 - 6x + 7} - 3x + 1)\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Kelompokkan suku di belakang akar dengan faktorkan tanda minus:</p>
-    \[ -3x + 1 = -(3x - 1) \]
-    <p><strong>Langkah 2:</strong> Ubah menjadi bentuk akar:</p>
-    \[ 3x - 1 = \sqrt{(3x - 1)^2} = \sqrt{9x^2 - 6x + 1} \]
-    <p><strong>Langkah 3:</strong> Limit menjadi:</p>
-    \[ \lim_{x \to \infty} (\sqrt{9x^2 - 6x + 7} - \sqrt{9x^2 - 6x + 1}) \]
-    <p>Nilai \(a = 9, b = -6, q = -6\):</p>
-    \[ L = \frac{-6 - (-6)}{2\sqrt{9}} = \frac{0}{2 \times 3} = 0 \]
-    <p><strong>Jawaban: \(0\)</strong></p>
+<!-- CONTOH 3 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Linear Tanpa Tanda Kurung</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 3</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (\sqrt{9x^2 - 6x + 7} - 3x + 1)\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Faktorkan tanda minus: \(-3x + 1 = -(3x - 1)\).</li>
+        <li>Ubah ke bentuk akar: \((3x - 1) = \sqrt{(3x - 1)^2} = \sqrt{9x^2 - 6x + 1}\).</li>
+        <li>Limit menjadi: \(\lim_{x \to \infty} (\sqrt{9x^2 - 6x + 7} - \sqrt{9x^2 - 6x + 1})\).</li>
+        <li>Koefisien \(a = 9, b = -6, q = -6\):
+        \[ L = \frac{-6 - (-6)}{2\sqrt{9}} = \frac{0}{2 \times 3} = 0 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(0\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 4: Linear Positif di Depan Akar</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (2x - 3 - \sqrt{4x^2 - 12x + 5})\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Ubah suku depan \(2x - 3\) menjadi bentuk akar:</p>
-    \[ (2x - 3) = \sqrt{(2x - 3)^2} = \sqrt{4x^2 - 12x + 9} \]
-    <p><strong>Langkah 2:</strong> Limit menjadi:</p>
-    \[ \lim_{x \to \infty} (\sqrt{4x^2 - 12x + 9} - \sqrt{4x^2 - 12x + 5}) \]
-    <p>Nilai \(a = 4, b = -12, q = -12\):</p>
-    \[ L = \frac{-12 - (-12)}{2\sqrt{4}} = \frac{0}{4} = 0 \]
-    <p><strong>Jawaban: \(0\)</strong></p>
+<!-- CONTOH 4 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Linear Positif di Depan Akar</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 4</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} (2x - 3 - \sqrt{4x^2 - 12x + 5})\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Ubah suku depan \(2x - 3\) menjadi bentuk akar:
+        \[ (2x - 3) = \sqrt{(2x - 3)^2} = \sqrt{4x^2 - 12x + 9} \]</li>
+        <li>Limit menjadi: \(\lim_{x \to \infty} (\sqrt{4x^2 - 12x + 9} - \sqrt{4x^2 - 12x + 5})\).</li>
+        <li>Koefisien \(a = 4, b = -12, q = -12\):
+        \[ L = \frac{-12 - (-12)}{2\sqrt{4}} = \frac{0}{4} = 0 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(0\)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE BANNER -->
+<div class="math-practice-banner">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <span class="badge bg-white text-success fw-bold mb-1">EVALUASI PEMBELAJARAN</span>
+      <h4 class="mb-1 text-white fw-bold">8 Soal Latihan Mandiri (Pertemuan 5)</h4>
+      <div class="small text-white-50">Terapkan rumus praktis selisih akar pada 8 soal pilihan ganda berikut!</div>
+    </div>
+    <div>
+      <span class="badge bg-black bg-opacity-25 fs-6 px-3 py-2"><i class="ti ti-target me-1"></i>8 Soal Pilihan Ganda</span>
+    </div>
   </div>
 </div>
 HTML,

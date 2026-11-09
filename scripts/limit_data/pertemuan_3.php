@@ -1,6 +1,6 @@
 <?php
 // ============================================================================
-// PERTEMUAN 3: BENTUK TAK TENTU (0/0) DENGAN PERKALIAN AKAR SEKAWAN
+// PERTEMUAN 3: BENTUK TAK TENTU (0/0) DENGAN PERKALIAN AKAR SEKAWAN (ENHANCED UI)
 // ============================================================================
 $meetings[3] = [
     'code' => 'limit-p3-akar-sekawan',
@@ -17,14 +17,18 @@ $meetings[3] = [
 </div>
 <p class="lead">Selamat datang di <strong>Pertemuan 3 Seri Limit Fungsi Aljabar</strong>. Pada sesi ini, kita akan menaklukkan bentuk pecahan tak tentu \(\frac{0}{0}\) yang melibatkan bentuk akar kuadrat pada pembilang maupun penyebut melalui metode <em>Perkalian Bentuk Sekawan</em> (Rasionalisasi Aljabar).</p>
 <hr>
-<p><strong>Tujuan Pembelajaran (TP) Pertemuan 3:</strong></p>
-<ol>
-  <li>Mengidentifikasi karakteristik limit pecahan aljabar yang memuat bentuk akar dan menghasilkan bentuk tak tentu \(\frac{0}{0}\).</li>
-  <li>Memahami prinsip rasionalisasi aljabar menggunakan identitas perkalian sekawan: \((u - v)(u + v) = u^2 - v^2\).</li>
-  <li>Menerapkan perkalian sekawan pada bentuk akar tunggal maupun selisih dua akar di pembilang atau penyebut.</li>
-  <li>Menyederhanakan pecahan aljabar hingga faktor pembuat nol \((x - c)\) dapat dieliminasi secara sempurna.</li>
-  <li>Menyelesaikan permasalahan limit bentuk akar berparameter konstanta tak diketahui.</li>
-</ol>
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center fs-6">
+    <i class="ti ti-target-arrow me-2 fs-5"></i>Tujuan Pembelajaran (TP) Pertemuan 3:
+  </div>
+  <ol class="mb-0 ps-3">
+    <li class="mb-1">Mengidentifikasi karakteristik limit pecahan aljabar yang memuat bentuk akar dan menghasilkan bentuk tak tentu \(\frac{0}{0}\).</li>
+    <li class="mb-1">Memahami prinsip rasionalisasi aljabar menggunakan identitas perkalian sekawan: \((u - v)(u + v) = u^2 - v^2\).</li>
+    <li class="mb-1">Menerapkan perkalian sekawan pada bentuk akar tunggal maupun selisih dua akar di pembilang atau penyebut.</li>
+    <li class="mb-1">Menyederhanakan pecahan aljabar hingga faktor pembuat nol \((x - c)\) dapat dieliminasi secara sempurna.</li>
+    <li class="mb-0">Menyelesaikan permasalahan limit bentuk akar berparameter konstanta tak diketahui.</li>
+  </ol>
+</div>
 <p><strong>Rekomendasi Alur Belajar Terarah (2 &times; 45 Menit):</strong></p>
 <ul>
   <li><strong>Tahap 1 (15 Menit):</strong> Pahami konsep bentuk sekawan dan bagaimana akar tereliminasi dengan kuadrat.</li>
@@ -37,99 +41,189 @@ HTML
     'content_html' => <<<'HTML'
 <h2>1. Konsep Dasar Bentuk Sekawan (Konjugat Aljabar)</h2>
 <p>Jika uji substitusi langsung pada pecahan yang memuat akar menghasilkan \(\frac{0}{0}\), kita tidak bisa langsung memfaktorkannya dengan cara biasa. Kita perlu <strong>merasionalkan</strong> bentuk akar tersebut dengan mengalikannya dengan <em>faktor sekawan</em> (konjugat).</p>
-<p>Prinsip dasar yang digunakan adalah identitas selisih dua kuadrat:</p>
-<div class="alert alert-primary text-center py-2 fs-5">
-  \[ (u - v)(u + v) = u^2 - v^2 \]
+
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center">
+    <i class="ti ti-flame me-2 fs-5"></i>Prinsip Identitas Selisih Dua Kuadrat:
+  </div>
+  <div class="math-formula-spotlight my-2">
+    \[ (u - v)(u + v) = u^2 - v^2 \]
+  </div>
+  <p class="mb-0">Dengan mengalikan suku akar dengan sekawannya, tanda akar kuadrat akan hilang seketika karena dikuadratkan!</p>
 </div>
-<p>Dengan mengalikan suku akar dengan sekawannya, tanda akar kuadrat akan hilang karena dikuadratkan:</p>
+
+<p>Pasangan sekawan baku yang wajib dipahami:</p>
 <ul>
-  <li>Bentuk sekawan dari \((\sqrt{a} - \sqrt{b})\) adalah \((\sqrt{a} + \sqrt{b})\), sehingga:
+  <li>Bentuk sekawan dari \((\sqrt{a} - \sqrt{b})\) adalah \((\sqrt{a} + \sqrt{b})\):
   \[ (\sqrt{a} - \sqrt{b})(\sqrt{a} + \sqrt{b}) = (\sqrt{a})^2 - (\sqrt{b})^2 = a - b \]</li>
-  <li>Bentuk sekawan dari \((\sqrt{f(x)} - g(x))\) adalah \((\sqrt{f(x)} + g(x))\), sehingga:
+  <li>Bentuk sekawan dari \((\sqrt{f(x)} - g(x))\) adalah \((\sqrt{f(x)} + g(x))\):
   \[ (\sqrt{f(x)} - g(x))(\sqrt{f(x)} + g(x)) = f(x) - [g(x)]^2 \]</li>
-  <li>Bentuk sekawan dari \((f(x) - \sqrt{g(x)})\) adalah \((f(x) + \sqrt{g(x)})\), sehingga:
+  <li>Bentuk sekawan dari \((f(x) - \sqrt{g(x)})\) adalah \((f(x) + \sqrt{g(x)})\):
   \[ (f(x) - \sqrt{g(x)})(f(x) + \sqrt{g(x)}) = [f(x)]^2 - g(x) \]</li>
 </ul>
 
 <h2>2. Algoritma 4 Langkah Menyelesaikan Limit Bentuk Akar</h2>
-<div class="alert alert-light border shadow-sm">
-  <ol class="mb-0">
-    <li class="mb-2"><strong>Langkah 1 (Uji Substitusi):</strong> Masukkan nilai \(x = c\). Jika menghasilkan nilai berhingga (bukan \(\frac{0}{0}\)), itulah hasil akhirnya.</li>
-    <li class="mb-2"><strong>Langkah 2 (Kalikan dengan Sekawan):</strong> Kalikan pembilang dan penyebut dengan bentuk sekawan dari bagian yang memuat akar bernilai nol. (Ingat: kalikan pecahan dengan \(\frac{\text{sekawan}}{\text{sekawan}} = 1\)).</li>
-    <li class="mb-2"><strong>Langkah 3 (Sederhanakan &amp; Faktorkan):</strong> Operasikan suku yang saling sekawan menggunakan rumus \(u^2 - v^2\). Bagian yang tidak sekawan biarkan dalam bentuk perkalian faktor (jangan dibuka kurungnya). Keluarkan faktor pembuat nol \((x - c)\) lalu coret.</li>
-    <li class="mb-0"><strong>Langkah 4 (Substitusi Ulang):</strong> Masukkan kembali nilai \(x = c\) ke dalam fungsi yang telah disederhanakan.</li>
+<div class="math-concept-card">
+  <ol class="mb-0 ps-3">
+    <li class="mb-2"><strong>Langkah 1 (Uji Substitusi):</strong> Masukkan nilai \(x = c\). Jika menghasilkan nilai pasti (bukan \(\frac{0}{0}\)), itulah hasil akhirnya.</li>
+    <li class="mb-2"><strong>Langkah 2 (Kalikan dengan Sekawan):</strong> Kalikan pembilang dan penyebut dengan faktor sekawan dari bagian yang memuat akar pembuat nol (\(\times \frac{\text{sekawan}}{\text{sekawan}}\)).</li>
+    <li class="mb-2"><strong>Langkah 3 (Sederhanakan &amp; Coret):</strong> Operasikan suku sekawan dengan rumus \(u^2 - v^2\). Bagian yang tidak sekawan biarkan dalam bentuk kurung faktor. Coret faktor pembuat nol \((x - c)\).</li>
+    <li class="mb-0"><strong>Langkah 4 (Substitusi Ulang):</strong> Masukkan kembali nilai \(x = c\) ke fungsi hasil penyederhanaan.</li>
   </ol>
 </div>
 
 <h2>3. Trik Cepat (Verifikasi Turunan / L'Hopital Singkat)</h2>
 <p>Untuk limit yang memuat satu bentuk akar \(\lim_{x \to c} \frac{\sqrt{f(x)} - k}{g(x)}\), turunan dari pembilang adalah \(\frac{f'(x)}{2\sqrt{f(x)}}\). Maka nilainya:</p>
-<div class="alert alert-secondary py-2">
+<div class="math-formula-spotlight">
   \[ \lim_{x \to c} \frac{\sqrt{f(x)} - k}{g(x)} = \frac{f'(c)}{2\sqrt{f(c)} \cdot g'(c)} \]
 </div>
-<p><em>Gunakan trik ini untuk mengecek kebenaran jawaban pada ujian bersistem pilihan ganda cepat seperti UTBK-SNBT!</em></p>
 
 <hr class="my-4">
-<h2>4. Empat Contoh Soal Terbimbing &amp; Langkah Pengerjaan</h2>
+<h2>4. Empat Contoh Soal Terbimbing &amp; Cara Pengerjaan</h2>
 
-<h3>Contoh 1: Bentuk Akar pada Penyebut</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 4} \frac{x - 4}{\sqrt{x} - 2}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Uji substitusi \(x = 4\) menghasilkan \(\frac{4 - 4}{\sqrt{4} - 2} = \frac{0}{0}\) (bentuk tak tentu).</p>
-    <p><strong>Langkah 2:</strong> Bentuk sekawan dari \((\sqrt{x} - 2)\) adalah \((\sqrt{x} + 2)\). Kalikan pembilang dan penyebut:</p>
-    \[ \lim_{x \to 4} \frac{x - 4}{\sqrt{x} - 2} \times \frac{\sqrt{x} + 2}{\sqrt{x} + 2} = \lim_{x \to 4} \frac{(x - 4)(\sqrt{x} + 2)}{(\sqrt{x})^2 - 2^2} \]
-    <p><strong>Langkah 3:</strong> Penyebut menjadi \(x - 4\). Coret faktor sekutu \((x - 4)\):</p>
-    \[ = \lim_{x \to 4} \frac{(x - 4)(\sqrt{x} + 2)}{x - 4} = \lim_{x \to 4} (\sqrt{x} + 2) \]
-    <p><strong>Langkah 4:</strong> Substitusi \(x = 4\):</p>
-    \[ = \sqrt{4} + 2 = 2 + 2 = 4 \]
-    <p><strong>Jawaban: \(4\)</strong></p>
+<!-- CONTOH 1 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Akar pada Penyebut</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 1</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 4} \frac{x - 4}{\sqrt{x} - 2}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Uji substitusi \(x = 4\) menghasilkan \(\frac{4 - 4}{\sqrt{4} - 2} = \frac{0}{0}\).</li>
+        <li>Bentuk sekawan dari \((\sqrt{x} - 2)\) adalah \((\sqrt{x} + 2)\). Kalikan pembilang dan penyebut:
+        \[ \lim_{x \to 4} \frac{x - 4}{\sqrt{x} - 2} \times \frac{\sqrt{x} + 2}{\sqrt{x} + 2} = \lim_{x \to 4} \frac{(x - 4)(\sqrt{x} + 2)}{(\sqrt{x})^2 - 2^2} \]</li>
+        <li>Penyebut menjadi \(x - 4\). Coret faktor sekutu \((x - 4)\):
+        \[ = \lim_{x \to 4} \frac{(x - 4)(\sqrt{x} + 2)}{x - 4} = \lim_{x \to 4} (\sqrt{x} + 2) \]</li>
+        <li>Substitusi \(x = 4\):
+        \[ = \sqrt{4} + 2 = 2 + 2 = 4 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(4\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 2: Bentuk Akar pada Pembilang</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 3} \frac{\sqrt{x + 1} - 2}{x - 3}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Substitusi \(x = 3\) menghasilkan \(\frac{\sqrt{4} - 2}{3 - 3} = \frac{0}{0}\).</p>
-    <p><strong>Langkah 2:</strong> Kalikan dengan sekawan pembilang, yaitu \((\sqrt{x + 1} + 2)\):</p>
-    \[ \lim_{x \to 3} \frac{\sqrt{x + 1} - 2}{x - 3} \times \frac{\sqrt{x + 1} + 2}{\sqrt{x + 1} + 2} = \lim_{x \to 3} \frac{(x + 1) - 4}{(x - 3)(\sqrt{x + 1} + 2)} \]
-    <p><strong>Langkah 3:</strong> Pembilang disederhanakan menjadi \(x - 3\):</p>
-    \[ = \lim_{x \to 3} \frac{x - 3}{(x - 3)(\sqrt{x + 1} + 2)} = \lim_{x \to 3} \frac{1}{\sqrt{x + 1} + 2} \]
-    <p><strong>Langkah 4:</strong> Masukkan nilai \(x = 3\):</p>
-    \[ = \frac{1}{\sqrt{3 + 1} + 2} = \frac{1}{2 + 2} = \frac{1}{4} \]
-    <p><strong>Jawaban: \(\frac{1}{4}\)</strong></p>
+<!-- CONTOH 2 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Akar pada Pembilang</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 2</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 3} \frac{\sqrt{x + 1} - 2}{x - 3}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Substitusi \(x = 3\) menghasilkan \(\frac{\sqrt{4} - 2}{3 - 3} = \frac{0}{0}\).</li>
+        <li>Kalikan dengan sekawan pembilang, yaitu \((\sqrt{x + 1} + 2)\):
+        \[ \lim_{x \to 3} \frac{\sqrt{x + 1} - 2}{x - 3} \times \frac{\sqrt{x + 1} + 2}{\sqrt{x + 1} + 2} = \lim_{x \to 3} \frac{(x + 1) - 4}{(x - 3)(\sqrt{x + 1} + 2)} \]</li>
+        <li>Pembilang disederhanakan menjadi \(x - 3\):
+        \[ = \lim_{x \to 3} \frac{x - 3}{(x - 3)(\sqrt{x + 1} + 2)} = \lim_{x \to 3} \frac{1}{\sqrt{x + 1} + 2} \]</li>
+        <li>Masukkan nilai \(x = 3\):
+        \[ = \frac{1}{\sqrt{3 + 1} + 2} = \frac{1}{2 + 2} = \frac{1}{4} \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(\frac{1}{4}\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 3: Selisih Dua Bentuk Akar</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 0} \frac{x}{\sqrt{4 + x} - \sqrt{4 - x}}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Substitusi \(x = 0\) menghasilkan \(\frac{0}{\sqrt{4} - \sqrt{4}} = \frac{0}{0}\).</p>
-    <p><strong>Langkah 2:</strong> Sekawan dari \((\sqrt{4 + x} - \sqrt{4 - x})\) adalah \((\sqrt{4 + x} + \sqrt{4 - x})\):</p>
-    \[ \lim_{x \to 0} \frac{x(\sqrt{4 + x} + \sqrt{4 - x})}{(\sqrt{4 + x} - \sqrt{4 - x})(\sqrt{4 + x} + \sqrt{4 - x})} \]
-    <p><strong>Langkah 3:</strong> Penyebut menjadi \((4 + x) - (4 - x) = 4 + x - 4 + x = 2x\):</p>
-    \[ = \lim_{x \to 0} \frac{x(\sqrt{4 + x} + \sqrt{4 - x})}{2x} = \lim_{x \to 0} \frac{\sqrt{4 + x} + \sqrt{4 - x}}{2} \]
-    <p><strong>Langkah 4:</strong> Substitusi \(x = 0\):</p>
-    \[ = \frac{\sqrt{4} + \sqrt{4}}{2} = \frac{2 + 2}{2} = \frac{4}{2} = 2 \]
-    <p><strong>Jawaban: \(2\)</strong></p>
+<!-- CONTOH 3 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Selisih Dua Bentuk Akar Kuadrat</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 3</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 0} \frac{x}{\sqrt{4 + x} - \sqrt{4 - x}}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Substitusi \(x = 0\) menghasilkan \(\frac{0}{\sqrt{4} - \sqrt{4}} = \frac{0}{0}\).</li>
+        <li>Sekawan penyebut adalah \((\sqrt{4 + x} + \sqrt{4 - x})\):
+        \[ \lim_{x \to 0} \frac{x(\sqrt{4 + x} + \sqrt{4 - x})}{(\sqrt{4 + x} - \sqrt{4 - x})(\sqrt{4 + x} + \sqrt{4 - x})} \]</li>
+        <li>Penyebut menjadi \((4 + x) - (4 - x) = 4 + x - 4 + x = 2x\):
+        \[ = \lim_{x \to 0} \frac{x(\sqrt{4 + x} + \sqrt{4 - x})}{2x} = \lim_{x \to 0} \frac{\sqrt{4 + x} + \sqrt{4 - x}}{2} \]</li>
+        <li>Substitusi \(x = 0\):
+        \[ = \frac{\sqrt{4} + \sqrt{4}}{2} = \frac{2 + 2}{2} = \frac{4}{2} = 2 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(2\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 4: Kombinasi Pemfaktoran Polinomial dan Perkalian Sekawan</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 2} \frac{\sqrt{3x - 2} - \sqrt{x + 2}}{x^2 - 4}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Substitusi \(x = 2\) menghasilkan \(\frac{\sqrt{4} - \sqrt{4}}{4 - 4} = \frac{0}{0}\).</p>
-    <p><strong>Langkah 2:</strong> Kalikan dengan sekawan pembilang dan faktorkan penyebut:</p>
-    \[ \lim_{x \to 2} \frac{(\sqrt{3x - 2} - \sqrt{x + 2})(\sqrt{3x - 2} + \sqrt{x + 2})}{(x - 2)(x + 2)(\sqrt{3x - 2} + \sqrt{x + 2})} \]
-    <p><strong>Langkah 3:</strong> Pembilang menjadi \((3x - 2) - (x + 2) = 2x - 4 = 2(x - 2)\):</p>
-    \[ = \lim_{x \to 2} \frac{2(x - 2)}{(x - 2)(x + 2)(\sqrt{3x - 2} + \sqrt{x + 2})} \]
-    <p>Coret faktor pembuat nol \((x - 2)\):</p>
-    \[ = \lim_{x \to 2} \frac{2}{(x + 2)(\sqrt{3x - 2} + \sqrt{x + 2})} \]
-    <p><strong>Langkah 4:</strong> Substitusi \(x = 2\):</p>
-    \[ = \frac{2}{(2 + 2)(\sqrt{4} + \sqrt{4})} = \frac{2}{4 \times (2 + 2)} = \frac{2}{16} = \frac{1}{8} \]
-    <p><strong>Jawaban: \(\frac{1}{8}\)</strong></p>
+<!-- CONTOH 4 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Kombinasi Pemfaktoran Polinomial dan Perkalian Sekawan</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 4</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 2} \frac{\sqrt{3x - 2} - \sqrt{x + 2}}{x^2 - 4}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Substitusi \(x = 2\) menghasilkan \(\frac{\sqrt{4} - \sqrt{4}}{4 - 4} = \frac{0}{0}\).</li>
+        <li>Kalikan dengan sekawan pembilang dan faktorkan penyebut:
+        \[ \lim_{x \to 2} \frac{(\sqrt{3x - 2} - \sqrt{x + 2})(\sqrt{3x - 2} + \sqrt{x + 2})}{(x - 2)(x + 2)(\sqrt{3x - 2} + \sqrt{x + 2})} \]</li>
+        <li>Pembilang menjadi \((3x - 2) - (x + 2) = 2x - 4 = 2(x - 2)\):
+        \[ = \lim_{x \to 2} \frac{2(x - 2)}{(x - 2)(x + 2)(\sqrt{3x - 2} + \sqrt{x + 2})} \]</li>
+        <li>Coret faktor pembuat nol \((x - 2)\) dan substitusi \(x = 2\):
+        \[ = \frac{2}{(2 + 2)(\sqrt{4} + \sqrt{4})} = \frac{2}{4 \times (2 + 2)} = \frac{2}{16} = \frac{1}{8} \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(\frac{1}{8}\)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE BANNER -->
+<div class="math-practice-banner">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <span class="badge bg-white text-success fw-bold mb-1">EVALUASI PEMBELAJARAN</span>
+      <h4 class="mb-1 text-white fw-bold">8 Soal Latihan Mandiri (Pertemuan 3)</h4>
+      <div class="small text-white-50">Latih ketangkasan merasionalkan bentuk akar kuadrat pada soal-soal latihan di bawah ini!</div>
+    </div>
+    <div>
+      <span class="badge bg-black bg-opacity-25 fs-6 px-3 py-2"><i class="ti ti-target me-1"></i>8 Soal Pilihan Ganda</span>
+    </div>
   </div>
 </div>
 HTML,

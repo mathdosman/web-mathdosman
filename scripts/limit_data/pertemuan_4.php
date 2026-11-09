@@ -1,6 +1,6 @@
 <?php
 // ============================================================================
-// PERTEMUAN 4: LIMIT DI TAK HINGGA PECAHAN RASIONAL (inf / inf)
+// PERTEMUAN 4: LIMIT DI TAK HINGGA PECAHAN RASIONAL (inf / inf) (ENHANCED UI)
 // ============================================================================
 $meetings[4] = [
     'code' => 'limit-p4-tak-hingga-pecahan',
@@ -17,14 +17,18 @@ $meetings[4] = [
 </div>
 <p class="lead">Selamat datang di <strong>Pertemuan 4 Seri Limit Fungsi Aljabar</strong>. Mulai sesi ini, kita memasuki topik <em>Limit di Tak Hingga</em> (\(x \to \infty\)). Kita akan membedah perilaku asimtotik fungsi pecahan rasional dan menaklukkan bentuk tak tentu \(\frac{\infty}{\infty}\) secara matematis dan melalui trik cepat pangkat tertinggi.</p>
 <hr>
-<p><strong>Tujuan Pembelajaran (TP) Pertemuan 4:</strong></p>
-<ol>
-  <li>Memahami konsep intuitif limit menuju tak hingga (\(x \to \infty\)) sebagai analisis tren nilai fungsi untuk variabel yang membesar tanpa batas.</li>
-  <li>Menerapkan teorema dasar limit tak hingga: \(\lim_{x \to \infty} \frac{1}{x^n} = 0\) untuk bilangan rasional \(n > 0\).</li>
-  <li>Menyelesaikan limit fungsi pecahan rasional dengan metode formal: membagi pembilang dan penyebut dengan variabel pangkat tertinggi.</li>
-  <li>Menemukan pola perbandingan derajat (ordo) pembilang \(m\) dan penyebut \(n\) untuk memprediksi hasil secara instan (kasus \(m < n\), \(m = n\), dan \(m > n\)).</li>
-  <li>Menyelesaikan limit tak hingga pecahan yang memuat perkalian faktor aljabar dan bentuk akar kuadrat.</li>
-</ol>
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center fs-6">
+    <i class="ti ti-target-arrow me-2 fs-5"></i>Tujuan Pembelajaran (TP) Pertemuan 4:
+  </div>
+  <ol class="mb-0 ps-3">
+    <li class="mb-1">Memahami konsep intuitif limit menuju tak hingga (\(x \to \infty\)) sebagai analisis tren nilai fungsi untuk variabel yang membesar tanpa batas.</li>
+    <li class="mb-1">Menerapkan teorema dasar limit tak hingga: \(\lim_{x \to \infty} \frac{1}{x^n} = 0\) untuk bilangan rasional \(n > 0\).</li>
+    <li class="mb-1">Menyelesaikan limit fungsi pecahan rasional dengan metode formal: membagi pembilang dan penyebut dengan variabel pangkat tertinggi.</li>
+    <li class="mb-1">Menemukan pola perbandingan derajat (ordo) pembilang \(m\) dan penyebut \(n\) untuk memprediksi hasil secara instan (kasus \(m < n\), \(m = n\), dan \(m > n\)).</li>
+    <li class="mb-0">Menyelesaikan limit tak hingga pecahan yang memuat perkalian faktor aljabar dan bentuk akar kuadrat.</li>
+  </ol>
+</div>
 <p><strong>Rekomendasi Alur Belajar Terarah (2 &times; 45 Menit):</strong></p>
 <ul>
   <li><strong>Tahap 1 (15 Menit):</strong> Pahami makna \(\frac{1}{\infty} \to 0\) dan konsep derajat tertinggi polinomial.</li>
@@ -38,21 +42,26 @@ HTML
 <h2>1. Konsep Dasar Limit Menuju Tak Hingga</h2>
 <p>Notasi \(x \to \infty\) berarti nilai \(x\) tumbuh membesar terus-menerus tanpa batas (\(10, 100, 1000, 1.000.000, \dots\)).</p>
 <p>Apa yang terjadi jika suatu bilangan tetap dibagi oleh bilangan yang semakin lama semakin raksasa?</p>
-<div class="alert alert-primary text-center py-2 fs-5">
+
+<div class="math-formula-spotlight">
+  <div class="small fw-semibold text-muted text-uppercase mb-1">Teorema Dasar Limit Tak Hingga</div>
   \[ \lim_{x \to \infty} \frac{k}{x^n} = 0 \quad (\text{untuk } k \text{ konstanta dan } n > 0) \]
 </div>
-<p><em>Contoh Intuitif:</em> Jika sebuah kue dibagi untuk 10 orang, tiap orang dapat potongan wajar. Jika dibagi untuk 1.000.000 orang, tiap orang mendapatkan serpihan yang nyaris tidak ada (mendekati 0). Teorema inilah yang menjadi fondasi seluruh limit di tak hingga!</p>
+
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center">
+    <i class="ti ti-bulb me-2 fs-5"></i>Analogi Kue Raksasa:
+  </div>
+  <p class="mb-0">Jika sebuah kue dibagi untuk 10 orang, tiap orang mendapat potongan wajar. Jika dibagi untuk 1.000.000 orang, tiap orang mendapatkan serpihan yang nyaris tidak ada (mendekati 0). Teorema inilah yang menjadi fondasi seluruh limit di tak hingga!</p>
+</div>
 
 <h2>2. Bentuk Tak Tentu \(\frac{\infty}{\infty}\) pada Pecahan Rasional</h2>
 <p>Pandang limit fungsi rasional umum berikut:</p>
 \[ \lim_{x \to \infty} \frac{a_m x^m + a_{m-1}x^{m-1} + \dots + a_1 x + a_0}{b_n x^n + b_{n-1}x^{n-1} + \dots + b_1 x + b_0} \]
-<p>di mana \(m\) adalah derajat (pangkat tertinggi) pembilang, dan \(n\) adalah derajat penyebut.</p>
-<p><strong>Metode Konseptual (Membagi Pangkat Tertinggi Penyebut):</strong></p>
-<p>Bagi setiap suku pada pembilang dan penyebut dengan \(x^n\) (variabel dengan pangkat tertinggi dari penyebut), lalu gunakan \(\lim_{x \to \infty} \frac{1}{x^p} = 0\).</p>
+<p>di mana \(m\) adalah derajat pembilang, dan \(n\) adalah derajat penyebut.</p>
 
 <h2>3. Tiga Aturan Emas Pangkat Tertinggi (Trik Cepat Ujian)</h2>
-<p>Berdasarkan perbandingan derajat pembilang (\(m\)) dan penyebut (\(n\)), hasilnya selalu mengikuti salah satu dari 3 kondisi ini:</p>
-<div class="table-responsive">
+<div class="table-responsive my-3">
   <table class="table table-bordered table-hover align-middle">
     <thead class="table-light">
       <tr>
@@ -89,57 +98,138 @@ HTML
 <hr class="my-4">
 <h2>4. Empat Contoh Soal Terbimbing &amp; Cara Pengerjaan</h2>
 
-<h3>Contoh 1: Derajat Pembilang Sama dengan Derajat Penyebut (\(m = n\))</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{4x^3 - 2x + 1}{2x^3 + 5x^2 - 7}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Cara Formal (Membagi \(x^3\)):</strong></p>
-    \[ \lim_{x \to \infty} \frac{\frac{4x^3}{x^3} - \frac{2x}{x^3} + \frac{1}{x^3}}{\frac{2x^3}{x^3} + \frac{5x^2}{x^3} - \frac{7}{x^3}} = \lim_{x \to \infty} \frac{4 - \frac{2}{x^2} + \frac{1}{x^3}}{2 + \frac{5}{x} - \frac{7}{x^3}} \]
-    <p>Karena suku-suku yang memuat pecahan \(\frac{1}{x^p} \to 0\):</p>
-    \[ = \frac{4 - 0 + 0}{2 + 0 - 0} = \frac{4}{2} = 2 \]
-    <p><strong>Cara Cepat:</strong> Pangkat tertinggi atas = 3, bawah = 3. Koefisien atas = 4, bawah = 2. Hasil = \(\frac{4}{2} = 2\).</p>
-    <p><strong>Jawaban: \(2\)</strong></p>
+<!-- CONTOH 1 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Derajat Pembilang Sama dengan Penyebut (\(m = n\))</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 1</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{4x^3 - 2x + 1}{2x^3 + 5x^2 - 7}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li><strong>Cara Konseptual (Membagi \(x^3\)):</strong>
+        \[ \lim_{x \to \infty} \frac{\frac{4x^3}{x^3} - \frac{2x}{x^3} + \frac{1}{x^3}}{\frac{2x^3}{x^3} + \frac{5x^2}{x^3} - \frac{7}{x^3}} = \lim_{x \to \infty} \frac{4 - \frac{2}{x^2} + \frac{1}{x^3}}{2 + \frac{5}{x} - \frac{7}{x^3}} = \frac{4 - 0 + 0}{2 + 0 - 0} = \frac{4}{2} = 2 \]</li>
+        <li><strong>Cara Cepat:</strong> Pangkat tertinggi atas = 3, bawah = 3. Koefisien atas = 4, bawah = 2. Hasil = \(\frac{4}{2} = 2\).</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(2\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 2: Derajat Pembilang Lebih Kecil dari Penyebut (\(m < n\))</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{3x^2 + 5x - 1}{x^3 - 4x + 6}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Derajat pembilang adalah 2 (\(3x^2\)), sedangkan derajat penyebut adalah 3 (\(x^3\)).</p>
-    <p>Karena derajat atas lebih kecil dari derajat bawah (\(2 < 3\)), maka penyebut bertambah besar jauh lebih cepat:</p>
-    \[ \lim_{x \to \infty} \frac{\frac{3}{x} + \frac{5}{x^2} - \frac{1}{x^3}}{1 - \frac{4}{x^2} + \frac{6}{x^3}} = \frac{0 + 0 - 0}{1 - 0 + 0} = \frac{0}{1} = 0 \]
-    <p><strong>Jawaban: \(0\)</strong></p>
+<!-- CONTOH 2 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Derajat Pembilang Lebih Kecil dari Penyebut (\(m < n\))</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 2</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{3x^2 + 5x - 1}{x^3 - 4x + 6}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Derajat pembilang adalah 2 (\(3x^2\)), sedangkan derajat penyebut adalah 3 (\(x^3\)).</li>
+        <li>Karena derajat atas lebih kecil dari derajat bawah (\(2 < 3\)), maka penyebut bertambah besar jauh lebih cepat:
+        \[ \lim_{x \to \infty} \frac{\frac{3}{x} + \frac{5}{x^2} - \frac{1}{x^3}}{1 - \frac{4}{x^2} + \frac{6}{x^3}} = \frac{0 + 0 - 0}{1 - 0 + 0} = \frac{0}{1} = 0 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(0\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 3: Bentuk Perkalian Faktor Aljabar</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{(2x - 1)(3x + 2)}{(x + 4)(2x - 5)}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Kita cukup mengalikan suku-suku dengan pangkat tertinggi pada masing-masing kurung:</p>
-    <ul>
-      <li>Pembilang: suku tertinggi adalah \((2x) \times (3x) = 6x^2\).</li>
-      <li>Penyebut: suku tertinggi adalah \((x) \times (2x) = 2x^2\).</li>
-    </ul>
-    <p>Maka limitnya disederhanakan menjadi:</p>
-    \[ \lim_{x \to \infty} \frac{6x^2 + \dots}{2x^2 + \dots} = \frac{6}{2} = 3 \]
-    <p><strong>Jawaban: \(3\)</strong></p>
+<!-- CONTOH 3 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Perkalian Faktor Aljabar</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 3</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{(2x - 1)(3x + 2)}{(x + 4)(2x - 5)}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Cukup kalikan suku dengan pangkat tertinggi pada masing-masing kurung:
+        <ul>
+          <li>Pembilang: \((2x) \times (3x) = 6x^2\).</li>
+          <li>Penyebut: \((x) \times (2x) = 2x^2\).</li>
+        </ul></li>
+        <li>Bandingkan koefisien pangkat tertinggi:
+        \[ \lim_{x \to \infty} \frac{6x^2 + \dots}{2x^2 + \dots} = \frac{6}{2} = 3 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(3\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 4: Bentuk Akar Kuadrat pada Limit Tak Hingga</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{\sqrt{4x^2 + 5x - 2}}{3x - 1}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Perhatikan suku dominan pada pembilang di dalam akar: \(\sqrt{4x^2} = 2x\) (untuk \(x > 0\)).</p>
-    <p>Suku dominan pada penyebut adalah \(3x\).</p>
-    <p>Bagi pembilang dan penyebut dengan \(x\) (di dalam akar dibagi \(x^2\)):</p>
-    \[ \lim_{x \to \infty} \frac{\sqrt{\frac{4x^2}{x^2} + \frac{5x}{x^2} - \frac{2}{x^2}}}{\frac{3x}{x} - \frac{1}{x}} = \lim_{x \to \infty} \frac{\sqrt{4 + \frac{5}{x} - \frac{2}{x^2}}}{3 - \frac{1}{x}} = \frac{\sqrt{4 + 0 - 0}}{3 - 0} = \frac{2}{3} \]
-    <p><strong>Jawaban: \(\frac{2}{3}\)</strong></p>
+<!-- CONTOH 4 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Akar Kuadrat pada Limit Tak Hingga</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 4</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \frac{\sqrt{4x^2 + 5x - 2}}{3x - 1}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Suku dominan pembilang di dalam akar adalah \(\sqrt{4x^2} = 2x\) (untuk \(x > 0\)).</li>
+        <li>Suku dominan penyebut adalah \(3x\).</li>
+        <li>Bagi pembilang dan penyebut dengan \(x\) (di dalam akar dibagi \(x^2\)):
+        \[ \lim_{x \to \infty} \frac{\sqrt{\frac{4x^2}{x^2} + \frac{5x}{x^2} - \frac{2}{x^2}}}{\frac{3x}{x} - \frac{1}{x}} = \frac{\sqrt{4 + 0 - 0}}{3 - 0} = \frac{2}{3} \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(\frac{2}{3}\)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE BANNER -->
+<div class="math-practice-banner">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <span class="badge bg-white text-success fw-bold mb-1">EVALUASI PEMBELAJARAN</span>
+      <h4 class="mb-1 text-white fw-bold">8 Soal Latihan Mandiri (Pertemuan 4)</h4>
+      <div class="small text-white-50">Uji kemampuan analisis derajat pangkat tertinggi pada variasi soal di bawah ini!</div>
+    </div>
+    <div>
+      <span class="badge bg-black bg-opacity-25 fs-6 px-3 py-2"><i class="ti ti-target me-1"></i>8 Soal Pilihan Ganda</span>
+    </div>
   </div>
 </div>
 HTML,

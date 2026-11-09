@@ -1,6 +1,6 @@
 <?php
 // ============================================================================
-// PAKET 7 (PENGAYAAN): BANK SOAL HOTS & PENALARAN MATEMATIKA UTBK-SNBT
+// PAKET 7 (PENGAYAAN): BANK SOAL HOTS & PENALARAN MATEMATIKA UTBK-SNBT (ENHANCED UI)
 // ============================================================================
 $meetings[7] = [
     'code' => 'limit-p7-hots-utbk-snbt',
@@ -17,14 +17,18 @@ $meetings[7] = [
 </div>
 <p class="lead">Selamat datang di <strong>Paket Pengayaan Khusus HOTS Limit Fungsi</strong>. Paket ini dirancang khusus bagi siswa yang ingin membidik skor maksimal pada subtes <em>Penalaran Matematika</em> UTBK-SNBT serta ujian seleksi mandiri PTN ternama (SIMAK UI, UTUL UGM). Soal-soal menguji penalaran mendalam, analisis parameter ganda, bentuk akar kubik, hingga aplikasi model kontekstual.</p>
 <hr>
-<p><strong>Tujuan Pembelajaran (TP) Paket Pengayaan:</strong></p>
-<ol>
-  <li>Menyelesaikan permasalahan limit yang memuat parameter ganda tak diketahui melalui pembentukan sistem persamaan aljabar.</li>
-  <li>Menerapkan manipulasi bentuk akar kubik (\(\sqrt[3]{x}\)) dan substitusi variabel baru \(u\).</li>
-  <li>Menganalisis limit fungsi komposit dan relasi nilai limit terhadap sifat fungsi kontinu.</li>
-  <li>Menerapkan Teorema Apit (<em>Squeeze Theorem</em>) pada fungsi yang dibatasi (bounded functions).</li>
-  <li>Menggunakan konsep limit untuk memecahkan model matematika kontekstual dunia nyata (laju perubahan sesaat partikel gerak).</li>
-</ol>
+<div class="math-concept-card">
+  <div class="fw-bold text-danger mb-2 d-flex align-items-center fs-6">
+    <i class="ti ti-target-arrow me-2 fs-5"></i>Tujuan Pembelajaran (TP) Paket Pengayaan:
+  </div>
+  <ol class="mb-0 ps-3">
+    <li class="mb-1">Menyelesaikan permasalahan limit yang memuat parameter ganda tak diketahui melalui pembentukan sistem persamaan aljabar.</li>
+    <li class="mb-1">Menerapkan manipulasi bentuk akar kubik (\(\sqrt[3]{x}\)) dan substitusi variabel baru \(u\).</li>
+    <li class="mb-1">Menganalisis limit fungsi komposit dan relasi nilai limit terhadap sifat fungsi kontinu.</li>
+    <li class="mb-1">Menerapkan Teorema Apit (<em>Squeeze Theorem</em>) pada fungsi yang dibatasi (bounded functions).</li>
+    <li class="mb-0">Menggunakan konsep limit untuk memecahkan model matematika kontekstual dunia nyata (laju perubahan sesaat partikel gerak).</li>
+  </ol>
+</div>
 <p><strong>Rekomendasi Alur Belajar Terarah (2 &times; 45 Menit):</strong></p>
 <ul>
   <li><strong>Tahap 1 (15 Menit):</strong> Review 4 strategi pemecahan soal HOTS limit pada bahan ajar.</li>
@@ -36,50 +40,70 @@ HTML
     'content_html' => <<<'HTML'
 <h2>1. Karakteristik Soal HOTS Limit pada UTBK-SNBT</h2>
 <p>Soal limit pada ujian seleksi masuk perguruan tinggi negeri (PTN) jarang hanya berupa soal hitungan mekanis langsung. Soal didesain untuk menguji <strong>daya nalar matematis</strong> siswa dengan ciri-ciri utama:</p>
-<ol>
-  <li><strong>Memuat Parameter Tak Diketahui:</strong> Nilai limit sudah diketahui, siswa diminta mencari nilai konstanta \(a\), \(b\), atau relasinya.</li>
-  <li><strong>Bentuk Pangkat Pecahan / Kubik:</strong> Melibatkan \(\sqrt[3]{f(x)}\) yang membutuhkan rumus selisih kubik \(u^3 - v^3 = (u - v)(u^2 + uv + v^2)\) atau substitusi pemisalan.</li>
-  <li><strong>Konsep Fungsi Komposit &amp; Kontinuitas:</strong> Mengaitkan limit dengan definisi fungsi kontinu dan nilai fungsi di titik tertentu.</li>
-  <li><strong>Model Kontekstual Laju Sesaat:</strong> Aplikasi limit dalam sains dan fisika kinetika (posisi, kecepatan sesaat, dan percepatan).</li>
-</ol>
+
+<div class="row g-2 my-2">
+  <div class="col-md-6">
+    <div class="p-3 border rounded bg-light-subtle h-100">
+      <strong class="text-primary d-block mb-1"><i class="ti ti-variable me-1"></i> 1. Parameter Tak Diketahui:</strong>
+      Nilai limit sudah diketahui, siswa diminta mencari nilai konstanta \(a\), \(b\), atau nilai relasinya.
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="p-3 border rounded bg-light-subtle h-100">
+      <strong class="text-primary d-block mb-1"><i class="ti ti-math-function me-1"></i> 2. Pangkat Kubik / Pecahan:</strong>
+      Melibatkan \(\sqrt[3]{f(x)}\) yang membutuhkan rumus selisih kubik atau substitusi variabel baru \(u = \sqrt[n]{x}\).
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="p-3 border rounded bg-light-subtle h-100">
+      <strong class="text-primary d-block mb-1"><i class="ti ti-layers-subtract me-1"></i> 3. Fungsi Komposit &amp; Kontinu:</strong>
+      Mengaitkan limit dengan definisi kekontinuan dan perilaku nilai fungsi di titik diskontinu.
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="p-3 border rounded bg-light-subtle h-100">
+      <strong class="text-primary d-block mb-1"><i class="ti ti-rocket me-1"></i> 4. Model Kontekstual Fisika:</strong>
+      Aplikasi kalkulus diferensial dalam pemodelan laju perubahan sesaat kecepatan dan percepatan.
+    </div>
+  </div>
+</div>
 
 <h2>2. Empat Trik Analisis Tingkat Lanjut</h2>
 <div class="row g-3">
   <div class="col-md-6">
-    <div class="card h-100 border-info">
+    <div class="card h-100 border-info shadow-sm">
       <div class="card-body">
         <h5 class="card-title text-info"><i class="ti ti-key me-1"></i> 1. Metode Dua Kondisi Aljabar</h5>
         <p class="card-text small">Jika \(\lim_{x \to c} \frac{f(x)}{g(x)} = L\) (dengan \(g(c) = 0\) dan \(L \in \mathbb{R}\)), maka pasti berlaku dua kondisi:</p>
         <ul class="small mb-0">
-          <li><strong>Kondisi 1:</strong> \(f(c) = 0\) (agar membentuk \(\frac{0}{0}\)). Dari sini didapat persamaan pertama antara konstanta.</li>
-          <li><strong>Kondisi 2:</strong> Evaluasi limit bernilai \(L\). Dari sini didapat persamaan kedua untuk eliminasi.</li>
+          <li><strong>Kondisi 1:</strong> \(f(c) = 0\) (agar membentuk \(\frac{0}{0}\)).</li>
+          <li><strong>Kondisi 2:</strong> Evaluasi limit bernilai \(L\).</li>
         </ul>
       </div>
     </div>
   </div>
   <div class="col-md-6">
-    <div class="card h-100 border-success">
+    <div class="card h-100 border-success shadow-sm">
       <div class="card-body">
         <h5 class="card-title text-success"><i class="ti ti-replace me-1"></i> 2. Substitusi Pemisalan Variabel</h5>
-        <p class="card-text small">Untuk akar berordo tinggi seperti \(\sqrt[n]{x}\), misalkan \(u = \sqrt[n]{x}\) sehingga \(x = u^n\). Hal ini mengubah bentuk akar rumit menjadi polinomial sederhana yang mudah difaktorkan.</p>
+        <p class="card-text small">Untuk akar berordo tinggi seperti \(\sqrt[n]{x}\), misalkan \(u = \sqrt[n]{x}\) sehingga \(x = u^n\). Hal ini mengubah bentuk akar rumit menjadi polinomial yang mudah difaktorkan.</p>
       </div>
     </div>
   </div>
   <div class="col-md-6">
-    <div class="card h-100 border-warning">
+    <div class="card h-100 border-warning shadow-sm">
       <div class="card-body">
-        <h5 class="card-title text-warning"><i class="ti ti-calculator me-1"></i> 3. Teorema L'Hopital Sebagai Alat Verifikasi</h5>
+        <h5 class="card-title text-warning"><i class="ti ti-calculator me-1"></i> 3. Aturan L'Hopital Sebagai Alat Verifikasi</h5>
         <p class="card-text small">Untuk bentuk \(\frac{0}{0}\) atau \(\frac{\infty}{\infty}\):</p>
         \[ \lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)} \]
-        <p class="card-text small">Turunkan pembilang dan penyebut masing-masing secara terpisah hingga tidak menghasilkan bentuk tak tentu lagi.</p>
       </div>
     </div>
   </div>
   <div class="col-md-6">
-    <div class="card h-100 border-danger">
+    <div class="card h-100 border-danger shadow-sm">
       <div class="card-body">
         <h5 class="card-title text-danger"><i class="ti ti-arrows-minimize me-1"></i> 4. Teorema Apit (Squeeze Theorem)</h5>
-        <p class="card-text small">Jika \(g(x) \le f(x) \le h(x)\) untuk semua \(x\) di sekitar \(c\), dan \(\lim_{x \to c} g(x) = \lim_{x \to c} h(x) = L\), maka sudah pasti \(\lim_{x \to c} f(x) = L\).</p>
+        <p class="card-text small">Jika \(g(x) \le f(x) \le h(x)\) dan \(\lim_{x \to c} g(x) = \lim_{x \to c} h(x) = L\), maka sudah pasti \(\lim_{x \to c} f(x) = L\).</p>
       </div>
     </div>
   </div>
@@ -88,71 +112,154 @@ HTML
 <hr class="my-4">
 <h2>3. Empat Contoh Soal HOTS Terbimbing &amp; Cara Pengerjaan</h2>
 
-<h3>Contoh 1: Analisis Parameter Berantai</h3>
-<p><strong>Soal:</strong> Jika \(\lim_{x \to 1} \frac{\sqrt{ax + 3} - b}{x - 1} = \frac{1}{4}\) dengan \(a > 0\), tentukan nilai dari \(a\) dan \(b\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1 (Kondisi 0/0):</strong> Karena penyebut nol di \(x = 1\), pembilang harus bernilai nol di \(x = 1\):</p>
-    \[ \sqrt{a(1) + 3} - b = 0 \implies b = \sqrt{a + 3} \]
-    <p><strong>Langkah 2 (Evaluasi Limit):</strong> Kalikan dengan sekawan pembilang:</p>
-    \[ \lim_{x \to 1} \frac{(\sqrt{ax + 3} - b)(\sqrt{ax + 3} + b)}{(x - 1)(\sqrt{ax + 3} + b)} = \lim_{x \to 1} \frac{ax + 3 - b^2}{(x - 1)(\sqrt{ax + 3} + b)} \]
-    <p>Substitusikan \(b^2 = a + 3\):</p>
-    \[ ax + 3 - (a + 3) = ax - a = a(x - 1) \]
-    <p>Coret faktor \((x - 1)\):</p>
-    \[ \lim_{x \to 1} \frac{a(x - 1)}{(x - 1)(\sqrt{ax + 3} + b)} = \frac{a}{\sqrt{a + 3} + b} = \frac{a}{b + b} = \frac{a}{2b} \]
-    <p><strong>Langkah 3 (Penyelesaian Sistem):</strong></p>
-    \[ \frac{a}{2b} = \frac{1}{4} \implies 2a = b \implies b = 2a \]
-    <p>Kuadratkan: \(b^2 = 4a^2\). Substitusikan ke \(b^2 = a + 3\):</p>
-    \[ 4a^2 = a + 3 \implies 4a^2 - a - 3 = 0 \implies (4a + 3)(a - 1) = 0 \]
-    <p>Karena \(a > 0\), kita peroleh \(a = 1\). Maka \(b = 2(1) = 2\).</p>
-    <p><strong>Jawaban: \(a = 1\) dan \(b = 2\)</strong></p>
+<!-- CONTOH 1 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal HOTS</span>
+      <span>Analisis Parameter Berantai</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 1</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Jika \(\lim_{x \to 1} \frac{\sqrt{ax + 3} - b}{x - 1} = \frac{1}{4}\) dengan \(a > 0\), tentukan nilai dari \(a\) dan \(b\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li><strong>Kondisi 0/0:</strong> Pembilang harus bernilai nol di \(x = 1\):
+        \[ \sqrt{a(1) + 3} - b = 0 \implies b = \sqrt{a + 3} \]</li>
+        <li><strong>Evaluasi Limit dengan Sekawan:</strong>
+        \[ \lim_{x \to 1} \frac{(\sqrt{ax + 3} - b)(\sqrt{ax + 3} + b)}{(x - 1)(\sqrt{ax + 3} + b)} = \lim_{x \to 1} \frac{ax + 3 - b^2}{(x - 1)(\sqrt{ax + 3} + b)} \]
+        Substitusikan \(b^2 = a + 3\):
+        \[ ax + 3 - (a + 3) = ax - a = a(x - 1) \]
+        Coret \((x - 1)\):
+        \[ \lim_{x \to 1} \frac{a(x - 1)}{(x - 1)(\sqrt{ax + 3} + b)} = \frac{a}{\sqrt{a + 3} + b} = \frac{a}{2b} \]</li>
+        <li><strong>Sistem Persamaan:</strong>
+        \[ \frac{a}{2b} = \frac{1}{4} \implies 2a = b \implies b^2 = 4a^2 \]
+        Substitusikan ke \(b^2 = a + 3\):
+        \[ 4a^2 = a + 3 \implies 4a^2 - a - 3 = 0 \implies (4a + 3)(a - 1) = 0 \]
+        Karena \(a > 0\), maka \(a = 1\). Sehingga \(b = 2(1) = 2\).</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Didapat \(a = 1\) dan \(b = 2\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 2: Bentuk Akar Kubik (\(\sqrt[3]{x}\))</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 2} \frac{\sqrt[3]{x + 6} - 2}{x - 2}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Metode Pemisalan:</strong></p>
-    <p>Misalkan \(y = \sqrt[3]{x + 6}\). Maka \(y^3 = x + 6 \implies x = y^3 - 6\).</p>
-    <p>Saat \(x \to 2\), nilai \(y \to \sqrt[3]{2 + 6} = \sqrt[3]{8} = 2\).</p>
-    <p>Penyebut \(x - 2\) menjadi \((y^3 - 6) - 2 = y^3 - 8\).</p>
-    <p>Faktorkan selisih kubik: \(y^3 - 8 = (y - 2)(y^2 + 2y + 4)\).</p>
-    <p>Limit menjadi:</p>
-    \[ \lim_{y \to 2} \frac{y - 2}{(y - 2)(y^2 + 2y + 4)} = \lim_{y \to 2} \frac{1}{y^2 + 2y + 4} \]
-    <p>Substitusikan \(y = 2\):</p>
-    \[ = \frac{1}{2^2 + 2(2) + 4} = \frac{1}{4 + 4 + 4} = \frac{1}{12} \]
-    <p><strong>Jawaban: \(\frac{1}{12}\)</strong></p>
+<!-- CONTOH 2 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal HOTS</span>
+      <span>Substitusi Variabel Akar Kubik (\(\sqrt[3]{x}\))</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 2</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 2} \frac{\sqrt[3]{x + 6} - 2}{x - 2}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Misalkan \(y = \sqrt[3]{x + 6}\). Maka \(y^3 = x + 6 \implies x = y^3 - 6\).</li>
+        <li>Saat \(x \to 2\), nilai \(y \to \sqrt[3]{2 + 6} = \sqrt[3]{8} = 2\).</li>
+        <li>Penyebut \(x - 2 = (y^3 - 6) - 2 = y^3 - 8 = (y - 2)(y^2 + 2y + 4)\).</li>
+        <li>Bentuk limit menjadi:
+        \[ \lim_{y \to 2} \frac{y - 2}{(y - 2)(y^2 + 2y + 4)} = \lim_{y \to 2} \frac{1}{y^2 + 2y + 4} \]</li>
+        <li>Substitusi \(y = 2\):
+        \[ = \frac{1}{2^2 + 2(2) + 4} = \frac{1}{4 + 4 + 4} = \frac{1}{12} \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(\frac{1}{12}\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 3: Limit di Tak Hingga Selisih Bentuk Tiga Suku Kuadrat</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \left( \sqrt{4x^2 + 4x + 1} - \sqrt{4x^2 - 8x + 3} \right)\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Gunakan rumus praktis \(\frac{b - q}{2\sqrt{a}}\):</p>
-    <ul>
-      <li>\(a = 4\), \(b = 4\)</li>
-      <li>\(p = 4\), \(q = -8\)</li>
-    </ul>
-    \[ L = \frac{b - q}{2\sqrt{a}} = \frac{4 - (-8)}{2\sqrt{4}} = \frac{12}{2 \times 2} = \frac{12}{4} = 3 \]
-    <p><strong>Jawaban: \(3\)</strong></p>
+<!-- CONTOH 3 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal HOTS</span>
+      <span>Limit Tak Hingga Selisih Bentuk Tiga Suku Kuadrat</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 3</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to \infty} \left( \sqrt{4x^2 + 4x + 1} - \sqrt{4x^2 - 8x + 3} \right)\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Gunakan rumus cepat \(\frac{b - q}{2\sqrt{a}}\):
+        <ul>
+          <li>Akar kiri: \(a = 4, b = 4\)</li>
+          <li>Akar kanan: \(p = 4, q = -8\)</li>
+        </ul></li>
+        <li>Hitung nilai:
+        \[ L = \frac{4 - (-8)}{2\sqrt{4}} = \frac{12}{2 \times 2} = \frac{12}{4} = 3 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(3\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 4: Teorema Apit (Squeeze Theorem)</h3>
-<p><strong>Soal:</strong> Jika suatu fungsi \(f(x)\) memenuhi ketidaksamaan \(2 - x^2 \le f(x) \le 2 + x^2\) untuk semua nilai \(x\) riil di sekitar 0, tentukan nilai dari \(\lim_{x \to 0} f(x)\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Hitung limit fungsi batas kiri (bawah):</p>
-    \[ \lim_{x \to 0} (2 - x^2) = 2 - 0 = 2 \]
-    <p>Hitung limit fungsi batas kanan (atas):</p>
-    \[ \lim_{x \to 0} (2 + x^2) = 2 + 0 = 2 \]
-    <p>Karena limit kedua batas sama-sama bernilai 2, maka berdasarkan <strong>Teorema Apit</strong>:</p>
-    \[ \lim_{x \to 0} f(x) = 2 \]
-    <p><strong>Jawaban: \(2\)</strong></p>
+<!-- CONTOH 4 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal HOTS</span>
+      <span>Teorema Apit (Squeeze Theorem)</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 4</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Jika suatu fungsi \(f(x)\) memenuhi ketidaksamaan \(2 - x^2 \le f(x) \le 2 + x^2\) untuk semua nilai \(x\) di sekitar 0, tentukan nilai dari \(\lim_{x \to 0} f(x)\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Hitung limit fungsi batas kiri (bawah):
+        \[ \lim_{x \to 0} (2 - x^2) = 2 - 0 = 2 \]</li>
+        <li>Hitung limit fungsi batas kanan (atas):
+        \[ \lim_{x \to 0} (2 + x^2) = 2 + 0 = 2 \]</li>
+        <li>Karena limit kedua batas penjepit sama-sama bernilai 2, maka berdasarkan <strong>Teorema Apit</strong>:
+        \[ \lim_{x \to 0} f(x) = 2 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(2\)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE BANNER -->
+<div class="math-practice-banner bg-gradient" style="background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <span class="badge bg-white text-danger fw-bold mb-1">TANTANGAN SELEKSI PTN</span>
+      <h4 class="mb-1 text-white fw-bold">8 Soal Latihan Pengayaan HOTS (Standar UTBK)</h4>
+      <div class="small text-white-50">Kerjakan soal-soal penalaran matematika tingkat lanjut ini secara cermat!</div>
+    </div>
+    <div>
+      <span class="badge bg-black bg-opacity-25 fs-6 px-3 py-2"><i class="ti ti-trophy me-1"></i>HOTS UTBK</span>
+    </div>
   </div>
 </div>
 HTML,

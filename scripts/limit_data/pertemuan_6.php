@@ -1,6 +1,6 @@
 <?php
 // ============================================================================
-// PERTEMUAN 6: DASAR LIMIT TRIGONOMETRI & KEKONTINUAN FUNGSI (JEMBATAN TURUNAN)
+// PERTEMUAN 6: DASAR LIMIT TRIGONOMETRI & KEKONTINUAN FUNGSI (ENHANCED UI)
 // ============================================================================
 $meetings[6] = [
     'code' => 'limit-p6-trigonometri-kontinuitas',
@@ -17,14 +17,18 @@ $meetings[6] = [
 </div>
 <p class="lead">Selamat datang di <strong>Pertemuan 6 Seri Limit Fungsi</strong>. Sesi ini adalah puncak dan penutup teori konsep limit kalkulus SMA, sekaligus menjadi <em>jembatan langsung</em> menuju materi Turunan (Diferensial). Kita akan mendalami dasar limit trigonometri \(\lim_{x \to 0} \frac{\sin x}{x} = 1\), syarat formal fungsi kontinu di suatu titik, serta bagaimana limit melahirkan konsep laju perubahan sesaat.</p>
 <hr>
-<p><strong>Tujuan Pembelajaran (TP) Pertemuan 6:</strong></p>
-<ol>
-  <li>Memahami teorema dasar limit trigonometri untuk sudut mendekati nol: \(\lim_{x \to 0} \frac{\sin ax}{bx} = \frac{a}{b}\) dan \(\lim_{x \to 0} \frac{\tan ax}{bx} = \frac{a}{b}\).</li>
-  <li>Menerapkan identitas sudut rangkap kosinus: \(1 - \cos(kx) = 2\sin^2\left(\frac{kx}{2}\right)\) untuk mengatasi pembuat nol pada fungsi kosinus.</li>
-  <li>Memahami 3 syarat formal fungsi kontinu di titik \(x = c\): (1) \(f(c)\) ada, (2) \(\lim_{x \to c} f(x)\) ada, dan (3) \(\lim_{x \to c} f(x) = f(c)\).</li>
-  <li>Menganalisis kontinuitas pada fungsi sepotong-sepotong (<em>piecewise function</em>) dan menentukan konstanta parameter agar fungsi kontinu.</li>
-  <li>Menghubungkan konsep limit dengan definisi turunan pertama: \(f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}\).</li>
-</ol>
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center fs-6">
+    <i class="ti ti-target-arrow me-2 fs-5"></i>Tujuan Pembelajaran (TP) Pertemuan 6:
+  </div>
+  <ol class="mb-0 ps-3">
+    <li class="mb-1">Memahami teorema dasar limit trigonometri untuk sudut mendekati nol: \(\lim_{x \to 0} \frac{\sin ax}{bx} = \frac{a}{b}\) dan \(\lim_{x \to 0} \frac{\tan ax}{bx} = \frac{a}{b}\).</li>
+    <li class="mb-1">Menerapkan identitas sudut rangkap kosinus: \(1 - \cos(kx) = 2\sin^2\left(\frac{kx}{2}\right)\) untuk mengatasi pembuat nol pada fungsi kosinus.</li>
+    <li class="mb-1">Memahami 3 syarat formal fungsi kontinu di titik \(x = c\): (1) \(f(c)\) ada, (2) \(\lim_{x \to c} f(x)\) ada, dan (3) \(\lim_{x \to c} f(x) = f(c)\).</li>
+    <li class="mb-1">Menganalisis kontinuitas pada fungsi sepotong-sepotong (<em>piecewise function</em>) dan menentukan konstanta parameter agar fungsi kontinu.</li>
+    <li class="mb-0">Menghubungkan konsep limit dengan definisi turunan pertama: \(f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}\).</li>
+  </ol>
+</div>
 <p><strong>Rekomendasi Alur Belajar Terarah (2 &times; 45 Menit):</strong></p>
 <ul>
   <li><strong>Tahap 1 (15 Menit):</strong> Pahami pasangan trigonometri (\(\sin\) dan \(\tan\)) serta perubahan bentuk \(1 - \cos\).</li>
@@ -37,40 +41,48 @@ HTML
     'content_html' => <<<'HTML'
 <h2>1. Teorema Dasar Limit Trigonometri (\(x \to 0\))</h2>
 <p>Untuk sudut yang sangat kecil mendekati nol (dalam satuan radian), panjang busur lingkaran mendekati nilai tali busur dan garis singgungnya. Hal ini melahirkan teorema fundamental limit trigonometri:</p>
-<div class="alert alert-primary text-center py-2 fs-5">
+
+<div class="math-formula-spotlight">
+  <div class="small fw-semibold text-muted text-uppercase mb-1">Teorema Fundamental Trigonometri</div>
   \[ \lim_{x \to 0} \frac{\sin x}{x} = 1 \quad \text{dan} \quad \lim_{x \to 0} \frac{\tan x}{x} = 1 \]
 </div>
+
 <p>Secara umum, untuk koefisien bilangan real \(a\) dan \(b\) (\(b \neq 0\)):</p>
 <div class="row g-2 text-center my-2">
   <div class="col-md-4">
-    <div class="border rounded p-2 bg-light">
+    <div class="border rounded p-2 bg-light-subtle">
       \[ \lim_{x \to 0} \frac{\sin ax}{bx} = \frac{a}{b} \]
     </div>
   </div>
   <div class="col-md-4">
-    <div class="border rounded p-2 bg-light">
+    <div class="border rounded p-2 bg-light-subtle">
       \[ \lim_{x \to 0} \frac{\tan ax}{bx} = \frac{a}{b} \]
     </div>
   </div>
   <div class="col-md-4">
-    <div class="border rounded p-2 bg-light">
+    <div class="border rounded p-2 bg-light-subtle">
       \[ \lim_{x \to 0} \frac{\sin ax}{\tan bx} = \frac{a}{b} \]
     </div>
   </div>
 </div>
 
-<div class="alert alert-warning">
-  <strong><i class="ti ti-bulb me-1"></i> Bagaimana dengan \(\cos x\)?</strong>
-  Ingat bahwa \(\cos(0) = 1\) (bukan nol). Jadi fungsi kosinus tidak perlu dicoret kecuali dalam bentuk selisih \(1 - \cos(kx)\). Gunakan identitas sudut rangkap:
-  \[ 1 - \cos(kx) = 2\sin^2\left(\frac{kx}{2}\right) \]
-  <em>Contoh:</em> \(1 - \cos(2x) = 2\sin^2(x)\), dan \(1 - \cos(4x) = 2\sin^2(2x)\).
+<div class="math-concept-card">
+  <div class="fw-bold text-primary mb-2 d-flex align-items-center">
+    <i class="ti ti-bulb me-2 fs-5"></i>Bagaimana Menangani Bentuk Kosinus (\(\cos x\))?
+  </div>
+  <p>Ingat bahwa \(\cos(0) = 1\) (bukan nol). Jadi fungsi kosinus tunggal tidak menyebabkan bentuk tak tentu. Namun bentuk selisih \(1 - \cos(kx)\) harus diubah menggunakan rumus sudut rangkap:</p>
+  <div class="math-formula-spotlight my-2">
+    \[ 1 - \cos(kx) = 2\sin^2\left(\frac{kx}{2}\right) \]
+  </div>
+  <p class="mb-0 small text-muted"><em>Contoh:</em> \(1 - \cos(2x) = 2\sin^2(x)\), dan \(1 - \cos(4x) = 2\sin^2(2x)\).</p>
 </div>
 
 <h2>2. Analisis Kekontinuan Fungsi (Kekontinuan di Suatu Titik)</h2>
 <p>Secara visual grafik, suatu kurva dikatakan <strong>kontinu</strong> jika kita dapat menggambarkannya tanpa mengangkat pena sama sekali. Secara matematis formal, fungsi \(f(x)\) dikatakan <strong>kontinu di titik \(x = c\)</strong> jika dan hanya jika memenuhi <strong>ketiga syarat</strong> berikut sekaligus:</p>
-<div class="card border-primary mb-3">
+
+<div class="card border-primary mb-3 shadow-sm">
   <div class="card-body">
-    <ol class="mb-0">
+    <ol class="mb-0 ps-3">
       <li class="mb-2"><strong>Nilai Fungsi Terdefinisi:</strong> \(f(c)\) ada (bukan tidak terdefinisi atau pembagian dengan nol).</li>
       <li class="mb-2"><strong>Nilai Limit Ada:</strong> \(\lim_{x \to c} f(x)\) ada, yang berarti limit kiri sama dengan limit kanan:
       \[ \lim_{x \to c^-} f(x) = \lim_{x \to c^+} f(x) \]</li>
@@ -79,74 +91,152 @@ HTML
     </ol>
   </div>
 </div>
-<p>Jika salah satu syarat saja gagal terpenuhi, maka fungsi \(f(x)\) dikatakan <strong>diskontinu</strong> (tidak kontinu) di \(x = c\).</p>
 
 <h2>3. Jembatan Emas: Dari Limit Menuju Turunan (Kalkulus Diferensial)</h2>
-<p>Pernahkah Anda bertanya, untuk apa kita mempelajari limit secara mendalam? Jawabannya: karena <strong>turunan pertama suatu fungsi didefinisikan secara mutlak melalui limit</strong>!</p>
-<p>Jika kita ingin mengetahui laju perubahan nilai fungsi \(f(x)\) pada suatu saat (laju sesaat), kita menghitung perubahan rata-rata saat interval waktu \(h\) menyusut mendekati nol:</p>
-<div class="alert alert-success text-center py-2 fs-5">
+<p>Turunan pertama suatu fungsi didefinisikan secara fundamental melalui limit:</p>
+<div class="math-formula-spotlight">
+  <div class="small fw-semibold text-success text-uppercase mb-1">Definisi Formal Turunan Pertama</div>
   \[ f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h} \]
 </div>
-<p>Konsep inilah yang akan kita gunakan secara intensif pada modul berikutnya (Materi Turunan Fungsi Aljabar).</p>
+<p class="text-muted small text-center"><em>Konsep inilah yang akan kita gunakan secara mendalam pada modul Turunan Fungsi!</em></p>
 
 <hr class="my-4">
 <h2>4. Empat Contoh Soal Terbimbing &amp; Cara Pengerjaan</h2>
 
-<h3>Contoh 1: Limit Trigonometri Sudut Dasar</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 0} \frac{\sin 6x}{\tan 2x}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Berdasarkan teorema limit trigonometri \(\lim_{x \to 0} \frac{\sin ax}{\tan bx} = \frac{a}{b}\):</p>
-    \[ \lim_{x \to 0} \frac{\sin 6x}{\tan 2x} = \lim_{x \to 0} \left( \frac{\sin 6x}{6x} \times \frac{2x}{\tan 2x} \times \frac{6x}{2x} \right) = 1 \times 1 \times \frac{6}{2} = 3 \]
-    <p><strong>Jawaban: \(3\)</strong></p>
+<!-- CONTOH 1 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Limit Trigonometri Sudut Dasar</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 1</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 0} \frac{\sin 6x}{\tan 2x}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Gunakan teorema limit trigonometri \(\lim_{x \to 0} \frac{\sin ax}{\tan bx} = \frac{a}{b}\):
+        \[ \lim_{x \to 0} \frac{\sin 6x}{\tan 2x} = \lim_{x \to 0} \left( \frac{\sin 6x}{6x} \times \frac{2x}{\tan 2x} \times \frac{6x}{2x} \right) = 1 \times 1 \times \frac{6}{2} = 3 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(3\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 2: Bentuk Sudut Rangkap Kosinus</h3>
-<p><strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 0} \frac{1 - \cos 4x}{x \sin 2x}\).</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Langkah 1:</strong> Ubah \(1 - \cos 4x\) menggunakan rumus sudut rangkap:</p>
-    \[ 1 - \cos 4x = 2\sin^2\left(\frac{4x}{2}\right) = 2\sin^2 2x = 2 \sin 2x \sin 2x \]
-    <p><strong>Langkah 2:</strong> Masukkan ke dalam limit:</p>
-    \[ \lim_{x \to 0} \frac{2 \sin 2x \sin 2x}{x \sin 2x} \]
-    <p><strong>Langkah 3:</strong> Coret suku \(\sin 2x\):</p>
-    \[ = \lim_{x \to 0} \frac{2 \sin 2x}{x} = 2 \times \lim_{x \to 0} \frac{\sin 2x}{x} = 2 \times 2 = 4 \]
-    <p><strong>Jawaban: \(4\)</strong></p>
+<!-- CONTOH 2 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Bentuk Sudut Rangkap Kosinus</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 2</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan nilai dari \(\lim_{x \to 0} \frac{1 - \cos 4x}{x \sin 2x}\).
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Ubah \(1 - \cos 4x\) menggunakan rumus sudut rangkap:
+        \[ 1 - \cos 4x = 2\sin^2\left(\frac{4x}{2}\right) = 2\sin^2 2x = 2 \sin 2x \sin 2x \]</li>
+        <li>Masukkan ke dalam limit:
+        \[ \lim_{x \to 0} \frac{2 \sin 2x \sin 2x}{x \sin 2x} \]</li>
+        <li>Coret suku \(\sin 2x\):
+        \[ = \lim_{x \to 0} \frac{2 \sin 2x}{x} = 2 \times 2 = 4 \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai Limit = \(4\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 3: Menentukan Nilai Parameter agar Fungsi Kontinu</h3>
-<p><strong>Soal:</strong> Diketahui fungsi sepotong-sepotong:</p>
-\[ f(x) = \begin{cases} \frac{x^2 - 9}{x - 3}, & x \neq 3 \\ k, & x = 3 \end{cases} \]
-<p>Tentukan nilai \(k\) agar fungsi \(f(x)\) kontinu di titik \(x = 3\)!</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Syarat kekontinuan di \(x = 3\) adalah \(\lim_{x \to 3} f(x) = f(3)\).</p>
-    <p><strong>1. Nilai fungsi:</strong> Berdasarkan definisi soal, \(f(3) = k\).</p>
-    <p><strong>2. Nilai limit:</strong></p>
-    \[ \lim_{x \to 3} \frac{x^2 - 9}{x - 3} = \lim_{x \to 3} \frac{(x - 3)(x + 3)}{x - 3} = \lim_{x \to 3} (x + 3) = 3 + 3 = 6 \]
-    <p><strong>3. Samakan limit dan nilai fungsi:</strong></p>
-    \[ k = 6 \]
-    <p><strong>Jawaban: \(k = 6\)</strong></p>
+<!-- CONTOH 3 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Menentukan Parameter agar Fungsi Kontinu</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 3</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Diketahui fungsi sepotong-sepotong:
+      \[ f(x) = \begin{cases} \frac{x^2 - 9}{x - 3}, & x \neq 3 \\ k, & x = 3 \end{cases} \]
+      Tentukan nilai \(k\) agar fungsi \(f(x)\) kontinu di titik \(x = 3\)!
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Syarat kekontinuan di \(x = 3\) adalah \(\lim_{x \to 3} f(x) = f(3)\).</li>
+        <li>Berdasarkan definisi fungsi, nilai \(f(3) = k\).</li>
+        <li>Hitung nilai limit fungsi di \(x = 3\):
+        \[ \lim_{x \to 3} \frac{x^2 - 9}{x - 3} = \lim_{x \to 3} \frac{(x - 3)(x + 3)}{x - 3} = \lim_{x \to 3} (x + 3) = 3 + 3 = 6 \]</li>
+        <li>Samakan nilai limit dengan nilai fungsi: \(k = 6\).</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Nilai \(k = 6\)
+      </div>
+    </div>
   </div>
 </div>
 
-<h3>Contoh 4: Laju Perubahan Menggunakan Definisi Limit Turunan</h3>
-<p><strong>Soal:</strong> Tentukan turunan fungsi \(f(x) = x^2\) pada titik sembarang menggunakan definisi limit turunan.</p>
-<div class="card bg-light mb-4">
-  <div class="card-body">
-    <p><strong>Pembahasan:</strong></p>
-    <p>Gunakan rumus definisi turunan:</p>
-    \[ f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h} \]
-    <p>Substitusikan \(f(x) = x^2\) dan \(f(x + h) = (x + h)^2\):</p>
-    \[ f'(x) = \lim_{h \to 0} \frac{(x + h)^2 - x^2}{h} = \lim_{h \to 0} \frac{x^2 + 2xh + h^2 - x^2}{h} \]
-    <p>Sederhanakan pembilang dan faktorkan \(h\):</p>
-    \[ = \lim_{h \to 0} \frac{2xh + h^2}{h} = \lim_{h \to 0} \frac{h(2x + h)}{h} = \lim_{h \to 0} (2x + h) = 2x + 0 = 2x \]
-    <p><em>Terbukti bahwa turunan dari \(x^2\) adalah \(2x\) melalui konsep limit!</em></p>
-    <p><strong>Jawaban: \(2x\)</strong></p>
+<!-- CONTOH 4 -->
+<div class="math-example-card">
+  <div class="math-example-header">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type"><i class="ti ti-bulb me-1"></i>Contoh Soal</span>
+      <span>Laju Perubahan via Definisi Limit Turunan</span>
+    </div>
+    <span class="badge bg-white-subtle text-white border border-white-subtle small">Contoh 4</span>
+  </div>
+  <div class="math-example-body">
+    <div class="math-problem-box">
+      <strong>Soal:</strong> Tentukan turunan fungsi \(f(x) = x^2\) menggunakan definisi limit turunan.
+    </div>
+    <div class="math-solution-box">
+      <div class="fw-bold text-success mb-2 d-flex align-items-center">
+        <i class="ti ti-checklist me-2 fs-5"></i>Langkah Penyelesaian:
+      </div>
+      <ol class="mb-2 ps-3">
+        <li>Gunakan rumus definisi turunan:
+        \[ f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h} \]</li>
+        <li>Substitusikan \(f(x) = x^2\) dan \(f(x + h) = (x + h)^2\):
+        \[ f'(x) = \lim_{h \to 0} \frac{x^2 + 2xh + h^2 - x^2}{h} = \lim_{h \to 0} \frac{h(2x + h)}{h} = \lim_{h \to 0} (2x + h) = 2x \]</li>
+      </ol>
+      <div class="math-final-answer">
+        <i class="ti ti-circle-check fs-5"></i> Turunan \(f'(x) = 2x\)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE BANNER -->
+<div class="math-practice-banner">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+      <span class="badge bg-white text-success fw-bold mb-1">EVALUASI PEMBELAJARAN</span>
+      <h4 class="mb-1 text-white fw-bold">8 Soal Latihan Mandiri (Pertemuan 6)</h4>
+      <div class="small text-white-50">Tuntaskan 8 soal latihan dasar limit trigonometri dan kekontinuan fungsi di bawah ini!</div>
+    </div>
+    <div>
+      <span class="badge bg-black bg-opacity-25 fs-6 px-3 py-2"><i class="ti ti-target me-1"></i>8 Soal Pilihan Ganda</span>
+    </div>
   </div>
 </div>
 HTML,
