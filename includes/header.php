@@ -443,27 +443,70 @@ try {
     ?>
 
     <?php if ($use_mathjax): ?>
+        <!-- KaTeX: Ultra-Fast High-Performance LaTeX Rendering -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous" onload="window.__runKaTeX && window.__runKaTeX();"></script>
         <script>
-            window.MathJax = {
-                tex: {
-                    inlineMath: [
-                        ['$', '$'],
-                        ['\\(', '\\)']
-                    ],
-                    displayMath: [
-                        ['$$', '$$'],
-                        ['\\[', '\\]']
-                    ],
-                    processEscapes: true,
-                },
-                options: {
-                    // Prevent rendering inside code blocks and rich text editors
-                    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                    ignoreHtmlClass: 'no-mathjax',
+            window.__katexDelimiters = [
+                {left: '$$', right: '$$', display: true},
+                {left: '\\[', right: '\\]', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false}
+            ];
+
+            window.renderMath = function(targetElement) {
+                var el = targetElement || document.body;
+                if (window.renderMathInElement && el) {
+                    try {
+                        window.renderMathInElement(el, {
+                            delimiters: window.__katexDelimiters,
+                            ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                            ignoredClasses: ['no-mathjax', 'no-katex'],
+                            throwOnError: false,
+                            errorColor: '#cc0000',
+                            strict: false
+                        });
+                    } catch (e) {
+                        console.warn('KaTeX render error:', e);
+                    }
                 }
             };
+
+            window.__runKaTeX = function() {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        window.renderMath(document.body);
+                    });
+                } else {
+                    window.renderMath(document.body);
+                }
+            };
+
+            // Polyfill window.MathJax.typesetPromise for backward compatibility with AJAX calls
+            window.MathJax = {
+                typesetPromise: function(elements) {
+                    return new Promise(function(resolve) {
+                        try {
+                            if (Array.isArray(elements)) {
+                                elements.forEach(function(el) { if (el) window.renderMath(el); });
+                            } else if (elements) {
+                                window.renderMath(elements);
+                            } else {
+                                window.renderMath(document.body);
+                            }
+                        } catch (err) {
+                            console.warn('MathJax polyfill error:', err);
+                        }
+                        resolve();
+                    });
+                }
+            };
+
+            if (window.renderMathInElement) {
+                window.__runKaTeX();
+            }
         </script>
-        <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <?php endif; ?>
     <?php
     $use_recaptcha = !empty($use_recaptcha);

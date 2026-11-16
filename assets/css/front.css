@@ -2120,5 +2120,32 @@ body.front-page .package-card-pro:hover .package-card-action {
     transform: translateX(3px);
 }
 
+/* KaTeX Enhancements & Responsive Display */
+.katex {
+    font-size: 1.08em;
+    text-rendering: auto;
+}
+
+.katex-display {
+    margin: 1rem 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.katex-display::-webkit-scrollbar {
+    height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+[data-bs-theme="dark"] .katex-display::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
 
 
