@@ -162,13 +162,11 @@ include __DIR__ . '/includes/header.php';
                         </p>
 
                         <!-- Live Search Bar (Filter Instan Card Rumpun) -->
-                        <div class="input-icon bg-white rounded-pill p-1 shadow-sm" style="max-width: 540px;">
-                            <span class="input-icon-addon ps-3">
-                                <i class="ti ti-search text-muted fs-4"></i>
-                            </span>
+                        <div class="d-flex align-items-center bg-white rounded-pill px-3 py-1 shadow-sm" style="max-width: 540px;">
+                            <i class="ti ti-search text-muted fs-4 me-2 flex-shrink-0"></i>
                             <input type="text"
                                    id="portalLiveSearch"
-                                   class="form-control border-0 rounded-pill ps-5 py-2 text-dark bg-transparent"
+                                   class="form-control border-0 shadow-none px-1 py-2 text-dark bg-transparent flex-grow-1"
                                    placeholder="Cari rumpun atau topik (Aljabar, Lingkaran, Limit, Turunan, Matriks)..."
                                    aria-label="Cari Bidang Matematika">
                         </div>
