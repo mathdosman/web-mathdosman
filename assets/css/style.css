@@ -2520,4 +2520,184 @@ body.front-page .package-card:hover {
         0 0 0 1px rgba(var(--package-accent-rgb, var(--bs-primary-rgb)), 0.28);
 }
 
+/* ====== Global Mobile Comfort & Zero-Overflow Reading (Semua Halaman) ====== */
+html, body {
+    overflow-x: clip;
+    max-width: 100%;
+}
+
+.paket-dock-main,
+.paket-sheet,
+.custom-card,
+.richtext-content,
+.materi-container,
+.opsi-content,
+.app-comment-main,
+.solution-content {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.richtext-content table,
+.materi-container table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.richtext-content svg,
+.richtext-content img,
+.materi-container svg,
+.materi-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.app-comment-body {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+@media (max-width: 767.98px) {
+    .app-container,
+    .container-xl,
+    .container-fluid.page-body {
+        padding-left: 0.65rem !important;
+        padding-right: 0.65rem !important;
+    }
+
+    .oke {
+        padding: 0.65rem !important;
+    }
+
+    .materi-container .card-body.p-4,
+    .card .card-body.p-4,
+    .card .card-body.p-md-5 {
+        padding: 0.9rem !important;
+    }
+
+    .materi-container .materi-header.p-4 {
+        padding: 1rem !important;
+    }
+
+    .materi-container .materi-header .h3 {
+        font-size: 1.15rem !important;
+        line-height: 1.35;
+    }
+
+    .math-concept-card,
+    .math-formula-spotlight,
+    .math-problem-box,
+    .math-solution-box,
+    .math-example-body {
+        padding: 0.75rem !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .math-example-header {
+        padding: 0.65rem 0.75rem !important;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+    }
+
+    .solution-collapsible summary {
+        padding: 0.7rem 0.85rem !important;
+        font-size: 0.9rem;
+    }
+
+    .solution-collapsible .solution-content {
+        padding: 0.85rem !important;
+    }
+
+    /* Kop Header ringkas di layar HP */
+    .kop-header {
+        padding: 10px 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .kop-header .container-kop {
+        flex-direction: row !important;
+        gap: 10px !important;
+        text-align: left !important;
+    }
+
+    .kop-header .logo-svg {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 10px !important;
+    }
+
+    .kop-header .text-area {
+        text-align: left !important;
+        min-width: 0;
+    }
+
+    .kop-header .brand-name {
+        font-size: 20px !important;
+    }
+
+    .kop-header .slogan {
+        font-size: 11px !important;
+        margin: 2px 0 1px !important;
+    }
+
+    .kop-header .jenjang-pendidikan {
+        font-size: 9.5px !important;
+    }
+
+    /* Tipografi nyaman dibaca di HP */
+    .richtext-content {
+        font-size: 0.94rem;
+        line-height: 1.65;
+    }
+
+    .katex {
+        font-size: 1em;
+    }
+
+    .katex-display {
+        margin: 0.65rem 0 !important;
+        padding: 0.35rem 0.1rem;
+    }
+
+    .opsi-row {
+        gap: 8px;
+    }
+
+    .opsi-content {
+        overflow-x: auto;
+    }
+
+    .tabler-page-nav-grid {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    .tabler-page-nav-slot {
+        flex: 1 1 auto;
+    }
+
+    .tabler-page-nav-slot .nav-action-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.85rem;
+    }
+
+    .app-comment {
+        gap: 0.65rem !important;
+    }
+
+    .app-comment-replies {
+        padding-left: 0.75rem !important;
+        margin-left: 0.5rem !important;
+    }
+}
+
 
