@@ -615,50 +615,50 @@ if ($useAdminSidebar) {
                 </div>
                 <div class="<?php echo $has_navbar_menu ? 'collapse navbar-collapse' : 'navbar-collapse'; ?>" id="navbarNav">
                     <?php if (!$useSidebar): ?>
-                        <ul class="navbar-nav me-auto">
+                        <ul class="navbar-nav me-auto ms-lg-3 gap-lg-1">
                             <li class="nav-item">
                                 <?php $isActive = ($currentPage === '' || $currentPage === 'index.php'); ?>
-                                <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/index.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                                <a class="nav-link px-lg-2.5 rounded-3<?php echo $isActive ? ' active fw-semibold' : ''; ?>" href="<?php echo $base_url; ?>/index.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                                     <i class="ti ti-home me-1"></i> Beranda
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <?php $isActive = ($currentPage === 'daftar-isi.php'); ?>
-                                <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/daftar-isi.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                                <a class="nav-link px-lg-2.5 rounded-3<?php echo $isActive ? ' active fw-semibold' : ''; ?>" href="<?php echo $base_url; ?>/daftar-isi.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                                     <i class="ti ti-list me-1"></i> Daftar Isi
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <?php $isActive = ($currentPage === 'tentang.php'); ?>
-                                <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/tentang.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                                <a class="nav-link px-lg-2.5 rounded-3<?php echo $isActive ? ' active fw-semibold' : ''; ?>" href="<?php echo $base_url; ?>/tentang.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                                     <i class="ti ti-info-circle me-1"></i> Tentang
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <?php $isActive = ($currentPage === 'kontak.php'); ?>
-                                <a class="nav-link<?php echo $isActive ? ' active' : ''; ?>" href="<?php echo $base_url; ?>/kontak.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
+                                <a class="nav-link px-lg-2.5 rounded-3<?php echo $isActive ? ' active fw-semibold' : ''; ?>" href="<?php echo $base_url; ?>/kontak.php" <?php echo $isActive ? ' aria-current="page"' : ''; ?>>
                                     <i class="ti ti-mail me-1"></i> Kontak
                                 </a>
                             </li>
-                            <li class="nav-item ms-lg-2 d-flex align-items-center">
-                                <button
-                                    type="button"
-                                    class="btn btn-outline-secondary btn-sm my-2 my-lg-0 md-theme-toggle"
-                                    id="themeToggle"
-                                    aria-label="Ganti tema"
-                                    title="Dark/Light">
-                                    <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
-                                </button>
-                                    <span class="theme-indicator small text-muted ms-2 d-none d-sm-inline">-</span>
-                            </li>
                         </ul>
                     <?php endif; ?>
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
                         <?php if (!$useSidebar): ?>
+                            <li class="nav-item d-flex align-items-center">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center md-theme-toggle"
+                                    id="themeToggle"
+                                    style="width: 34px; height: 34px; padding: 0;"
+                                    aria-label="Ganti tema"
+                                    title="Ganti Tema (Gelap / Terang)">
+                                    <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+                                </button>
+                            </li>
                             <?php if ($isStudent): ?>
-                                <li class="nav-item dropdown me-2">
-                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Siswa
+                                <li class="nav-item dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ti ti-user me-1"></i>Siswa
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li>
@@ -678,8 +678,11 @@ if ($useAdminSidebar) {
                                     </ul>
                                 </li>
                             <?php else: ?>
-                                <li class="nav-item me-2">
-                                    <a class="btn btn-outline-secondary btn-sm px-3 py-1 rounded-pill" href="<?php echo $base_url; ?>/siswa/login.php">Login Siswa</a>
+                                <li class="nav-item">
+                                    <a class="btn btn-outline-primary btn-sm px-3 py-1.5 rounded-pill fw-semibold d-inline-flex align-items-center gap-1" href="<?php echo $base_url; ?>/siswa/login.php">
+                                        <i class="ti ti-login"></i>
+                                        <span>Login Siswa</span>
+                                    </a>
                                 </li>
                             <?php endif; ?>
                         <?php endif; ?>
