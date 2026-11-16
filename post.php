@@ -423,30 +423,29 @@ $renderHtml = function (?string $html): string {
 					<div class="sticky-reading-sidebar">
 						<!-- Widget A: Navigasi Bab Aktif -->
 						<div class="card rounded-4 border-0 shadow-sm mb-3 overflow-hidden">
-							<div class="card-header bg-body-tertiary border-bottom py-2.5 px-3">
+							<div class="card-header bg-primary-subtle py-2.5 px-3">
 								<h3 class="card-title fw-bold text-primary fs-6 mb-0 d-flex align-items-center gap-2">
-									<span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-primary-subtle text-primary" style="width:26px;height:26px;">
-										<i class="ti ti-folder"></i>
-									</span>
+									<i class="ti ti-folder"></i>
 									<span><?php echo htmlspecialchars((string)($activeCategory['name'] ?? 'Navigasi Bab')); ?></span>
 								</h3>
 							</div>
-							<div class="list-group list-group-flush small" style="max-height: 420px; overflow-y: auto;">
+							<div class="list-group list-group-flush small" style="max-height: 380px; overflow-y: auto;">
 								<?php if (empty($chapterPosts)): ?>
 									<div class="p-3 text-muted small">Hanya materi ini pada bab aktif.</div>
 								<?php else: ?>
 									<?php foreach ($chapterPosts as $idx => $cp): ?>
-										<?php
-										$isAct = ((int)$cp['id'] === (int)$content['id']);
-										$cpTitle = trim((string)$cp['title']);
-										$cpTitleClean = preg_replace('/^Bahan\s+Ajar\s+/i', '', $cpTitle) ?? $cpTitle;
-										?>
+										<?php $isAct = ((int)$cp['id'] === (int)$content['id']); ?>
 										<a href="post.php?slug=<?php echo urlencode((string)$cp['slug']); ?>"
-										   class="list-group-item list-group-item-action py-2.5 px-3 d-flex align-items-start gap-2.5 <?php echo $isAct ? 'bg-primary-subtle text-primary fw-bold border-start border-4 border-primary' : ''; ?>">
-											<span class="badge <?php echo $isAct ? 'bg-primary text-white' : 'bg-body-secondary text-secondary border'; ?> rounded-circle flex-shrink-0 d-inline-flex align-items-center justify-content-center mt-0.5" style="width:22px;height:22px;font-size:0.75rem;">
-												<?php echo ((int)$cp['order'] > 0) ? (int)$cp['order'] : ($idx + 1); ?>
+										   class="list-group-item list-group-item-action py-2.5 px-3 d-flex align-items-center justify-content-between gap-2 <?php echo $isAct ? 'bg-primary text-white active fw-bold' : ''; ?>">
+											<span class="d-flex align-items-center gap-2 text-truncate">
+												<span class="badge <?php echo $isAct ? 'bg-white text-primary' : 'bg-light text-secondary border'; ?> rounded-circle flex-shrink-0">
+													<?php echo ((int)$cp['order'] > 0) ? (int)$cp['order'] : ($idx + 1); ?>
+												</span>
+												<span class="text-truncate"><?php echo htmlspecialchars((string)$cp['title']); ?></span>
 											</span>
-											<span class="flex-grow-1 min-w-0" style="line-height: 1.4;"><?php echo htmlspecialchars($cpTitleClean); ?></span>
+											<?php if ($isAct): ?>
+												<i class="ti ti-check flex-shrink-0"></i>
+											<?php endif; ?>
 										</a>
 									<?php endforeach; ?>
 								<?php endif; ?>
