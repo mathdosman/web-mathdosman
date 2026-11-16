@@ -1,19 +1,16 @@
 <?php
 require __DIR__ . '/../config/db.php';
-$tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-echo "TABLES IN DB:\n" . implode(", ", $tables) . "\n\n";
 
-if (in_array('categories', $tables, true)) {
-    echo "--- categories columns ---\n";
-    print_r($pdo->query("DESCRIBE categories")->fetchAll(PDO::FETCH_ASSOC));
-}
+echo "--- materials schema & data ---\n";
+print_r($pdo->query("DESCRIBE materials")->fetchAll(PDO::FETCH_ASSOC));
+print_r($pdo->query("SELECT * FROM materials LIMIT 20")->fetchAll(PDO::FETCH_ASSOC));
 
-if (in_array('contents', $tables, true)) {
-    echo "--- contents columns ---\n";
-    print_r($pdo->query("DESCRIBE contents")->fetchAll(PDO::FETCH_ASSOC));
-}
+echo "--- submaterials schema & data ---\n";
+print_r($pdo->query("DESCRIBE submaterials")->fetchAll(PDO::FETCH_ASSOC));
+print_r($pdo->query("SELECT * FROM submaterials LIMIT 20")->fetchAll(PDO::FETCH_ASSOC));
 
-if (in_array('packages', $tables, true)) {
-    echo "--- packages columns ---\n";
-    print_r($pdo->query("DESCRIBE packages")->fetchAll(PDO::FETCH_ASSOC));
-}
+// Distinct materi and submateri in contents and packages
+echo "--- distinct materi in packages ---\n";
+print_r($pdo->query("SELECT materi, count(*) as c FROM packages GROUP BY materi")->fetchAll(PDO::FETCH_ASSOC));
+echo "--- distinct submateri in packages ---\n";
+print_r($pdo->query("SELECT materi, submateri, count(*) as c FROM packages GROUP BY materi, submateri")->fetchAll(PDO::FETCH_ASSOC));
