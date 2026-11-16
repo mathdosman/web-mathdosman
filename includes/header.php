@@ -476,9 +476,11 @@ try {
             window.__runKaTeX = function() {
                 var run = function() {
                     var article = document.getElementById('article-content');
-                    if (article) {
-                        window.renderMath(article);
-                    } else if (document.querySelector('.paket-sheet') || document.querySelector('.richtext-content')) {
+                    var quiz = document.getElementById('latihan-soal-content');
+                    if (article || quiz) {
+                        if (article) window.renderMath(article);
+                        if (quiz) window.renderMath(quiz);
+                    } else if (document.querySelector('.paket-sheet') || document.querySelector('.richtext-content') || document.body.classList.contains('assignment-view')) {
                         window.renderMath(document.body);
                     }
                 };

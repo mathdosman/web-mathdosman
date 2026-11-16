@@ -465,6 +465,16 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 
+    <div class="alert alert-info border-0 shadow-sm rounded-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2" data-no-swal="1">
+        <div class="small">
+            <i class="ti ti-info-circle me-1"></i>
+            <strong>Alur Terpadu:</strong> Di web publik, Materi Pengantar &amp; Latihan Soal tampil menyatu dalam <strong>1 halaman</strong>. Saat ditugaskan ke siswa terdaftar, sistem otomatis <strong>hanya mengambil soalnya saja</strong>.
+        </div>
+        <a href="../siswa/admin/assignment_add.php" class="btn btn-sm btn-primary rounded-pill px-3">
+            <i class="ti ti-send me-1"></i> Tugaskan Soal ke Siswa
+        </a>
+    </div>
+
 <div class="card">
     <div class="card-body">
         <div class="mb-3 pb-3 border-bottom">

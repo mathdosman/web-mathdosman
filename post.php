@@ -87,7 +87,8 @@ if ($slug === '') {
 		if (!$content) {
 			$errorMessage = 'Konten tidak ditemukan atau belum dipublikasikan.';
 		} else {
-			// Detect whether this content is attached as a package intro.
+			// Detect whether this content is attached as a package intro & load its questions for 1-page unified view.
+			$linkedQuestions = [];
 			try {
 				$stmt0 = $pdo->prepare('SELECT id, code, name, subject_id, materi, submateri
 					FROM packages
@@ -95,8 +96,24 @@ if ($slug === '') {
 					LIMIT 1');
 				$stmt0->execute([':cid' => (int)($content['id'] ?? 0)]);
 				$linkedIntroPackage = $stmt0->fetch(PDO::FETCH_ASSOC) ?: null;
+
+				if ($linkedIntroPackage) {
+					$stmtLQ = $pdo->prepare('
+						SELECT q.id, q.pertanyaan, q.tipe_soal,
+							   q.pilihan_1, q.pilihan_2, q.pilihan_3, q.pilihan_4, q.pilihan_5,
+							   q.jawaban_benar, q.penyelesaian,
+							   pq.question_number
+						FROM package_questions pq
+						JOIN questions q ON q.id = pq.question_id
+						WHERE pq.package_id = :pid AND q.status_soal = "published"
+						ORDER BY (pq.question_number IS NULL) ASC, pq.question_number ASC, pq.added_at ASC
+					');
+					$stmtLQ->execute([':pid' => (int)$linkedIntroPackage['id']]);
+					$linkedQuestions = $stmtLQ->fetchAll(PDO::FETCH_ASSOC);
+				}
 			} catch (Throwable $e0) {
 				$linkedIntroPackage = null;
+				$linkedQuestions = [];
 			}
 
 			// Track page view
@@ -372,10 +389,10 @@ $renderHtml = function (?string $html): string {
 				</ol>
 
 				<div class="d-flex align-items-center gap-2">
-					<?php if ($linkedIntroPackage): ?>
-						<a href="paket.php?code=<?php echo urlencode((string)$linkedIntroPackage['code']); ?>"
+					<?php if (!empty($linkedQuestions)): ?>
+						<a href="#latihan-soal"
 						   class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm">
-							<i class="ti ti-pencil me-1"></i> Kerjakan Soal Latihan
+							<i class="ti ti-pencil me-1"></i> Soal Latihan (<?php echo count($linkedQuestions); ?>)
 						</a>
 					<?php endif; ?>
 					<button type="button"
@@ -520,18 +537,85 @@ $renderHtml = function (?string $html): string {
 							</div>
 						</div>
 
-						<?php if ($linkedIntroPackage): ?>
-							<div class="card border-0 shadow-sm rounded-4 mb-3 bg-success-subtle d-print-none">
-								<div class="card-body p-3.5 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
-									<div>
-										<h5 class="fw-bold text-success mb-1"><i class="ti ti-trophy me-1"></i> Uji Pemahaman Materi Ini</h5>
-										<p class="small text-secondary mb-0">Kerjakan paket soal latihan interaktif dan pembahasan lengkap untuk bab ini.</p>
-									</div>
-									<a href="paket.php?code=<?php echo urlencode((string)$linkedIntroPackage['code']); ?>"
-									   class="btn btn-success rounded-pill px-4 fw-bold flex-shrink-0">
-										Mulai Latihan <i class="ti ti-arrow-right ms-1"></i>
-									</a>
+						<?php if (!empty($linkedQuestions)): ?>
+							<!-- BAGIAN LATIHAN SOAL TERPADU (1 HALAMAN BERSAMA MATERI) -->
+							<div id="latihan-soal-content" class="mt-4">
+								<div class="d-flex align-items-center my-4" aria-label="Pembatas Materi dan Soal">
+									<hr class="flex-grow-1" />
+									<h2 id="latihan-soal" class="px-4 py-2 fw-bold fs-4 text-success bg-success-subtle border border-success-subtle rounded-pill mb-0 d-inline-flex align-items-center gap-2">
+										<i class="ti ti-pencil"></i> Latihan Soal &amp; Pembahasan (<?php echo count($linkedQuestions); ?> Soal)
+									</h2>
+									<hr class="flex-grow-1" />
 								</div>
+
+								<?php foreach ($linkedQuestions as $qIdx => $lq): ?>
+									<?php
+									$qNo = $lq['question_number'] === null ? ($qIdx + 1) : (int)$lq['question_number'];
+									$qTipe = trim((string)($lq['tipe_soal'] ?? 'Pilihan Ganda'));
+									if (strtolower($qTipe) === 'pg') $qTipe = 'Pilihan Ganda';
+									$qId = (int)($lq['id'] ?? 0);
+									$qAnsRaw = trim((string)($lq['jawaban_benar'] ?? ''));
+									$qMap = ['1' => 'A', '2' => 'B', '3' => 'C', '4' => 'D', '5' => 'E', 'pilihan_1' => 'A', 'pilihan_2' => 'B', 'pilihan_3' => 'C', 'pilihan_4' => 'D', 'pilihan_5' => 'E'];
+									$qAnsLabel = $qMap[strtolower($qAnsRaw)] ?? strtoupper($qAnsRaw);
+									$qOpts = [
+										'A' => (string)($lq['pilihan_1'] ?? ''),
+										'B' => (string)($lq['pilihan_2'] ?? ''),
+										'C' => (string)($lq['pilihan_3'] ?? ''),
+										'D' => (string)($lq['pilihan_4'] ?? ''),
+										'E' => (string)($lq['pilihan_5'] ?? ''),
+									];
+									$qPeny = trim((string)($lq['penyelesaian'] ?? ''));
+									?>
+									<div class="custom-card mb-3" id="soal-<?php echo $qNo; ?>">
+										<div class="custom-card-header d-flex align-items-center justify-content-between gap-2">
+											<div>
+												<span class="soal-nomor">No. <?php echo $qNo; ?></span>
+												<span class="soal-header ms-2"><?php echo htmlspecialchars($qTipe); ?></span>
+											</div>
+										</div>
+										<div class="oke">
+											<div class="mb-3 richtext-content"><?php echo $renderHtml((string)($lq['pertanyaan'] ?? '')); ?></div>
+
+											<?php if ($qTipe === 'Pilihan Ganda' || $qTipe === 'Pilihan Ganda Kompleks'): ?>
+												<div class="row g-2 mb-3">
+													<?php foreach ($qOpts as $optLabel => $optVal): ?>
+														<?php if (trim(strip_tags($optVal)) === '' && trim($optVal) === '') continue; ?>
+														<div class="col-12">
+															<div class="border rounded-3 p-2.5 opsi-row bg-body-tertiary">
+																<span class="opsi-label fw-bold text-primary"><?php echo $optLabel; ?>.</span>
+																<div class="opsi-content richtext-content"><?php echo $renderHtml($optVal); ?></div>
+															</div>
+														</div>
+													<?php endforeach; ?>
+												</div>
+											<?php endif; ?>
+
+											<?php if ($qPeny !== '' || $qAnsLabel !== ''): ?>
+												<details class="solution-collapsible mt-2">
+													<summary>
+														<span class="d-flex align-items-center gap-2">
+															<i class="ti ti-bulb text-warning fs-5"></i>
+															<span>Buka / Tutup Kunci &amp; Pembahasan Soal No. <?php echo $qNo; ?></span>
+														</span>
+														<i class="ti ti-chevron-down"></i>
+													</summary>
+													<div class="solution-content">
+														<?php if ($qAnsLabel !== ''): ?>
+															<div class="mb-2">
+																<span class="badge bg-success text-white px-3 py-1.5 rounded-pill fw-bold">
+																	<i class="ti ti-check me-1"></i> Jawaban Benar: <?php echo htmlspecialchars($qAnsLabel); ?>
+																</span>
+															</div>
+														<?php endif; ?>
+														<?php if ($qPeny !== ''): ?>
+															<div class="richtext-content small text-body"><?php echo $renderHtml($qPeny); ?></div>
+														<?php endif; ?>
+													</div>
+												</details>
+											<?php endif; ?>
+										</div>
+									</div>
+								<?php endforeach; ?>
 							</div>
 						<?php endif; ?>
 
@@ -710,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	const tocMobile = document.getElementById('mobile-toc-list');
 	if (!articleContent) return;
 
-	const headings = articleContent.querySelectorAll('h2, h3');
+	const headings = document.querySelectorAll('#article-content h2, #article-content h3, #latihan-soal');
 	if (headings.length === 0) {
 		const tocCard = document.getElementById('toc-card');
 		if (tocCard) tocCard.style.display = 'none';

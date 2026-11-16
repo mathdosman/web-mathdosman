@@ -1039,39 +1039,8 @@ $renderHtml = function (?string $html): string {
     return sanitize_rich_text((string)$html);
 };
 
-// Optional: load linked materi/konten untuk paket ini (jika ada).
-// Guru dapat mengaitkan konten materi ke paket soal via intro_content_id di halaman paket.
-// Di sini kita tampilkan materi tersebut di atas daftar soal (khusus siswa yang mengerjakan).
+// Penugasan & Ujian Siswa: HANYA tampilkan butir soalnya saja (materi pengantar tidak ditampilkan).
 $introContent = null;
-try {
-    $pkgId = (int)($assignment['package_id'] ?? 0);
-    if ($pkgId > 0) {
-        // Ambil intro_content_id dari tabel packages (tanpa asumsi kolom selalu ada di SELECT awal).
-        try {
-            $stmtIntroId = $pdo->prepare('SELECT intro_content_id FROM packages WHERE id = :pid LIMIT 1');
-            $stmtIntroId->execute([':pid' => $pkgId]);
-            $introId = (int)($stmtIntroId->fetchColumn() ?? 0);
-        } catch (Throwable $eIntroId) {
-            $introId = 0;
-        }
-
-        if ($introId > 0) {
-            try {
-                // Hanya tampilkan materi berstatus published (sesuai perilaku halaman publik).
-                $stmtIntro = $pdo->prepare('SELECT title, content_html, status FROM contents WHERE id = :id AND status = "published" LIMIT 1');
-                $stmtIntro->execute([':id' => $introId]);
-                $rowIntro = $stmtIntro->fetch(PDO::FETCH_ASSOC) ?: null;
-                if ($rowIntro) {
-                    $introContent = $rowIntro;
-                }
-            } catch (Throwable $eIntro) {
-                $introContent = null;
-            }
-        }
-    }
-} catch (Throwable $e) {
-    $introContent = null;
-}
 
 // Load saved answers (best-effort)
 $savedAnswers = [];
@@ -1092,6 +1061,7 @@ $page_title = 'Tugas/Ujian';
 $body_class = trim((isset($body_class) ? (string)$body_class : '') . ' assignment-view siswa-page');
 $hide_public_footer_links = true;
 $use_print_soal_css = true;
+$use_mathjax = true;
 $disable_student_sidebar = true;
 $disable_adsense = true;
 $disable_navbar = true;

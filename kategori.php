@@ -62,7 +62,8 @@ if (!$dbOk) {
         // Ambil Materi (Contents) di kategori ini urut berdasarkan kurikulum (`order` asc)
         $stmtContents = $pdo->prepare('
             SELECT id, title, slug, excerpt, `order`, reading_time, published_at,
-                (SELECT code FROM packages p WHERE p.intro_content_id = contents.id AND p.status = "published" LIMIT 1) AS linked_pkg_code
+                (SELECT code FROM packages p WHERE p.intro_content_id = contents.id AND p.status = "published" LIMIT 1) AS linked_pkg_code,
+                (SELECT COUNT(*) FROM package_questions pq JOIN packages p ON p.id = pq.package_id WHERE p.intro_content_id = contents.id AND p.status = "published") AS linked_q_count
             FROM contents
             WHERE category_id = :cid AND status = "published"
             ORDER BY CASE WHEN `order` > 0 THEN 0 ELSE 1 END, `order` ASC, published_at ASC, id ASC
@@ -73,15 +74,19 @@ if (!$dbOk) {
         $linkedContentIds = [];
         foreach ($contentsList as $ct) {
             $linkedContentIds[] = (int)$ct['id'];
+            $qCnt = (int)($ct['linked_q_count'] ?? 0);
+            $rt = (int)($ct['reading_time'] ?? 5);
+            $badgeStr = $qCnt > 0 ? "{$rt} mnt • {$qCnt} Soal" : "{$rt} mnt baca";
             $curriculumItems[] = [
                 'kind' => 'content',
                 'title' => (string)$ct['title'],
                 'url' => 'post.php?slug=' . rawurlencode((string)$ct['slug']),
                 'excerpt' => (string)($ct['excerpt'] ?? ''),
                 'order' => (int)($ct['order'] ?? 0),
-                'badge' => ((int)($ct['reading_time'] ?? 5)) . ' mnt baca',
-                'badge_icon' => 'ti ti-clock',
+                'badge' => $badgeStr,
+                'badge_icon' => $qCnt > 0 ? 'ti ti-book-2' : 'ti ti-clock',
                 'pkg_code' => (string)($ct['linked_pkg_code'] ?? ''),
+                'has_quiz' => $qCnt > 0,
             ];
         }
 
@@ -287,15 +292,15 @@ include __DIR__ . '/includes/header.php';
                                         <i class="<?php echo htmlspecialchars($item['badge_icon']); ?>"></i>
                                         <?php echo htmlspecialchars($item['badge']); ?>
                                     </span>
-                                    <?php if ($item['pkg_code'] !== '' && $item['kind'] === 'content'): ?>
-                                        <a href="paket.php?code=<?php echo urlencode($item['pkg_code']); ?>"
-                                           class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold">
-                                            <i class="ti ti-pencil me-1"></i> Latihan Soal
-                                        </a>
-                                    <?php endif; ?>
                                     <a href="<?php echo htmlspecialchars($item['url']); ?>"
                                        class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold">
-                                        <?php echo $item['kind'] === 'content' ? 'Baca Materi' : 'Mulai Latihan'; ?>
+                                        <?php
+                                        if ($item['kind'] === 'content') {
+                                            echo !empty($item['has_quiz']) ? 'Pelajari &amp; Latihan' : 'Baca Materi';
+                                        } else {
+                                            echo 'Mulai Latihan';
+                                        }
+                                        ?>
                                         <i class="ti ti-chevron-right ms-1"></i>
                                     </a>
                                 </div>

@@ -173,16 +173,18 @@ try {
 
 try {
     if ($hasIsExamColumn) {
-        // Ambil paket yang didaftarkan sebagai Paket Ujian (is_exam=1) ATAU paket yang sudah dipublish
-        $packages = $pdo->query('SELECT id, code, name, status, COALESCE(is_exam, 0) AS is_exam
+        // Ambil paket beserta jumlah soalnya
+        $packages = $pdo->query('SELECT id, code, name, materi, submateri, status, COALESCE(is_exam, 0) AS is_exam,
+            (SELECT COUNT(*) FROM package_questions pq WHERE pq.package_id = packages.id) AS q_count
             FROM packages
             WHERE COALESCE(is_exam, 0) = 1 OR status = "published"
-            ORDER BY COALESCE(is_exam, 0) DESC, COALESCE(published_at, created_at) DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
+            ORDER BY COALESCE(is_exam, 0) DESC, materi ASC, submateri ASC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
     } else {
-        $packages = $pdo->query('SELECT id, code, name, status, 0 AS is_exam
+        $packages = $pdo->query('SELECT id, code, name, materi, submateri, status, 0 AS is_exam,
+            (SELECT COUNT(*) FROM package_questions pq WHERE pq.package_id = packages.id) AS q_count
             FROM packages
             WHERE status = "published"
-            ORDER BY COALESCE(published_at, created_at) DESC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
+            ORDER BY materi ASC, submateri ASC, id DESC')->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (Throwable $e) {
     $packages = [];
@@ -658,20 +660,24 @@ include __DIR__ . '/../../includes/header.php';
                                 <label class="form-label mb-0 fw-semibold text-body">Paket Soal</label>
                             </div>
                             <select class="form-select" name="package_id" id="packageSelect" required>
-                                <option value="0">-- pilih paket --</option>
+                                <option value="0">-- pilih paket soal --</option>
                                 <?php foreach ($packages as $p): ?>
                                     <?php
                                     $pid = (int)$p['id'];
                                     $isExamOpt = $hasIsExamColumn ? (((int)($p['is_exam'] ?? 0)) === 1) : false;
-                                    $tag = $isExamOpt ? '[Ujian]' : '[Materi]';
+                                    $qCnt = (int)($p['q_count'] ?? 0);
+                                    $tag = $isExamOpt ? "[Ujian • {$qCnt} Soal]" : "[Latihan • {$qCnt} Soal]";
+                                    $matPrefix = trim((string)($p['materi'] ?? ''));
+                                    $subPrefix = trim((string)($p['submateri'] ?? ''));
+                                    $topicLabel = $matPrefix !== '' ? ($subPrefix !== '' ? "$matPrefix / $subPrefix" : $matPrefix) : '';
                                     ?>
                                     <option value="<?php echo $pid; ?>" data-is-exam="<?php echo $isExamOpt ? '1' : '0'; ?>" <?php echo ($values['package_id'] === $pid) ? 'selected' : ''; ?>>
-                                        <?php echo $tag . ' ' . htmlspecialchars((string)$p['name']); ?> (<?php echo htmlspecialchars((string)$p['code']); ?>)
+                                        <?php echo htmlspecialchars($tag . ($topicLabel !== '' ? " [$topicLabel] " : ' ') . (string)$p['name']); ?> (<?php echo htmlspecialchars((string)$p['code']); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text" id="packageHelpText">
-                                Mode Tugas: Bebas memilih semua paket soal materi pembelajaran maupun paket ujian.
+                            <div class="form-text text-primary fw-medium" id="packageHelpText">
+                                <i class="ti ti-info-circle me-1"></i>Saat ditugaskan ke siswa terdaftar, sistem <strong>HANYA mengambil butir soalnya saja</strong> (materi pengantar disembunyikan otomatis).
                             </div>
                         </div>
                     </div>
