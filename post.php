@@ -403,35 +403,50 @@ $renderHtml = function (?string $html): string {
 				</div>
 			</div>
 
+			<?php
+			$colorHexMap = [
+				'blue'      => '#2563eb',
+				'teal'      => '#0d9488',
+				'indigo'    => '#4f46e5',
+				'purple'    => '#7c3aed',
+				'azure'     => '#0284c7',
+				'orange'    => '#ea580c',
+				'green'     => '#16a34a',
+				'cyan'      => '#0891b2',
+				'red'       => '#dc2626',
+				'secondary' => '#475569',
+			];
+			?>
 			<div class="row g-4">
 				<!-- ================= SIDEBAR KIRI (col-lg-3, STICKY) ================= -->
 				<aside class="col-lg-3 d-none d-lg-block reading-sidebar-col d-print-none">
 					<div class="sticky-reading-sidebar">
 						<!-- Widget A: Navigasi Bab Aktif -->
 						<div class="card rounded-4 border-0 shadow-sm mb-3 overflow-hidden">
-							<div class="card-header bg-primary-subtle py-2.5 px-3">
+							<div class="card-header bg-body-tertiary border-bottom py-2.5 px-3">
 								<h3 class="card-title fw-bold text-primary fs-6 mb-0 d-flex align-items-center gap-2">
-									<i class="ti ti-folder"></i>
+									<span class="d-inline-flex align-items-center justify-content-center rounded-2 bg-primary-subtle text-primary" style="width:26px;height:26px;">
+										<i class="ti ti-folder"></i>
+									</span>
 									<span><?php echo htmlspecialchars((string)($activeCategory['name'] ?? 'Navigasi Bab')); ?></span>
 								</h3>
 							</div>
-							<div class="list-group list-group-flush small" style="max-height: 380px; overflow-y: auto;">
+							<div class="list-group list-group-flush small" style="max-height: 420px; overflow-y: auto;">
 								<?php if (empty($chapterPosts)): ?>
 									<div class="p-3 text-muted small">Hanya materi ini pada bab aktif.</div>
 								<?php else: ?>
 									<?php foreach ($chapterPosts as $idx => $cp): ?>
-										<?php $isAct = ((int)$cp['id'] === (int)$content['id']); ?>
+										<?php
+										$isAct = ((int)$cp['id'] === (int)$content['id']);
+										$cpTitle = trim((string)$cp['title']);
+										$cpTitleClean = preg_replace('/^Bahan\s+Ajar\s+/i', '', $cpTitle) ?? $cpTitle;
+										?>
 										<a href="post.php?slug=<?php echo urlencode((string)$cp['slug']); ?>"
-										   class="list-group-item list-group-item-action py-2.5 px-3 d-flex align-items-center justify-content-between gap-2 <?php echo $isAct ? 'bg-primary text-white active fw-bold' : ''; ?>">
-											<span class="d-flex align-items-center gap-2 text-truncate">
-												<span class="badge <?php echo $isAct ? 'bg-white text-primary' : 'bg-light text-secondary border'; ?> rounded-circle flex-shrink-0">
-													<?php echo ((int)$cp['order'] > 0) ? (int)$cp['order'] : ($idx + 1); ?>
-												</span>
-												<span class="text-truncate"><?php echo htmlspecialchars((string)$cp['title']); ?></span>
+										   class="list-group-item list-group-item-action py-2.5 px-3 d-flex align-items-start gap-2.5 <?php echo $isAct ? 'bg-primary-subtle text-primary fw-bold border-start border-4 border-primary' : ''; ?>">
+											<span class="badge <?php echo $isAct ? 'bg-primary text-white' : 'bg-body-secondary text-secondary border'; ?> rounded-circle flex-shrink-0 d-inline-flex align-items-center justify-content-center mt-0.5" style="width:22px;height:22px;font-size:0.75rem;">
+												<?php echo ((int)$cp['order'] > 0) ? (int)$cp['order'] : ($idx + 1); ?>
 											</span>
-											<?php if ($isAct): ?>
-												<i class="ti ti-check flex-shrink-0"></i>
-											<?php endif; ?>
+											<span class="flex-grow-1 min-w-0" style="line-height: 1.4;"><?php echo htmlspecialchars($cpTitleClean); ?></span>
 										</a>
 									<?php endforeach; ?>
 								<?php endif; ?>
@@ -439,39 +454,50 @@ $renderHtml = function (?string $html): string {
 						</div>
 
 						<!-- Widget B: Pindah Rumpun Cepat (Accordion) -->
-						<div class="card rounded-4 border-0 shadow-sm">
-							<div class="card-header py-2.5 px-3 bg-body-tertiary">
-								<span class="fw-bold small text-muted"><i class="ti ti-category me-1"></i> Pindah Rumpun Cepat</span>
+						<div class="card rounded-4 border-0 shadow-sm overflow-hidden">
+							<div class="card-header py-2.5 px-3 bg-body-tertiary border-bottom">
+								<span class="fw-bold small text-body-secondary d-flex align-items-center gap-2">
+									<i class="ti ti-category text-primary"></i> Pindah Rumpun Cepat
+								</span>
 							</div>
 							<div class="card-body p-2">
 								<div class="accordion accordion-flush" id="accordionRumpun">
 									<?php foreach ($allClusters as $cluster): ?>
-										<div class="accordion-item border-0">
+										<?php
+										$cHex = $colorHexMap[(string)($cluster['color'] ?? 'blue')] ?? '#2563eb';
+										$isCurrentCluster = $parentCategory && ((int)$parentCategory['id'] === (int)$cluster['id']);
+										?>
+										<div class="accordion-item border-0 mb-1">
 											<h4 class="accordion-header" id="headingCluster<?php echo (int)$cluster['id']; ?>">
-												<button class="accordion-button collapsed py-2 px-2.5 small fw-semibold rounded-2"
+												<button class="accordion-button <?php echo $isCurrentCluster ? '' : 'collapsed'; ?> py-2 px-2 small fw-semibold rounded-3 bg-transparent shadow-none"
 														type="button"
 														data-bs-toggle="collapse"
 														data-bs-target="#collapseCluster<?php echo (int)$cluster['id']; ?>"
-														aria-expanded="false">
-													<i class="<?php echo htmlspecialchars((string)$cluster['icon']); ?> me-2 text-<?php echo htmlspecialchars((string)$cluster['color']); ?>"></i>
-													<span class="text-truncate"><?php echo htmlspecialchars((string)$cluster['name']); ?></span>
+														aria-expanded="<?php echo $isCurrentCluster ? 'true' : 'false'; ?>">
+													<span class="d-inline-flex align-items-center justify-content-center rounded-2 me-2 flex-shrink-0"
+														  style="width:26px;height:26px;background-color:<?php echo $cHex; ?>1a;color:<?php echo $cHex; ?>;">
+														<i class="<?php echo htmlspecialchars((string)$cluster['icon']); ?>"></i>
+													</span>
+													<span style="line-height: 1.3;"><?php echo htmlspecialchars((string)$cluster['name']); ?></span>
 												</button>
 											</h4>
 											<div id="collapseCluster<?php echo (int)$cluster['id']; ?>"
-												 class="accordion-collapse collapse"
+												 class="accordion-collapse collapse <?php echo $isCurrentCluster ? 'show' : ''; ?>"
 												 data-bs-parent="#accordionRumpun">
-												<div class="accordion-body p-1 ps-3">
-													<div class="nav flex-column small">
+												<div class="accordion-body py-1 ps-4 pe-2">
+													<div class="nav flex-column small gap-1 border-start ps-2">
 														<?php if (empty($cluster['children'])): ?>
 															<a href="kategori.php?slug=<?php echo urlencode((string)$cluster['slug']); ?>"
-															   class="nav-link py-1 text-primary fw-semibold">
-																&bull; Buka <?php echo htmlspecialchars((string)$cluster['name']); ?>
+															   class="nav-link py-1 px-2 rounded-2 text-primary fw-semibold">
+																Buka <?php echo htmlspecialchars((string)$cluster['name']); ?>
 															</a>
 														<?php else: ?>
 															<?php foreach ($cluster['children'] as $child): ?>
+																<?php $isActChild = $activeCategory && ((int)$activeCategory['id'] === (int)$child['id']); ?>
 																<a href="kategori.php?slug=<?php echo urlencode((string)$child['slug']); ?>"
-																   class="nav-link py-1 text-secondary text-truncate">
-																	&bull; <?php echo htmlspecialchars((string)$child['name']); ?>
+																   class="nav-link py-1 px-2 rounded-2 <?php echo $isActChild ? 'bg-primary-subtle text-primary fw-bold' : 'text-secondary'; ?>"
+																   style="line-height: 1.35;">
+																	<?php echo htmlspecialchars((string)$child['name']); ?>
 																</a>
 															<?php endforeach; ?>
 														<?php endif; ?>
@@ -695,10 +721,14 @@ $renderHtml = function (?string $html): string {
 									<div class="p-3 text-muted small text-center">Belum ada materi terkait lainnya.</div>
 								<?php else: ?>
 									<?php foreach ($relatedPosts as $rel): ?>
+										<?php
+										$relTitle = trim((string)$rel['title']);
+										$relTitleClean = preg_replace('/^Bahan\s+Ajar\s+/i', '', $relTitle) ?? $relTitle;
+										?>
 										<a href="post.php?slug=<?php echo urlencode((string)$rel['slug']); ?>"
 										   class="list-group-item list-group-item-action p-2.5">
-											<div class="fw-bold text-body text-truncate"><?php echo htmlspecialchars((string)$rel['title']); ?></div>
-											<span class="text-muted small"><?php echo htmlspecialchars((string)($rel['cat_name'] ?: 'Matematika')); ?></span>
+											<div class="fw-bold text-body mb-1" style="line-height: 1.35;"><?php echo htmlspecialchars($relTitleClean); ?></div>
+											<span class="badge bg-body-secondary text-secondary border rounded-pill" style="font-size: 0.7rem;"><?php echo htmlspecialchars((string)($rel['cat_name'] ?: 'Matematika')); ?></span>
 										</a>
 									<?php endforeach; ?>
 								<?php endif; ?>
