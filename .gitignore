@@ -46,6 +46,7 @@ php_errorlog
 tmp/
 temp/
 cache/
+scratch/
 
 # Upload directories (keep local)
 gambar/
