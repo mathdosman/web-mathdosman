@@ -719,7 +719,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
 ?>
 <div class="row">
     <div class="col-12">
-        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="index.php" class="btn btn-tabler-nav btn-sm fw-semibold">
                     <i class="ti ti-arrow-left" aria-hidden="true"></i>

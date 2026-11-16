@@ -2147,5 +2147,160 @@ body.front-page .package-card-pro:hover .package-card-action {
     background: #475569;
 }
 
+/* ====== Mobile Comfort & Zero-Overflow Reading (paket.php & post.php) ====== */
+body.paket-preview .paket-dock-main,
+body.paket-preview .paket-sheet,
+body.paket-preview .custom-card,
+body.paket-preview .richtext-content,
+body.paket-preview .materi-container,
+body.paket-preview .opsi-content {
+    max-width: 100%;
+    min-width: 0;
+}
+
+body.paket-preview .richtext-content table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.paket-preview .richtext-content svg,
+body.paket-preview .richtext-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 767.98px) {
+    /* Perkecil padding bertumpuk agar area baca luas & nyaman di HP */
+    body.paket-preview .app-container,
+    body.paket-preview .container-xl {
+        padding-left: 0.6rem !important;
+        padding-right: 0.6rem !important;
+    }
+
+    body.paket-preview .oke {
+        padding: 0.65rem !important;
+    }
+
+    body.paket-preview .materi-container .card-body.p-4 {
+        padding: 0.85rem !important;
+    }
+
+    body.paket-preview .materi-container .materi-header.p-4 {
+        padding: 1rem !important;
+    }
+
+    body.paket-preview .materi-container .materi-header .h3 {
+        font-size: 1.15rem !important;
+        line-height: 1.35;
+    }
+
+    body.paket-preview .math-concept-card,
+    body.paket-preview .math-formula-spotlight,
+    body.paket-preview .math-problem-box,
+    body.paket-preview .math-solution-box,
+    body.paket-preview .math-example-body {
+        padding: 0.75rem !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.paket-preview .math-example-header {
+        padding: 0.65rem 0.75rem !important;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+    }
+
+    body.paket-preview .solution-collapsible summary {
+        padding: 0.7rem 0.85rem !important;
+        font-size: 0.9rem;
+    }
+
+    body.paket-preview .solution-collapsible .solution-content {
+        padding: 0.85rem !important;
+    }
+
+    /* Kop Header ringkas & hemat ruang di layar HP */
+    body.paket-preview .kop-header {
+        padding: 10px 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    body.paket-preview .kop-header .container-kop {
+        flex-direction: row !important;
+        gap: 10px !important;
+        text-align: left !important;
+    }
+
+    body.paket-preview .kop-header .logo-svg {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 10px !important;
+    }
+
+    body.paket-preview .kop-header .text-area {
+        text-align: left !important;
+        min-width: 0;
+    }
+
+    body.paket-preview .kop-header .brand-name {
+        font-size: 20px !important;
+    }
+
+    body.paket-preview .kop-header .slogan {
+        font-size: 11px !important;
+        margin: 2px 0 1px !important;
+    }
+
+    body.paket-preview .kop-header .jenjang-pendidikan {
+        font-size: 9.5px !important;
+    }
+
+    /* Tipografi nyaman dibaca di HP */
+    body.paket-preview .richtext-content {
+        font-size: 0.94rem;
+        line-height: 1.65;
+    }
+
+    body.paket-preview .katex {
+        font-size: 1em;
+    }
+
+    body.paket-preview .katex-display {
+        margin: 0.65rem 0 !important;
+        padding: 0.35rem 0.1rem;
+    }
+
+    /* Opsi pilihan ganda & navigasi bawah rapi di HP */
+    body.paket-preview .opsi-row {
+        gap: 8px;
+    }
+
+    body.paket-preview .opsi-content {
+        overflow-x: auto;
+    }
+
+    body.paket-preview .tabler-page-nav-grid {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    body.paket-preview .tabler-page-nav-slot {
+        flex: 1 1 auto;
+    }
+
+    body.paket-preview .tabler-page-nav-slot .nav-action-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.85rem;
+    }
+}
+
 
 
