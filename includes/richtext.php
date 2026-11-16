@@ -49,6 +49,14 @@ function sanitize_rich_text(string $html): string
         'caption' => ['class'],
         'a' => ['href', 'title', 'target', 'rel', 'class'],
         'img' => ['src', 'alt', 'width', 'height', 'class'],
+        'details' => ['class', 'open'],
+        'summary' => ['class'],
+        'svg' => ['class', 'width', 'height', 'viewbox', 'fill', 'xmlns', 'role', 'aria-hidden'],
+        'circle' => ['cx', 'cy', 'r', 'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'class'],
+        'line' => ['x1', 'y1', 'x2', 'y2', 'stroke', 'stroke-width', 'class'],
+        'path' => ['d', 'fill', 'stroke', 'stroke-width', 'class'],
+        'polygon' => ['points', 'fill', 'stroke', 'stroke-width', 'class'],
+        'text' => ['x', 'y', 'fill', 'font-size', 'font-weight', 'text-anchor', 'class'],
     ];
 
     $isSafeColorValue = static function (string $val): bool {
