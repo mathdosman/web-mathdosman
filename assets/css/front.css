@@ -1194,8 +1194,34 @@
 
     @media (min-width: 992px) {
         body.paket-preview.paket-dock .app-container {
-            max-width: 1140px;
+            max-width: 1180px;
         }
+
+        body.paket-preview.content-page .app-container {
+            max-width: 1200px;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        body.paket-preview.content-page .app-container {
+            max-width: 1360px;
+        }
+    }
+
+    @media (min-width: 1400px) {
+        body.paket-preview.paket-dock .app-container {
+            max-width: 1360px;
+        }
+        body.paket-preview.content-page .app-container {
+            max-width: 1460px;
+        }
+    }
+
+    body.paket-preview.content-page.reading-focus-mode .app-container {
+        max-width: 1040px;
+    }
+
+    @media (min-width: 992px) {
 
         body.paket-preview.paket-dock .paket-dock-layout {
             display: flex;
