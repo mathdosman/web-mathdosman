@@ -59,7 +59,7 @@ $schema_markup = seo_render_website_schema((string)$base_url);
 
 $use_print_soal_css = true;
 $body_class = 'front-page';
-$use_mathjax = true;
+$use_mathjax = false; // KaTeX tidak dimuat di homepage agar beban super ringan
 
 $q = trim((string)($_GET['q'] ?? ''));
 $filterSubjectId = (int)($_GET['subject_id'] ?? 0);

@@ -118,12 +118,12 @@ $isStudentExamPage = $isStudentArea && in_array($currentPage, ['assignment_view.
 // - Bisa dimatikan per-halaman dengan set $disable_adsense = true sebelum include header.php.
 $disable_adsense = !empty($disable_adsense) || $isAdminArea || $isSiswaAdminArea || $isStudentExamPage;
 
-// MathJax (LaTeX rendering)
-// Default: aktif di hampir semua halaman yang menampilkan konten.
+// MathJax / KaTeX (LaTeX rendering)
+// Default: nonaktif secara global (homepage tidak memuat), hanya aktif kondisional di halaman baca artikel (posts/show)
 if (isset($use_mathjax)) {
     $use_mathjax = !empty($use_mathjax);
 } else {
-    $use_mathjax = true;
+    $use_mathjax = false;
 }
 
 $isFrontArea = false;
