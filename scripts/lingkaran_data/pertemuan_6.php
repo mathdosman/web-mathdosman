@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 $p6_nav = $navHtml(6);
 
-$p6_content = <<<HTML
+$p6_content = str_replace('{{NAV}}', $p6_nav, <<<'HTML'
 <div class="materi-container">
     <div class="materi-header mb-4 p-4 rounded-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
         <span class="badge bg-info-subtle text-info px-3 py-1.5 rounded-pill fw-semibold mb-2 border border-info-subtle">
@@ -20,7 +20,7 @@ $p6_content = <<<HTML
         </p>
     </div>
 
-    {$p6_nav}
+    {{NAV}}
 
     <!-- 1. Definisi & Sifat Sudut Berhadapan 180 Derajat -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -182,7 +182,8 @@ $p6_content = <<<HTML
         <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
     </div>
 </div>
-HTML;
+HTML
+);
 
 $meetings[6] = [
     'num' => 6,
@@ -257,3 +258,4 @@ $meetings[6] = [
         ],
     ],
 ];
+

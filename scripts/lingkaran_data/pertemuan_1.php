@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 $p1_nav = $navHtml(1);
 
-$p1_content = <<<HTML
+$p1_content = str_replace('{{NAV}}', $p1_nav, <<<'HTML'
 <div class="materi-container">
     <div class="materi-header mb-4 p-4 rounded-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
         <span class="badge bg-info-subtle text-info px-3 py-1.5 rounded-pill fw-semibold mb-2 border border-info-subtle">
@@ -20,7 +20,7 @@ $p1_content = <<<HTML
         </p>
     </div>
 
-    {$p1_nav}
+    {{NAV}}
 
     <!-- 1. Konsep Dasar & Definisi Lingkaran -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -282,7 +282,8 @@ $p1_content = <<<HTML
         <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
     </div>
 </div>
-HTML;
+HTML
+);
 
 $meetings[1] = [
     'num' => 1,
@@ -357,3 +358,4 @@ $meetings[1] = [
         ],
     ],
 ];
+

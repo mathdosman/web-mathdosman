@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 $p2_nav = $navHtml(2);
 
-$p2_content = <<<HTML
+$p2_content = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
 <div class="materi-container">
     <div class="materi-header mb-4 p-4 rounded-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
         <span class="badge bg-info-subtle text-info px-3 py-1.5 rounded-pill fw-semibold mb-2 border border-info-subtle">
@@ -20,7 +20,7 @@ $p2_content = <<<HTML
         </p>
     </div>
 
-    {$p2_nav}
+    {{NAV}}
 
     <!-- 1. Penemuan Nilai Pendekatan pi -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -228,7 +228,8 @@ $p2_content = <<<HTML
         <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
     </div>
 </div>
-HTML;
+HTML
+);
 
 $meetings[2] = [
     'num' => 2,
@@ -303,3 +304,4 @@ $meetings[2] = [
         ],
     ],
 ];
+

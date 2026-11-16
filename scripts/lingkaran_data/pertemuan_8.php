@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 $p8_nav = $navHtml(8);
 
-$p8_content = <<<HTML
+$p8_content = str_replace('{{NAV}}', $p8_nav, <<<'HTML'
 <div class="materi-container">
     <div class="materi-header mb-4 p-4 rounded-4" style="background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f172a 100%); color: #ffffff;">
         <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-1.5 rounded-pill fw-semibold mb-2 border border-warning-subtle">
@@ -21,7 +21,7 @@ $p8_content = <<<HTML
         </p>
     </div>
 
-    {$p8_nav}
+    {{NAV}}
 
     <!-- 1. Peta Rangkuman Rumus Pokok Bab Lingkaran -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -269,7 +269,8 @@ $p8_content = <<<HTML
         <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">10 Soal</span>
     </div>
 </div>
-HTML;
+HTML
+);
 
 $meetings[8] = [
     'num' => 8,
@@ -384,3 +385,4 @@ $meetings[8] = [
         ],
     ],
 ];
+

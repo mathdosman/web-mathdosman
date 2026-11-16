@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 $p5_nav = $navHtml(5);
 
-$p5_content = <<<HTML
+$p5_content = str_replace('{{NAV}}', $p5_nav, <<<'HTML'
 <div class="materi-container">
     <div class="materi-header mb-4 p-4 rounded-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #ffffff;">
         <span class="badge bg-info-subtle text-info px-3 py-1.5 rounded-pill fw-semibold mb-2 border border-info-subtle">
@@ -20,7 +20,7 @@ $p5_content = <<<HTML
         </p>
     </div>
 
-    {$p5_nav}
+    {{NAV}}
 
     <!-- 1. Definisi & Teorema Sudut Pusat vs Sudut Keliling -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -197,7 +197,8 @@ $p5_content = <<<HTML
         <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
     </div>
 </div>
-HTML;
+HTML
+);
 
 $meetings[5] = [
     'num' => 5,
@@ -272,3 +273,4 @@ $meetings[5] = [
         ],
     ],
 ];
+
