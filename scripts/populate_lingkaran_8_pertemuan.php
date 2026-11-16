@@ -192,58 +192,65 @@ try {
             $stmtFindPq->execute([':pid' => $packageId, ':qnum' => $qNum]);
             $questionId = (int)($stmtFindPq->fetchColumn() ?: 0);
 
+            $p1 = $qData['pilihan_1'] ?? $qData['p1'] ?? '';
+            $p2 = $qData['pilihan_2'] ?? $qData['p2'] ?? '';
+            $p3 = $qData['pilihan_3'] ?? $qData['p3'] ?? '';
+            $p4 = $qData['pilihan_4'] ?? $qData['p4'] ?? '';
+            $p5 = $qData['pilihan_5'] ?? $qData['p5'] ?? '';
+            $jb = (int)($qData['jawaban_benar'] ?? $qData['jb'] ?? 1);
+            $peny = $qData['pembahasan'] ?? $qData['penyelesaian'] ?? '';
+
             if ($questionId > 0) {
                 // Update question yang sudah ada
                 $stmtUpdQ = $pdo->prepare('
                     UPDATE questions
-                    SET subject_id = :subject_id,
+                    SET subject_id = :sid,
                         materi = :materi,
                         submateri = :submateri,
-                        pertanyaan = :pertanyaan,
+                        pertanyaan = :q,
                         pilihan_1 = :p1,
                         pilihan_2 = :p2,
                         pilihan_3 = :p3,
                         pilihan_4 = :p4,
                         pilihan_5 = :p5,
-                        jawaban_benar = :jawaban_benar,
-                        pembahasan = :pembahasan,
-                        status = "published",
-                        is_active = 1,
-                        updated_at = NOW()
+                        jawaban_benar = :jb,
+                        penyelesaian = :peny,
+                        status_soal = "published"
                     WHERE id = :id
                 ');
                 $stmtUpdQ->execute([
-                    ':subject_id' => $subjectId,
+                    ':sid' => $subjectId,
                     ':materi' => $materi,
                     ':submateri' => $submateri,
-                    ':pertanyaan' => $qData['pertanyaan'],
-                    ':p1' => $qData['pilihan_1'],
-                    ':p2' => $qData['pilihan_2'],
-                    ':p3' => $qData['pilihan_3'],
-                    ':p4' => $qData['pilihan_4'],
-                    ':p5' => $qData['pilihan_5'],
-                    ':jawaban_benar' => (int)$qData['jawaban_benar'],
-                    ':pembahasan' => $qData['pembahasan'],
+                    ':q' => $qData['pertanyaan'],
+                    ':p1' => $p1,
+                    ':p2' => $p2,
+                    ':p3' => $p3,
+                    ':p4' => $p4,
+                    ':p5' => $p5,
+                    ':jb' => $jb,
+                    ':peny' => $peny,
                     ':id' => $questionId,
                 ]);
             } else {
                 // Insert question baru
                 $stmtInsQ = $pdo->prepare('
-                    INSERT INTO questions (subject_id, materi, submateri, pertanyaan, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, pembahasan, status, is_active, created_at)
-                    VALUES (:subject_id, :materi, :submateri, :pertanyaan, :p1, :p2, :p3, :p4, :p5, :jawaban_benar, :pembahasan, "published", 1, NOW())
+                    INSERT INTO questions (subject_id, pertanyaan, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, penyelesaian, status_soal, materi, submateri, created_at)
+                    VALUES (:sid, :q, "Pilihan Ganda", :p1, :p2, :p3, :p4, :p5, :jb, :peny, "published", :materi, :submateri, :created_at)
                 ');
                 $stmtInsQ->execute([
-                    ':subject_id' => $subjectId,
+                    ':sid' => $subjectId,
+                    ':q' => $qData['pertanyaan'],
+                    ':p1' => $p1,
+                    ':p2' => $p2,
+                    ':p3' => $p3,
+                    ':p4' => $p4,
+                    ':p5' => $p5,
+                    ':jb' => $jb,
+                    ':peny' => $peny,
                     ':materi' => $materi,
                     ':submateri' => $submateri,
-                    ':pertanyaan' => $qData['pertanyaan'],
-                    ':p1' => $qData['pilihan_1'],
-                    ':p2' => $qData['pilihan_2'],
-                    ':p3' => $qData['pilihan_3'],
-                    ':p4' => $qData['pilihan_4'],
-                    ':p5' => $qData['pilihan_5'],
-                    ':jawaban_benar' => (int)$qData['jawaban_benar'],
-                    ':pembahasan' => $qData['pembahasan'],
+                    ':created_at' => $m['published_at'],
                 ]);
                 $questionId = (int)$pdo->lastInsertId();
 
