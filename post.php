@@ -539,22 +539,8 @@ $renderHtml = function (?string $html): string {
 
 						<?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('in_content'); ?>
 
-						<?php
-						require_once __DIR__ . '/includes/disqus.php';
-						$disqusIdentifier = 'post-' . (string)$slug;
-						$disqusUrl = rtrim((string)$base_url, '/') . '/post.php?slug=' . rawurlencode((string)$slug);
-						?>
-						<div class="custom-card mb-3 d-print-none">
-							<div class="custom-card-header">
-								<div class="small text-muted">Komentar</div>
-							</div>
-							<div class="oke">
-								<?php app_render_disqus($disqusIdentifier, $disqusUrl); ?>
-							</div>
-						</div>
-
 						<!-- Navigasi Materi Sebelumnya / Sesudahnya -->
-						<nav class="mt-4 d-print-none tabler-page-nav" aria-label="Navigasi konten">
+						<nav class="mt-4 mb-4 d-print-none tabler-page-nav" aria-label="Navigasi konten">
 							<div class="tabler-page-nav-grid">
 								<div class="tabler-page-nav-slot text-start">
 									<?php if ($navPrev && !empty($navPrev['slug'])): ?>
@@ -592,6 +578,13 @@ $renderHtml = function (?string $html): string {
 								</div>
 							</div>
 						</nav>
+
+						<?php
+						require_once __DIR__ . '/includes/disqus.php';
+						$disqusIdentifier = 'post-' . (string)$slug;
+						$disqusUrl = rtrim((string)$base_url, '/') . '/post.php?slug=' . rawurlencode((string)$slug);
+						app_render_disqus($disqusIdentifier, $disqusUrl);
+						?>
 					</div>
 				</main>
 

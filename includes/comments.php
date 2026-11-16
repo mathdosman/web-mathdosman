@@ -217,14 +217,22 @@ if (!function_exists('app_render_comments')) {
 
         rsort($topLevelIds);
 ?>
-        <div id="comments" class="card shadow-sm mt-4 comments-widget app-comments" data-no-swal="1">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+        <div id="comments" class="card border-0 shadow-sm rounded-4 mt-4 comments-widget app-comments d-print-none" data-no-swal="1">
+            <div class="card-header bg-body-tertiary border-bottom py-3 px-4 rounded-top-4 d-flex align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar avatar-sm rounded-circle bg-primary-subtle text-primary">
+                        <i class="ti ti-messages fs-4"></i>
+                    </span>
                     <div>
-                        <h5 class="mb-0">Komentar</h5>
-                        <div class="text-muted small"><?php echo (int)$count; ?> komentar</div>
+                        <h5 class="mb-0 fw-bold">Diskusi &amp; Komentar</h5>
+                        <div class="text-muted small">Tanyakan materi atau bagikan pemikiranmu di sini</div>
                     </div>
                 </div>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 fw-bold">
+                    <?php echo (int)$count; ?> Komentar
+                </span>
+            </div>
+            <div class="card-body p-3 p-md-4">
 
                 <?php if ($flashMsg !== ''): ?>
                     <?php
@@ -235,14 +243,14 @@ if (!function_exists('app_render_comments')) {
                         $alertClass = 'alert-danger';
                     }
                     ?>
-                    <div class="alert <?php echo htmlspecialchars($alertClass); ?> py-2 small"><?php echo htmlspecialchars($flashMsg); ?></div>
+                    <div data-no-swal="1" class="alert <?php echo htmlspecialchars($alertClass); ?> rounded-3 py-2 small mb-3"><?php echo htmlspecialchars($flashMsg); ?></div>
                 <?php endif; ?>
 
                 <?php if ($loadError !== ''): ?>
-                    <div class="alert alert-warning py-2 small mb-2"><?php echo htmlspecialchars($loadError); ?></div>
+                    <div data-no-swal="1" class="alert alert-warning rounded-3 py-2 small mb-3"><?php echo htmlspecialchars($loadError); ?></div>
                 <?php endif; ?>
 
-                <form method="post" action="<?php echo htmlspecialchars($submitAction); ?>" class="mb-3" autocomplete="off">
+                <form method="post" action="<?php echo htmlspecialchars($submitAction); ?>" class="p-3 p-md-4 rounded-4 bg-body-tertiary border mb-4" autocomplete="off">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
                     <input type="hidden" name="comment_action" value="add">
                     <input type="hidden" name="comment_page_identifier" value="<?php echo htmlspecialchars($pageIdentifier); ?>">
@@ -250,34 +258,39 @@ if (!function_exists('app_render_comments')) {
 
                     <input type="text" name="comment_website" value="" class="d-none" tabindex="-1" autocomplete="off" aria-hidden="true">
 
-                    <div class="row g-2">
+                    <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <label class="form-label mb-1 small">Nama</label>
+                            <label class="form-label mb-1 small fw-semibold">Nama Lengkap</label>
                             <?php if ($isStudent): ?>
-                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($studentName !== '' ? $studentName : '-'); ?>" readonly>
+                                <input type="text" class="form-control rounded-3" value="<?php echo htmlspecialchars($studentName !== '' ? $studentName : '-'); ?>" readonly>
                             <?php elseif ($isAdmin): ?>
-                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($adminDisplayName); ?>" readonly>
+                                <input type="text" class="form-control rounded-3" value="<?php echo htmlspecialchars($adminDisplayName); ?>" readonly>
                             <?php else: ?>
-                                <input type="text" name="comment_name" class="form-control" value="<?php echo htmlspecialchars($postedName); ?>" placeholder="Nama Anda" required maxlength="60">
+                                <input type="text" name="comment_name" class="form-control rounded-3" value="<?php echo htmlspecialchars($postedName); ?>" placeholder="Masukkan nama Anda" required maxlength="60">
                             <?php endif; ?>
                         </div>
                         <div class="col-12 col-md-6">
-                            <label class="form-label mb-1 small">Email (opsional)</label>
-                            <input type="email" name="comment_email" class="form-control" value="<?php echo htmlspecialchars($postedEmail); ?>" placeholder="email@contoh.com" maxlength="190" <?php echo $isStudent ? 'disabled' : ''; ?>>
-                            <div class="form-text">Email tidak ditampilkan ke publik.</div>
+                            <label class="form-label mb-1 small fw-semibold">Email (opsional)</label>
+                            <input type="email" name="comment_email" class="form-control rounded-3" value="<?php echo htmlspecialchars($postedEmail); ?>" placeholder="email@contoh.com" maxlength="190" <?php echo $isStudent ? 'disabled' : ''; ?>>
+                            <div class="form-text small">Email bersifat rahasia dan tidak ditampilkan ke publik.</div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label mb-1 small">Komentar</label>
-                            <textarea name="comment_body" class="form-control" rows="3" placeholder="Tulis komentar..." required maxlength="2000"><?php echo htmlspecialchars($postedBody); ?></textarea>
+                            <label class="form-label mb-1 small fw-semibold">Pesan atau Pertanyaan</label>
+                            <textarea name="comment_body" class="form-control rounded-3" rows="3" placeholder="Tulis pertanyaan atau komentar terkait materi ini..." required maxlength="2000"><?php echo htmlspecialchars($postedBody); ?></textarea>
                         </div>
                         <div class="col-12 d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">Kirim Komentar</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                <i class="ti ti-send me-1"></i> Kirim Komentar
+                            </button>
                         </div>
                     </div>
                 </form>
 
                 <?php if (!$rows): ?>
-                    <div class="text-muted small">Belum ada komentar. Jadilah yang pertama.</div>
+                    <div class="text-center py-4 px-3 rounded-4 border border-dashed text-muted small">
+                        <i class="ti ti-message-circle-off fs-2 mb-1 d-block opacity-50"></i>
+                        Belum ada komentar. Jadilah yang pertama memulai diskusi!
+                    </div>
                 <?php else: ?>
                     <div class="app-comments-list">
                         <?php foreach ($topLevelIds as $cid): ?>
