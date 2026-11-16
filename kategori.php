@@ -192,7 +192,7 @@ include __DIR__ . '/includes/header.php';
                             </span>
                         <?php endif; ?>
                     </div>
-                    <h1 class="display-6 fw-bold text-white mb-2"><?php echo htmlspecialchars((string)$category['name']); ?></h1>
+                    <h1 class="fw-bold text-white mb-2" style="font-size: clamp(1.4rem, 4vw, 2.15rem);"><?php echo htmlspecialchars((string)$category['name']); ?></h1>
                     <p class="text-light opacity-90 fs-5 mb-0" style="max-width: 760px;">
                         <?php echo htmlspecialchars((string)($category['description'] ?: 'Daftar materi pembelajaran terstruktur dan paket latihan soal interaktif.')); ?>
                     </p>
@@ -221,21 +221,21 @@ include __DIR__ . '/includes/header.php';
                         ?>
                         <div class="col-12 col-md-6 col-lg-4">
                             <a href="kategori.php?slug=<?php echo urlencode((string)$sub['slug']); ?>"
-                               class="card card-link card-link-pop h-100 rounded-4 border shadow-sm text-decoration-none">
+                               class="card card-link card-link-pop h-100 rounded-4 border shadow-sm text-decoration-none overflow-hidden">
                                 <div class="card-body p-3.5 d-flex flex-column justify-content-between">
                                     <div>
                                         <div class="d-flex align-items-center gap-3 mb-2">
-                                            <span class="avatar avatar-md rounded-3 fs-3" style="background-color: <?php echo $subHex; ?>1a; color: <?php echo $subHex; ?>;">
+                                            <span class="avatar avatar-md rounded-3 fs-3 flex-shrink-0" style="background-color: <?php echo $subHex; ?>1a; color: <?php echo $subHex; ?>;">
                                                 <i class="<?php echo $subIcon; ?>"></i>
                                             </span>
-                                            <div>
-                                                <h3 class="fw-bold fs-5 mb-0 text-body"><?php echo htmlspecialchars((string)$sub['name']); ?></h3>
+                                            <div class="min-w-0 flex-grow-1">
+                                                <h3 class="fw-bold fs-5 mb-0 text-body text-break"><?php echo htmlspecialchars((string)$sub['name']); ?></h3>
                                                 <span class="text-muted small">
                                                     <?php echo $totalItems > 0 ? $totalItems . ' Modul & Latihan' : 'Segera Hadir'; ?>
                                                 </span>
                                             </div>
                                         </div>
-                                        <p class="text-secondary small mb-0" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        <p class="text-secondary small mb-0 text-break" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                             <?php echo htmlspecialchars((string)($sub['description'] ?: 'Pelajari konsep dasar, contoh soal, dan latihan terstruktur.')); ?>
                                         </p>
                                     </div>
@@ -253,7 +253,7 @@ include __DIR__ . '/includes/header.php';
             <!-- 4. DAFTAR MATERI & LATIHAN BERNOMOR URUT (TINGKAT 3) -->
             <?php if (!empty($curriculumItems)): ?>
                 <div class="card rounded-4 border-0 shadow-sm overflow-hidden mb-4">
-                    <div class="card-header bg-body-tertiary py-3 px-4 d-flex align-items-center justify-content-between">
+                    <div class="card-header bg-body-tertiary py-3 px-3 px-md-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <h2 class="h5 fw-bold mb-0 d-flex align-items-center gap-2">
                             <i class="ti ti-list-numbers text-success"></i>
                             <span>Alur Belajar &amp; Daftar Materi Terstruktur</span>
@@ -265,24 +265,24 @@ include __DIR__ . '/includes/header.php';
                     <div class="list-group list-group-flush list-group-hoverable">
                         <?php foreach ($curriculumItems as $idx => $item): ?>
                             <?php $num = $item['order'] > 0 ? $item['order'] : ($idx + 1); ?>
-                            <div class="list-group-item p-3 p-md-3.5 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                            <div class="list-group-item p-3 p-md-3.5 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 gap-md-3">
                                 <a href="<?php echo htmlspecialchars($item['url']); ?>"
-                                   class="d-flex align-items-start gap-3 text-decoration-none flex-grow-1">
+                                   class="d-flex align-items-start gap-2 gap-sm-3 text-decoration-none flex-grow-1 min-w-0">
                                     <span class="badge bg-primary-subtle text-primary fw-bold rounded-pill px-2.5 py-1.5 fs-6 flex-shrink-0 mt-1">
                                         <?php echo $num; ?>
                                     </span>
-                                    <div>
-                                        <div class="fw-bold text-body fs-5 mb-1">
+                                    <div class="min-w-0 flex-grow-1">
+                                        <div class="fw-bold text-body fs-5 mb-1 text-break">
                                             <?php echo htmlspecialchars($item['title']); ?>
                                         </div>
                                         <?php if ($item['excerpt'] !== ''): ?>
-                                            <p class="text-secondary small mb-0" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            <p class="text-secondary small mb-0 text-break" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                                 <?php echo htmlspecialchars($item['excerpt']); ?>
                                             </p>
                                         <?php endif; ?>
                                     </div>
                                 </a>
-                                <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-5 ms-md-0">
+                                <div class="d-flex flex-wrap align-items-center gap-2 mt-1 mt-md-0 flex-md-shrink-0">
                                     <span class="badge bg-body-secondary text-secondary border d-inline-flex align-items-center gap-1 py-1.5 px-2.5">
                                         <i class="<?php echo htmlspecialchars($item['badge_icon']); ?>"></i>
                                         <?php echo htmlspecialchars($item['badge']); ?>

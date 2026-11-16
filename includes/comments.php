@@ -124,6 +124,7 @@ if (!function_exists('app_render_comments')) {
         $postedName = '';
         $postedEmail = '';
         $postedBody = '';
+        $postedParentId = 0;
         try {
             if (!empty($_SESSION['comment_flash']) && is_array($_SESSION['comment_flash'])) {
                 $flash = $_SESSION['comment_flash'];
@@ -136,12 +137,15 @@ if (!function_exists('app_render_comments')) {
                     $postedName = trim((string)($vals['name'] ?? ''));
                     $postedEmail = trim((string)($vals['email'] ?? ''));
                     $postedBody = trim((string)($vals['body'] ?? ''));
+                    $postedParentId = (int)($vals['parent_id'] ?? 0);
                 }
             }
         } catch (Throwable $e) {
             $flashType = '';
             $flashMsg = '';
         }
+
+        $csrfToken = function_exists('csrf_token') ? (string)csrf_token() : (string)($_SESSION['csrf_token'] ?? '');
 
         $returnUri = (string)($_SERVER['REQUEST_URI'] ?? '');
         if ($returnUri === '') {
@@ -155,14 +159,8 @@ if (!function_exists('app_render_comments')) {
             $basePath = '';
         }
 
-        // Use absolute URL to comment_submit to avoid incorrect relative paths
-        // when pages are served from subdirectories (e.g. /siswa/...). Prefer
-        // configured `$base_url` when available, otherwise fall back to root.
-        if (isset($GLOBALS['base_url']) && is_string($GLOBALS['base_url']) && trim($GLOBALS['base_url']) !== '') {
-            $submitAction = rtrim((string)$GLOBALS['base_url'], '/') . '/comment_submit.php';
-        } else {
-            $submitAction = '/comment_submit.php';
-        }
+        // Gunakan path same-origin agar form submit tidak pernah bentrok protocol/domain/port
+        $submitAction = $basePath . '/comment_submit.php';
 
         $rows = [];
         $loadError = '';
@@ -251,7 +249,7 @@ if (!function_exists('app_render_comments')) {
                 <?php endif; ?>
 
                 <form method="post" action="<?php echo htmlspecialchars($submitAction); ?>" class="p-3 p-md-4 rounded-4 bg-body-tertiary border mb-4" autocomplete="off">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
                     <input type="hidden" name="comment_action" value="add">
                     <input type="hidden" name="comment_page_identifier" value="<?php echo htmlspecialchars($pageIdentifier); ?>">
                     <input type="hidden" name="comment_return_uri" value="<?php echo htmlspecialchars($returnUri); ?>">
@@ -266,17 +264,17 @@ if (!function_exists('app_render_comments')) {
                             <?php elseif ($isAdmin): ?>
                                 <input type="text" class="form-control rounded-3" value="<?php echo htmlspecialchars($adminDisplayName); ?>" readonly>
                             <?php else: ?>
-                                <input type="text" name="comment_name" class="form-control rounded-3" value="<?php echo htmlspecialchars($postedName); ?>" placeholder="Masukkan nama Anda" required maxlength="60">
+                                <input type="text" name="comment_name" class="form-control rounded-3" value="<?php echo htmlspecialchars($postedParentId === 0 ? $postedName : ''); ?>" placeholder="Masukkan nama Anda" required maxlength="60">
                             <?php endif; ?>
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label mb-1 small fw-semibold">Email (opsional)</label>
-                            <input type="email" name="comment_email" class="form-control rounded-3" value="<?php echo htmlspecialchars($postedEmail); ?>" placeholder="email@contoh.com" maxlength="190" <?php echo $isStudent ? 'disabled' : ''; ?>>
+                            <input type="email" name="comment_email" class="form-control rounded-3" value="<?php echo htmlspecialchars($postedParentId === 0 ? $postedEmail : ''); ?>" placeholder="email@contoh.com" maxlength="190" <?php echo $isStudent ? 'disabled' : ''; ?>>
                             <div class="form-text small">Email bersifat rahasia dan tidak ditampilkan ke publik.</div>
                         </div>
                         <div class="col-12">
                             <label class="form-label mb-1 small fw-semibold">Pesan atau Pertanyaan</label>
-                            <textarea name="comment_body" class="form-control rounded-3" rows="3" placeholder="Tulis pertanyaan atau komentar terkait materi ini..." required maxlength="2000"><?php echo htmlspecialchars($postedBody); ?></textarea>
+                            <textarea name="comment_body" class="form-control rounded-3" rows="3" placeholder="Tulis pertanyaan atau komentar terkait materi ini..." required maxlength="2000"><?php echo htmlspecialchars($postedParentId === 0 ? $postedBody : ''); ?></textarea>
                         </div>
                         <div class="col-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
@@ -318,20 +316,27 @@ if (!function_exists('app_render_comments')) {
                                         <?php echo htmlspecialchars($initial !== '' ? $initial : '?'); ?>
                                     <?php endif; ?>
                                 </div>
-                                <div class="app-comment-main">
+                                <div class="app-comment-main min-w-0">
                                     <div class="app-comment-head">
-                                        <div class="app-comment-author"><?php echo htmlspecialchars($author); ?></div>
+                                        <div class="app-comment-author">
+                                            <?php echo htmlspecialchars($author); ?>
+                                            <?php if ($isAdminComment): ?>
+                                                <span class="badge bg-primary-subtle text-primary ms-1 rounded-pill">Admin</span>
+                                            <?php endif; ?>
+                                        </div>
                                         <div class="app-comment-time"><?php echo htmlspecialchars($whenLabel); ?></div>
                                     </div>
-                                    <div class="app-comment-body"><?php echo htmlspecialchars((string)($c['body'] ?? '')); ?></div>
+                                    <div class="app-comment-body text-break"><?php echo nl2br(htmlspecialchars((string)($c['body'] ?? ''))); ?></div>
 
-                                    <div class="app-comment-actions">
-                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>" aria-expanded="false" aria-controls="<?php echo htmlspecialchars($collapseId); ?>">Balas</button>
+                                    <div class="app-comment-actions mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo htmlspecialchars($collapseId); ?>" aria-expanded="false" aria-controls="<?php echo htmlspecialchars($collapseId); ?>">
+                                            <i class="ti ti-corner-down-right me-1"></i> Balas
+                                        </button>
                                     </div>
 
                                     <div class="collapse app-comment-reply" id="<?php echo htmlspecialchars($collapseId); ?>">
-                                        <form method="post" action="<?php echo htmlspecialchars($submitAction); ?>" class="mt-2" autocomplete="off">
-                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars((string)($_SESSION['csrf_token'] ?? '')); ?>">
+                                        <form method="post" action="<?php echo htmlspecialchars($submitAction); ?>" class="mt-2 p-3 rounded-3 bg-body-tertiary border" autocomplete="off">
+                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
                                             <input type="hidden" name="comment_action" value="add">
                                             <input type="hidden" name="comment_page_identifier" value="<?php echo htmlspecialchars($pageIdentifier); ?>">
                                             <input type="hidden" name="comment_return_uri" value="<?php echo htmlspecialchars($returnUri); ?>">
@@ -395,12 +400,17 @@ if (!function_exists('app_render_comments')) {
                                                     <?php echo htmlspecialchars($rinitial !== '' ? $rinitial : '?'); ?>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="app-comment-main">
+                                            <div class="app-comment-main min-w-0">
                                                 <div class="app-comment-head">
-                                                    <div class="app-comment-author"><?php echo htmlspecialchars($rauthor); ?></div>
+                                                    <div class="app-comment-author">
+                                                        <?php echo htmlspecialchars($rauthor); ?>
+                                                        <?php if ($isAdminReply): ?>
+                                                            <span class="badge bg-primary-subtle text-primary ms-1 rounded-pill">Admin</span>
+                                                        <?php endif; ?>
+                                                    </div>
                                                     <div class="app-comment-time"><?php echo htmlspecialchars($rwhenLabel); ?></div>
                                                 </div>
-                                                <div class="app-comment-body"><?php echo htmlspecialchars((string)($rc['body'] ?? '')); ?></div>
+                                                <div class="app-comment-body text-break"><?php echo nl2br(htmlspecialchars((string)($rc['body'] ?? ''))); ?></div>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>

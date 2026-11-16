@@ -307,7 +307,7 @@ include __DIR__ . '/includes/header.php';
                                 </div>
 
                                 <!-- Card Footer -->
-                                <div class="d-flex align-items-center justify-content-between pt-2.5 border-top border-light-subtle">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2.5 border-top border-light-subtle">
                                     <span class="text-muted small d-inline-flex align-items-center gap-1">
                                         <i class="ti ti-layers-subtract" style="color: <?php echo $hexColor; ?>;"></i>
                                         <?php if ($totalBab > 0): ?>
