@@ -14,8 +14,6 @@ declare(strict_types=1);
 require __DIR__ . '/../config/db.php';
 
 try {
-    $pdo->beginTransaction();
-
     // 1. Buat tabel categories jika belum ada
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `categories` (
@@ -291,7 +289,9 @@ try {
         ]);
     }
 
-    $pdo->commit();
+    if ($pdo->inTransaction()) {
+        $pdo->commit();
+    }
     echo "=== SUKSES: Migrasi Arsitektur Kategori 2 Tingkat & Relasi Parent_ID Berhasil ===\n";
     echo "Total Kategori Utama (Tingkat 1): " . count($rumpunUtama) . "\n";
     echo "Total Bab Khusus (Tingkat 2): " . count($subCategoryMap) . "\n";
