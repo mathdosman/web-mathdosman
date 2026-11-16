@@ -600,7 +600,7 @@ $renderSidebarKonten = function (string $title, array $list, string $currentKind
 								<?php if ($excerpt !== ''): ?>
 									<div class="text-muted mb-2"><?php echo htmlspecialchars($excerpt); ?></div>
 								<?php endif; ?>
-								<div class="richtext-content"><?php echo $safeHtml; ?></div>
+								<div id="article-content" class="richtext-content"><?php echo $safeHtml; ?></div>
 							</div>
 						</div>
 

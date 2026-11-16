@@ -456,7 +456,7 @@ try {
             ];
 
             window.renderMath = function(targetElement) {
-                var el = targetElement || document.body;
+                var el = targetElement || document.getElementById('article-content') || document.querySelector('.richtext-content');
                 if (window.renderMathInElement && el) {
                     try {
                         window.renderMathInElement(el, {
@@ -474,12 +474,16 @@ try {
             };
 
             window.__runKaTeX = function() {
+                var run = function() {
+                    var target = document.getElementById('article-content') || document.querySelector('.richtext-content');
+                    if (target) {
+                        window.renderMath(target);
+                    }
+                };
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', function() {
-                        window.renderMath(document.body);
-                    });
+                    document.addEventListener('DOMContentLoaded', run);
                 } else {
-                    window.renderMath(document.body);
+                    run();
                 }
             };
 
