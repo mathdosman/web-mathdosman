@@ -357,11 +357,11 @@ include __DIR__ . '/includes/header.php';
                 <div class="card rounded-4 border-0 shadow-sm h-100 bg-body-tertiary">
                     <div class="card-body p-4 d-flex align-items-center justify-content-between gap-3">
                         <div>
-                            <span class="badge bg-info-subtle text-info mb-2 rounded-pill">Portal Pengguna</span>
-                            <h4 class="fw-bold mb-1">Masuk Dashboard Siswa &amp; Guru</h4>
-                            <p class="small text-secondary mb-3">Akses tugas kelas, ujian daring terpantau, dan riwayat nilai evaluasi Anda.</p>
-                            <a href="login.php" class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white">
-                                <i class="ti ti-login me-1"></i> Login Portal
+                            <span class="badge bg-info-subtle text-info mb-2 rounded-pill">Portal Siswa</span>
+                            <h4 class="fw-bold mb-1">Masuk Dashboard Siswa</h4>
+                            <p class="small text-secondary mb-3">Akses tugas kelas, ujian daring terpantau, absensi, dan riwayat nilai evaluasi Anda.</p>
+                            <a href="siswa/login.php" class="btn btn-info btn-sm rounded-pill px-3 fw-bold text-white">
+                                <i class="ti ti-login me-1"></i> Login Siswa
                             </a>
                         </div>
                         <i class="ti ti-user-shield display-3 text-info opacity-50 d-none d-sm-block"></i>
