@@ -1,0 +1,28 @@
+<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg-geo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042f2e"/>
+      <stop offset="55%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <pattern id="grid-geo" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r="1" fill="rgba(255,255,255,0.12)"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="180" fill="url(#bg-geo)"/>
+  <rect width="400" height="180" fill="url(#grid-geo)"/>
+  <!-- Lingkaran & Sudut Pusat -->
+  <circle cx="285" cy="90" r="62" fill="rgba(255,255,255,0.06)" stroke="#5eead4" stroke-width="2.5"/>
+  <path d="M 285 90 L 347 90 A 62 62 0 0 0 254 36 Z" fill="rgba(94, 234, 212, 0.25)"/>
+  <line x1="285" y1="90" x2="347" y2="90" stroke="#99f6e4" stroke-width="2"/>
+  <line x1="285" y1="90" x2="254" y2="36" stroke="#99f6e4" stroke-width="2"/>
+  <!-- Segitiga Tali Busur -->
+  <polygon points="223,90 347,90 254,36" fill="none" stroke="#fde047" stroke-width="2" stroke-dasharray="5 3"/>
+  <circle cx="285" cy="90" r="4" fill="#fff"/>
+  <!-- Kubus Dimensi Tiga Isometrik -->
+  <polygon points="150,55 185,35 220,55 185,75" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <polygon points="150,55 185,75 185,115 150,95" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <polygon points="220,55 185,75 185,115 220,95" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+  <!-- Rumus Geometri -->
+  <text x="24" y="138" font-family="Georgia, serif" font-style="italic" font-size="18" font-weight="bold" fill="rgba(255,255,255,0.9)">L = πr²  •  ∠Pusat = 2∠Keliling</text>
+</svg>

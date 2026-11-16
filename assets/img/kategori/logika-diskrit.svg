@@ -1,0 +1,28 @@
+<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg-log" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#083344"/>
+      <stop offset="55%" stop-color="#0e7490"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="180" fill="url(#bg-log)"/>
+  <!-- Pohon Graf / Logika Keputusan -->
+  <line x1="275" y1="38" x2="225" y2="85" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+  <line x1="275" y1="38" x2="325" y2="85" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+  <line x1="225" y1="85" x2="200" y2="135" stroke="#a5f3fc" stroke-width="2"/>
+  <line x1="225" y1="85" x2="250" y2="135" stroke="#a5f3fc" stroke-width="2"/>
+  <line x1="325" y1="85" x2="300" y2="135" stroke="#fde047" stroke-width="2"/>
+  <line x1="325" y1="85" x2="350" y2="135" stroke="#fde047" stroke-width="2"/>
+  <!-- Simpul Node -->
+  <circle cx="275" cy="38" r="10" fill="#fde047" stroke="#fff" stroke-width="2"/>
+  <circle cx="225" cy="85" r="8" fill="#67e8f9" stroke="#fff" stroke-width="2"/>
+  <circle cx="325" cy="85" r="8" fill="#67e8f9" stroke="#fff" stroke-width="2"/>
+  <circle cx="200" cy="135" r="6" fill="#fff"/>
+  <circle cx="250" cy="135" r="6" fill="#fff"/>
+  <circle cx="300" cy="135" r="6" fill="#fde047"/>
+  <circle cx="350" cy="135" r="6" fill="#fff"/>
+  <!-- Simbol Logika -->
+  <text x="26" y="102" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="rgba(255,255,255,0.92)">(p ∧ q) ⇒ r</text>
+  <text x="26" y="138" font-family="monospace" font-size="13" fill="rgba(165,243,252,0.85)">∀x ∈ ℕ • Program Linear</text>
+</svg>

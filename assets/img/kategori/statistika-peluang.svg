@@ -1,0 +1,24 @@
+<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg-stat" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="55%" stop-color="#15803d"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="180" fill="url(#bg-stat)"/>
+  <!-- Histogram & Kurva Distribusi Normal (Bell Curve) -->
+  <rect x="190" y="110" width="24" height="35" rx="2" fill="rgba(255,255,255,0.18)"/>
+  <rect x="220" y="75" width="24" height="70" rx="2" fill="rgba(255,255,255,0.28)"/>
+  <rect x="250" y="45" width="24" height="100" rx="2" fill="rgba(255,255,255,0.45)"/>
+  <rect x="280" y="75" width="24" height="70" rx="2" fill="rgba(255,255,255,0.28)"/>
+  <rect x="310" y="110" width="24" height="35" rx="2" fill="rgba(255,255,255,0.18)"/>
+  <path d="M 165 142 C 215 142, 230 35, 262 35 C 294 35, 309 142, 359 142" fill="none" stroke="#fde047" stroke-width="3" stroke-linecap="round"/>
+  <!-- Scatter Titik Data -->
+  <circle cx="215" cy="85" r="3.5" fill="#fff"/>
+  <circle cx="262" cy="35" r="4.5" fill="#f43f5e" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="305" cy="90" r="3.5" fill="#fff"/>
+  <!-- Notasi Statistika & Peluang -->
+  <text x="26" y="100" font-family="Georgia, serif" font-style="italic" font-size="22" font-weight="bold" fill="rgba(255,255,255,0.92)">P(A) = n(A) / n(S)</text>
+  <text x="26" y="138" font-family="monospace" font-size="13" fill="rgba(187,247,208,0.88)">x̄ (Mean) • σ (Simpangan)</text>
+</svg>

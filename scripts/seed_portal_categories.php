@@ -37,10 +37,10 @@ try {
             'slug' => 'aljabar-fungsi',
             'subtitle' => 'Rumpun Analisis & Persamaan',
             'description' => 'Mempelajari bentuk aljabar, eksponen, logaritma, relasi fungsi, polinomial, dan sistem persamaan.',
-            'icon' => 'ti ti-variable',
+            'icon' => 'ti ti-superscript',
             'color' => 'blue',
             'order' => 1,
-            'cover_image' => 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/aljabar-fungsi.svg',
             'children' => [
                 ['name' => 'Eksponen', 'desc' => 'Sifat bilangan berpangkat, bentuk akar, dan persamaan eksponensial.'],
                 ['name' => 'Logaritma', 'desc' => 'Konsep dasar logaritma, sifat operasi, dan persamaan logaritma.'],
@@ -55,10 +55,10 @@ try {
             'slug' => 'geometri-pengukuran',
             'subtitle' => 'Rumpun Ruang, Bangun & Sudut',
             'description' => 'Eksplorasi bangun datar, bangun ruang dimensi tiga, sifat sudut, lingkaran, dan transformasi geometri.',
-            'icon' => 'ti ti-pyramid',
+            'icon' => 'ti ti-shapes',
             'color' => 'teal',
             'order' => 2,
-            'cover_image' => 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/geometri-pengukuran.svg',
             'children' => [
                 ['name' => 'Lingkaran', 'desc' => 'Unsur lingkaran, keliling, luas, busur, juring, sudut pusat/keliling, dan tali busur.'],
                 ['name' => 'Transformasi Geometri', 'desc' => 'Translasi, refleksi, rotasi, dilatasi, dan komposisi matriks transformasi.'],
@@ -74,7 +74,7 @@ try {
             'icon' => 'ti ti-triangle',
             'color' => 'indigo',
             'order' => 3,
-            'cover_image' => 'https://images.unsplash.com/photo-1596495578065-6e0763fa1178?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/trigonometri.svg',
             'children' => [
                 ['name' => 'Perbandingan Trigonometri Dasar', 'desc' => 'Sinus, cosinus, tangen pada segitiga siku-siku dan sudut berelasi.'],
                 ['name' => 'Aturan Sinus & Cosinus', 'desc' => 'Penerapan aturan sinus, cosinus, dan luas segitiga sembarang.'],
@@ -86,10 +86,10 @@ try {
             'slug' => 'kalkulus',
             'subtitle' => 'Rumpun Laju Perubahan & Luas',
             'description' => 'Analisis limit fungsi aljabar & trigonometri, konsep turunan diferensial, serta akumulasi integral.',
-            'icon' => 'ti ti-math-function',
+            'icon' => 'ti ti-math-integral-x',
             'color' => 'purple',
             'order' => 4,
-            'cover_image' => 'https://images.unsplash.com/photo-1518133910546-b6c2fb7d79e3?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/kalkulus.svg',
             'children' => [
                 ['name' => 'Limit', 'desc' => 'Konsep intuitif limit, limit aljabar tak tentu, dan limit tak hingga.'],
                 ['name' => 'Limit Trigonometri', 'desc' => 'Limit fungsi trigonometri menggunakan rumus dasar dan identitas sudut.'],
@@ -105,7 +105,7 @@ try {
             'icon' => 'ti ti-grid-dots',
             'color' => 'azure',
             'order' => 5,
-            'cover_image' => 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/matriks-vektor.svg',
             'children' => [
                 ['name' => 'Matriks', 'desc' => 'Jenis matriks, operasi penjumlahan/perkalian, determinan, dan invers matriks.'],
                 ['name' => 'Vektor', 'desc' => 'Operasi vektor di R2 dan R3, panjang vektor, dan perkalian skalar (dot product).'],
@@ -116,10 +116,10 @@ try {
             'slug' => 'barisan-deret',
             'subtitle' => 'Rumpun Pola Bilangan',
             'description' => 'Pola deret aritmetika, geometri berhingga dan tak hingga, serta aplikasi matematika keuangan.',
-            'icon' => 'ti ti-sigma',
+            'icon' => 'ti ti-sum',
             'color' => 'orange',
             'order' => 6,
-            'cover_image' => 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/barisan-deret.svg',
             'children' => [
                 ['name' => 'Barisan dan Deret', 'desc' => 'Barisan & deret aritmetika, geometri, deret tak hingga, dan bunga majemuk.'],
             ],
@@ -132,7 +132,7 @@ try {
             'icon' => 'ti ti-chart-bar',
             'color' => 'green',
             'order' => 7,
-            'cover_image' => 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/statistika-peluang.svg',
             'children' => [
                 ['name' => 'Bivariat', 'desc' => 'Diagram pencar (scatter plot), regresi linear, dan analisis korelasi data.'],
                 ['name' => 'Univariat', 'desc' => 'Mean, median, modus, kuartil, varians, dan simpangan baku.'],
@@ -147,7 +147,7 @@ try {
             'icon' => 'ti ti-binary-tree',
             'color' => 'cyan',
             'order' => 8,
-            'cover_image' => 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/logika-diskrit.svg',
             'children' => [
                 ['name' => 'Program Linear', 'desc' => 'Model matematika kendala, daerah himpunan penyelesaian, dan nilai optimum.'],
                 ['name' => 'Logika Matematika', 'desc' => 'Ingkaran, konjungsi, disjungsi, implikasi, biimplikasi, dan penarikan kesimpulan.'],
@@ -159,10 +159,10 @@ try {
             'slug' => 'bank-soal-evaluasi',
             'subtitle' => 'Rumpun Uji Kompetensi & Asesmen',
             'description' => 'Latihan Sumatif Akhir Semester (SAS), persiapan asesmen nasional, UTBK/SNBT, dan pembahasan olimpiade.',
-            'icon' => 'ti ti-file-certificate',
+            'icon' => 'ti ti-award',
             'color' => 'red',
             'order' => 9,
-            'cover_image' => 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/bank-soal-evaluasi.svg',
             'children' => [
                 ['name' => 'PAS & PAT Kelas 10', 'desc' => 'Kumpulan soal evaluasi akhir semester dan kenaikan kelas tingkat X.'],
                 ['name' => 'PAS & PAT Kelas 11', 'desc' => 'Kumpulan soal evaluasi akhir semester dan kenaikan kelas tingkat XI.'],
@@ -177,7 +177,7 @@ try {
             'icon' => 'ti ti-archive',
             'color' => 'secondary',
             'order' => 99,
-            'cover_image' => 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80',
+            'cover_image' => 'assets/img/kategori/arsip-materi-umum.svg',
             'children' => [],
         ],
     ];
@@ -299,3 +299,4 @@ try {
 } catch (Throwable $e) {
     echo "ERROR: " . $e->getMessage() . "\n";
 }
+

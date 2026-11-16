@@ -137,7 +137,21 @@ include __DIR__ . '/includes/header.php';
             </div>
         <?php else: ?>
             <?php
-            $catColor = htmlspecialchars((string)($category['color'] ?: 'primary'));
+            $colorHexMap = [
+                'blue'      => '#2563eb',
+                'teal'      => '#0d9488',
+                'indigo'    => '#4f46e5',
+                'purple'    => '#7c3aed',
+                'azure'     => '#0284c7',
+                'orange'    => '#ea580c',
+                'green'     => '#16a34a',
+                'cyan'      => '#0891b2',
+                'red'       => '#dc2626',
+                'secondary' => '#475569',
+                'primary'   => '#2563eb',
+            ];
+            $catColor = (string)($category['color'] ?: 'blue');
+            $catHex = $colorHexMap[$catColor] ?? '#2563eb';
             $catIcon = htmlspecialchars((string)($category['icon'] ?: 'ti ti-book'));
             $coverImg = trim((string)($category['cover_image'] ?? ''));
             $isMainCluster = empty($category['parent_id']);
@@ -168,7 +182,7 @@ include __DIR__ . '/includes/header.php';
                 <?php endif; ?>
                 <div class="card-body p-4 p-md-5 position-relative z-1 d-flex flex-column justify-content-center">
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="badge bg-<?php echo $catColor; ?> text-white px-3 py-1.5 rounded-pill fw-semibold">
+                        <span class="badge text-white px-3 py-1.5 rounded-pill fw-semibold" style="background-color: <?php echo $catHex; ?>;">
                             <i class="<?php echo $catIcon; ?> me-1"></i>
                             <?php echo htmlspecialchars((string)($category['subtitle'] ?: 'Kurikulum Matematika')); ?>
                         </span>
@@ -200,7 +214,8 @@ include __DIR__ . '/includes/header.php';
                 <div class="row row-cards g-3 mb-4">
                     <?php foreach ($subCategories as $sub): ?>
                         <?php
-                        $subColor = htmlspecialchars((string)($sub['color'] ?: $catColor));
+                        $subColor = (string)($sub['color'] ?: $catColor);
+                        $subHex = $colorHexMap[$subColor] ?? $catHex;
                         $subIcon = htmlspecialchars((string)($sub['icon'] ?: 'ti ti-book-2'));
                         $totalItems = max((int)$sub['contents_count'], (int)$sub['packages_count']);
                         ?>
@@ -210,7 +225,7 @@ include __DIR__ . '/includes/header.php';
                                 <div class="card-body p-3.5 d-flex flex-column justify-content-between">
                                     <div>
                                         <div class="d-flex align-items-center gap-3 mb-2">
-                                            <span class="avatar avatar-md rounded-3 bg-<?php echo $subColor; ?>-subtle text-<?php echo $subColor; ?> fs-3">
+                                            <span class="avatar avatar-md rounded-3 fs-3" style="background-color: <?php echo $subHex; ?>1a; color: <?php echo $subHex; ?>;">
                                                 <i class="<?php echo $subIcon; ?>"></i>
                                             </span>
                                             <div>
@@ -289,9 +304,11 @@ include __DIR__ . '/includes/header.php';
                     </div>
                 </div>
             <?php elseif (!$isMainCluster || empty($subCategories)): ?>
-                <div class="alert alert-info rounded-4 p-4 text-center">
-                    <i class="ti ti-books fs-2 mb-2 d-block"></i>
-                    Materi untuk bab ini sedang dalam tahap penyusunan oleh tim pengajar. Silakan jelajahi rumpun lainnya.
+                <div data-no-swal="1" class="card border border-info bg-info-subtle rounded-4 p-4 text-center">
+                    <div class="text-info-emphasis">
+                        <i class="ti ti-books fs-2 mb-2 d-block"></i>
+                        Materi untuk bab ini sedang dalam tahap penyusunan oleh tim pengajar. Silakan jelajahi rumpun lainnya.
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -300,3 +317,4 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+

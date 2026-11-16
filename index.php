@@ -225,12 +225,26 @@ include __DIR__ . '/includes/header.php';
 
         <!-- 3. GRID CARD KATEGORI UTAMA (100% RESPONSIVE: 1 col HP, 2 col Tablet, 3 col Desktop) -->
         <?php if (empty($mainCategories)): ?>
-            <div class="alert alert-info rounded-4 text-center py-5">
-                <i class="ti ti-database-off fs-1 mb-2 d-block"></i>
+            <div data-no-swal="1" class="card border border-info bg-info-subtle rounded-4 text-center py-5">
+                <i class="ti ti-database-off fs-1 mb-2 d-block text-info"></i>
                 <h4 class="fw-bold">Kategori Portal Belum Tersedia</h4>
                 <p class="small text-muted mb-0">Silakan jalankan seeder kategori terlebih dahulu.</p>
             </div>
         <?php else: ?>
+            <?php
+            $colorHexMap = [
+                'blue'      => '#2563eb',
+                'teal'      => '#0d9488',
+                'indigo'    => '#4f46e5',
+                'purple'    => '#7c3aed',
+                'azure'     => '#0284c7',
+                'orange'    => '#ea580c',
+                'green'     => '#16a34a',
+                'cyan'      => '#0891b2',
+                'red'       => '#dc2626',
+                'secondary' => '#475569',
+            ];
+            ?>
             <div class="row row-cards g-3 g-md-4" id="portalCategoriesGrid">
                 <?php foreach ($mainCategories as $cluster): ?>
                     <?php
@@ -239,7 +253,8 @@ include __DIR__ . '/includes/header.php';
                     $cSub = (string)($cluster['subtitle'] ?? 'Rumpun Matematika');
                     $cDesc = (string)($cluster['description'] ?? 'Pelajari konsep dasar, contoh soal, dan latihan interaktif.');
                     $cIcon = htmlspecialchars((string)($cluster['icon'] ?: 'ti ti-book'));
-                    $cColor = htmlspecialchars((string)($cluster['color'] ?: 'blue'));
+                    $cColor = (string)($cluster['color'] ?: 'blue');
+                    $hexColor = $colorHexMap[$cColor] ?? '#2563eb';
                     $cCover = trim((string)($cluster['cover_image'] ?? ''));
                     $totalBab = (int)($cluster['total_subcategories'] ?? 0);
                     $totalMod = max((int)($cluster['total_contents'] ?? 0), (int)($cluster['total_packages'] ?? 0));
@@ -259,24 +274,24 @@ include __DIR__ . '/includes/header.php';
                                              loading="lazy"
                                              class="w-100 h-100 object-fit-cover category-cover-img">
                                         <div class="position-absolute top-0 start-0 w-100 h-100"
-                                             style="background: linear-gradient(to top, rgba(9,26,58,0.88) 0%, rgba(9,26,58,0.18) 100%);"></div>
+                                             style="background: linear-gradient(to top, rgba(9,26,58,0.35) 0%, rgba(9,26,58,0) 60%);"></div>
                                     <?php else: ?>
-                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-<?php echo $cColor; ?>-subtle">
-                                            <i class="<?php echo $cIcon; ?> display-1 opacity-25 text-<?php echo $cColor; ?>"></i>
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: <?php echo $hexColor; ?>18;">
+                                            <i class="<?php echo $cIcon; ?> display-1 opacity-25" style="color: <?php echo $hexColor; ?>;"></i>
                                         </div>
                                     <?php endif; ?>
 
                                     <!-- Floating Subtitle Badge -->
                                     <div class="position-absolute top-0 start-0 m-3 z-2">
-                                        <span class="badge bg-dark bg-opacity-75 text-white px-2.5 py-1 rounded-pill small fw-semibold">
+                                        <span class="badge bg-dark bg-opacity-75 text-white px-2.5 py-1 rounded-pill small fw-semibold shadow-sm">
                                             <?php echo htmlspecialchars($cSub); ?>
                                         </span>
                                     </div>
                                 </div>
 
                                 <!-- Floating Avatar Icon Tabler Bulat -->
-                                <span class="category-floating-avatar bg-<?php echo $cColor; ?> text-white">
-                                    <i class="<?php echo $cIcon; ?> fs-4"></i>
+                                <span class="category-floating-avatar text-white" style="background-color: <?php echo $hexColor; ?>;">
+                                    <i class="<?php echo $cIcon; ?> fs-4" style="color: #ffffff;"></i>
                                 </span>
                             </div>
 
@@ -294,7 +309,7 @@ include __DIR__ . '/includes/header.php';
                                 <!-- Card Footer -->
                                 <div class="d-flex align-items-center justify-content-between pt-2.5 border-top border-light-subtle">
                                     <span class="text-muted small d-inline-flex align-items-center gap-1">
-                                        <i class="ti ti-layers-subtract text-<?php echo $cColor; ?>"></i>
+                                        <i class="ti ti-layers-subtract" style="color: <?php echo $hexColor; ?>;"></i>
                                         <?php if ($totalBab > 0): ?>
                                             <strong><?php echo $totalBab; ?></strong> Bab &bull; <strong><?php echo $totalMod; ?></strong> Modul
                                         <?php else: ?>
@@ -312,10 +327,12 @@ include __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
             </div>
 
-            <!-- Pesan Saat Pencarian Kosong -->
-            <div id="portalSearchEmpty" class="alert alert-warning text-center rounded-4 p-4 mt-4 d-none">
-                <i class="ti ti-search-off fs-2 mb-2 d-block"></i>
-                <strong>Topik tidak ditemukan.</strong> Coba kata kunci lain seperti <em>Aljabar</em>, <em>Geometri</em>, atau <em>Kalkulus</em>.
+            <!-- Pesan Saat Pencarian Kosong (Bebas SweetAlert Modal Popup) -->
+            <div id="portalSearchEmpty" data-no-swal="1" class="card border border-warning bg-warning-subtle text-center rounded-4 p-4 mt-4 d-none">
+                <div class="text-warning-emphasis">
+                    <i class="ti ti-search fs-2 mb-2 d-block"></i>
+                    <strong>Topik tidak ditemukan.</strong> Coba kata kunci lain seperti <em>Aljabar</em>, <em>Geometri</em>, atau <em>Kalkulus</em>.
+                </div>
             </div>
         <?php endif; ?>
 
