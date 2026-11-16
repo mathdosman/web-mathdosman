@@ -1984,6 +1984,69 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
+/* Expandable / Collapsible Solution Box */
+.solution-collapsible {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    margin: 1.25rem 0;
+    background: #f8fafc;
+    transition: all 0.25s ease;
+    overflow: hidden;
+}
+
+[data-bs-theme="dark"] .solution-collapsible {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+.solution-collapsible summary {
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 700;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    background: rgba(2, 132, 199, 0.05);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.solution-collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+.solution-collapsible summary:hover {
+    background: rgba(2, 132, 199, 0.12);
+    color: #0369a1;
+}
+
+.solution-collapsible[open] summary {
+    border-bottom: 1px solid #cbd5e1;
+    background: rgba(2, 132, 199, 0.1);
+}
+
+[data-bs-theme="dark"] .solution-collapsible summary {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.08);
+}
+
+[data-bs-theme="dark"] .solution-collapsible[open] summary {
+    border-bottom-color: #334155;
+    background: rgba(56, 189, 248, 0.14);
+}
+
+.solution-collapsible .solution-content {
+    padding: 1.25rem;
+    background: #ffffff;
+}
+
+[data-bs-theme="dark"] .solution-collapsible .solution-content {
+    background: #0f172a;
+    color: #f1f5f9;
+}
+
 /* Feed Container AJAX Transitions */
 #feed-container {
     transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);

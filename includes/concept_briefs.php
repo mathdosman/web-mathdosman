@@ -17,8 +17,41 @@ function render_smart_concept_spotlight(string $materi, string $submateri, strin
 
     $html = '';
 
+    // 0. LINGKARAN (GEOMETRI)
+    if (str_contains($subLower, 'lingkaran') || str_contains($nameLower, 'lingkaran')) {
+        $html = <<< 'HTML'
+<div class="math-concept-card mb-4">
+    <div class="d-flex align-items-center gap-2 text-primary fw-bold mb-2">
+        <i class="ti ti-circle-half-2 fs-4"></i>
+        <h5 class="mb-0 fw-bold">Ringkasan Konsep &amp; Rumus Kunci: Lingkaran</h5>
+    </div>
+    <p class="small text-secondary mb-3">Lingkaran adalah kurva tertutup sederhana di mana semua titik berjarak sama (jari-jari \(r\)) dari sebuah titik tetap (titik pusat). Teorema pokok lingkaran mencakup relasi keliling, luas, busur, juring, serta sudut pusat dan sudut keliling.</p>
+    
+    <div class="math-formula-spotlight my-3">
+        <div class="row text-center gy-2">
+            <div class="col-md-4 border-end">
+                <span class="badge bg-primary-subtle text-primary mb-1">Keliling &amp; Luas</span>
+                \[ K = 2\pi r = \pi d \]
+                \[ L = \pi r^2 = \frac{1}{4}\pi d^2 \]
+            </div>
+            <div class="col-md-4 border-end">
+                <span class="badge bg-success-subtle text-success mb-1">Busur &amp; Juring (\(\alpha\))</span>
+                \[ \text{Busur} = \frac{\alpha}{360^\circ} \times 2\pi r \]
+                \[ L_{\text{juring}} = \frac{\alpha}{360^\circ} \times \pi r^2 \]
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-warning-subtle text-warning-emphasis mb-1">Sudut Pusat &amp; Keliling</span>
+                \[ \angle_{\text{pusat}} = 2 \times \angle_{\text{keliling}} \]
+                \[ \angle_{\text{hadap } d} = 90^\circ \]
+            </div>
+        </div>
+    </div>
+</div>
+HTML;
+    }
+
     // 1. TRANSFORMASI GEOMETRI
-    if (str_contains($subLower, 'transformasi') || str_contains($materiLower, 'geometri')) {
+    elseif (str_contains($subLower, 'transformasi') || str_contains($materiLower, 'geometri')) {
         if (str_contains($nameLower, 'rotasi') || str_contains($subLower, 'rotasi')) {
             $html = <<< 'HTML'
 <div class="math-concept-card mb-4">
