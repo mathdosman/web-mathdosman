@@ -255,8 +255,8 @@ try {
                 $questionId = (int)$pdo->lastInsertId();
 
                 $stmtInsPq = $pdo->prepare('
-                    INSERT INTO package_questions (package_id, question_id, question_number, bobot)
-                    VALUES (:pid, :qid, :qnum, 1)
+                    INSERT INTO package_questions (package_id, question_id, question_number, added_at)
+                    VALUES (:pid, :qid, :qnum, NOW())
                 ');
                 $stmtInsPq->execute([
                     ':pid' => $packageId,
