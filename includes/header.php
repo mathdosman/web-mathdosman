@@ -475,9 +475,11 @@ try {
 
             window.__runKaTeX = function() {
                 var run = function() {
-                    var target = document.getElementById('article-content') || document.querySelector('.richtext-content');
-                    if (target) {
-                        window.renderMath(target);
+                    var article = document.getElementById('article-content');
+                    if (article) {
+                        window.renderMath(article);
+                    } else if (document.querySelector('.paket-sheet') || document.querySelector('.richtext-content')) {
+                        window.renderMath(document.body);
                     }
                 };
                 if (document.readyState === 'loading') {
