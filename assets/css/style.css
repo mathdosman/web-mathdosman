@@ -136,11 +136,13 @@ pre {
 /* Display math (MathJax/KaTeX) can be wider than the viewport; keep scroll inside formula */
 .richtext-content mjx-container[display="true"],
 .richtext-content .MathJax_Display,
-.richtext-content .katex-display {
+.richtext-content .katex-display,
+.katex-display {
     display: block;
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    padding: 0.5rem 0;
     -webkit-overflow-scrolling: touch;
 }
 
