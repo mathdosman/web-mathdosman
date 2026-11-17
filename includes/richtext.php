@@ -305,6 +305,16 @@ function sanitize_rich_text(string $html): string
         return true;
     };
 
+    // Escape raw < and > inside LaTeX math delimiters so DOMDocument and browser HTML parsers
+    // do not misinterpret inequalities (e.g. "-4 < p < 8") as HTML tags.
+    $html = preg_replace_callback(
+        '/\\\\\[[\s\S]*?\\\\\]|\\\\\([\s\S]*?\\\\\)|\$\$[\s\S]*?\$\$|(?<!\$)\$[^$\r\n]+?\$(?!\$)/',
+        static function (array $m): string {
+            return str_replace(['<', '>'], ['&lt;', '&gt;'], $m[0]);
+        },
+        $html
+    ) ?? $html;
+
     $wrap = '<div>' . $html . '</div>';
 
     $prev = libxml_use_internal_errors(true);
