@@ -86,6 +86,30 @@ $p1_html = str_replace('{{NAV}}', $p1_nav, <<<'HTML'
                     Nilai-nilai \(x\) yang memenuhi persamaan tersebut disebut <strong>akar-akar</strong> atau <strong>penyelesaian</strong> persamaan kuadrat.
                 </div>
             </div>
+
+            <figure class="my-3 text-center" data-visual="pk-akar-grafik">
+                <svg viewBox="0 0 420 220" width="420" height="220" class="img-fluid rounded-3 border bg-body p-2 d-block mx-auto" role="img" aria-label="Grafik Akar Persamaan Kuadrat y = x^2 + x - 6">
+                    <!-- Grid & Axes -->
+                    <line x1="30" y1="115" x2="390" y2="115" stroke="currentColor" stroke-width="1.5" opacity="0.65"/>
+                    <line x1="210" y1="15" x2="210" y2="205" stroke="currentColor" stroke-width="1.5" opacity="0.65"/>
+                    <text x="382" y="108" font-size="11" fill="currentColor" opacity="0.7">X</text>
+                    <text x="216" y="24" font-size="11" fill="currentColor" opacity="0.7">Y</text>
+                    <!-- Axis of symmetry x = -0.5 -> px = 195 -->
+                    <line x1="195" y1="22" x2="195" y2="195" stroke="#64748b" stroke-width="1.2" stroke-dasharray="4,4"/>
+                    <!-- Parabola passing through (-3,0)=120,115; (-0.5,-6.25)=195,190; (2,0)=270,115 -->
+                    <path d="M 80 25 Q 195 355 310 25" fill="none" stroke="#2563eb" stroke-width="2.8"/>
+                    <!-- Roots -->
+                    <circle cx="120" cy="115" r="4.5" fill="#dc2626"/>
+                    <circle cx="270" cy="115" r="4.5" fill="#dc2626"/>
+                    <!-- Vertex -->
+                    <circle cx="195" cy="190" r="4" fill="#0d9488"/>
+                    <text x="102" y="104" font-size="11" font-weight="bold" fill="#dc2626">x₁ = -3</text>
+                    <text x="255" y="104" font-size="11" font-weight="bold" fill="#dc2626">x₂ = 2</text>
+                    <text x="195" y="207" text-anchor="middle" font-size="10" fill="#0d9488">Titik Puncak (-0,5 ; -6,25)</text>
+                    <text x="320" y="42" font-size="11" font-weight="bold" fill="#2563eb">y = x² + x - 6</text>
+                </svg>
+                <figcaption class="small text-muted mt-1">Secara geometris, akar-akar \(x_1 = -3\) dan \(x_2 = 2\) adalah absis titik potong kurva parabola \(y = x^2 + x - 6\) terhadap sumbu-\(X\).</figcaption>
+            </figure>
         </div>
     </div>
 
@@ -264,6 +288,31 @@ $p2_html = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
                     <li>\(x_1^3 + x_2^3 = (x_1 + x_2)^3 - 3x_1 x_2 (x_1 + x_2)\)</li>
                 </ul>
             </div>
+
+            <figure class="my-3 text-center" data-visual="pk-vieta-simetri">
+                <svg viewBox="0 0 420 200" width="420" height="200" class="img-fluid rounded-3 border bg-body p-2 d-block mx-auto" role="img" aria-label="Ilustrasi Simetri Akar Persamaan Kuadrat">
+                    <!-- X axis -->
+                    <line x1="30" y1="100" x2="390" y2="100" stroke="currentColor" stroke-width="1.5" opacity="0.65"/>
+                    <text x="382" y="93" font-size="11" fill="currentColor" opacity="0.7">X</text>
+                    <!-- Axis of symmetry x = 210 -->
+                    <line x1="210" y1="20" x2="210" y2="180" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="5,4"/>
+                    <!-- Parabola -->
+                    <path d="M 85 20 Q 210 300 335 20" fill="none" stroke="#2563eb" stroke-width="2.8"/>
+                    <!-- Distance arrows from symmetry axis to roots -->
+                    <line x1="130" y1="78" x2="206" y2="78" stroke="#0d9488" stroke-width="1.6"/>
+                    <line x1="214" y1="78" x2="290" y2="78" stroke="#0d9488" stroke-width="1.6"/>
+                    <text x="168" y="72" text-anchor="middle" font-size="10" font-weight="bold" fill="#0d9488">d</text>
+                    <text x="252" y="72" text-anchor="middle" font-size="10" font-weight="bold" fill="#0d9488">d</text>
+                    <!-- Roots & Vertex -->
+                    <circle cx="130" cy="100" r="4.5" fill="#dc2626"/>
+                    <circle cx="290" cy="100" r="4.5" fill="#dc2626"/>
+                    <circle cx="210" cy="160" r="4" fill="#7c3aed"/>
+                    <text x="115" y="118" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">x₁</text>
+                    <text x="305" y="118" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">x₂</text>
+                    <text x="210" y="182" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#7c3aed">Sumbu Simetri: xₚ = (x₁ + x₂)/2 = -b/(2a)</text>
+                </svg>
+                <figcaption class="small text-muted mt-1">Akar \(x_1\) dan \(x_2\) selalu berjarak sama (\(d\)) dari sumbu simetri \(x_p = -\frac{b}{2a}\), sehingga \(x_1 + x_2 = -\frac{b}{a}\).</figcaption>
+            </figure>
         </div>
     </div>
 
@@ -524,6 +573,32 @@ $p4_html = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
                     Atau secara ringkas: \(x^2 - (\text{Jumlah Akar Baru})x + (\text{Hasil Kali Akar Baru}) = 0\).
                 </div>
             </div>
+
+            <figure class="my-3 text-center" data-visual="pk-susun-baru">
+                <svg viewBox="0 0 430 140" width="430" height="140" class="img-fluid rounded-3 border bg-body p-2 d-block mx-auto" role="img" aria-label="Alur Menyusun Persamaan Kuadrat Baru">
+                    <rect x="10" y="30" width="115" height="72" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+                    <text x="67" y="54" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1e3a8a">1. PK Asal</text>
+                    <text x="67" y="72" text-anchor="middle" font-size="9.5" fill="#334155">x₁ + x₂ = -b/a</text>
+                    <text x="67" y="88" text-anchor="middle" font-size="9.5" fill="#334155">x₁ · x₂ = c/a</text>
+
+                    <line x1="127" y1="66" x2="152" y2="66" stroke="#64748b" stroke-width="2"/>
+                    <polygon points="150,61 158,66 150,71" fill="#64748b"/>
+
+                    <rect x="160" y="30" width="115" height="72" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+                    <text x="217" y="54" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#14532d">2. Akar Baru (α, β)</text>
+                    <text x="217" y="72" text-anchor="middle" font-size="9.5" fill="#334155">Hitung α + β</text>
+                    <text x="217" y="88" text-anchor="middle" font-size="9.5" fill="#334155">Hitung α · β</text>
+
+                    <line x1="277" y1="66" x2="302" y2="66" stroke="#64748b" stroke-width="2"/>
+                    <polygon points="300,61 308,66 300,71" fill="#64748b"/>
+
+                    <rect x="310" y="30" width="110" height="72" rx="10" fill="#fefce8" stroke="#ca8a04" stroke-width="1.6"/>
+                    <text x="365" y="54" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#713f12">3. PK Baru</text>
+                    <text x="365" y="73" text-anchor="middle" font-size="9.5" fill="#334155">x² - (α+β)x</text>
+                    <text x="365" y="88" text-anchor="middle" font-size="9.5" fill="#334155">+ (α·β) = 0</text>
+                </svg>
+                <figcaption class="small text-muted mt-1">Alur sistematis menyusun persamaan kuadrat baru dari transformasi akar-akar persamaan asal.</figcaption>
+            </figure>
         </div>
     </div>
 
