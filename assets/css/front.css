@@ -2174,7 +2174,19 @@ body.front-page .package-card-pro:hover .package-card-action {
 
 @media (max-width: 767.98px) {
     .katex-display .katex {
-        font-size: 16px;
+        font-size: 13px !important;
+    }
+    .math-formula-spotlight .katex-display .katex {
+        font-size: 12.5px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .katex-display .katex {
+        font-size: 12px !important;
+    }
+    .math-formula-spotlight .katex-display .katex {
+        font-size: 11.5px !important;
     }
 }
 
