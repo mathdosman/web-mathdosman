@@ -51,7 +51,13 @@ $p7_content = str_replace('{{NAV}}', $p7_nav, <<<'HTML'
                     <li>Sudut \(\angle BDC\) adalah sudut keliling yang menghadap busur \(BC\), sehingga: \(\angle BDC = \frac{1}{2}\angle BOC\).</li>
                     <li>Sudut \(\angle ACD\) adalah sudut keliling yang menghadap busur \(AD\), sehingga: \(\angle ACD = \frac{1}{2}\angle AOD\).</li>
                     <li>Berdasarkan sifat <strong>sudut luar segitiga</strong> pada \(\Delta CDE\), besar sudut luar \(\angle BEC\) sama dengan jumlah dua sudut dalam yang tidak berdampingan:
-                        \[ \angle BEC = \angle BDC + \angle ACD = \frac{1}{2}\angle BOC + \frac{1}{2}\angle AOD = \frac{1}{2}(\angle BOC + \angle AOD) \]
+                        \[
+                        \begin{aligned}
+                        \angle BEC &= \angle BDC + \angle ACD \\
+                                   &= \frac{1}{2}\angle BOC + \frac{1}{2}\angle AOD \\
+                                   &= \frac{1}{2}(\angle BOC + \angle AOD)
+                        \end{aligned}
+                        \]
                     </li>
                 </ol>
             </div>
@@ -117,8 +123,14 @@ $p7_content = str_replace('{{NAV}}', $p7_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             Gunakan rumus perpotongan di dalam lingkaran:
-                            \[ \angle PTQ = \frac{1}{2} (\angle POQ + \angle ROS) \]
-                            \[ \angle PTQ = \frac{1}{2} (60^\circ + 130^\circ) = \frac{1}{2} \times 190^\circ = 95^\circ \]
+                            \[
+                            \begin{aligned}
+                            \angle PTQ &= \frac{1}{2} (\angle POQ + \angle ROS) \\
+                                       &= \frac{1}{2} (60^\circ + 130^\circ) \\
+                                       &= \frac{1}{2} \times 190^\circ \\
+                                       &= 95^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Besar sudut \(\angle PTQ = 95^\circ\).
@@ -141,10 +153,20 @@ $p7_content = str_replace('{{NAV}}', $p7_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             Gunakan rumus perpotongan di luar lingkaran:
-                            \[ \angle AED = \frac{1}{2} (\angle AOD - \angle BOC) \]
-                            \[ 25^\circ = \frac{1}{2} (\angle AOD - 35^\circ) \]
+                            \[
+                            \begin{aligned}
+                            \angle AED &= \frac{1}{2} (\angle AOD - \angle BOC) \\
+                            25^\circ &= \frac{1}{2} (\angle AOD - 35^\circ)
+                            \end{aligned}
+                            \]
                             Kalikan kedua ruas dengan 2:
-                            \[ 50^\circ = \angle AOD - 35^\circ \implies \angle AOD = 50^\circ + 35^\circ = 85^\circ \]
+                            \[
+                            \begin{aligned}
+                            50^\circ &= \angle AOD - 35^\circ \\
+                            \angle AOD &= 50^\circ + 35^\circ \\
+                                       &= 85^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Besar sudut pusat \(\angle AOD = 85^\circ\).

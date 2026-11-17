@@ -418,10 +418,22 @@ $renderHtml = function (?string $html): string {
 			];
 			?>
 			<div class="row g-4">
-				<!-- ================= SIDEBAR KIRI (col-lg-3, STICKY) ================= -->
+				<!-- ================= SIDEBAR KIRI (col-lg-3, STICKY - TATA LETAK 2 KOLOM) ================= -->
 				<aside class="col-lg-3 d-none d-lg-block reading-sidebar-col d-print-none">
 					<div class="sticky-reading-sidebar">
-						<!-- Widget A: Navigasi Bab Aktif -->
+						<!-- Widget A: On This Page (Auto Table of Contents + ScrollSpy) -->
+						<div id="toc-card" class="card rounded-4 border-0 shadow-sm mb-3 overflow-hidden">
+							<div class="card-header py-2.5 px-3 bg-body-tertiary border-bottom">
+								<span class="fw-bold small text-body-secondary d-flex align-items-center gap-2">
+									<i class="ti ti-bookmarks text-primary"></i> On This Page
+								</span>
+							</div>
+							<div class="card-body p-2">
+								<nav id="toc-list" class="nav flex-column"></nav>
+							</div>
+						</div>
+
+						<!-- Widget B: Navigasi Bab Aktif -->
 						<div class="card rounded-4 border-0 shadow-sm mb-3 overflow-hidden">
 							<div class="card-header bg-primary-subtle py-2.5 px-3">
 								<h3 class="card-title fw-bold text-primary fs-6 mb-0 d-flex align-items-center gap-2">
@@ -508,11 +520,12 @@ $renderHtml = function (?string $html): string {
 								</div>
 							</div>
 						</div>
+						<?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('sidebar'); ?>
 					</div>
 				</aside>
 
-				<!-- ================= AREA BACA UTAMA (100% DIPERTAHANKAN) ================= -->
-				<main class="col-12 col-lg-6 reading-main-col">
+				<!-- ================= AREA BACA UTAMA (col-lg-9 - LEBAR LUAS 2 KOLOM) ================= -->
+				<main class="col-12 col-lg-9 reading-main-col">
 					<div class="paket-sheet">
 						<header class="kop-header" aria-label="Kop MathDosman">
 							<div class="container-kop">
@@ -688,6 +701,34 @@ $renderHtml = function (?string $html): string {
 							</div>
 						</nav>
 
+						<!-- Materi Terkait (Max 4 Relevan dalam Grid 2x2) -->
+						<?php if (!empty($relatedPosts)): ?>
+							<div class="card rounded-4 border-0 shadow-sm mb-4 d-print-none overflow-hidden">
+								<div class="card-header py-2.5 px-3 bg-body-tertiary border-bottom">
+									<span class="fw-bold small text-body-secondary d-flex align-items-center gap-2">
+										<i class="ti ti-sparkles text-warning"></i> Materi Terkait Lainnya
+									</span>
+								</div>
+								<div class="card-body p-3">
+									<div class="row g-2.5">
+										<?php foreach ($relatedPosts as $rel): ?>
+											<?php
+											$relTitle = trim((string)$rel['title']);
+											$relTitleClean = preg_replace('/^Bahan\s+Ajar\s+/i', '', $relTitle) ?? $relTitle;
+											?>
+											<div class="col-12 col-sm-6">
+												<a href="post.php?slug=<?php echo urlencode((string)$rel['slug']); ?>"
+												   class="d-block p-3 rounded-3 border bg-body-tertiary text-decoration-none h-100">
+													<div class="fw-bold text-body small mb-1" style="line-height: 1.4;"><?php echo htmlspecialchars($relTitleClean); ?></div>
+													<span class="badge bg-body-secondary text-secondary border rounded-pill" style="font-size: 0.7rem;"><?php echo htmlspecialchars((string)($rel['cat_name'] ?: 'Matematika')); ?></span>
+												</a>
+											</div>
+										<?php endforeach; ?>
+									</div>
+								</div>
+							</div>
+						<?php endif; ?>
+
 						<?php
 						require_once __DIR__ . '/includes/disqus.php';
 						$disqusIdentifier = 'post-' . (string)$slug;
@@ -696,47 +737,6 @@ $renderHtml = function (?string $html): string {
 						?>
 					</div>
 				</main>
-
-				<!-- ================= SIDEBAR KANAN (col-lg-3, STICKY) ================= -->
-				<aside class="col-lg-3 d-none d-lg-block reading-sidebar-col d-print-none">
-					<div class="sticky-reading-sidebar">
-						<!-- Widget A: On This Page (Auto Table of Contents + ScrollSpy) -->
-						<div id="toc-card" class="card rounded-4 border-0 shadow-sm mb-3">
-							<div class="card-header py-2.5 px-3 bg-body-tertiary">
-								<span class="fw-bold small text-muted"><i class="ti ti-bookmarks me-1 text-primary"></i> On This Page</span>
-							</div>
-							<div class="card-body p-2">
-								<nav id="toc-list" class="nav flex-column"></nav>
-							</div>
-						</div>
-
-						<!-- Widget B: Materi Terkait (Max 4 Relevan) -->
-						<div class="card rounded-4 border-0 shadow-sm mb-3">
-							<div class="card-header py-2.5 px-3 bg-body-tertiary">
-								<span class="fw-bold small text-muted"><i class="ti ti-sparkles me-1 text-warning"></i> Materi Terkait</span>
-							</div>
-							<div class="list-group list-group-flush small">
-								<?php if (empty($relatedPosts)): ?>
-									<div class="p-3 text-muted small text-center">Belum ada materi terkait lainnya.</div>
-								<?php else: ?>
-									<?php foreach ($relatedPosts as $rel): ?>
-										<?php
-										$relTitle = trim((string)$rel['title']);
-										$relTitleClean = preg_replace('/^Bahan\s+Ajar\s+/i', '', $relTitle) ?? $relTitle;
-										?>
-										<a href="post.php?slug=<?php echo urlencode((string)$rel['slug']); ?>"
-										   class="list-group-item list-group-item-action p-2.5">
-											<div class="fw-bold text-body mb-1" style="line-height: 1.35;"><?php echo htmlspecialchars($relTitleClean); ?></div>
-											<span class="badge bg-body-secondary text-secondary border rounded-pill" style="font-size: 0.7rem;"><?php echo htmlspecialchars((string)($rel['cat_name'] ?: 'Matematika')); ?></span>
-										</a>
-									<?php endforeach; ?>
-								<?php endif; ?>
-							</div>
-						</div>
-
-						<?php if (function_exists('mathdosman_render_ad')) echo mathdosman_render_ad('sidebar'); ?>
-					</div>
-				</aside>
 			</div>
 
 			<!-- ================= OFFCANVAS DRAWERS KHUSUS MOBILE (< 992px) ================= -->

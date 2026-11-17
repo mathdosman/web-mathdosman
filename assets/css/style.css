@@ -2521,6 +2521,18 @@ body.front-page .package-card:hover {
 }
 
 /* ====== Global Mobile Comfort & Zero-Overflow Reading (Semua Halaman) ====== */
+.materi-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+    color: #ffffff !important;
+    border-radius: 1rem;
+}
+
+.materi-header h1,
+.materi-header .h3,
+.materi-header p {
+    color: #ffffff !important;
+}
+
 html, body {
     overflow-x: clip;
     max-width: 100%;

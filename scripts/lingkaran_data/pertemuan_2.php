@@ -172,11 +172,25 @@ $p2_content = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>a. Keliling:</strong>
-                            \[ K = 2\pi r = 2 \times \frac{22}{7} \times 14 = 2 \times 22 \times 2 = 88\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            K &= 2\pi r \\
+                              &= 2 \times \frac{22}{7} \times 14 \\
+                              &= 2 \times 22 \times 2 \\
+                              &= 88\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>b. Luas:</strong>
-                            \[ L = \pi r^2 = \frac{22}{7} \times 14 \times 14 = 22 \times 2 \times 14 = 616\text{ cm}^2 \]
+                            \[
+                            \begin{aligned}
+                            L &= \pi r^2 \\
+                              &= \frac{22}{7} \times 14 \times 14 \\
+                              &= 22 \times 2 \times 14 \\
+                              &= 616\text{ cm}^2
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Keliling \(= 88\text{ cm}\) dan Luas \(= 616\text{ cm}^2\).
@@ -204,11 +218,26 @@ $p2_content = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>a. Keliling Roda (\(K\)):</strong>
-                            \[ s = n \times K \implies K = \frac{s}{n} = \frac{70.650\text{ cm}}{500} = 141{,}3\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            s &= n \times K \\
+                            K &= \frac{s}{n} \\
+                              &= \frac{70.650\text{ cm}}{500} \\
+                              &= 141{,}3\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>b. Panjang Jari-jari (\(r\)):</strong>
-                            \[ K = 2\pi r \implies r = \frac{K}{2\pi} = \frac{141{,}3}{2 \times 3{,}14} = \frac{141{,}3}{6{,}28} = 22{,}5\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            K &= 2\pi r \\
+                            r &= \frac{K}{2\pi} \\
+                              &= \frac{141{,}3}{2 \times 3{,}14} \\
+                              &= \frac{141{,}3}{6{,}28} \\
+                              &= 22{,}5\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Keliling roda \(= 141{,}3\text{ cm}\) dan jari-jari roda \(= 22{,}5\text{ cm}\).

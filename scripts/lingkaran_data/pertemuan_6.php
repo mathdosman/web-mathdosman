@@ -53,7 +53,13 @@ $p6_content = str_replace('{{NAV}}', $p6_nav, <<<'HTML'
                 </p>
                 <p class="small text-secondary mb-0" style="line-height: 1.7;">
                     Karena kedua sudut pusat tersebut melingkupi satu putaran penuh (\(360^\circ\)):
-                    \[ 2\beta + 2\delta = 360^\circ \implies 2(\beta + \delta) = 360^\circ \implies \beta + \delta = 180^\circ \]
+                    \[
+                    \begin{aligned}
+                    2\beta + 2\delta &= 360^\circ \\
+                    2(\beta + \delta) &= 360^\circ \\
+                    \beta + \delta &= 180^\circ
+                    \end{aligned}
+                    \]
                     Maka terbukti bahwa: \(\angle B + \angle D = 180^\circ\).
                 </p>
             </div>
@@ -125,12 +131,24 @@ $p6_content = str_replace('{{NAV}}', $p6_nav, <<<'HTML'
                         <p class="text-secondary small mb-2">
                             <strong>a. Menentukan \(\angle ADC\):</strong>
                             <br>Sudut \(\angle ADC\) berhadapan dengan \(\angle ABC\):
-                            \[ \angle ADC + \angle ABC = 180^\circ \implies \angle ADC = 180^\circ - 80^\circ = 100^\circ \]
+                            \[
+                            \begin{aligned}
+                            \angle ADC + \angle ABC &= 180^\circ \\
+                            \angle ADC &= 180^\circ - 80^\circ \\
+                                       &= 100^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>b. Menentukan \(\angle BAD\):</strong>
                             <br>Sudut \(\angle BAD\) berhadapan dengan \(\angle BCD\):
-                            \[ \angle BAD + \angle BCD = 180^\circ \implies \angle BAD = 180^\circ - 105^\circ = 75^\circ \]
+                            \[
+                            \begin{aligned}
+                            \angle BAD + \angle BCD &= 180^\circ \\
+                            \angle BAD &= 180^\circ - 105^\circ \\
+                                       &= 75^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Besar \(\angle ADC = 100^\circ\) dan \(\angle BAD = 75^\circ\).
@@ -155,9 +173,15 @@ $p6_content = str_replace('{{NAV}}', $p6_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             Karena sudut \(P\) dan \(R\) saling berhadapan:
-                            \[ \angle P + \angle R = 180^\circ \]
-                            \[ (2x + 10) + (3x + 20) = 180 \implies 5x + 30 = 180 \]
-                            \[ 5x = 150 \implies x = 30 \]
+                            \[
+                            \begin{aligned}
+                            \angle P + \angle R &= 180^\circ \\
+                            (2x + 10) + (3x + 20) &= 180 \\
+                            5x + 30 &= 180 \\
+                            5x &= 150 \\
+                            x &= 30
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             Substitusikan nilai \(x = 30\):

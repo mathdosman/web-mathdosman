@@ -258,11 +258,21 @@ $p1_content = str_replace('{{NAV}}', $p1_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             Karena apotema \(OC \perp AB\), maka titik \(C\) membagi tali busur \(AB\) menjadi dua bagian yang sama panjang:
-                            \[ AC = CB = \frac{1}{2} \times AB = \frac{1}{2} \times 16 = 8\text{ cm} \]
+                            \[ \begin{aligned}
+                            AC = CB &= \frac{1}{2} \times AB \\
+                            &= \frac{1}{2} \times 16 \\
+                            &= 8\text{ cm}
+                            \end{aligned} \]
                         </p>
                         <p class="text-secondary small mb-2">
                             Segitiga \(OCA\) adalah segitiga siku-siku di titik \(C\) dengan sisi miring \(OA = r = 10\text{ cm}\) dan sisi alas \(AC = 8\text{ cm}\). Berdasarkan Teorema Pythagoras:
-                            \[ OC = \sqrt{OA^2 - AC^2} = \sqrt{10^2 - 8^2} = \sqrt{100 - 64} = \sqrt{36} = 6\text{ cm} \]
+                            \[ \begin{aligned}
+                            OC &= \sqrt{OA^2 - AC^2} \\
+                            &= \sqrt{10^2 - 8^2} \\
+                            &= \sqrt{100 - 64} \\
+                            &= \sqrt{36} \\
+                            &= 6\text{ cm}
+                            \end{aligned} \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Jadi, panjang apotema \(OC\) adalah \(6\text{ cm}\).

@@ -42,14 +42,24 @@ $p3_content = str_replace('{{NAV}}', $p3_nav, <<<'HTML'
                     <div class="col-12 col-md-6">
                         <div class="p-3 rounded-3 border bg-white h-100">
                             <strong class="text-primary d-block mb-1">A. Selisih Keliling (\(K_2 - K_1\)):</strong>
-                            \[ K_2 - K_1 = 2\pi r_2 - 2\pi r_1 = 2\pi(r_2 - r_1) \]
+                            \[
+                            \begin{aligned}
+                            K_2 - K_1 &= 2\pi r_2 - 2\pi r_1 \\
+                                      &= 2\pi(r_2 - r_1)
+                            \end{aligned}
+                            \]
                             <em>Selisih keliling hanya bergantung pada selisih jari-jarinya.</em>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="p-3 rounded-3 border bg-white h-100">
                             <strong class="text-success d-block mb-1">B. Selisih Luas (\(L_2 - L_1\)):</strong>
-                            \[ L_2 - L_1 = \pi r_2^2 - \pi r_1^2 = \pi(r_2^2 - r_1^2) \]
+                            \[
+                            \begin{aligned}
+                            L_2 - L_1 &= \pi r_2^2 - \pi r_1^2 \\
+                                      &= \pi(r_2^2 - r_1^2)
+                            \end{aligned}
+                            \]
                             Menggunakan faktorisasi selisih kuadrat:
                             \[ L_2 - L_1 = \pi(r_2 - r_1)(r_2 + r_1) \]
                         </div>
@@ -112,19 +122,45 @@ $p3_content = str_replace('{{NAV}}', $p3_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             <strong>1. Selisih Keliling:</strong>
-                            \[ K_2 - K_1 = 2\pi(r_2 - r_1) = 2\pi(4 - 2) = 4\pi\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            K_2 - K_1 &= 2\pi(r_2 - r_1) \\
+                                      &= 2\pi(4 - 2) \\
+                                      &= 4\pi\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>2. Selisih Luas:</strong>
-                            \[ L_2 - L_1 = \pi(r_2 - r_1)(r_2 + r_1) = \pi(4 - 2)(4 + 2) = \pi \times 2 \times 6 = 12\pi\text{ cm}^2 \]
+                            \[
+                            \begin{aligned}
+                            L_2 - L_1 &= \pi(r_2 - r_1)(r_2 + r_1) \\
+                                      &= \pi(4 - 2)(4 + 2) \\
+                                      &= \pi \times 2 \times 6 \\
+                                      &= 12\pi\text{ cm}^2
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>3. Perbandingan Keliling:</strong>
-                            \[ K_2 : K_1 = r_2 : r_1 = 4 : 2 = 2 : 1 \]
+                            \[
+                            \begin{aligned}
+                            K_2 : K_1 &= r_2 : r_1 \\
+                                      &= 4 : 2 \\
+                                      &= 2 : 1
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>4. Perbandingan Luas:</strong>
-                            \[ L_2 : L_1 = r_2^2 : r_1^2 = 4^2 : 2^2 = 16 : 4 = 4 : 1 \]
+                            \[
+                            \begin{aligned}
+                            L_2 : L_1 &= r_2^2 : r_1^2 \\
+                                      &= 4^2 : 2^2 \\
+                                      &= 16 : 4 \\
+                                      &= 4 : 1
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Selisih keliling \(= 4\pi\text{ cm}\), selisih luas \(= 12\pi\text{ cm}^2\), rasio keliling \(= 2:1\), rasio luas \(= 4:1\).
@@ -149,12 +185,26 @@ $p3_content = str_replace('{{NAV}}', $p3_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             Diketahui \(\frac{L_1}{L_2} = \frac{36}{64}\). Karena rasio luas adalah kuadrat dari rasio jari-jari:
-                            \[ \left(\frac{r_1}{r_2}\right)^2 = \frac{36}{64} \implies \frac{r_1}{r_2} = \sqrt{\frac{36}{64}} = \frac{6}{8} = \frac{3}{4} \]
+                            \[
+                            \begin{aligned}
+                            \left(\frac{r_1}{r_2}\right)^2 &= \frac{36}{64} \\
+                            \frac{r_1}{r_2} &= \sqrt{\frac{36}{64}} \\
+                                            &= \frac{6}{8} \\
+                                            &= \frac{3}{4}
+                            \end{aligned}
+                            \]
                             Maka perbandingan jari-jari \(r_1 : r_2 = 3 : 4\).
                         </p>
                         <p class="text-secondary small mb-2">
                             Karena rasio keliling sama dengan rasio jari-jari:
-                            \[ \frac{K_1}{K_2} = \frac{r_1}{r_2} \implies \frac{60}{K_2} = \frac{3}{4} \implies K_2 = \frac{60 \times 4}{3} = 80\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            \frac{K_1}{K_2} &= \frac{r_1}{r_2} \\
+                            \frac{60}{K_2} &= \frac{3}{4} \\
+                            K_2 &= \frac{60 \times 4}{3} \\
+                                &= 80\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Rasio jari-jari \(= 3:4\) dan keliling lingkaran kedua \(= 80\text{ cm}\).

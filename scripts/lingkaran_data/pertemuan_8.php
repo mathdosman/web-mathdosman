@@ -141,21 +141,39 @@ $p8_content = str_replace('{{NAV}}', $p8_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-check"></i> Langkah 1: Menghitung Panjang Lintasan Orbit (\(s\))</div>
                         <p class="small text-secondary mb-2">
                             Panjang lintasan orbit satu putaran penuh sama dengan jarak tempuh selama 6 jam:
-                            \[ s = v \times t = 7.500\text{ km/jam} \times 6\text{ jam} = 45.000\text{ km} \]
+                            \[
+                            \begin{aligned}
+                            s &= v \times t \\
+                              &= 7.500\text{ km/jam} \times 6\text{ jam} \\
+                              &= 45.000\text{ km}
+                            \end{aligned}
+                            \]
                             Maka keliling lingkaran lintasan orbit satelit adalah \(K = 45.000\text{ km}\).
                         </p>
 
                         <div class="math-step-title"><i class="ti ti-check"></i> Langkah 2: Menghitung Jarak Satelit ke Pusat Bumi (\(r_{\text{orbit}}\))</div>
                         <p class="small text-secondary mb-2">
                             Gunakan rumus keliling lingkaran \(K = 2\pi r_{\text{orbit}}\):
-                            \[ 45.000 = 2 \times 3{,}14 \times r_{\text{orbit}} = 6{,}28 \times r_{\text{orbit}} \]
-                            \[ r_{\text{orbit}} = \frac{45.000}{6{,}28} \approx 7.165{,}61\text{ km} \]
+                            \[
+                            \begin{aligned}
+                            45.000 &= 2 \times 3{,}14 \times r_{\text{orbit}} \\
+                                   &= 6{,}28 \times r_{\text{orbit}} \\
+                            r_{\text{orbit}} &= \frac{45.000}{6{,}28} \\
+                                             &\approx 7.165{,}61\text{ km}
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-step-title"><i class="ti ti-check"></i> Langkah 3: Menghitung Tinggi Satelit dari Permukaan Bumi (\(h\))</div>
                         <p class="small text-secondary mb-2">
                             Ketinggian satelit di atas permukaan bumi adalah selisih antara jari-jari orbit dengan jari-jari bumi (\(R_{\text{bumi}} = 6.400\text{ km}\)):
-                            \[ h = r_{\text{orbit}} - R_{\text{bumi}} = 7.165{,}61\text{ km} - 6.400\text{ km} = 765{,}61\text{ km} \]
+                            \[
+                            \begin{aligned}
+                            h &= r_{\text{orbit}} - R_{\text{bumi}} \\
+                              &= 7.165{,}61\text{ km} - 6.400\text{ km} \\
+                              &= 765{,}61\text{ km}
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-final-answer">
@@ -196,12 +214,27 @@ $p8_content = str_replace('{{NAV}}', $p8_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-check"></i> a. Perbandingan Luas:</div>
                         <p class="small text-secondary mb-2">
                             Rasio luas kuadratik:
-                            \[ \frac{L_{\text{kecil}}}{L_{\text{besar}}} = \left(\frac{r}{R}\right)^2 = \left(\frac{3}{6}\right)^2 = \left(\frac{1}{2}\right)^2 = \frac{1}{4} \implies 1 : 4 \]
+                            \[
+                            \begin{aligned}
+                            \frac{L_{\text{kecil}}}{L_{\text{besar}}} &= \left(\frac{r}{R}\right)^2 \\
+                                                                        &= \left(\frac{3}{6}\right)^2 \\
+                                                                        &= \left(\frac{1}{2}\right)^2 \\
+                                                                        &= \frac{1}{4} \implies 1 : 4
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-step-title"><i class="ti ti-check"></i> b. Selisih Keliling:</div>
                         <p class="small text-secondary mb-2">
-                            \[ K_{\text{besar}} - K_{\text{kecil}} = 2\pi(R - r) = 2\pi(6 - 3) = 6\pi\text{ cm} \approx 6 \times 3{,}14 = 18{,}84\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            K_{\text{besar}} - K_{\text{kecil}} &= 2\pi(R - r) \\
+                                                                &= 2\pi(6 - 3) \\
+                                                                &= 6\pi\text{ cm} \\
+                                                                &\approx 6 \times 3{,}14 \\
+                                                                &= 18{,}84\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-final-answer">
@@ -236,19 +269,38 @@ $p8_content = str_replace('{{NAV}}', $p8_nav, <<<'HTML'
                     <div class="solution-content">
                         <div class="math-step-title"><i class="ti ti-check"></i> a. Panjang Lintasan Pesawat:</div>
                         <p class="small text-secondary mb-2">
-                            \[ s = v \times t = 7.850\text{ km/jam} \times 8\text{ jam} = 62.800\text{ km} \]
+                            \[
+                            \begin{aligned}
+                            s &= v \times t \\
+                              &= 7.850\text{ km/jam} \times 8\text{ jam} \\
+                              &= 62.800\text{ km}
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-step-title"><i class="ti ti-check"></i> b. Jarak Pesawat ke Pusat Bumi (\(r\)):</div>
                         <p class="small text-secondary mb-2">
                             Keliling lingkaran lintasan \(K = 62.800\text{ km}\):
-                            \[ K = 2\pi r \implies 62.800 = 2 \times 3{,}14 \times r = 6{,}28 \times r \]
-                            \[ r = \frac{62.800}{6{,}28} = 10.000\text{ km} \]
+                            \[
+                            \begin{aligned}
+                            K &= 2\pi r \\
+                            62.800 &= 2 \times 3{,}14 \times r \\
+                            62.800 &= 6{,}28 \times r \\
+                            r &= \frac{62.800}{6{,}28} \\
+                              &= 10.000\text{ km}
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-step-title"><i class="ti ti-check"></i> c. Tinggi Lintasan Pesawat dari Permukaan Bumi (\(h\)):</div>
                         <p class="small text-secondary mb-2">
-                            \[ h = r - R_{\text{bumi}} = 10.000\text{ km} - 6.400\text{ km} = 3.600\text{ km} \]
+                            \[
+                            \begin{aligned}
+                            h &= r - R_{\text{bumi}} \\
+                              &= 10.000\text{ km} - 6.400\text{ km} \\
+                              &= 3.600\text{ km}
+                            \end{aligned}
+                            \]
                         </p>
 
                         <div class="math-final-answer">

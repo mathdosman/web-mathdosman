@@ -115,7 +115,13 @@ $p5_content = str_replace('{{NAV}}', $p5_nav, <<<'HTML'
                             Berapa pun banyaknya sudut keliling yang dibuat, asalkan kaki-kakinya berpijak pada busur yang sama (\(AB\)), besar sudutnya akan identik:
                         </p>
                         <div class="text-center fw-bold text-primary fs-5 my-2">
-                            \[ \angle ACB = \angle ADB = \angle AEB = \frac{1}{2}\angle AOB \]
+                            \[
+                            \begin{aligned}
+                            \angle ACB &= \angle ADB \\
+                                       &= \angle AEB \\
+                                       &= \frac{1}{2}\angle AOB
+                            \end{aligned}
+                            \]
                         </div>
                         <p class="small text-muted mb-0">Sifat ini sering dipakai untuk membuktikan kesebangunan pada segitiga di dalam lingkaran.</p>
                     </div>
@@ -145,11 +151,23 @@ $p5_content = str_replace('{{NAV}}', $p5_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             Besar total sudut keliling \(\angle ACB\) adalah:
-                            \[ \angle ACB = \angle ACO + \angle BCO = 15^\circ + 12^\circ = 27^\circ \]
+                            \[
+                            \begin{aligned}
+                            \angle ACB &= \angle ACO + \angle BCO \\
+                                       &= 15^\circ + 12^\circ \\
+                                       &= 27^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             Karena sudut pusat \(\angle AOB\) dan sudut keliling \(\angle ACB\) sama-sama menghadap busur \(AB\):
-                            \[ \angle AOB = 2 \times \angle ACB = 2 \times 27^\circ = 54^\circ \]
+                            \[
+                            \begin{aligned}
+                            \angle AOB &= 2 \times \angle ACB \\
+                                       &= 2 \times 27^\circ \\
+                                       &= 54^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Besar sudut pusat \(\angle AOB = 54^\circ\).
@@ -175,9 +193,15 @@ $p5_content = str_replace('{{NAV}}', $p5_nav, <<<'HTML'
                         </p>
                         <p class="text-secondary small mb-2">
                             Jumlah sudut dalam segitiga \(\Delta ABC\) adalah \(180^\circ\):
-                            \[ \angle CAB + \angle ABC + \angle ACB = 180^\circ \]
-                            \[ \angle CAB + 65^\circ + 90^\circ = 180^\circ \]
-                            \[ \angle CAB + 155^\circ = 180^\circ \implies \angle CAB = 180^\circ - 155^\circ = 25^\circ \]
+                            \[
+                            \begin{aligned}
+                            \angle CAB + \angle ABC + \angle ACB &= 180^\circ \\
+                            \angle CAB + 65^\circ + 90^\circ &= 180^\circ \\
+                            \angle CAB + 155^\circ &= 180^\circ \\
+                            \angle CAB &= 180^\circ - 155^\circ \\
+                                       &= 25^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Besar \(\angle CAB = 25^\circ\).

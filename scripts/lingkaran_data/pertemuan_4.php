@@ -35,7 +35,12 @@ $p4_content = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
             <div class="math-formula-spotlight my-3">
                 <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill fw-semibold mb-2">Teorema Kesebandingan Lingkaran</span>
                 <div class="fs-5 fw-bold text-dark mb-1">
-                    \[ \frac{\text{Besar Sudut Pusat } \alpha}{360^\circ} = \frac{\text{Panjang Busur } AB}{\text{Keliling Lingkaran } (2\pi r)} = \frac{\text{Luas Juring } OAB}{\text{Luas Lingkaran } (\pi r^2)} \]
+                    \[
+                    \begin{aligned}
+                    \frac{\text{Besar Sudut Pusat } \alpha}{360^\circ} &= \frac{\text{Panjang Busur } AB}{\text{Keliling Lingkaran } (2\pi r)} \\
+                                                                      &= \frac{\text{Luas Juring } OAB}{\text{Luas Lingkaran } (\pi r^2)}
+                    \end{aligned}
+                    \]
                 </div>
                 <div class="small text-muted">
                     Satu putaran penuh lingkaran berkorespondensi dengan sudut \(360^\circ\), keliling \(2\pi r\), dan luas \(\pi r^2\).
@@ -67,7 +72,12 @@ $p4_content = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
                     Jika terdapat dua sudut pusat \(\angle AOB\) dan \(\angle COD\) pada satu lingkaran yang sama, berlaku perbandingan senilai langsung:
                 </p>
                 <div class="text-center fw-bold text-primary">
-                    \[ \frac{\text{besar } \angle AOB}{\text{besar } \angle COD} = \frac{\text{panjang busur } AB}{\text{panjang busur } CD} = \frac{\text{luas juring } OAB}{\text{luas juring } OCD} \]
+                    \[
+                    \begin{aligned}
+                    \frac{\text{besar } \angle AOB}{\text{besar } \angle COD} &= \frac{\text{panjang busur } AB}{\text{panjang busur } CD} \\
+                                                                              &= \frac{\text{luas juring } OAB}{\text{luas juring } OCD}
+                    \end{aligned}
+                    \]
                 </div>
             </div>
         </div>
@@ -138,17 +148,41 @@ $p4_content = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             <strong>a. Panjang Busur \(AB\):</strong>
-                            \[ \text{Panjang Busur } AB = \frac{60^\circ}{360^\circ} \times 2 \times 3{,}14 \times 10 = \frac{1}{6} \times 62{,}8 = 10{,}47\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            \text{Panjang Busur } AB &= \frac{60^\circ}{360^\circ} \times 2 \times 3{,}14 \times 10 \\
+                                                     &= \frac{1}{6} \times 62{,}8 \\
+                                                     &= 10{,}47\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>b. Luas Juring \(OAB\):</strong>
-                            \[ \text{Luas Juring } OAB = \frac{60^\circ}{360^\circ} \times 3{,}14 \times 10^2 = \frac{1}{6} \times 314 = 52{,}33\text{ cm}^2 \]
+                            \[
+                            \begin{aligned}
+                            \text{Luas Juring } OAB &= \frac{60^\circ}{360^\circ} \times 3{,}14 \times 10^2 \\
+                                                    &= \frac{1}{6} \times 314 \\
+                                                    &= 52{,}33\text{ cm}^2
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>c. Luas Tembereng \(AB\):</strong>
                             <br>Karena \(\angle AOB = 60^\circ\), segitiga \(OAB\) adalah segitiga sama sisi dengan sisi \(10\text{ cm}\):
-                            \[ \text{Luas } \Delta OAB = \frac{1}{4} \times 10^2 \times \sqrt{3} = 25 \times 1{,}732 = 43{,}30\text{ cm}^2 \]
-                            \[ \text{Luas Tembereng} = \text{Luas Juring } OAB - \text{Luas } \Delta OAB = 52{,}33 - 43{,}30 = 9{,}03\text{ cm}^2 \]
+                            \[
+                            \begin{aligned}
+                            \text{Luas } \Delta OAB &= \frac{1}{4} \times 10^2 \times \sqrt{3} \\
+                                                    &= 25 \times 1{,}732 \\
+                                                    &= 43{,}30\text{ cm}^2
+                            \end{aligned}
+                            \]
+                            \[
+                            \begin{aligned}
+                            \text{Luas Tembereng} &= \text{Luas Juring } OAB - \text{Luas } \Delta OAB \\
+                                                  &= 52{,}33 - 43{,}30 \\
+                                                  &= 9{,}03\text{ cm}^2
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Busur \(= 10{,}47\text{ cm}\), Juring \(= 52{,}33\text{ cm}^2\), Tembereng \(= 9{,}03\text{ cm}^2\).
@@ -173,13 +207,27 @@ $p4_content = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
                         <div class="math-step-title"><i class="ti ti-arrow-right"></i> Langkah Penyelesaian:</div>
                         <p class="text-secondary small mb-2">
                             <strong>a. Menentukan besar \(\angle QOR\):</strong>
-                            \[ \frac{\angle POQ}{\angle QOR} = \frac{\text{Busur } PQ}{\text{Busur } QR} \implies \frac{45^\circ}{\angle QOR} = \frac{16{,}5}{22} = \frac{3}{4} \]
-                            \[ \angle QOR = \frac{45^\circ \times 4}{3} = 60^\circ \]
+                            \[
+                            \begin{aligned}
+                            \frac{\angle POQ}{\angle QOR} &= \frac{\text{Busur } PQ}{\text{Busur } QR} \\
+                            \frac{45^\circ}{\angle QOR} &= \frac{16{,}5}{22} \\
+                                                          &= \frac{3}{4} \\
+                            \angle QOR &= \frac{45^\circ \times 4}{3} \\
+                                       &= 60^\circ
+                            \end{aligned}
+                            \]
                         </p>
                         <p class="text-secondary small mb-2">
                             <strong>b. Menentukan panjang jari-jari (\(r\)):</strong>
-                            \[ \text{Busur } QR = \frac{\angle QOR}{360^\circ} \times 2\pi r \implies 22 = \frac{60^\circ}{360^\circ} \times 2 \times \frac{22}{7} \times r \]
-                            \[ 22 = \frac{1}{6} \times \frac{44}{7} \times r \implies 22 = \frac{22}{21} r \implies r = 21\text{ cm} \]
+                            \[
+                            \begin{aligned}
+                            \text{Busur } QR &= \frac{\angle QOR}{360^\circ} \times 2\pi r \\
+                            22 &= \frac{60^\circ}{360^\circ} \times 2 \times \frac{22}{7} \times r \\
+                            22 &= \frac{1}{6} \times \frac{44}{7} \times r \\
+                            22 &= \frac{22}{21} r \\
+                            r &= 21\text{ cm}
+                            \end{aligned}
+                            \]
                         </p>
                         <div class="math-final-answer">
                             <i class="ti ti-circle-check"></i> Besar \(\angle QOR = 60^\circ\) dan jari-jari lingkaran \(= 21\text{ cm}\).
