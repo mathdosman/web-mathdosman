@@ -413,7 +413,7 @@ $p3_html = str_replace('{{NAV}}', $p3_nav, <<<'HTML'
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <h2 class="h5 fw-bold text-primary mb-3 d-flex align-items-center gap-2">
-                <i class="ti ti-calculator text-warning"></i> 1. Pengertian &amp; Kriteria Diskriminan (\(D\))
+                <i class="ti ti-calculator text-warning flex-shrink-0"></i> <span>1. Pengertian &amp; Kriteria Diskriminan (\(D\))</span>
             </h2>
             <div class="math-formula-spotlight my-3">
                 <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill fw-semibold mb-2">Rumus Diskriminan</span>
