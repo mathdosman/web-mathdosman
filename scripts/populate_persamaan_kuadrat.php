@@ -660,11 +660,27 @@ HTML
 try {
     $pdo->beginTransaction();
 
-    $updContent = $pdo->prepare("UPDATE contents SET content_html = :html, status = 'published' WHERE id = :id");
-    $updContent->execute([':html' => $p1_html, ':id' => 39]);
-    $updContent->execute([':html' => $p2_html, ':id' => 38]);
-    $updContent->execute([':html' => $p3_html, ':id' => 143]);
-    $updContent->execute([':html' => $p4_html, ':id' => 144]);
+    $updContent = $pdo->prepare("UPDATE contents SET excerpt = :excerpt, content_html = :html, status = 'published' WHERE id = :id");
+    $updContent->execute([
+        ':excerpt' => 'Mempelajari bentuk umum persamaan kuadrat serta tiga metode menentukan akar-akarnya: pemfaktoran, melengkapkan kuadrat sempurna, dan rumus ABC, lengkap dengan 16 soal latihan.',
+        ':html' => $p1_html,
+        ':id' => 39,
+    ]);
+    $updContent->execute([
+        ':excerpt' => 'Mempelajari rumus Vieta (jumlah dan hasil kali akar), identitas bentuk simetris akar, dan ilustrasi simetri parabola, lengkap dengan 15 soal latihan.',
+        ':html' => $p2_html,
+        ':id' => 38,
+    ]);
+    $updContent->execute([
+        ':excerpt' => 'Memahami nilai diskriminan D = b^2 - 4ac untuk menentukan jenis-jenis akar dan posisi grafik parabola terhadap sumbu-X, lengkap dengan 15 soal latihan.',
+        ':html' => $p3_html,
+        ':id' => 143,
+    ]);
+    $updContent->execute([
+        ':excerpt' => 'Strategi menyusun persamaan kuadrat baru dari akar yang diketahui maupun transformasi akar menggunakan rumus jumlah-hasil kali, lengkap dengan 15 soal latihan.',
+        ':html' => $p4_html,
+        ':id' => 144,
+    ]);
     echo "[OK] Updated 4 Persamaan Kuadrat contents (ID 39, 38, 143, 144).\n";
 
     // Hubungkan Package 31 ke Content ID 144 (Pertemuan 4)
