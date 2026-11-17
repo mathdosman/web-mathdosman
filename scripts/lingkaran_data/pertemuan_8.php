@@ -21,6 +21,21 @@ $p8_content = str_replace('{{NAV}}', $p8_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-success">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-success mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 8 (Evaluasi Bab Lingkaran)
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 8.1:</strong> Menguasai seluruh konsep dasar unsur lingkaran, keliling, dan luas lingkaran beserta aplikasinya.</li>
+                <li><strong>TP 8.2:</strong> Menganalisis perbandingan dimensi, panjang busur, luas juring, dan luas tembereng pada berbagai variasi soal.</li>
+                <li><strong>TP 8.3:</strong> Mengintegrasikan teorema sudut pusat, sudut keliling, segi empat tali busur, dan perpotongan dua tali busur.</li>
+                <li><strong>TP 8.4:</strong> Memecahkan masalah penalaran tingkat tinggi (HOTS) kontekstual yang memadukan beberapa konsep lingkaran sekaligus.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Peta Rangkuman Rumus Pokok Bab Lingkaran -->
@@ -316,9 +331,9 @@ $p8_content = str_replace('{{NAV}}', $p8_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-award me-1"></i> Evaluasi Uji Kompetensi Bab Lingkaran</h4>
-            <p class="small mb-0 opacity-90">Uji ketuntasan belajar secara menyeluruh pada 10 soal pilihan ganda standar evaluasi di bawah ini.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Bab Lingkaran melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">10 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -433,7 +448,57 @@ $meetings[8] = [
             'pilihan_4' => '\(96^\circ\)',
             'pilihan_5' => '\(84^\circ\)',
             'jawaban_benar' => 3,
-            'pembahasan' => '\(\text{Sudut} = \frac{1}{2}(\text{Pusat}_{\text{jauh}} - \text{Pusat}_{\text{dekat}}) \implies 28^\circ = \frac{1}{2}(\alpha - 34^\circ) \implies 56^\circ = \alpha - 34^\circ \implies \alpha = 56^\circ + 34^\circ = 90^\circ\).',
+            'pembahasan' => '[TP 8.3] \(\text{Sudut} = \frac{1}{2}(\text{Pusat}_{\text{jauh}} - \text{Pusat}_{\text{dekat}}) \implies 28^\circ = \frac{1}{2}(\alpha - 34^\circ) \implies 56^\circ = \alpha - 34^\circ \implies \alpha = 56^\circ + 34^\circ = 90^\circ\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Perbandingan luas dua buah lingkaran adalah \(25 : 81\). Jika keliling lingkaran yang lebih kecil adalah \(45\text{ cm}\), maka keliling lingkaran yang lebih besar adalah ....',
+            'pilihan_1' => '\(63\text{ cm}\)',
+            'pilihan_2' => '\(72\text{ cm}\)',
+            'pilihan_3' => '\(81\text{ cm}\)',
+            'pilihan_4' => '\(90\text{ cm}\)',
+            'pilihan_5' => '\(145{,}8\text{ cm}\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 8.2] Rasio keliling \(\frac{K_1}{K_2} = \sqrt{\frac{25}{81}} = \frac{5}{9}\). Maka \(K_2 = \frac{9}{5} \times 45 = 81\text{ cm}\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Luas tembereng suatu lingkaran yang berjari-jari \(14\text{ cm}\) dengan sudut pusat \(90^\circ\) adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(28\text{ cm}^2\)',
+            'pilihan_2' => '\(56\text{ cm}^2\)',
+            'pilihan_3' => '\(98\text{ cm}^2\)',
+            'pilihan_4' => '\(154\text{ cm}^2\)',
+            'pilihan_5' => '\(42\text{ cm}^2\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 8.2] Luas juring \(= \frac{1}{4} \times \frac{22}{7} \times 14^2 = 154\text{ cm}^2\). Luas segitiga siku-siku \(= \frac{1}{2} \times 14 \times 14 = 98\text{ cm}^2\). Luas tembereng \(= 154 - 98 = 56\text{ cm}^2\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Pada segi empat tali busur \(ABCD\), diketahui besar \(\angle A = (5x - 15)^\circ\) dan \(\angle C = (3x + 35)^\circ\). Besar sudut \(\angle C\) adalah ....',
+            'pilihan_1' => '\(80^\circ\)',
+            'pilihan_2' => '\(85^\circ\)',
+            'pilihan_3' => '\(95^\circ\)',
+            'pilihan_4' => '\(100^\circ\)',
+            'pilihan_5' => '\(105^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 8.3] \[ \begin{aligned} (5x - 15) + (3x + 35) &= 180 \\ 8x + 20 &= 180 \\ 8x &= 160 \\ x &= 20 \end{aligned} \] Maka \(\angle C = 3(20) + 35 = 95^\circ\).',
+        ],
+        14 => [
+            'pertanyaan' => 'Dua tali busur berpotongan di dalam lingkaran. Jika besar sudut-sudut pusat yang menghadap dua busur yang diapitnya adalah \(84^\circ\) dan \(126^\circ\), maka besar sudut tumpul perpotongan kedua tali busur tersebut adalah ....',
+            'pilihan_1' => '\(75^\circ\)',
+            'pilihan_2' => '\(105^\circ\)',
+            'pilihan_3' => '\(115^\circ\)',
+            'pilihan_4' => '\(120^\circ\)',
+            'pilihan_5' => '\(135^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 8.3] \(\text{Sudut} = \frac{1}{2}(84^\circ + 126^\circ) = \frac{1}{2} \times 210^\circ = 105^\circ\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Sebuah taman berbentuk lingkaran memiliki keliling \(132\text{ m}\). Di sepanjang bagian dalam tepi taman dibuat jalan setapak melingkar selebar \(7\text{ m}\). Luas jalan setapak tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(154\text{ m}^2\)',
+            'pilihan_2' => '\(385\text{ m}^2\)',
+            'pilihan_3' => '\(616\text{ m}^2\)',
+            'pilihan_4' => '\(770\text{ m}^2\)',
+            'pilihan_5' => '\(1.386\text{ m}^2\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 8.4] Dari \(K = 132\text{ m}\), diperoleh jari-jari luar \(R = \frac{132}{2 \times \frac{22}{7}} = 21\text{ m}\). Jari-jari dalam \(r = 21 - 7 = 14\text{ m}\). Luas jalan setapak \(= \pi(R^2 - r^2) = \frac{22}{7}(21^2 - 14^2) = \frac{22}{7}(441 - 196) = \frac{22}{7} \times 245 = 770\text{ m}^2\).',
         ],
     ],
 ];

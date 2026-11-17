@@ -20,6 +20,20 @@ $p2_content = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 2
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 2.1:</strong> Menjelaskan makna konstanta \(\pi\) sebagai rasio keliling terhadap diameter lingkaran dan memilih pendekatannya (\(\frac{22}{7}\) atau \(3{,}14\)).</li>
+                <li><strong>TP 2.2:</strong> Menghitung keliling dan luas lingkaran, serta menentukan jari-jari/diameter jika keliling atau luasnya diketahui.</li>
+                <li><strong>TP 2.3:</strong> Memecahkan masalah kontekstual tentang jarak tempuh putaran roda dan luas daerah arsiran gabungan.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Penemuan Nilai Pendekatan pi -->
@@ -253,9 +267,9 @@ $p2_content = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 2</h4>
-            <p class="small mb-0 opacity-90">Uji kemampuan komputasi keliling, luas, dan aplikasi putaran roda pada kuis interaktif berikut.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 2 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -330,7 +344,97 @@ $meetings[2] = [
             'pilihan_4' => '\(55\text{ pohon}\)',
             'pilihan_5' => '\(66\text{ pohon}\)',
             'jawaban_benar' => 2,
-            'pembahasan' => 'Mencari jari-jari: \(\frac{22}{7} r^2 = 1.386 \implies r^2 = \frac{1.386 \times 7}{22} = 441 \implies r = 21\text{ m}\). Keliling \(K = 2 \times \frac{22}{7} \times 21 = 132\text{ m}\). Banyak pohon \(= \frac{132}{4} = 33\text{ pohon}\).',
+            'pembahasan' => '[TP 2.3] Mencari jari-jari: \(\frac{22}{7} r^2 = 1.386 \implies r^2 = \frac{1.386 \times 7}{22} = 441 \implies r = 21\text{ m}\). Keliling \(K = 2 \times \frac{22}{7} \times 21 = 132\text{ m}\). Banyak pohon \(= \frac{132}{4} = 33\text{ pohon}\).',
+        ],
+        7 => [
+            'pertanyaan' => 'Perbandingan antara keliling lingkaran dengan panjang diameternya selalu menghasilkan bilangan irasional tetap yang disebut \(\pi\), yang dalam perhitungan praktis didekati dengan ....',
+            'pilihan_1' => '\(3{,}14\text{ atau }\frac{22}{7}\)',
+            'pilihan_2' => '\(3{,}14\text{ atau }\frac{7}{22}\)',
+            'pilihan_3' => '\(2{,}14\text{ atau }\frac{22}{7}\)',
+            'pilihan_4' => '\(3{,}41\text{ atau }\frac{21}{7}\)',
+            'pilihan_5' => '\(1{,}41\text{ atau }\frac{22}{7}\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 2.1] Nilai pendekatan konstanta \(\pi\) adalah \(3{,}14\) (untuk jari-jari/diameter bukan kelipatan 7) atau \(\frac{22}{7}\) (untuk kelipatan 7).',
+        ],
+        8 => [
+            'pertanyaan' => 'Sebuah lingkaran memiliki luas daerah \(616\text{ cm}^2\). Keliling lingkaran tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(44\text{ cm}\)',
+            'pilihan_2' => '\(66\text{ cm}\)',
+            'pilihan_3' => '\(88\text{ cm}\)',
+            'pilihan_4' => '\(132\text{ cm}\)',
+            'pilihan_5' => '\(176\text{ cm}\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 2.2] Dari luas: \(\frac{22}{7}r^2 = 616 \implies r^2 = \frac{616 \times 7}{22} = 196 \implies r = 14\text{ cm}\). Keliling: \(K = 2 \times \frac{22}{7} \times 14 = 88\text{ cm}\).',
+        ],
+        9 => [
+            'pertanyaan' => 'Diketahui keliling suatu lingkaran adalah \(62{,}8\text{ cm}\). Luas lingkaran tersebut adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(157\text{ cm}^2\)',
+            'pilihan_2' => '\(314\text{ cm}^2\)',
+            'pilihan_3' => '\(471\text{ cm}^2\)',
+            'pilihan_4' => '\(628\text{ cm}^2\)',
+            'pilihan_5' => '\(1.256\text{ cm}^2\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 2.2] Dari keliling: \(2 \times 3{,}14 \times r = 62{,}8 \implies r = \frac{62{,}8}{6{,}28} = 10\text{ cm}\). Luas: \(L = 3{,}14 \times 10^2 = 314\text{ cm}^2\).',
+        ],
+        10 => [
+            'pertanyaan' => 'Sebuah roda memiliki jari-jari \(35\text{ cm}\) dan berputar penuh sebanyak \(200\text{ kali}\) pada jalan datar. Jarak yang ditempuh roda tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(220\text{ m}\)',
+            'pilihan_2' => '\(330\text{ m}\)',
+            'pilihan_3' => '\(400\text{ m}\)',
+            'pilihan_4' => '\(440\text{ m}\)',
+            'pilihan_5' => '\(880\text{ m}\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 2.3] Keliling roda \(K = 2 \times \frac{22}{7} \times 35 = 220\text{ cm} = 2{,}2\text{ m}\). Jarak tempuh \(= 200 \times 2{,}2\text{ m} = 440\text{ m}\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Roda sebuah sepeda menempuh jarak \(314\text{ meter}\) setelah berputar sebanyak \(250\text{ kali}\). Panjang jari-jari roda sepeda tersebut adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(10\text{ cm}\)',
+            'pilihan_2' => '\(20\text{ cm}\)',
+            'pilihan_3' => '\(25\text{ cm}\)',
+            'pilihan_4' => '\(40\text{ cm}\)',
+            'pilihan_5' => '\(50\text{ cm}\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 2.3] Keliling roda \(K = \frac{31.400\text{ cm}}{250} = 125{,}6\text{ cm}\). Jari-jari \(r = \frac{125{,}6}{2 \times 3{,}14} = \frac{125{,}6}{6{,}28} = 20\text{ cm}\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Di dalam sebuah persegi bersisi \(20\text{ cm}\) dibuat sebuah lingkaran terbesar yang menyinggung keempat sisi persegi tersebut. Luas daerah di dalam persegi namun di luar lingkaran adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(86\text{ cm}^2\)',
+            'pilihan_2' => '\(100\text{ cm}^2\)',
+            'pilihan_3' => '\(114\text{ cm}^2\)',
+            'pilihan_4' => '\(314\text{ cm}^2\)',
+            'pilihan_5' => '\(400\text{ cm}^2\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 2.3] Diameter lingkaran \(= 20\text{ cm} \implies r = 10\text{ cm}\). Luas arsiran \(= L_{\text{persegi}} - L_{\text{lingkaran}} = 20^2 - 3{,}14 \times 10^2 = 400 - 314 = 86\text{ cm}^2\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Sebuah lapangan lari berbentuk gabungan persegi panjang berukuran \(100\text{ m} \times 70\text{ m}\) dengan dua buah setengah lingkaran pada kedua sisi lebarnya (\(d = 70\text{ m}\)). Keliling lintasan lari tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(320\text{ m}\)',
+            'pilihan_2' => '\(390\text{ m}\)',
+            'pilihan_3' => '\(420\text{ m}\)',
+            'pilihan_4' => '\(440\text{ m}\)',
+            'pilihan_5' => '\(560\text{ m}\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 2.3] Keliling lintasan terdiri dari dua sisi lurus \(100\text{ m}\) dan satu keliling lingkaran penuh berdiameter \(70\text{ m}\): \(K = 2(100) + \frac{22}{7} \times 70 = 200 + 220 = 420\text{ m}\).',
+        ],
+        14 => [
+            'pertanyaan' => 'Sebuah panggung berbentuk setengah lingkaran memiliki panjang diameter \(14\text{ m}\). Keliling tepi panggung tersebut seluruhnya (termasuk sisi lurusnya) adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(22\text{ m}\)',
+            'pilihan_2' => '\(36\text{ m}\)',
+            'pilihan_3' => '\(44\text{ m}\)',
+            'pilihan_4' => '\(58\text{ m}\)',
+            'pilihan_5' => '\(77\text{ m}\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 2.2] Keliling setengah lingkaran tertutup \(= \frac{1}{2}\pi d + d = \frac{1}{2} \times \frac{22}{7} \times 14 + 14 = 22 + 14 = 36\text{ m}\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Seutas kawat sepanjang \(88\text{ cm}\) dibentuk tepat menjadi satu lingkaran penuh. Luas daerah yang dibatasi oleh kawat lingkaran tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(154\text{ cm}^2\)',
+            'pilihan_2' => '\(308\text{ cm}^2\)',
+            'pilihan_3' => '\(440\text{ cm}^2\)',
+            'pilihan_4' => '\(616\text{ cm}^2\)',
+            'pilihan_5' => '\(1.232\text{ cm}^2\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 2.2] Panjang kawat adalah keliling lingkaran: \(2 \times \frac{22}{7} \times r = 88 \implies r = 14\text{ cm}\). Luasnya \(L = \frac{22}{7} \times 14^2 = 616\text{ cm}^2\).',
         ],
     ],
 ];

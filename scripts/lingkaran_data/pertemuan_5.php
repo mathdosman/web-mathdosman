@@ -20,6 +20,20 @@ $p5_content = str_replace('{{NAV}}', $p5_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 5
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 5.1:</strong> Menjelaskan dan menggunakan teorema hubungan sudut pusat (\(= 2 \times\) sudut keliling) jika menghadap busur yang sama, termasuk sudut refleks.</li>
+                <li><strong>TP 5.2:</strong> Menentukan besar sudut pada segitiga di dalam lingkaran yang salah satu sisinya merupakan diameter (sudut keliling \(= 90^\circ\)).</li>
+                <li><strong>TP 5.3:</strong> Menerapkan sifat kesamaan besar sudut-sudut keliling yang menghadap busur yang sama dalam perhitungan aljabar sudut.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Definisi & Teorema Sudut Pusat vs Sudut Keliling -->
@@ -216,9 +230,9 @@ $p5_content = str_replace('{{NAV}}', $p5_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 5</h4>
-            <p class="small mb-0 opacity-90">Uji ketajaman logikamu mengenai sudut pusat dan sudut keliling pada kuis interaktif berikut.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 5 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -293,7 +307,97 @@ $meetings[5] = [
             'pilihan_4' => '\(40^\circ\)',
             'pilihan_5' => '\(65^\circ\)',
             'jawaban_benar' => 2,
-            'pembahasan' => 'Karena menghadap busur \(BC\) yang sama, kedua sudut keliling sama besar: \(y = 50^\circ\).',
+            'pembahasan' => '[TP 5.3] Karena menghadap busur \(BC\) yang sama, kedua sudut keliling sama besar: \(y = 50^\circ\).',
+        ],
+        7 => [
+            'pertanyaan' => 'Pada lingkaran berpusat di \(O\), diketahui besar sudut keliling \(\angle ABC = 38^\circ\). Besar sudut pusat \(\angle AOC\) yang menghadap busur \(AC\) yang sama adalah ....',
+            'pilihan_1' => '\(19^\circ\)',
+            'pilihan_2' => '\(52^\circ\)',
+            'pilihan_3' => '\(76^\circ\)',
+            'pilihan_4' => '\(104^\circ\)',
+            'pilihan_5' => '\(142^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 5.1] \(\angle AOC = 2 \times \angle ABC = 2 \times 38^\circ = 76^\circ\).',
+        ],
+        8 => [
+            'pertanyaan' => 'Diketahui sudut pusat \(\angle AOB = 134^\circ\). Besar sudut keliling \(\angle ACB\) yang menghadap busur \(AB\) yang sama adalah ....',
+            'pilihan_1' => '\(46^\circ\)',
+            'pilihan_2' => '\(67^\circ\)',
+            'pilihan_3' => '\(134^\circ\)',
+            'pilihan_4' => '\(268^\circ\)',
+            'pilihan_5' => '\(77^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 5.1] \(\angle ACB = \frac{1}{2} \times \angle AOB = \frac{1}{2} \times 134^\circ = 67^\circ\).',
+        ],
+        9 => [
+            'pertanyaan' => 'Ruas garis \(AB\) adalah diameter lingkaran dan titik \(C\) berada pada keliling lingkaran. Jika besar \(\angle CAB = 28^\circ\), maka besar \(\angle CBA\) adalah ....',
+            'pilihan_1' => '\(28^\circ\)',
+            'pilihan_2' => '\(56^\circ\)',
+            'pilihan_3' => '\(90^\circ\)',
+            'pilihan_4' => '\(62^\circ\)',
+            'pilihan_5' => '\(72^\circ\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 5.2] Karena \(AB\) diameter, maka \(\angle ACB = 90^\circ\). Jadi \(\angle CBA = 180^\circ - 90^\circ - 28^\circ = 62^\circ\).',
+        ],
+        10 => [
+            'pertanyaan' => 'Titik \(O\) adalah pusat lingkaran dan titik \(A, B, C\) terletak pada keliling lingkaran. Jika segitiga \(\Delta OAB\) memiliki besar \(\angle OAB = 35^\circ\), maka besar sudut keliling \(\angle ACB\) yang menghadap busur minor \(AB\) adalah ....',
+            'pilihan_1' => '\(35^\circ\)',
+            'pilihan_2' => '\(55^\circ\)',
+            'pilihan_3' => '\(70^\circ\)',
+            'pilihan_4' => '\(110^\circ\)',
+            'pilihan_5' => '\(145^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 5.1] Karena \(OA = OB = r\), \(\Delta OAB\) sama kaki sehingga \(\angle OBA = 35^\circ\). Maka \(\angle AOB = 180^\circ - (35^\circ + 35^\circ) = 110^\circ\). Jadi \(\angle ACB = \frac{1}{2} \times 110^\circ = 55^\circ\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Pada suatu lingkaran, titik \(A, B, C, D\) terletak berurutan pada kelilingnya. Tali busur \(AC\) dan \(BD\) berpotongan di titik \(E\). Jika \(\angle BAC = 42^\circ\) dan \(\angle CED = 68^\circ\), maka besar \(\angle ACD\) adalah ....',
+            'pilihan_1' => '\(42^\circ\)',
+            'pilihan_2' => '\(68^\circ\)',
+            'pilihan_3' => '\(70^\circ\)',
+            'pilihan_4' => '\(110^\circ\)',
+            'pilihan_5' => '\(26^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 5.3] \(\angle BDC\) dan \(\angle BAC\) menghadap busur \(BC\) yang sama, sehingga \(\angle BDC = 42^\circ\). Pada \(\Delta CDE\), \(\angle ACD = 180^\circ - (68^\circ + 42^\circ) = 70^\circ\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Sudut pusat \(\angle POQ = (4x - 10)^\circ\) dan sudut keliling \(\angle PRQ = (x + 25)^\circ\) sama-sama menghadap busur \(PQ\). Nilai \(x\) yang memenuhi adalah ....',
+            'pilihan_1' => '\(20\)',
+            'pilihan_2' => '\(25\)',
+            'pilihan_3' => '\(30\)',
+            'pilihan_4' => '\(35\)',
+            'pilihan_5' => '\(40\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 5.1] \[ \begin{aligned} \angle POQ &= 2 \times \angle PRQ \\ 4x - 10 &= 2(x + 25) \\ 4x - 10 &= 2x + 50 \\ 2x &= 60 \\ x &= 30 \end{aligned} \]',
+        ],
+        13 => [
+            'pertanyaan' => 'Diketahui \(PR\) adalah diameter lingkaran dan \(Q\) terletak pada keliling lingkaran. Jika \(\angle QPR = (2x + 5)^\circ\) dan \(\angle PRQ = (3x - 15)^\circ\), maka besar \(\angle PRQ\) adalah ....',
+            'pilihan_1' => '\(20^\circ\)',
+            'pilihan_2' => '\(45^\circ\)',
+            'pilihan_3' => '\(55^\circ\)',
+            'pilihan_4' => '\(65^\circ\)',
+            'pilihan_5' => '\(75^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 5.2] Karena \(\angle PQR = 90^\circ\), maka \((2x + 5) + (3x - 15) = 90 \implies 5x - 10 = 90 \implies 5x = 100 \implies x = 20\). Jadi \(\angle PRQ = 3(20) - 15 = 45^\circ\).',
+        ],
+        14 => [
+            'pertanyaan' => 'Tiga buah sudut keliling \(\angle P, \angle Q,\) dan \(\angle R\) menghadap busur \(AB\) yang sama. Jika \(\angle P + \angle Q + \angle R = 126^\circ\), maka besar sudut pusat \(\angle AOB\) yang menghadap busur \(AB\) adalah ....',
+            'pilihan_1' => '\(42^\circ\)',
+            'pilihan_2' => '\(63^\circ\)',
+            'pilihan_3' => '\(72^\circ\)',
+            'pilihan_4' => '\(84^\circ\)',
+            'pilihan_5' => '\(126^\circ\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 5.3] Ketiga sudut keliling sama besar, sehingga masing-masing bernilai \(\frac{126^\circ}{3} = 42^\circ\). Besar sudut pusat \(\angle AOB = 2 \times 42^\circ = 84^\circ\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Pada lingkaran berpusat di \(O\), terdapat titik \(A, B, C\) pada keliling lingkaran. Garis \(CO\) membagi sudut keliling \(\angle ACB\) menjadi \(\angle ACO = 18^\circ\) dan \(\angle BCO = 24^\circ\). Besar sudut pusat \(\angle AOB\) adalah ....',
+            'pilihan_1' => '\(84^\circ\)',
+            'pilihan_2' => '\(42^\circ\)',
+            'pilihan_3' => '\(48^\circ\)',
+            'pilihan_4' => '\(66^\circ\)',
+            'pilihan_5' => '\(96^\circ\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 5.1] \(\angle ACB = 18^\circ + 24^\circ = 42^\circ\). Karena \(\angle AOB\) dan \(\angle ACB\) menghadap busur \(AB\) yang sama, \(\angle AOB = 2 \times 42^\circ = 84^\circ\).',
         ],
     ],
 ];

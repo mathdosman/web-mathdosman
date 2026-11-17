@@ -20,6 +20,20 @@ $p3_content = str_replace('{{NAV}}', $p3_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 3
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 3.1:</strong> Menentukan selisih keliling dan selisih luas dua lingkaran akibat perubahan ukuran jari-jari atau diameter.</li>
+                <li><strong>TP 3.2:</strong> Menganalisis rasio perbandingan keliling (linier) dan perbandingan luas (kuadratik) ketika jari-jari diperbesar atau diperkecil dengan faktor skala \(k\).</li>
+                <li><strong>TP 3.3:</strong> Merekonstruksi ukuran jari-jari, keliling, atau luas lingkaran berdasarkan data perbandingan yang diketahui.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Konsep Perubahan Dimensi -->
@@ -219,9 +233,9 @@ $p3_content = str_replace('{{NAV}}', $p3_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 3</h4>
-            <p class="small mb-0 opacity-90">Uji kemampuan analitis perbandingan dimensi dan perubahan jari-jari pada kuis berikut.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 3 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -296,7 +310,97 @@ $meetings[3] = [
             'pilihan_4' => '\(4 : 1\)',
             'pilihan_5' => '\(1 : 8\)',
             'jawaban_benar' => 2,
-            'pembahasan' => 'Perbandingan keliling mengikuti langsung perbandingan jari-jari: \(K_2 : K_1 = r_2 : r_1 = \frac{1}{2} : 1 = 1 : 2\).',
+            'pembahasan' => '[TP 3.2] Perbandingan keliling mengikuti langsung perbandingan jari-jari: \(K_2 : K_1 = r_2 : r_1 = \frac{1}{2} : 1 = 1 : 2\).',
+        ],
+        7 => [
+            'pertanyaan' => 'Dua buah lingkaran memiliki panjang jari-jari masing-masing \(3\text{ cm}\) dan \(10\text{ cm}\). Selisih keliling kedua lingkaran tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(22\text{ cm}\)',
+            'pilihan_2' => '\(44\text{ cm}\)',
+            'pilihan_3' => '\(66\text{ cm}\)',
+            'pilihan_4' => '\(88\text{ cm}\)',
+            'pilihan_5' => '\(14\text{ cm}\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 3.1] Selisih keliling: \(K_2 - K_1 = 2\pi(r_2 - r_1) = 2 \times \frac{22}{7} \times (10 - 3) = 2 \times \frac{22}{7} \times 7 = 44\text{ cm}\).',
+        ],
+        8 => [
+            'pertanyaan' => 'Diketahui dua buah lingkaran berjari-jari \(10\text{ cm}\) dan \(6\text{ cm}\). Selisih luas kedua lingkaran tersebut adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(100{,}48\text{ cm}^2\)',
+            'pilihan_2' => '\(150{,}72\text{ cm}^2\)',
+            'pilihan_3' => '\(200{,}96\text{ cm}^2\)',
+            'pilihan_4' => '\(251{,}20\text{ cm}^2\)',
+            'pilihan_5' => '\(314{,}00\text{ cm}^2\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 3.1] Selisih luas: \(L_2 - L_1 = \pi(r_2^2 - r_1^2) = 3{,}14 \times (10^2 - 6^2) = 3{,}14 \times (100 - 36) = 3{,}14 \times 64 = 200{,}96\text{ cm}^2\).',
+        ],
+        9 => [
+            'pertanyaan' => 'Jika panjang diameter suatu lingkaran diperbesar menjadi \(4\text{ kali}\) panjang semula, maka keliling lingkaran yang baru menjadi ....',
+            'pilihan_1' => '\(4\text{ kali keliling semula}\)',
+            'pilihan_2' => '\(8\text{ kali keliling semula}\)',
+            'pilihan_3' => '\(16\text{ kali keliling semula}\)',
+            'pilihan_4' => '\(2\text{ kali keliling semula}\)',
+            'pilihan_5' => '\(12\text{ kali keliling semula}\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 3.2] Karena \(K = \pi d\) berbanding lurus linier dengan diameter, jika \(d_2 = 4d_1\), maka \(K_2 = 4K_1\).',
+        ],
+        10 => [
+            'pertanyaan' => 'Sebuah lingkaran memiliki jari-jari \(r\). Jika jari-jarinya diperbesar menjadi \(2{,}5\text{ kali}\) semula, maka luas lingkaran baru menjadi ....',
+            'pilihan_1' => '\(2{,}5\text{ kali luas semula}\)',
+            'pilihan_2' => '\(5\text{ kali luas semula}\)',
+            'pilihan_3' => '\(5{,}25\text{ kali luas semula}\)',
+            'pilihan_4' => '\(6{,}25\text{ kali luas semula}\)',
+            'pilihan_5' => '\(12{,}5\text{ kali luas semula}\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 3.2] Faktor skala luas adalah kuadrat dari faktor skala jari-jari: \(k^2 = (2{,}5)^2 = 6{,}25\text{ kali luas semula}\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Perbandingan jari-jari dua buah lingkaran adalah \(2 : 5\). Perbandingan luas kedua lingkaran tersebut adalah ....',
+            'pilihan_1' => '\(2 : 5\)',
+            'pilihan_2' => '\(4 : 10\)',
+            'pilihan_3' => '\(4 : 25\)',
+            'pilihan_4' => '\(8 : 125\)',
+            'pilihan_5' => '\(2 : 25\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 3.2] \(L_1 : L_2 = r_1^2 : r_2^2 = 2^2 : 5^2 = 4 : 25\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Perbandingan luas dua buah lingkaran adalah \(16 : 49\). Jika keliling lingkaran pertama adalah \(40\text{ cm}\), maka keliling lingkaran kedua adalah ....',
+            'pilihan_1' => '\(56\text{ cm}\)',
+            'pilihan_2' => '\(70\text{ cm}\)',
+            'pilihan_3' => '\(80\text{ cm}\)',
+            'pilihan_4' => '\(122{,}5\text{ cm}\)',
+            'pilihan_5' => '\(98\text{ cm}\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 3.3] Rasio keliling \(\frac{K_1}{K_2} = \sqrt{\frac{16}{49}} = \frac{4}{7}\). Maka \(K_2 = \frac{7}{4} \times 40 = 70\text{ cm}\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Jari-jari dua buah lingkaran masing-masing adalah \(a\text{ cm}\) dan \(3a\text{ cm}\). Jika jumlah panjang jari-jari kedua lingkaran tersebut adalah \(28\text{ cm}\), maka selisih luas kedua lingkaran adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(616\text{ cm}^2\)',
+            'pilihan_2' => '\(924\text{ cm}^2\)',
+            'pilihan_3' => '\(1.078\text{ cm}^2\)',
+            'pilihan_4' => '\(1.232\text{ cm}^2\)',
+            'pilihan_5' => '\(1.386\text{ cm}^2\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 3.3] \(a + 3a = 28 \implies a = 7\text{ cm}\), sehingga \(r_1 = 7\text{ cm}\) dan \(r_2 = 21\text{ cm}\). Selisih luas \(= \frac{22}{7}(21^2 - 7^2) = \frac{22}{7}(441 - 49) = \frac{22}{7} \times 392 = 1.232\text{ cm}^2\).',
+        ],
+        14 => [
+            'pertanyaan' => 'Sebuah lingkaran mempunyai luas \(154\text{ cm}^2\). Jika jari-jari lingkaran tersebut ditambah \(7\text{ cm}\), maka pertambahan luas lingkaran tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(154\text{ cm}^2\)',
+            'pilihan_2' => '\(308\text{ cm}^2\)',
+            'pilihan_3' => '\(462\text{ cm}^2\)',
+            'pilihan_4' => '\(616\text{ cm}^2\)',
+            'pilihan_5' => '\(770\text{ cm}^2\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 3.3] Dari \(L_1 = 154\text{ cm}^2\) diperoleh \(r_1 = 7\text{ cm}\). Jari-jari baru \(r_2 = 7 + 7 = 14\text{ cm}\) dengan \(L_2 = \frac{22}{7} \times 14^2 = 616\text{ cm}^2\). Pertambahan luas \(= 616 - 154 = 462\text{ cm}^2\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Dua buah lingkaran memiliki perbandingan keliling \(3 : 5\). Jika selisih luas kedua lingkaran tersebut adalah \(64\pi\text{ cm}^2\), maka luas lingkaran yang lebih kecil adalah ....',
+            'pilihan_1' => '\(18\pi\text{ cm}^2\)',
+            'pilihan_2' => '\(36\pi\text{ cm}^2\)',
+            'pilihan_3' => '\(45\pi\text{ cm}^2\)',
+            'pilihan_4' => '\(64\pi\text{ cm}^2\)',
+            'pilihan_5' => '\(100\pi\text{ cm}^2\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 3.3] Misal \(r_1 = 3k\) dan \(r_2 = 5k\). Selisih luas: \(\pi(25k^2 - 9k^2) = 16\pi k^2 = 64\pi \implies k^2 = 4\). Jadi luas lingkaran kecil \(= \pi(3k)^2 = 9\pi k^2 = 9\pi(4) = 36\pi\text{ cm}^2\).',
         ],
     ],
 ];

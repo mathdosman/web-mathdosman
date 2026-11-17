@@ -20,6 +20,20 @@ $p6_content = str_replace('{{NAV}}', $p6_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 6
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 6.1:</strong> Menentukan besar sudut-sudut pada segi empat tali busur menggunakan sifat jumlah sudut berhadapan sama dengan \(180^\circ\).</li>
+                <li><strong>TP 6.2:</strong> Menerapkan sifat sudut luar segi empat tali busur (sama dengan sudut dalam yang berhadapan dengannya).</li>
+                <li><strong>TP 6.3:</strong> Mengidentifikasi dan menghitung unsur/luas bentuk khusus segi empat tali busur (siku-siku, persegi panjang, dan persegi).</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Definisi & Sifat Sudut Berhadapan 180 Derajat -->
@@ -201,9 +215,9 @@ $p6_content = str_replace('{{NAV}}', $p6_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 6</h4>
-            <p class="small mb-0 opacity-90">Uji kemampuan analitis sifat-sifat segi empat tali busur pada kuis interaktif berikut.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 6 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -278,7 +292,97 @@ $meetings[6] = [
             'pilihan_4' => '\(75^\circ\)',
             'pilihan_5' => '\(65^\circ\)',
             'jawaban_benar' => 1,
-            'pembahasan' => 'Besar sudut luar segi empat tali busur sama dengan sudut dalam yang berhadapan dengannya. Karena \(\angle BCD = 180^\circ - 85^\circ = 95^\circ\), maka sudut luar \(\angle DCE = 180^\circ - 95^\circ = 85^\circ = \angle BAD\).',
+            'pembahasan' => '[TP 6.2] Besar sudut luar segi empat tali busur sama dengan sudut dalam yang berhadapan dengannya. Karena \(\angle BCD = 180^\circ - 85^\circ = 95^\circ\), maka sudut luar \(\angle DCE = 180^\circ - 95^\circ = 85^\circ = \angle BAD\).',
+        ],
+        7 => [
+            'pertanyaan' => 'Diketahui \(PQRS\) adalah segi empat tali busur. Jika besar \(\angle P = 112^\circ\) dan \(\angle Q = 64^\circ\), maka besar \(\angle R\) dan \(\angle S\) berturut-turut adalah ....',
+            'pilihan_1' => '\(64^\circ\text{ dan } 112^\circ\)',
+            'pilihan_2' => '\(68^\circ\text{ dan } 116^\circ\)',
+            'pilihan_3' => '\(78^\circ\text{ dan } 126^\circ\)',
+            'pilihan_4' => '\(116^\circ\text{ dan } 68^\circ\)',
+            'pilihan_5' => '\(68^\circ\text{ dan } 106^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 6.1] \(\angle R = 180^\circ - \angle P = 180^\circ - 112^\circ = 68^\circ\) dan \(\angle S = 180^\circ - \angle Q = 180^\circ - 64^\circ = 116^\circ\).',
+        ],
+        8 => [
+            'pertanyaan' => 'Pada segi empat tali busur \(ABCD\), sisi \(AB\) diperpanjang ke titik \(E\) sehingga terbentuk sudut luar \(\angle CBE = 104^\circ\). Besar \(\angle ADC\) adalah ....',
+            'pilihan_1' => '\(76^\circ\)',
+            'pilihan_2' => '\(86^\circ\)',
+            'pilihan_3' => '\(94^\circ\)',
+            'pilihan_4' => '\(104^\circ\)',
+            'pilihan_5' => '\(114^\circ\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 6.2] Sudut luar di \(B\) (\(\angle CBE\)) sama besar dengan sudut dalam yang berhadapan dengannya, yaitu \(\angle ADC = 104^\circ\).',
+        ],
+        9 => [
+            'pertanyaan' => 'Diketahui segi empat tali busur \(ABCD\) memiliki perbandingan sudut berhadapan \(\angle A : \angle C = 2 : 3\). Besar sudut \(\angle C\) adalah ....',
+            'pilihan_1' => '\(72^\circ\)',
+            'pilihan_2' => '\(90^\circ\)',
+            'pilihan_3' => '\(108^\circ\)',
+            'pilihan_4' => '\(120^\circ\)',
+            'pilihan_5' => '\(135^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 6.1] \(\angle A + \angle C = 180^\circ\), maka \(\angle C = \frac{3}{2 + 3} \times 180^\circ = \frac{3}{5} \times 180^\circ = 108^\circ\).',
+        ],
+        10 => [
+            'pertanyaan' => 'Segi empat tali busur \(KLMN\) berada di dalam lingkaran berjari-jari \(10\text{ cm}\). Jika kedua diagonalnya \(KM\) dan \(LN\) merupakan diameter lingkaran yang saling tegak lurus, maka luas segi empat \(KLMN\) adalah ....',
+            'pilihan_1' => '\(100\text{ cm}^2\)',
+            'pilihan_2' => '\(200\text{ cm}^2\)',
+            'pilihan_3' => '\(314\text{ cm}^2\)',
+            'pilihan_4' => '\(400\text{ cm}^2\)',
+            'pilihan_5' => '\(150\text{ cm}^2\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 6.3] Panjang kedua diagonal sama dengan diameter \(d = 20\text{ cm}\) dan saling tegak lurus (membentuk persegi). Luas \(= \frac{1}{2} \times d_1 \times d_2 = \frac{1}{2} \times 20 \times 20 = 200\text{ cm}^2\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Pada segi empat tali busur \(ABCD\), diketahui besar \(\angle A = (4x - 20)^\circ\) dan \(\angle C = (2x + 32)^\circ\). Besar sudut \(\angle A\) sebenarnya adalah ....',
+            'pilihan_1' => '\(28^\circ\)',
+            'pilihan_2' => '\(88^\circ\)',
+            'pilihan_3' => '\(92^\circ\)',
+            'pilihan_4' => '\(96^\circ\)',
+            'pilihan_5' => '\(102^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 6.1] \[ \begin{aligned} (4x - 20) + (2x + 32) &= 180 \\ 6x + 12 &= 180 \\ 6x &= 168 \\ x &= 28 \end{aligned} \] Maka \(\angle A = 4(28) - 20 = 112 - 20 = 92^\circ\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Segi empat tali busur \(PQRS\) memiliki diagonal \(PR\) dan \(QS\) yang keduanya merupakan diameter lingkaran dengan pusat \(O\). Jika besar \(\angle OPS = 35^\circ\), maka besar \(\angle QPR\) adalah ....',
+            'pilihan_1' => '\(35^\circ\)',
+            'pilihan_2' => '\(55^\circ\)',
+            'pilihan_3' => '\(70^\circ\)',
+            'pilihan_4' => '\(90^\circ\)',
+            'pilihan_5' => '\(145^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 6.3] Karena \(QS\) adalah diameter, maka sudut keliling \(\angle QPS = 90^\circ\). Jadi \(\angle QPR = 90^\circ - \angle OPS = 90^\circ - 35^\circ = 55^\circ\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Diketahui segi empat tali busur \(ABCD\) dengan \(\angle DAB = 85^\circ\) dan \(\angle ABD = 40^\circ\). Besar \(\angle BCD\) dan \(\angle ADB\) berturut-turut adalah ....',
+            'pilihan_1' => '\(95^\circ\text{ dan } 55^\circ\)',
+            'pilihan_2' => '\(55^\circ\text{ dan } 95^\circ\)',
+            'pilihan_3' => '\(85^\circ\text{ dan } 55^\circ\)',
+            'pilihan_4' => '\(95^\circ\text{ dan } 40^\circ\)',
+            'pilihan_5' => '\(105^\circ\text{ dan } 45^\circ\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 6.1] \(\angle BCD = 180^\circ - \angle DAB = 180^\circ - 85^\circ = 95^\circ\). Pada \(\Delta ABD\), \(\angle ADB = 180^\circ - (85^\circ + 40^\circ) = 55^\circ\).',
+        ],
+        14 => [
+            'pertanyaan' => 'Pada segi empat tali busur \(ABCD\), sisi \(CD\) diperpanjang hingga titik \(G\) membentuk sudut luar \(\angle BCG = (2x + 10)^\circ\). Jika \(\angle BAD = (3x - 25)^\circ\), maka nilai \(x\) adalah ....',
+            'pilihan_1' => '\(20\)',
+            'pilihan_2' => '\(25\)',
+            'pilihan_3' => '\(30\)',
+            'pilihan_4' => '\(35\)',
+            'pilihan_5' => '\(40\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 6.2] Sudut luar sama dengan sudut dalam di hadapannya: \(\angle BCG = \angle BAD \implies 2x + 10 = 3x - 25 \implies x = 35\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Diketahui \(ABCD\) adalah segi empat tali busur dengan \(AC\) sebagai diameter lingkaran. Jika \(\angle BAC = 32^\circ\) dan \(\angle CAD = 41^\circ\), maka besar \(\angle BCD\) adalah ....',
+            'pilihan_1' => '\(73^\circ\)',
+            'pilihan_2' => '\(90^\circ\)',
+            'pilihan_3' => '\(107^\circ\)',
+            'pilihan_4' => '\(117^\circ\)',
+            'pilihan_5' => '\(123^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 6.1] \(\angle BAD = \angle BAC + \angle CAD = 32^\circ + 41^\circ = 73^\circ\). Karena \(\angle BCD\) berhadapan dengan \(\angle BAD\), maka \(\angle BCD = 180^\circ - 73^\circ = 107^\circ\).',
         ],
     ],
 ];

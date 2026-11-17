@@ -20,6 +20,20 @@ $p7_content = str_replace('{{NAV}}', $p7_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 7
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 7.1:</strong> Menentukan besar sudut yang dibentuk oleh dua tali busur yang berpotongan di dalam lingkaran (\(\frac{1}{2}\) dari jumlah sudut pusat).</li>
+                <li><strong>TP 7.2:</strong> Menentukan besar sudut yang dibentuk oleh perpanjangan dua tali busur yang berpotongan di luar lingkaran (\(\frac{1}{2}\) dari selisih sudut pusat).</li>
+                <li><strong>TP 7.3:</strong> Memecahkan masalah aljabar sudut dan sudut berpelurus yang melibatkan perpotongan tali busur di dalam maupun di luar lingkaran.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Perpotongan Dua Tali Busur DI DALAM Lingkaran -->
@@ -181,9 +195,9 @@ $p7_content = str_replace('{{NAV}}', $p7_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 7</h4>
-            <p class="small mb-0 opacity-90">Uji kemampuan menganalisis perpotongan tali busur di dalam dan di luar lingkaran pada kuis berikut.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 7 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -258,7 +272,97 @@ $meetings[7] = [
             'pilihan_4' => '\(120^\circ\)',
             'pilihan_5' => '\(180^\circ\)',
             'jawaban_benar' => 3,
-            'pembahasan' => '\(\text{Sudut} = \frac{1}{2} \times 180^\circ = 90^\circ\) (tegak lurus).',
+            'pembahasan' => '[TP 7.1] \(\text{Sudut} = \frac{1}{2} \times 180^\circ = 90^\circ\) (tegak lurus).',
+        ],
+        7 => [
+            'pertanyaan' => 'Tali busur \(AB\) dan \(CD\) berpotongan di titik \(E\) di dalam lingkaran. Jika \(\angle AOC = 65^\circ\) dan \(\angle BOD = 140^\circ\) (keduanya sudut pusat yang menghadap busur \(AC\) dan \(BD\)), maka besar sudut pelurus \(\angle BEC\) adalah ....',
+            'pilihan_1' => '\(102{,}5^\circ\)',
+            'pilihan_2' => '\(77{,}5^\circ\)',
+            'pilihan_3' => '\(75^\circ\)',
+            'pilihan_4' => '\(105^\circ\)',
+            'pilihan_5' => '\(67{,}5^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 7.3] \(\angle AEC = \frac{1}{2}(65^\circ + 140^\circ) = 102{,}5^\circ\). Karena \(\angle BEC\) berpelurus dengan \(\angle AEC\), maka \(\angle BEC = 180^\circ - 102{,}5^\circ = 77{,}5^\circ\).',
+        ],
+        8 => [
+            'pertanyaan' => 'Dua tali busur \(PR\) dan \(QS\) berpotongan di titik \(T\) di dalam lingkaran berpusat di \(O\). Jika \(\angle POQ = 35^\circ\) dan \(\angle ROS = 50^\circ\), maka besar sudut \(\angle QTR\) adalah ....',
+            'pilihan_1' => '\(42{,}5^\circ\)',
+            'pilihan_2' => '\(85^\circ\)',
+            'pilihan_3' => '\(115^\circ\)',
+            'pilihan_4' => '\(137{,}5^\circ\)',
+            'pilihan_5' => '\(145^\circ\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 7.3] \(\angle PTQ = \frac{1}{2}(35^\circ + 50^\circ) = 42{,}5^\circ\). Sudut \(\angle QTR\) berpelurus dengan \(\angle PTQ\), sehingga \(\angle QTR = 180^\circ - 42{,}5^\circ = 137{,}5^\circ\).',
+        ],
+        9 => [
+            'pertanyaan' => 'Perpanjangan tali busur \(AB\) dan \(CD\) berpotongan di titik \(P\) di luar lingkaran. Jika sudut pusat busur jauh adalah \(128^\circ\) dan sudut pusat busur dekat adalah \(44^\circ\), maka besar \(\angle P\) adalah ....',
+            'pilihan_1' => '\(42^\circ\)',
+            'pilihan_2' => '\(64^\circ\)',
+            'pilihan_3' => '\(84^\circ\)',
+            'pilihan_4' => '\(86^\circ\)',
+            'pilihan_5' => '\(36^\circ\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 7.2] \(\angle P = \frac{1}{2}(128^\circ - 44^\circ) = \frac{1}{2} \times 84^\circ = 42^\circ\).',
+        ],
+        10 => [
+            'pertanyaan' => 'Tali busur \(KL\) dan \(MN\) diperpanjang ke luar lingkaran hingga berpotongan di titik \(P\) membentuk sudut \(\angle P = 25^\circ\). Jika sudut pusat busur dekat adalah \(30^\circ\), maka besar sudut pusat busur jauh adalah ....',
+            'pilihan_1' => '\(55^\circ\)',
+            'pilihan_2' => '\(70^\circ\)',
+            'pilihan_3' => '\(80^\circ\)',
+            'pilihan_4' => '\(85^\circ\)',
+            'pilihan_5' => '\(110^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 7.2] \(25^\circ = \frac{1}{2}(\alpha - 30^\circ) \implies 50^\circ = \alpha - 30^\circ \implies \alpha = 80^\circ\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Tali busur \(KM\) dan \(LN\) berpotongan di dalam lingkaran pada titik \(Q\). Diketahui sudut pusat \(\angle NOM = 30^\circ\) dan sudut perpotongan \(\angle KQL = 60^\circ\). Besar sudut pusat \(\angle KOL\) adalah ....',
+            'pilihan_1' => '\(45^\circ\)',
+            'pilihan_2' => '\(60^\circ\)',
+            'pilihan_3' => '\(90^\circ\)',
+            'pilihan_4' => '\(120^\circ\)',
+            'pilihan_5' => '\(150^\circ\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 7.1] \(\angle KQL = \frac{1}{2}(\angle KOL + \angle NOM) \implies 60^\circ = \frac{1}{2}(\angle KOL + 30^\circ) \implies 120^\circ = \angle KOL + 30^\circ \implies \angle KOL = 90^\circ\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Jika dua tali busur diperpanjang hingga berpotongan di titik \(P\) di luar lingkaran dengan sudut pusat busur jauh \(\angle KOL = 90^\circ\) dan sudut pusat busur dekat \(\angle NOM = 30^\circ\), maka besar sudut \(\angle KPL\) adalah ....',
+            'pilihan_1' => '\(15^\circ\)',
+            'pilihan_2' => '\(30^\circ\)',
+            'pilihan_3' => '\(45^\circ\)',
+            'pilihan_4' => '\(60^\circ\)',
+            'pilihan_5' => '\(120^\circ\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 7.2] \(\angle KPL = \frac{1}{2}(\angle KOL - \angle NOM) = \frac{1}{2}(90^\circ - 30^\circ) = 30^\circ\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Dua buah tali busur berpotongan di dalam lingkaran membentuk sudut \((3x + 10)^\circ\). Jika kedua sudut pusat yang diapitnya berukuran \(70^\circ\) dan \(130^\circ\), maka nilai \(x\) adalah ....',
+            'pilihan_1' => '\(20\)',
+            'pilihan_2' => '\(25\)',
+            'pilihan_3' => '\(30\)',
+            'pilihan_4' => '\(35\)',
+            'pilihan_5' => '\(40\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 7.3] \[ \begin{aligned} 3x + 10 &= \frac{1}{2}(70 + 130) \\ 3x + 10 &= 100 \\ 3x &= 90 \\ x &= 30 \end{aligned} \]',
+        ],
+        14 => [
+            'pertanyaan' => 'Dua tali busur diperpanjang hingga berpotongan di luar lingkaran membentuk sudut \((2x - 5)^\circ\). Jika sudut pusat busur jauh \((5x + 10)^\circ\) dan sudut pusat busur dekat \(40^\circ\), maka nilai \(x\) adalah ....',
+            'pilihan_1' => '\(15\)',
+            'pilihan_2' => '\(20\)',
+            'pilihan_3' => '\(25\)',
+            'pilihan_4' => '\(30\)',
+            'pilihan_5' => '\(35\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 7.3] \[ \begin{aligned} 2x - 5 &= \frac{1}{2}(5x + 10 - 40) \\ 4x - 10 &= 5x - 30 \\ x &= 20 \end{aligned} \]',
+        ],
+        15 => [
+            'pertanyaan' => 'Tali busur \(AC\) dan \(BD\) berpotongan di titik \(E\) di dalam lingkaran. Jika diketahui besar sudut keliling \(\angle BDC = 28^\circ\) dan \(\angle ACD = 37^\circ\), maka besar sudut \(\angle BEC\) adalah ....',
+            'pilihan_1' => '\(9^\circ\)',
+            'pilihan_2' => '\(32{,}5^\circ\)',
+            'pilihan_3' => '\(56^\circ\)',
+            'pilihan_4' => '\(65^\circ\)',
+            'pilihan_5' => '\(115^\circ\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 7.1] \(\angle BEC\) merupakan sudut luar segitiga \(\Delta CDE\), sehingga besarnya sama dengan jumlah dua sudut dalam yang tidak berdampingan: \(\angle BEC = \angle BDC + \angle ACD = 28^\circ + 37^\circ = 65^\circ\).',
         ],
     ],
 ];

@@ -20,6 +20,20 @@ $p1_content = str_replace('{{NAV}}', $p1_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 1
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 1.1:</strong> Menjelaskan definisi formal lingkaran sebagai tempat kedudukan titik-titik yang berjarak sama terhadap titik pusat.</li>
+                <li><strong>TP 1.2:</strong> Mengidentifikasi dan membedakan 8 unsur pembentuk lingkaran (pusat, jari-jari, diameter, tali busur, apotema, busur, juring, dan tembereng).</li>
+                <li><strong>TP 1.3:</strong> Menentukan hubungan panjang diameter dengan jari-jari (\(d = 2r\)) serta menghitung panjang apotema, jari-jari, atau tali busur menggunakan Teorema Pythagoras.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Konsep Dasar & Definisi Lingkaran -->
@@ -287,9 +301,9 @@ $p1_content = str_replace('{{NAV}}', $p1_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 1</h4>
-            <p class="small mb-0 opacity-90">Uji pemahamanmu mengenai unsur dan bagian lingkaran melalui kuis interaktif di bawah ini.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 1 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -364,7 +378,97 @@ $meetings[1] = [
             'pilihan_4' => 'Busur kecil memiliki panjang kurang dari setengah keliling lingkaran.',
             'pilihan_5' => 'Titik pusat membagi diameter menjadi dua segmen jari-jari sama panjang.',
             'jawaban_benar' => 3,
-            'pembahasan' => 'Pernyataan nomor 3 SALAH karena tembereng dibatasi oleh sebuah tali busur dan sebuah busur lingkaran (bukan oleh dua buah jari-jari). Daerah yang dibatasi oleh dua jari-jari dan busur adalah juring.',
+            'pembahasan' => '[TP 1.2] Pernyataan nomor 3 SALAH karena tembereng dibatasi oleh sebuah tali busur dan sebuah busur lingkaran (bukan oleh dua buah jari-jari). Daerah yang dibatasi oleh dua jari-jari dan busur adalah juring.',
+        ],
+        7 => [
+            'pertanyaan' => 'Secara matematis, seluruh titik yang terletak pada garis lengkung keliling lingkaran memiliki sifat selalu ....',
+            'pilihan_1' => 'Membentuk sudut siku-siku dengan diameter',
+            'pilihan_2' => 'Berjarak sama terhadap titik pusat lingkaran',
+            'pilihan_3' => 'Memiliki jarak lebih pendek dari apotema',
+            'pilihan_4' => 'Terletak di dalam daerah juring',
+            'pilihan_5' => 'Berpotongan dengan garis singgung di pusat',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 1.1] Berdasarkan definisi formal, lingkaran adalah tempat kedudukan titik-titik pada bidang datar yang berjarak sama (sebesar jari-jari \(r\)) terhadap satu titik tertentu (pusat lingkaran).',
+        ],
+        8 => [
+            'pertanyaan' => 'Bagian dari garis lengkung keliling lingkaran yang panjangnya lebih dari setengah keliling lingkaran disebut ....',
+            'pilihan_1' => 'Tali busur',
+            'pilihan_2' => 'Apotema',
+            'pilihan_3' => 'Busur kecil',
+            'pilihan_4' => 'Busur besar',
+            'pilihan_5' => 'Tembereng',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 1.2] Busur lingkaran terbagi menjadi dua: busur kecil (kurang dari setengah keliling lingkaran) dan busur besar (lebih dari setengah keliling lingkaran).',
+        ],
+        9 => [
+            'pertanyaan' => 'Daerah di dalam lingkaran yang dibatasi oleh dua buah jari-jari dan satu busur lingkaran disebut ....',
+            'pilihan_1' => 'Juring',
+            'pilihan_2' => 'Tembereng',
+            'pilihan_3' => 'Apotema',
+            'pilihan_4' => 'Diameter',
+            'pilihan_5' => 'Tali busur',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 1.2] Juring (sektor) adalah daerah yang dibatasi oleh dua jari-jari dan busur yang diapit oleh kedua jari-jari tersebut.',
+        ],
+        10 => [
+            'pertanyaan' => 'Jika panjang jari-jari sebuah lingkaran adalah \(17{,}5\text{ cm}\), maka panjang diameter lingkaran tersebut adalah ....',
+            'pilihan_1' => '\(8{,}75\text{ cm}\)',
+            'pilihan_2' => '\(25\text{ cm}\)',
+            'pilihan_3' => '\(35\text{ cm}\)',
+            'pilihan_4' => '\(36\text{ cm}\)',
+            'pilihan_5' => '\(52{,}5\text{ cm}\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 1.3] Panjang diameter adalah dua kali jari-jari: \(d = 2r = 2 \times 17{,}5 = 35\text{ cm}\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Pada lingkaran berpusat di \(O\), terdapat tali busur \(PQ\) dengan panjang \(16\text{ cm}\). Jika panjang apotema dari pusat \(O\) ke tali busur \(PQ\) adalah \(6\text{ cm}\), maka panjang jari-jari lingkaran tersebut adalah ....',
+            'pilihan_1' => '\(8\text{ cm}\)',
+            'pilihan_2' => '\(10\text{ cm}\)',
+            'pilihan_3' => '\(12\text{ cm}\)',
+            'pilihan_4' => '\(14\text{ cm}\)',
+            'pilihan_5' => '\(20\text{ cm}\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 1.3] Setengah panjang tali busur \(PQ\) adalah \(8\text{ cm}\). Dengan Teorema Pythagoras: \[ \begin{aligned} r &= \sqrt{8^2 + 6^2} \\ &= \sqrt{64 + 36} \\ &= \sqrt{100} = 10\text{ cm} \end{aligned} \]',
+        ],
+        12 => [
+            'pertanyaan' => 'Sebuah lingkaran berjari-jari \(10\text{ cm}\) memiliki sebuah tali busur \(AB\) yang berjarak \(8\text{ cm}\) dari titik pusat lingkaran. Panjang tali busur \(AB\) adalah ....',
+            'pilihan_1' => '\(6\text{ cm}\)',
+            'pilihan_2' => '\(8\text{ cm}\)',
+            'pilihan_3' => '\(10\text{ cm}\)',
+            'pilihan_4' => '\(12\text{ cm}\)',
+            'pilihan_5' => '\(16\text{ cm}\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 1.3] Setengah panjang tali busur: \(\sqrt{10^2 - 8^2} = \sqrt{100 - 64} = \sqrt{36} = 6\text{ cm}\). Jadi panjang tali busur \(AB = 2 \times 6 = 12\text{ cm}\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Sebuah tali busur \(CD\) yang tidak melalui titik pusat membagi daerah lingkaran menjadi dua bagian. Kedua bagian tersebut adalah ....',
+            'pilihan_1' => 'Juring kecil dan juring besar',
+            'pilihan_2' => 'Tembereng kecil dan tembereng besar',
+            'pilihan_3' => 'Busur kecil dan diameter',
+            'pilihan_4' => 'Setengah lingkaran yang sama luas',
+            'pilihan_5' => 'Apotema dan sektor',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 1.2] Tali busur yang bukan diameter membagi daerah lingkaran menjadi dua daerah tidak sama besar, yaitu tembereng kecil dan tembereng besar.',
+        ],
+        14 => [
+            'pertanyaan' => 'Dua buah tali busur sejajar \(AB = 12\text{ cm}\) dan \(CD = 16\text{ cm}\) terletak pada sisi yang sama terhadap titik pusat \(O\) pada lingkaran berjari-jari \(10\text{ cm}\). Jarak antara kedua tali busur tersebut adalah ....',
+            'pilihan_1' => '\(2\text{ cm}\)',
+            'pilihan_2' => '\(4\text{ cm}\)',
+            'pilihan_3' => '\(6\text{ cm}\)',
+            'pilihan_4' => '\(8\text{ cm}\)',
+            'pilihan_5' => '\(14\text{ cm}\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 1.3] Apotema \(AB = \sqrt{10^2 - 6^2} = 8\text{ cm}\). Apotema \(CD = \sqrt{10^2 - 8^2} = 6\text{ cm}\). Karena berada pada sisi yang sama dari pusat, jarak keduanya \(= 8 - 6 = 2\text{ cm}\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Diketahui panjang diameter sebuah lingkaran adalah \(34\text{ cm}\). Jika panjang tali busur \(AC = 16\text{ cm}\), maka panjang apotema dari pusat \(O\) ke tali busur \(AC\) adalah ....',
+            'pilihan_1' => '\(8\text{ cm}\)',
+            'pilihan_2' => '\(12\text{ cm}\)',
+            'pilihan_3' => '\(15\text{ cm}\)',
+            'pilihan_4' => '\(17\text{ cm}\)',
+            'pilihan_5' => '\(18\text{ cm}\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 1.3] Jari-jari \(r = \frac{34}{2} = 17\text{ cm}\), setengah tali busur \(= \frac{16}{2} = 8\text{ cm}\). Apotema \(= \sqrt{17^2 - 8^2} = \sqrt{289 - 64} = \sqrt{225} = 15\text{ cm}\).',
         ],
     ],
 ];

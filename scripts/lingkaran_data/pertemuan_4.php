@@ -20,6 +20,20 @@ $p4_content = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
         </p>
     </div>
 
+    <!-- Tujuan Pembelajaran (TP) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h6 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+                <i class="ti ti-target-arrow"></i> Tujuan Pembelajaran (TP) Pertemuan 4
+            </h2>
+            <ol class="small text-secondary mb-0 ps-3" style="line-height: 1.7;">
+                <li><strong>TP 4.1:</strong> Menjelaskan dan menggunakan prinsip kesebandingan senilai antara sudut pusat, panjang busur, dan luas juring pada lingkaran.</li>
+                <li><strong>TP 4.2:</strong> Menghitung panjang busur dan luas juring lingkaran (termasuk busur/juring besar maupun kecil) dari sudut pusat dan jari-jari yang diketahui.</li>
+                <li><strong>TP 4.3:</strong> Menentukan luas daerah tembereng serta luas daerah arsiran gabungan juring pada berbagai masalah geometri.</li>
+            </ol>
+        </div>
+    </div>
+
     {{NAV}}
 
     <!-- 1. Konsep Kesebandingan Sudut Pusat -->
@@ -242,9 +256,9 @@ $p4_content = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
     <div class="math-practice-banner d-flex align-items-center justify-content-between">
         <div>
             <h4 class="fw-bold mb-1"><i class="ti ti-pencil me-1"></i> Latihan Soal Mandiri Pertemuan 4</h4>
-            <p class="small mb-0 opacity-90">Uji kemampuan kalkulasi busur, juring, dan tembereng melalui kuis interaktif berikut.</p>
+            <p class="small mb-0 opacity-90">Uji ketuntasan seluruh TP Pertemuan 4 melalui 15 butir soal ulangan standar pilihan ganda di bawah ini.</p>
         </div>
-        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">6 Soal</span>
+        <span class="badge bg-white text-success px-3 py-2 rounded-pill fw-bold">15 Soal</span>
     </div>
 </div>
 HTML
@@ -319,7 +333,97 @@ $meetings[4] = [
             'pilihan_4' => '\(57{,}75\text{ cm}^2\)',
             'pilihan_5' => '\(61{,}25\text{ cm}^2\)',
             'jawaban_benar' => 4,
-            'pembahasan' => 'Luas juring besar \(= \frac{45}{360} \times \frac{22}{7} \times 14^2 = \frac{1}{8} \times 616 = 77\text{ cm}^2\). Luas juring kecil (\(r=7\)) \(= \frac{1}{8} \times \frac{22}{7} \times 7^2 = \frac{154}{8} = 19{,}25\text{ cm}^2\). Luas arsiran \(= 77 - 19{,}25 = 57{,}75\text{ cm}^2\).',
+            'pembahasan' => '[TP 4.3] Luas juring besar \(= \frac{45}{360} \times \frac{22}{7} \times 14^2 = \frac{1}{8} \times 616 = 77\text{ cm}^2\). Luas juring kecil (\(r=7\)) \(= \frac{1}{8} \times \frac{22}{7} \times 7^2 = \frac{154}{8} = 19{,}25\text{ cm}^2\). Luas arsiran \(= 77 - 19{,}25 = 57{,}75\text{ cm}^2\).',
+        ],
+        7 => [
+            'pertanyaan' => 'Sebuah lingkaran berjari-jari \(10\text{ cm}\) memiliki sudut pusat \(72^\circ\). Panjang busur di hadapan sudut pusat tersebut adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(12{,}56\text{ cm}\)',
+            'pilihan_2' => '\(15{,}70\text{ cm}\)',
+            'pilihan_3' => '\(25{,}12\text{ cm}\)',
+            'pilihan_4' => '\(62{,}80\text{ cm}\)',
+            'pilihan_5' => '\(6{,}28\text{ cm}\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 4.2] Panjang busur \(= \frac{72^\circ}{360^\circ} \times 2 \times 3{,}14 \times 10 = \frac{1}{5} \times 62{,}8 = 12{,}56\text{ cm}\).',
+        ],
+        8 => [
+            'pertanyaan' => 'Luas juring lingkaran yang berjari-jari \(12\text{ cm}\) dengan besar sudut pusat \(150^\circ\) adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(94{,}2\text{ cm}^2\)',
+            'pilihan_2' => '\(150{,}72\text{ cm}^2\)',
+            'pilihan_3' => '\(188{,}4\text{ cm}^2\)',
+            'pilihan_4' => '\(226{,}08\text{ cm}^2\)',
+            'pilihan_5' => '\(376{,}8\text{ cm}^2\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 4.2] Luas juring \(= \frac{150^\circ}{360^\circ} \times 3{,}14 \times 12^2 = \frac{5}{12} \times 3{,}14 \times 144 = 5 \times 12 \times 3{,}14 = 188{,}4\text{ cm}^2\).',
+        ],
+        9 => [
+            'pertanyaan' => 'Pada sebuah lingkaran, panjang busur \(AB\) yang menghadap sudut pusat \(45^\circ\) adalah \(18\text{ cm}\). Keliling lingkaran tersebut adalah ....',
+            'pilihan_1' => '\(72\text{ cm}\)',
+            'pilihan_2' => '\(90\text{ cm}\)',
+            'pilihan_3' => '\(108\text{ cm}\)',
+            'pilihan_4' => '\(144\text{ cm}\)',
+            'pilihan_5' => '\(162\text{ cm}\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 4.1] Keliling lingkaran penuh bersesuaian dengan \(360^\circ\): \(K = \frac{360^\circ}{45^\circ} \times 18 = 8 \times 18 = 144\text{ cm}\).',
+        ],
+        10 => [
+            'pertanyaan' => 'Diketahui panjang busur lingkaran di hadapan sudut pusat \(60^\circ\) adalah \(22\text{ cm}\). Panjang jari-jari lingkaran tersebut adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(14\text{ cm}\)',
+            'pilihan_2' => '\(21\text{ cm}\)',
+            'pilihan_3' => '\(28\text{ cm}\)',
+            'pilihan_4' => '\(35\text{ cm}\)',
+            'pilihan_5' => '\(42\text{ cm}\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 4.2] \(22 = \frac{60^\circ}{360^\circ} \times 2 \times \frac{22}{7} \times r = \frac{1}{6} \times \frac{44}{7} r = \frac{22}{21}r \implies r = 21\text{ cm}\).',
+        ],
+        11 => [
+            'pertanyaan' => 'Luas sebuah juring dengan sudut pusat \(120^\circ\) adalah \(150\text{ cm}^2\). Luas lingkaran penuhnya adalah ....',
+            'pilihan_1' => '\(300\text{ cm}^2\)',
+            'pilihan_2' => '\(400\text{ cm}^2\)',
+            'pilihan_3' => '\(450\text{ cm}^2\)',
+            'pilihan_4' => '\(500\text{ cm}^2\)',
+            'pilihan_5' => '\(600\text{ cm}^2\)',
+            'jawaban_benar' => 3,
+            'pembahasan' => '[TP 4.1] Luas lingkaran \(= \frac{360^\circ}{120^\circ} \times 150 = 3 \times 150 = 450\text{ cm}^2\).',
+        ],
+        12 => [
+            'pertanyaan' => 'Pada suatu lingkaran diketahui panjang jari-jari \(OP = 28\text{ cm}\) dan panjang busur \(PQ = 17{,}6\text{ cm}\). Luas juring \(POQ\) adalah ....',
+            'pilihan_1' => '\(123{,}2\text{ cm}^2\)',
+            'pilihan_2' => '\(246{,}4\text{ cm}^2\)',
+            'pilihan_3' => '\(492{,}8\text{ cm}^2\)',
+            'pilihan_4' => '\(264{,}4\text{ cm}^2\)',
+            'pilihan_5' => '\(196{,}4\text{ cm}^2\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 4.2] Hubungan luas juring dan panjang busur: \(L_{\text{juring}} = \frac{1}{2} \times r \times \text{busur} = \frac{1}{2} \times 28 \times 17{,}6 = 14 \times 17{,}6 = 246{,}4\text{ cm}^2\).',
+        ],
+        13 => [
+            'pertanyaan' => 'Sebuah lingkaran berjari-jari \(7\text{ cm}\) memiliki sudut pusat \(\angle AOB = 90^\circ\). Luas tembereng \(AB\) adalah .... (gunakan \(\pi = \frac{22}{7}\))',
+            'pilihan_1' => '\(14\text{ cm}^2\)',
+            'pilihan_2' => '\(24{,}5\text{ cm}^2\)',
+            'pilihan_3' => '\(28\text{ cm}^2\)',
+            'pilihan_4' => '\(38{,}5\text{ cm}^2\)',
+            'pilihan_5' => '\(49\text{ cm}^2\)',
+            'jawaban_benar' => 1,
+            'pembahasan' => '[TP 4.3] Luas juring \(= \frac{1}{4} \times \frac{22}{7} \times 7^2 = 38{,}5\text{ cm}^2\). Luas \(\Delta OAB = \frac{1}{2} \times 7 \times 7 = 24{,}5\text{ cm}^2\). Luas tembereng \(= 38{,}5 - 24{,}5 = 14\text{ cm}^2\).',
+        ],
+        14 => [
+            'pertanyaan' => 'Diketahui sebuah lingkaran berjari-jari \(20\text{ cm}\) dan sudut pusat minor \(\angle POQ = 72^\circ\). Panjang busur besar \(PQ\) adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(25{,}12\text{ cm}\)',
+            'pilihan_2' => '\(50{,}24\text{ cm}\)',
+            'pilihan_3' => '\(75{,}36\text{ cm}\)',
+            'pilihan_4' => '\(100{,}48\text{ cm}\)',
+            'pilihan_5' => '\(125{,}60\text{ cm}\)',
+            'jawaban_benar' => 4,
+            'pembahasan' => '[TP 4.2] Sudut pusat busur besar \(= 360^\circ - 72^\circ = 288^\circ\). Panjang busur besar \(= \frac{288^\circ}{360^\circ} \times 2 \times 3{,}14 \times 20 = \frac{4}{5} \times 125{,}6 = 100{,}48\text{ cm}\).',
+        ],
+        15 => [
+            'pertanyaan' => 'Diketahui jari-jari sebuah lingkaran \(10\text{ cm}\) dan sudut pusat \(\angle AOB = 90^\circ\). Luas tembereng yang dibatasi tali busur \(AB\) dan busur \(AB\) adalah .... (gunakan \(\pi = 3{,}14\))',
+            'pilihan_1' => '\(21{,}5\text{ cm}^2\)',
+            'pilihan_2' => '\(28{,}5\text{ cm}^2\)',
+            'pilihan_3' => '\(50{,}0\text{ cm}^2\)',
+            'pilihan_4' => '\(78{,}5\text{ cm}^2\)',
+            'pilihan_5' => '\(14{,}25\text{ cm}^2\)',
+            'jawaban_benar' => 2,
+            'pembahasan' => '[TP 4.3] Luas juring \(= \frac{1}{4} \times 3{,}14 \times 10^2 = 78{,}5\text{ cm}^2\). Luas \(\Delta OAB = \frac{1}{2} \times 10 \times 10 = 50\text{ cm}^2\). Luas tembereng \(= 78{,}5 - 50 = 28{,}5\text{ cm}^2\).',
         ],
     ],
 ];
