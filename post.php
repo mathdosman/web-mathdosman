@@ -331,28 +331,28 @@ $renderHtml = function (?string $html): string {
 
 <!-- STICKY SUB-BAR KHUSUS MOBILE (< 992px): MENCEGAH TUMPUKAN SIDEBAR DI ATAS ARTIKEL -->
 <?php if ($content): ?>
-<div class="d-lg-none sticky-top bg-body border-bottom shadow-sm py-2 px-3 mb-3 z-3 d-print-none">
+<div class="d-lg-none sticky-top bg-body border-bottom shadow-sm py-2 px-2 mb-2 z-3 d-print-none">
 	<div class="d-flex align-items-center justify-content-between gap-2">
-		<button class="btn btn-outline-primary btn-sm flex-fill fw-semibold"
+		<button class="btn btn-outline-primary btn-sm flex-fill fw-semibold rounded-3"
 				type="button"
 				data-bs-toggle="offcanvas"
 				data-bs-target="#offcanvasBab"
 				aria-controls="offcanvasBab">
 			<i class="ti ti-list me-1"></i> Daftar Bab
 		</button>
-		<button class="btn btn-outline-secondary btn-sm flex-fill fw-semibold"
+		<button class="btn btn-outline-secondary btn-sm flex-fill fw-semibold rounded-3"
 				type="button"
 				data-bs-toggle="offcanvas"
 				data-bs-target="#offcanvasToC"
 				aria-controls="offcanvasToC">
 			<i class="ti ti-bookmarks me-1"></i> Daftar Isi
 		</button>
-		<button class="btn btn-outline-dark btn-sm btn-icon js-focus-toggle"
-				type="button"
-				title="Mode Baca Fokus"
-				aria-label="Mode Baca Fokus">
-			<i class="ti ti-maximize"></i>
-		</button>
+		<?php if (!empty($linkedQuestions)): ?>
+			<a href="#latihan-soal"
+			   class="btn btn-success btn-sm flex-fill fw-semibold rounded-3 text-nowrap">
+				<i class="ti ti-pencil me-1"></i> Soal (<?php echo count($linkedQuestions); ?>)
+			</a>
+		<?php endif; ?>
 	</div>
 </div>
 <?php endif; ?>
@@ -376,7 +376,7 @@ $renderHtml = function (?string $html): string {
 			?>
 
 			<!-- Breadcrumb & Focus Mode Toggle Bar -->
-			<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 d-print-none">
+			<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 mb-lg-3 d-print-none">
 				<ol class="breadcrumb breadcrumb-arrows small mb-0" aria-label="breadcrumbs">
 					<li class="breadcrumb-item"><a href="index.php"><i class="ti ti-home me-1"></i>Beranda</a></li>
 					<?php if ($parentCategory): ?>
@@ -388,7 +388,7 @@ $renderHtml = function (?string $html): string {
 					<li class="breadcrumb-item active d-none d-md-inline" aria-current="page"><span><?php echo htmlspecialchars($title); ?></span></li>
 				</ol>
 
-				<div class="d-flex align-items-center gap-2">
+				<div class="d-none d-lg-flex align-items-center gap-2">
 					<?php if (!empty($linkedQuestions)): ?>
 						<a href="#latihan-soal"
 						   class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm">
@@ -396,7 +396,7 @@ $renderHtml = function (?string $html): string {
 						</a>
 					<?php endif; ?>
 					<button type="button"
-							class="btn btn-outline-secondary btn-sm d-none d-lg-inline-flex align-items-center gap-1 rounded-pill px-3 js-focus-toggle">
+							class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 rounded-pill px-3 js-focus-toggle">
 						<i class="ti ti-maximize js-focus-icon"></i>
 						<span class="js-focus-label">Mode Baca Fokus</span>
 					</button>
