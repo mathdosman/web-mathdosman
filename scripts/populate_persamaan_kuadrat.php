@@ -570,7 +570,13 @@ $p4_html = str_replace('{{NAV}}', $p4_nav, <<<'HTML'
                     \]
                 </div>
                 <div class="small text-muted">
-                    Atau secara ringkas: \(x^2 - (\text{Jumlah Akar Baru})x + (\text{Hasil Kali Akar Baru}) = 0\).
+                    Atau secara ringkas:
+                    \[
+                    \begin{aligned}
+                    x^2 &- (\text{Jumlah Akar Baru})x \\
+                        &+ (\text{Hasil Kali Akar Baru}) = 0
+                    \end{aligned}
+                    \]
                 </div>
             </div>
 
