@@ -2580,37 +2580,59 @@ html, body {
     .app-container,
     .container-xl,
     .container-fluid.page-body {
-        padding-left: 0.65rem !important;
-        padding-right: 0.65rem !important;
+        padding-left: 0.35rem !important;
+        padding-right: 0.35rem !important;
+    }
+
+    .custom-card-header {
+        padding: 0.65rem 0.75rem !important;
     }
 
     .oke {
-        padding: 0.65rem !important;
+        padding: 0.6rem 0.65rem !important;
     }
 
-    .materi-container .card-body.p-4,
+    .materi-container {
+        padding: 0 !important;
+    }
+
+    .materi-container > .card {
+        box-shadow: none !important;
+        border: 0 !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .materi-container > .card > .card-body {
+        padding: 0.35rem 0 !important;
+    }
+
     .card .card-body.p-4,
     .card .card-body.p-md-5 {
-        padding: 0.9rem !important;
+        padding: 0.75rem !important;
     }
 
     .materi-container .materi-header.p-4 {
-        padding: 1rem !important;
+        padding: 0.85rem !important;
     }
 
     .materi-container .materi-header .h3 {
-        font-size: 1.15rem !important;
+        font-size: 1.1rem !important;
         line-height: 1.35;
     }
 
     .math-concept-card,
     .math-formula-spotlight,
     .math-problem-box,
-    .math-solution-box,
-    .math-example-body {
-        padding: 0.75rem !important;
+    .math-solution-box {
+        padding: 0.6rem 0.65rem !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+    }
+
+    .math-example-body {
+        padding: 0.5rem !important;
     }
 
     .math-example-header {
