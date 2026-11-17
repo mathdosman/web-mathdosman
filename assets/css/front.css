@@ -1844,6 +1844,25 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     line-height: 1.4;
 }
 
+.materi-container .card-body > h2:first-child,
+.materi-container .card > .card-body > h2 {
+    margin-top: 0 !important;
+    margin-bottom: 0.75rem !important;
+}
+
+@media (max-width: 767.98px) {
+    .richtext-content h2 {
+        font-size: 1.08rem;
+        margin-top: 1rem;
+        margin-bottom: 0.65rem;
+        padding: 7px 12px;
+    }
+
+    .materi-container .materi-header {
+        margin-bottom: 0.75rem !important;
+    }
+}
+
 [data-bs-theme="dark"] .richtext-content h2 {
     color: #38bdf8;
     border-left-color: #38bdf8;
