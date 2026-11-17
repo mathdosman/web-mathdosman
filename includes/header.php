@@ -455,10 +455,43 @@ try {
                 {left: '\\(', right: '\\)', display: false}
             ];
 
+            window.__normalizeLegacyMath = function(rootEl) {
+                if (!rootEl || !document.createTreeWalker) return;
+                var skipTags = { SCRIPT: 1, NOSCRIPT: 1, STYLE: 1, TEXTAREA: 1, PRE: 1, CODE: 1 };
+                var walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
+                    acceptNode: function(node) {
+                        var p = node.parentElement;
+                        while (p && p !== rootEl) {
+                            if (skipTags[p.tagName] || p.classList.contains('katex') || p.classList.contains('no-katex') || p.classList.contains('no-mathjax')) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            p = p.parentElement;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+                var nodes = [];
+                var cur;
+                while ((cur = walker.nextNode())) {
+                    if (cur.nodeValue && cur.nodeValue.indexOf('\\begin{align') !== -1) {
+                        nodes.push(cur);
+                    }
+                }
+                nodes.forEach(function(n) {
+                    var txt = n.nodeValue;
+                    txt = txt.replace(/\\begin\{align\*?\}/g, '\\begin{aligned}');
+                    txt = txt.replace(/\\end\{align\*?\}/g, '\\end{aligned}');
+                    txt = txt.replace(/\\\(\s*(?:\\displaystyle\s*)?\\begin\{aligned\}([\s\S]*?)\\end\{aligned\}\s*\\\)/g, '\\[\\begin{aligned}$1\\end{aligned}\\]');
+                    txt = txt.replace(/(^|[^$])\$\s*(?:\\displaystyle\s*)?\\begin\{aligned\}([\s\S]*?)\\end\{aligned\}\s*\$(?!\$)/g, '$1\\[\\begin{aligned}$2\\end{aligned}\\]');
+                    n.nodeValue = txt;
+                });
+            };
+
             window.renderMath = function(targetElement) {
                 var el = targetElement || document.getElementById('article-content') || document.querySelector('.richtext-content');
                 if (window.renderMathInElement && el) {
                     try {
+                        window.__normalizeLegacyMath(el);
                         window.renderMathInElement(el, {
                             delimiters: window.__katexDelimiters,
                             ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
