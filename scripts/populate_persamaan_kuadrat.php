@@ -678,7 +678,7 @@ try {
     $p3Code = 'pk03-diskriminan-jenis-akar';
     $pkg3Id = (int)$pdo->query("SELECT id FROM packages WHERE code = " . $pdo->quote($p3Code))->fetchColumn();
     if (!$pkg3Id) {
-        $stmtPkg = $pdo->prepare("INSERT INTO packages (code, name, description, category_id, intro_content_id, status, show_answers) VALUES (:code, :name, :desc, :cat, 143, 'published', 1)");
+        $stmtPkg = $pdo->prepare("INSERT INTO packages (code, name, description, category_id, intro_content_id, status) VALUES (:code, :name, :desc, :cat, 143, 'published')");
         $stmtPkg->execute([
             ':code' => $p3Code,
             ':name' => 'Persamaan Kuadrat - Paket 3: Diskriminan & Jenis-Jenis Akar',
