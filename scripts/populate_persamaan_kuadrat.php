@@ -729,7 +729,7 @@ try {
                 'pilihan_4' => '\(7\)',
                 'pilihan_5' => '\(8\)',
                 'jawaban_benar' => '4',
-                'penyelesaian' => '[TP 2.3] \(x_1 \cdot x_2 = 12 \implies (3x_2)x_2 = 12 \implies x_2^2 = 4 \implies x_2 = 2\) (karena positif) dan \(x_1 = 6\). Sehingga \(x_1 + x_2 = 8 = k + 1 \implies k = 7\).',
+                'penyelesaian' => '[TP 2.3] \[ \begin{aligned} x_1 \cdot x_2 &= 12 \\ (3x_2)x_2 &= 12 \\ x_2^2 &= 4 \\ x_2 &= 2 \quad (\text{positif}) \\ x_1 &= 3(2) = 6 \end{aligned} \] Sehingga \(x_1 + x_2 = 8 = k + 1 \implies k = 7\).',
             ],
             15 => [
                 'pertanyaan' => 'Akar-akar persamaan kuadrat \(2x^2 - 6x + p = 0\) adalah \(x_1\) dan \(x_2\). Jika diketahui \(x_1^2 + x_2^2 = 13\), maka nilai \(p\) adalah ....',
@@ -782,9 +782,7 @@ try {
     }
 
     $pkg3Count = (int)$pdo->query("SELECT COUNT(*) FROM package_questions WHERE package_id = $pkg3Id")->fetchColumn();
-    if ($pkg3Count < 15) {
-        $pdo->prepare("DELETE FROM package_questions WHERE package_id = ?")->execute([$pkg3Id]);
-        $p3_questions = [
+    $p3_questions = [
             1 => [
                 'pertanyaan' => 'Nilai diskriminan dari persamaan kuadrat \(x^2 - 5x + 6 = 0\) adalah ....',
                 'pilihan_1' => '\(-1\)',
@@ -843,7 +841,7 @@ try {
                 'pilihan_4' => '\(12\)',
                 'pilihan_5' => '\(36\)',
                 'jawaban_benar' => '3',
-                'penyelesaian' => '[TP 3.2] Syarat akar kembar \(D = 0 \implies 6^2 - 4(1)(p) = 0 \implies 36 - 4p = 0 \implies p = 9\).',
+                'penyelesaian' => '[TP 3.2] Syarat akar kembar \(D = 0\): \[ \begin{aligned} 6^2 - 4(1)(p) &= 0 \\ 36 - 4p &= 0 \\ 4p &= 36 \\ p &= 9 \end{aligned} \]',
             ],
             7 => [
                 'pertanyaan' => 'Nilai \(k\) agar persamaan kuadrat \(x^2 - kx + 16 = 0\) mempunyai dua akar real yang sama adalah ....',
@@ -853,7 +851,7 @@ try {
                 'pilihan_4' => '\(k = -8\text{ atau } k = 8\)',
                 'pilihan_5' => '\(k = 2\text{ atau } k = -2\)',
                 'jawaban_benar' => '4',
-                'penyelesaian' => '[TP 3.2] \(D = 0 \implies (-k)^2 - 4(1)(16) = 0 \implies k^2 = 64 \implies k = -8\text{ atau } k = 8\).',
+                'penyelesaian' => '[TP 3.2] Syarat akar kembar \(D = 0\): \[ \begin{aligned} (-k)^2 - 4(1)(16) &= 0 \\ k^2 - 64 &= 0 \\ k^2 &= 64 \\ k = -8 &\text{ atau } k = 8 \end{aligned} \]',
             ],
             8 => [
                 'pertanyaan' => 'Batasan nilai \(m\) agar persamaan kuadrat \(x^2 + mx + 4 = 0\) memiliki dua akar real yang berbeda adalah ....',
@@ -863,7 +861,7 @@ try {
                 'pilihan_4' => '\(-2 &lt; m &lt; 2\)',
                 'pilihan_5' => '\(m &gt; 4\)',
                 'jawaban_benar' => '1',
-                'penyelesaian' => '[TP 3.2] Syarat dua akar real berbeda: \(D &gt; 0 \implies m^2 - 16 &gt; 0 \implies (m - 4)(m + 4) &gt; 0 \implies m &lt; -4\text{ atau } m &gt; 4\).',
+                'penyelesaian' => '[TP 3.2] Syarat dua akar real berbeda (\(D &gt; 0\)): \[ \begin{aligned} m^2 - 4(1)(4) &gt; 0 \\ m^2 - 16 &gt; 0 \\ (m - 4)(m + 4) &gt; 0 \end{aligned} \] Diperoleh \(m &lt; -4\text{ atau } m &gt; 4\).',
             ],
             9 => [
                 'pertanyaan' => 'Persamaan kuadrat \(2x^2 - 4x + (k - 1) = 0\) tidak memiliki akar real. Batasan nilai \(k\) yang memenuhi adalah ....',
@@ -903,7 +901,7 @@ try {
                 'pilihan_4' => '\(0 &lt; m &lt; 2\)',
                 'pilihan_5' => '\(m &gt; 0\)',
                 'jawaban_benar' => '3',
-                'penyelesaian' => '[TP 3.3] Syarat definit positif: \(a &gt; 0 \implies m &gt; 0\) dan \(D &lt; 0 \implies 16 - 4m^2 &lt; 0 \implies m^2 &gt; 4 \implies m &lt; -2\text{ atau } m &gt; 2\). Irisan keduanya adalah \(m &gt; 2\).',
+                'penyelesaian' => '[TP 3.3] Syarat definit positif adalah \(a &gt; 0\) (\(m &gt; 0\)) dan \(D &lt; 0\): \[ \begin{aligned} 4^2 - 4(m)(m) &lt; 0 \\ 16 - 4m^2 &lt; 0 \\ m^2 &gt; 4 \end{aligned} \] Diperoleh \(m &lt; -2\text{ atau } m &gt; 2\). Irisan dengan \(m &gt; 0\) adalah \(m &gt; 2\).',
             ],
             13 => [
                 'pertanyaan' => 'Berdasarkan nilai \(a\) dan diskriminannya, grafik fungsi \(y = -x^2 + 2x - 5\) memiliki posisi ....',
@@ -923,7 +921,7 @@ try {
                 'pilihan_4' => '\(k &lt; 9\)',
                 'pilihan_5' => '\(k &gt; 9\)',
                 'jawaban_benar' => '1',
-                'penyelesaian' => '[TP 3.3] Memotong sumbu-\(X\) di dua titik berarti \(D &gt; 0\): \((-6)^2 - 4(1)(k + 2) &gt; 0 \implies 36 - 4k - 8 &gt; 0 \implies 28 &gt; 4k \implies k &lt; 7\).',
+                'penyelesaian' => '[TP 3.3] Memotong sumbu-\(X\) di dua titik berarti \(D &gt; 0\): \[ \begin{aligned} (-6)^2 - 4(1)(k + 2) &gt; 0 \\ 36 - 4k - 8 &gt; 0 \\ 28 - 4k &gt; 0 \\ k &lt; 7 \end{aligned} \]',
             ],
             15 => [
                 'pertanyaan' => 'Diketahui garis \(y = 2x + c\) menyinggung parabola \(y = x^2 - 4x + 10\). Nilai \(c\) yang memenuhi adalah ....',
@@ -933,9 +931,11 @@ try {
                 'pilihan_4' => '\(4\)',
                 'pilihan_5' => '\(6\)',
                 'jawaban_benar' => '2',
-                'penyelesaian' => '[TP 3.3] Substitusikan garis ke parabola: \(x^2 - 4x + 10 = 2x + c \implies x^2 - 6x + (10 - c) = 0\). Syarat menyinggung \(D = 0 \implies (-6)^2 - 4(1)(10 - c) = 0 \implies 36 - 40 + 4c = 0 \implies 4c = 4 \implies c = 1\).',
+                'penyelesaian' => '[TP 3.3] Substitusikan garis ke parabola: \(x^2 - 4x + 10 = 2x + c \implies x^2 - 6x + (10 - c) = 0\). Syarat menyinggung (\(D = 0\)): \[ \begin{aligned} (-6)^2 - 4(1)(10 - c) &= 0 \\ 36 - 40 + 4c &= 0 \\ 4c &= 4 \\ c &= 1 \end{aligned} \]',
             ],
         ];
+    if ($pkg3Count < 15) {
+        $pdo->prepare("DELETE FROM package_questions WHERE package_id = ?")->execute([$pkg3Id]);
         $insQ = $pdo->prepare("INSERT INTO questions (subject_id, pertanyaan, tipe_soal, pilihan_1, pilihan_2, pilihan_3, pilihan_4, pilihan_5, jawaban_benar, penyelesaian, status_soal, materi, submateri) VALUES (:sid, :p, 'Pilihan Ganda', :o1, :o2, :o3, :o4, :o5, :ans, :sol, 'published', 'Aljabar & Fungsi', 'Persamaan Kuadrat')");
         $insPQ = $pdo->prepare("INSERT INTO package_questions (package_id, question_id, question_number) VALUES (:pid, :qid, :qno)");
         foreach ($p3_questions as $no => $q) {
@@ -955,7 +955,11 @@ try {
         }
         echo "[OK] Populated Package ID=$pkg3Id ($p3Code) with 15 questions and linked to Content ID=143.\n";
     } else {
-        echo "[SKIP] Package ID=$pkg3Id already has $pkg3Count questions.\n";
+        $updSol = $pdo->prepare("UPDATE questions q INNER JOIN package_questions pq ON pq.question_id = q.id SET q.penyelesaian = :sol WHERE pq.package_id = :pid AND pq.question_number = :qno");
+        foreach ($p3_questions as $no => $q) {
+            $updSol->execute([':sol' => $q['penyelesaian'], ':pid' => $pkg3Id, ':qno' => $no]);
+        }
+        echo "[OK] Synced vertical aligned solutions on Package ID=$pkg3Id ($pkg3Count questions).\n";
     }
 
     $pdo->commit();
