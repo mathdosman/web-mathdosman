@@ -1972,9 +1972,13 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     color: #0369a1;
     margin-top: 0.75rem;
     margin-bottom: 0.35rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    display: block;
+    line-height: 1.5;
+}
+
+.math-step-title i {
+    margin-right: 4px;
+    vertical-align: -1px;
 }
 
 [data-bs-theme="dark"] .math-step-title {
@@ -1989,9 +1993,15 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     color: #166534;
     border-radius: 6px;
     font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    display: block;
+    max-width: 100%;
+    line-height: 1.65;
+    overflow-wrap: break-word;
+}
+
+.math-final-answer i {
+    margin-right: 4px;
+    vertical-align: -1px;
 }
 
 [data-bs-theme="dark"] .math-final-answer {
