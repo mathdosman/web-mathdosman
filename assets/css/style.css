@@ -2635,6 +2635,25 @@ html, body {
         padding: 0.5rem !important;
     }
 
+    .richtext-content .table thead th,
+    .richtext-content table th,
+    .richtext-content table td,
+    .materi-container .table thead th,
+    .materi-container table th,
+    .materi-container table td {
+        white-space: normal !important;
+        word-break: break-word;
+        font-size: 0.78rem !important;
+        padding: 0.45rem 0.5rem !important;
+        line-height: 1.35;
+    }
+
+    .richtext-content .table-responsive .table,
+    .materi-container .table-responsive .table {
+        display: table !important;
+        width: 100% !important;
+    }
+
     .math-example-header {
         padding: 0.65rem 0.75rem !important;
         flex-wrap: wrap;
