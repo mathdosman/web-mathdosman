@@ -2004,6 +2004,11 @@ body.paket-preview .paket-sheet > .custom-card:nth-of-type(3) { animation-delay:
     vertical-align: -1px;
 }
 
+.math-formula-spotlight .katex,
+.math-final-answer .katex {
+    white-space: nowrap;
+}
+
 [data-bs-theme="dark"] .math-final-answer {
     background: rgba(34, 197, 94, 0.15);
     border-color: rgba(34, 197, 94, 0.35);

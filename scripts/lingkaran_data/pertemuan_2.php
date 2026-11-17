@@ -38,7 +38,8 @@ $p2_content = str_replace('{{NAV}}', $p2_nav, <<<'HTML'
                     \[ \frac{\text{Keliling } (K)}{\text{Diameter } (d)} = \pi \]
                 </div>
                 <div class="small text-muted">
-                    Nilai \(\pi\) (dibaca: <em>pi</em>) adalah bilangan irasional: \(\pi = 3{,}1415926535... \) (desimal tak berhingga dan tak berulang).
+                    Nilai \(\pi\) (dibaca: <em>pi</em>) adalah bilangan irasional:
+                    <br>\(\pi = 3{,}1415926535\dots\) (desimal tak berhingga dan tak berulang).
                 </div>
             </div>
 
