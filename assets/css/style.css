@@ -2533,6 +2533,10 @@ body.front-page .package-card:hover {
     color: #ffffff !important;
 }
 
+#accordionRumpun .accordion-button::after {
+    display: none;
+}
+
 html, body {
     overflow-x: clip;
     max-width: 100%;
