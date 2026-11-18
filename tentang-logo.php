@@ -114,89 +114,47 @@ include __DIR__ . '/includes/header.php';
             <!-- Bedah Anatomi & Simbolisme -->
             <div class="card border-0 shadow-sm rounded-4 mb-4" id="anatomi-logo">
                 <div class="card-body p-4 p-md-5">
-                    <div class="text-center mb-5">
-                        <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill fw-semibold mb-2">Anatomi Desain</span>
-                        <h2 class="h3 fw-bold mb-2">Simbolisme di Balik Setiap Elemen</h2>
-                        <p class="text-muted small mx-auto" style="max-width: 600px;">
-                            Logo MATHDOSMAN tidak sekadar hiasan grafis, melainkan perwujudan prinsip-prinsip matematika dan visi edukasi terpadu.
+                    <div class="text-center mb-4">
+                        <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill fw-semibold mb-2">Makna Desain</span>
+                        <h2 class="h4 fw-bold mb-2">Tiga Elemen Utama Logo</h2>
+                        <p class="text-muted small mx-auto mb-0" style="max-width: 560px;">
+                            Dirancang sederhana agar tetap tajam, mudah dikenali, dan nyaman dilihat di layar kecil maupun besar.
                         </p>
                     </div>
 
-                    <div class="row g-4">
-                        <!-- Point 1: Monogram M -->
-                        <div class="col-12 col-md-6 col-lg-4">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
                             <div class="p-3.5 rounded-4 border h-100 bg-body-tertiary">
-                                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2 mb-3" style="width: 44px; height: 44px;">
-                                    <i class="ti ti-math fs-3"></i>
+                                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-3 p-2 mb-3" style="width: 42px; height: 42px;">
+                                    <i class="ti ti-layers-intersect fs-4"></i>
                                 </div>
-                                <h3 class="h6 fw-bold mb-2">1. Monogram Geometris "M"</h3>
+                                <h3 class="h6 fw-bold mb-2">1. Monogram "M" 3 Bidang</h3>
                                 <p class="small text-muted mb-0">
-                                    Mewakili pilar <strong>Mathematics</strong> dan identitas <strong>MathDosman</strong>. Didesain dengan pilar vertikal tegas dan sudut chamfer kemiringan $20^\circ$, mencerminkan keteguhan logika eksak dan sudut pandang analitis yang presisi.
+                                    Huruf <strong>M</strong> (MathDosman) dibentuk dari tiga bidang geometris bergaya lipatan 3D yang tegas, melambangkan keteraturan dan logika matematika.
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Point 2: Delta Prism -->
-                        <div class="col-12 col-md-6 col-lg-4">
+                        <div class="col-12 col-md-4">
                             <div class="p-3.5 rounded-4 border h-100 bg-body-tertiary">
-                                <div class="d-inline-flex align-items-center justify-content-center bg-info text-white rounded-3 p-2 mb-3" style="width: 44px; height: 44px;">
-                                    <i class="ti ti-delta fs-3"></i>
+                                <div class="d-inline-flex align-items-center justify-content-center bg-info text-white rounded-3 p-2 mb-3" style="width: 42px; height: 42px;">
+                                    <i class="ti ti-circle fs-4"></i>
                                 </div>
-                                <h3 class="h6 fw-bold mb-2">2. Prisma Delta (&Delta;) Pengetahuan</h3>
+                                <h3 class="h6 fw-bold mb-2">2. Lingkaran Penghubung</h3>
                                 <p class="small text-muted mb-0">
-                                    Segitiga Delta di puncak tengah melambangkan konsep kalkulus fundamental: diferensial ($\Delta y / \Delta x$), perubahan, dan pertumbuhan bertahap. Bentuknya yang mengarah ke atas menyimbolkan proses belajar yang terus meningkat menuju prestasi puncak.
+                                    Lingkaran tipis di belakang monogram menyatukan ketiga bidang menjadi satu kesatuan yang utuh dan seimbang.
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Point 3: Lintasan Kurva f(x) -->
-                        <div class="col-12 col-md-6 col-lg-4">
+                        <div class="col-12 col-md-4">
                             <div class="p-3.5 rounded-4 border h-100 bg-body-tertiary">
-                                <div class="d-inline-flex align-items-center justify-content-center bg-cyan text-white rounded-3 p-2 mb-3" style="width: 44px; height: 44px; background-color: #06b6d4;">
-                                    <i class="ti ti-chart-arcs fs-3"></i>
+                                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-3 p-2 mb-3" style="width: 42px; height: 42px;">
+                                    <i class="ti ti-contrast fs-4"></i>
                                 </div>
-                                <h3 class="h6 fw-bold mb-2">3. Kurva Fungsi &amp; Orbit Kontinu</h3>
+                                <h3 class="h6 fw-bold mb-2">3. Kontras Terang &amp; Gelap</h3>
                                 <p class="small text-muted mb-0">
-                                    Lengkungan dinamis bercahaya di latar belakang menggambarkan grafik fungsi matematika $f(x)$ dan lintasan kalkulus. Bentuk lengkungan yang dinamis mencerminkan fleksibilitas metode belajar yang adaptif bagi semua tingkatan siswa.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Point 4: Squircle Sapphire Badge -->
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="p-3.5 rounded-4 border h-100 bg-body-tertiary">
-                                <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-3 p-2 mb-3" style="width: 44px; height: 44px;">
-                                    <i class="ti ti-app-window fs-3"></i>
-                                </div>
-                                <h3 class="h6 fw-bold mb-2">4. Wadah Squircle "Midnight Sapphire"</h3>
-                                <p class="small text-muted mb-0">
-                                    Bentuk <em>squircle</em> (perpaduan bujur sangkar dan lingkaran) dengan sudut kurva super-halus memberi kesan aplikasi modern kelas dunia (seperti standar icon Apple &amp; tech modern). Warna biru safir pekat memancarkan kedalaman samudra ilmu pengetahuan.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Point 5: Nexus Diamond -->
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="p-3.5 rounded-4 border h-100 bg-body-tertiary">
-                                <div class="d-inline-flex align-items-center justify-content-center bg-warning text-dark rounded-3 p-2 mb-3" style="width: 44px; height: 44px;">
-                                    <i class="ti ti-diamond fs-3"></i>
-                                </div>
-                                <h3 class="h6 fw-bold mb-2">5. Titik Temu Intan (Nexus Point)</h3>
-                                <p class="small text-muted mb-0">
-                                    Rombus sian di bagian bawah simpul tengah melambangkan <em>nexus</em>: titik temu antara teori matematika murni dan latihan soal kontekstual. Ini juga menyimbolkan konklusi pembuktian rumus (*Quod Erat Demonstrandum*).
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Point 6: Bintang Inspirasi -->
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="p-3.5 rounded-4 border h-100 bg-body-tertiary">
-                                <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3 p-2 mb-3" style="width: 44px; height: 44px;">
-                                    <i class="ti ti-sparkles fs-3"></i>
-                                </div>
-                                <h3 class="h6 fw-bold mb-2">6. Bintang 4-Sudut (Brilliance Star)</h3>
-                                <p class="small text-muted mb-0">
-                                    Kilauan bintang di sudut kanan atas mencerminkan momen pencerahan <em>(Eureka!)</em> ketika seorang pembelajar berhasil memecahkan soal matematika yang menantang melalui penalaran kritis.
+                                    Mode terang memakai latar gelap dengan huruf <strong>M</strong> terang, sedangkan mode gelap membalikkan warnanya agar selalu kontras dan nyaman di mata.
                                 </p>
                             </div>
                         </div>

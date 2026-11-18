@@ -33,7 +33,7 @@ include __DIR__ . '/includes/header.php';
                                 <h3 class="h6 fw-bold mb-0">Filosofi &amp; Makna Logo Baru</h3>
                             </div>
                             <p class="small text-muted mb-2">
-                                Jelajahi bedah anatomi logo, simbolisme Delta kalkulus, lintasan kurva matematika, dan tipografi dual-tone resmi MATHDOSMAN.
+                                Mengenal identitas visual, makna tiga bidang monogram M, serta unduh berkas logo resmi MATHDOSMAN.
                             </p>
                             <a href="<?php echo htmlspecialchars((string)$base_url); ?>/tentang-logo.php" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold d-inline-flex align-items-center gap-1">
                                 Pelajari Filosofi Logo <i class="ti ti-arrow-right"></i>
