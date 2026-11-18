@@ -220,6 +220,12 @@ try {
     $items = [];
 }
 
+// Mode Simulasi CAT CPNS Publik (Tanpa Login, State Client-Side)
+if (str_starts_with(strtoupper(trim((string)($package['code'] ?? ''))), 'CPNS-')) {
+    include __DIR__ . '/includes/cpns_cat_simulasi.php';
+    exit;
+}
+
 // Sidebar: 3 list konten (gabungan materi + paket), semua published.
 $sidebarRelated = [];
 $sidebarLatest = [];
