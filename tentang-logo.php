@@ -170,13 +170,13 @@ include __DIR__ . '/includes/header.php';
                     
                     <div class="row align-items-center g-4">
                         <div class="col-12 col-lg-6">
-                            <div class="p-4 rounded-4 text-center" style="background: linear-gradient(135deg, #09153a 0%, #060d24 100%); border: 1px solid rgba(56, 189, 248, 0.2);">
-                                <div class="display-5 fw-bolder mb-2" style="letter-spacing: -0.03em;">
+                            <div class="p-3 p-sm-4 rounded-4 text-center" style="background: linear-gradient(135deg, #09153a 0%, #060d24 100%); border: 1px solid rgba(56, 189, 248, 0.2);">
+                                <div class="display-6 fw-bolder mb-2" style="letter-spacing: -0.03em;">
                                     <span style="color: #ffffff;">MATH</span><span style="color: #38bdf8;">DOSMAN</span>
                                 </div>
-                                <div class="d-flex justify-content-center gap-2 mt-3">
-                                    <span class="badge bg-light text-dark px-2.5 py-1">MATH = Ilmu Eksak</span>
-                                    <span class="badge bg-info text-dark px-2.5 py-1">DOSMAN = Identitas SMAN 1 Gianyar</span>
+                                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                                    <span class="badge bg-light text-dark text-wrap px-3 py-2">MATH = Ilmu Eksak</span>
+                                    <span class="badge bg-info text-dark text-wrap px-3 py-2">DOSMAN = Identitas SMAN 1 Gianyar</span>
                                 </div>
                             </div>
                         </div>
