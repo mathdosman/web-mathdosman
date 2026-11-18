@@ -347,19 +347,19 @@ include __DIR__ . '/includes/header.php';
                         </div>
                         <div class="col-12 col-md-5">
                             <div class="d-flex flex-column gap-2">
-                                <a href="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/icon.svg" download="Logo-MathDosman.svg" class="btn btn-primary d-flex align-items-center justify-content-between px-3 py-2.5 rounded-3 fw-semibold shadow-sm">
+                                <a href="<?php echo htmlspecialchars(asset_url('assets/img/icon.svg', (string)$base_url)); ?>" download="Logo-MathDosman.svg" class="btn btn-primary d-flex align-items-center justify-content-between px-3 py-2.5 rounded-3 fw-semibold shadow-sm">
                                     <span class="d-flex align-items-center gap-2">
                                         <i class="ti ti-file-vector fs-4"></i> Vektor SVG (Scalable)
                                     </span>
                                     <span class="badge bg-white text-primary">SVG</span>
                                 </a>
-                                <a href="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/icon-512.png" download="Logo-MathDosman-512px.png" class="btn btn-outline-secondary d-flex align-items-center justify-content-between px-3 py-2.5 rounded-3 fw-semibold">
+                                <a href="<?php echo htmlspecialchars(asset_url('assets/img/icon-512.png', (string)$base_url)); ?>" download="Logo-MathDosman-512px.png" class="btn btn-outline-secondary d-flex align-items-center justify-content-between px-3 py-2.5 rounded-3 fw-semibold">
                                     <span class="d-flex align-items-center gap-2">
                                         <i class="ti ti-photo fs-4"></i> High-Res PNG (512x512)
                                     </span>
                                     <span class="badge bg-secondary-subtle text-secondary">PNG</span>
                                 </a>
-                                <a href="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/logo_mathdosman_1024.png" download="Logo-MathDosman-1024px.png" class="btn btn-outline-secondary d-flex align-items-center justify-content-between px-3 py-2.5 rounded-3 fw-semibold">
+                                <a href="<?php echo htmlspecialchars(asset_url('assets/img/logo_mathdosman_1024.png', (string)$base_url)); ?>" download="Logo-MathDosman-1024px.png" class="btn btn-outline-secondary d-flex align-items-center justify-content-between px-3 py-2.5 rounded-3 fw-semibold">
                                     <span class="d-flex align-items-center gap-2">
                                         <i class="ti ti-photo-circle fs-4"></i> Ultra-Res PNG (1024x1024)
                                     </span>
