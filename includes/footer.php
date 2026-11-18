@@ -130,6 +130,7 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 
 			// Sinkronkan logo brand antara mode terang (icon.svg) dan mode gelap (icon-dark.svg)
 			document.querySelectorAll('img[src*="icon.svg"], img[src*="icon-dark.svg"]').forEach(img => {
+				if (img.hasAttribute('data-static-logo')) return;
 				const src = img.getAttribute('src') || '';
 				const next = isDark
 					? src.replace('icon.svg', 'icon-dark.svg')

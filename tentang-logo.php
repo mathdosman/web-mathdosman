@@ -76,7 +76,7 @@ include __DIR__ . '/includes/header.php';
                         <div class="col-12 col-md-6">
                             <div class="p-4 rounded-4 border bg-white text-dark h-100 shadow-sm">
                                 <div class="d-flex align-items-center gap-3 mb-3">
-                                    <img src="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/icon.svg" width="60" height="60" class="rounded-3 shadow-sm" alt="Logo Terang">
+                                    <img src="<?php echo htmlspecialchars(asset_url('assets/img/icon.svg', (string)$base_url)); ?>" width="60" height="60" class="rounded-3 shadow-sm" alt="Logo Terang" data-static-logo="1">
                                     <div>
                                         <div class="fs-4 fw-bolder" style="letter-spacing: -0.02em;">
                                             <span style="color: #0f172a;">MATH</span><span style="color: #0284c7;">DOSMAN</span>
@@ -94,7 +94,7 @@ include __DIR__ . '/includes/header.php';
                         <div class="col-12 col-md-6">
                             <div class="p-4 rounded-4 border h-100 shadow-sm" style="background: #0b1329; border-color: #1e293b !important; color: #ffffff;">
                                 <div class="d-flex align-items-center gap-3 mb-3">
-                                    <img src="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/icon.svg" width="60" height="60" class="rounded-3 shadow" alt="Logo Gelap" style="box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);">
+                                    <img src="<?php echo htmlspecialchars(asset_url('assets/img/icon-dark.svg', (string)$base_url)); ?>" width="60" height="60" class="rounded-3 shadow" alt="Logo Gelap" data-static-logo="1" style="box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);">
                                     <div>
                                         <div class="fs-4 fw-bolder" style="letter-spacing: -0.02em;">
                                             <span style="color: #ffffff;">MATH</span><span style="color: #38bdf8; text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);">DOSMAN</span>

@@ -222,10 +222,12 @@ try {
     $placeholderLogoFile = __DIR__ . '/../assets/img/brand-mathdosman-placeholder.svg';
 
     if (is_file($iconFile)) {
-        $brandLogoPath = $base_url . '/assets/img/icon.svg';
+        $brandLogoPath = function_exists('asset_url')
+            ? asset_url('assets/img/icon.svg', (string)$base_url)
+            : ($base_url . '/assets/img/icon.svg?v=' . @filemtime($iconFile));
         $faviconPath = is_file($faviconFile)
-            ? ($base_url . '/assets/img/favicon.svg')
-            : ($base_url . '/assets/img/icon.svg');
+            ? (function_exists('asset_url') ? asset_url('assets/img/favicon.svg', (string)$base_url) : ($base_url . '/assets/img/favicon.svg?v=' . @filemtime($faviconFile)))
+            : $brandLogoPath;
     } elseif (is_file($placeholderLogoFile)) {
         $brandLogoPath = $base_url . '/assets/img/brand-mathdosman-placeholder.svg';
         $faviconPath = $base_url . '/assets/img/brand-mathdosman-placeholder.svg';
