@@ -6,29 +6,29 @@
       <stop offset="100%" stop-color="#030712"/>
     </linearGradient>
 
-    <!-- Bangun 1: Pilar Kiri Terang 3D -->
+    <!-- Bangun 1: Pilar Kiri (Cahaya dari kiri-atas) -->
     <linearGradient id="lightLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0f9ff"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
+    </linearGradient>
+
+    <!-- Bangun 2: Lipatan Diagonal Atas (Bidang paling terang) -->
+    <linearGradient id="lightTop" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#e0f2fe"/>
       <stop offset="100%" stop-color="#bae6fd"/>
     </linearGradient>
 
-    <!-- Bangun 2: Lipatan Diagonal Atas Paling Terang 3D -->
-    <linearGradient id="lightTop" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="60%" stop-color="#e0f2fe"/>
-      <stop offset="100%" stop-color="#7dd3fc"/>
+    <!-- Bangun 3: Pilar Kanan & Puncak 45° (Gradasi kedalaman 3D) -->
+    <linearGradient id="lightRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#bae6fd"/>
+      <stop offset="55%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
     </linearGradient>
 
-    <!-- Bangun 3: Pilar Kanan & Puncak 45° Terang 3D -->
-    <linearGradient id="lightRight" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#f0f9ff"/>
-      <stop offset="55%" stop-color="#bae6fd"/>
-      <stop offset="100%" stop-color="#7dd3fc"/>
-    </linearGradient>
-
-    <linearGradient id="foldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    <linearGradient id="foldShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0369a1" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#0369a1" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
@@ -39,18 +39,15 @@
   <!-- Lingkaran Tipis di Belakang M -->
   <circle cx="256" cy="252" r="204" stroke="#7dd3fc" stroke-width="10" stroke-opacity="0.85"/>
 
-  <!-- Bangun 1: Pilar Kiri Terang + Sisi Kedalaman 3D -->
-  <polygon points="74,182 184,182 184,410 74,410" fill="url(#lightLeft)"/>
-  <polygon points="184,182 198,196 198,422 184,410" fill="#38bdf8"/>
+  <!-- Bangun 1: Pilar Kiri -->
+  <rect x="74" y="182" width="110" height="228" fill="url(#lightLeft)"/>
+  <!-- Bayangan lipatan halus di atas Pilar Kiri -->
+  <polygon points="74,182 184,182 184,224 74,194" fill="url(#foldShadow)"/>
 
-  <!-- Bangun 3: Pilar Kanan & Puncak Terang + Sisi Kedalaman 3D -->
+  <!-- Bangun 3: Pilar Kanan & Puncak 45° (Rapi sejajar y=410) -->
   <polygon points="338,182 446,74 446,410 338,410" fill="url(#lightRight)"/>
-  <polygon points="446,74 458,86 458,422 446,410" fill="#0284c7"/>
-
-  <!-- Bayangan Lipatan 3D -->
-  <polygon points="74,182 184,182 260,276 338,182 260,260" fill="url(#foldShadow)"/>
 
   <!-- Bangun 2: Bidang Lipatan Diagonal Atas -->
   <polygon points="74,74 230,74 338,182 260,260" fill="url(#lightTop)"/>
-  <polyline points="74,74 230,74 338,182" stroke="#ffffff" stroke-width="2.5" stroke-opacity="0.9" fill="none"/>
+  <polyline points="74,74 230,74 338,182" stroke="#ffffff" stroke-width="2" stroke-opacity="0.9" fill="none"/>
 </svg>

@@ -20,14 +20,14 @@
     </linearGradient>
 
     <!-- Bangun 3: Pilar Kanan & Puncak Gelap 3D -->
-    <linearGradient id="darkRight" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="darkRight" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#1d4ed8"/>
-      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#0f172a"/>
       <stop offset="100%" stop-color="#030712"/>
     </linearGradient>
 
-    <linearGradient id="foldShadowDark" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#020617" stop-opacity="0.45"/>
+    <linearGradient id="foldShadowDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#020617" stop-opacity="0.5"/>
       <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
     </linearGradient>
   </defs>
@@ -39,18 +39,14 @@
   <!-- Lingkaran Tipis di Belakang M -->
   <circle cx="256" cy="252" r="204" stroke="#1e3a8a" stroke-width="10" stroke-opacity="0.85"/>
 
-  <!-- Bangun 1: Pilar Kiri Gelap + Sisi Kedalaman 3D -->
-  <polygon points="74,182 184,182 184,410 74,410" fill="url(#darkLeft)"/>
-  <polygon points="184,182 198,196 198,422 184,410" fill="#3b82f6"/>
+  <!-- Bangun 1: Pilar Kiri -->
+  <rect x="74" y="182" width="110" height="228" fill="url(#darkLeft)"/>
+  <polygon points="74,182 184,182 184,224 74,194" fill="url(#foldShadowDark)"/>
 
-  <!-- Bangun 3: Pilar Kanan & Puncak Gelap + Sisi Kedalaman 3D -->
+  <!-- Bangun 3: Pilar Kanan & Puncak 45° (Rapi sejajar y=410) -->
   <polygon points="338,182 446,74 446,410 338,410" fill="url(#darkRight)"/>
-  <polygon points="446,74 458,86 458,422 446,410" fill="#1d4ed8"/>
-
-  <!-- Bayangan Lipatan 3D -->
-  <polygon points="74,182 184,182 260,276 338,182 260,260" fill="url(#foldShadowDark)"/>
 
   <!-- Bangun 2: Bidang Lipatan Diagonal Atas -->
   <polygon points="74,74 230,74 338,182 260,260" fill="url(#darkTop)"/>
-  <polyline points="74,74 230,74 338,182" stroke="#60a5fa" stroke-width="2.5" stroke-opacity="0.85" fill="none"/>
+  <polyline points="74,74 230,74 338,182" stroke="#60a5fa" stroke-width="2" stroke-opacity="0.85" fill="none"/>
 </svg>
