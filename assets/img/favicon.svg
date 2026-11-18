@@ -4,32 +4,32 @@
       <stop offset="0%" stop-color="#0b1326"/>
       <stop offset="100%" stop-color="#030712"/>
     </linearGradient>
-    <linearGradient id="blockLeft" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6"/>
-      <stop offset="100%" stop-color="#1e40af"/>
+    <linearGradient id="lightLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#bae6fd"/>
     </linearGradient>
-    <linearGradient id="blockTop" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e0f2fe"/>
-      <stop offset="45%" stop-color="#38bdf8"/>
-      <stop offset="100%" stop-color="#0284c7"/>
+    <linearGradient id="lightTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#e0f2fe"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
     </linearGradient>
-    <linearGradient id="blockRight" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#0ea5e9"/>
-      <stop offset="45%" stop-color="#1d4ed8"/>
-      <stop offset="100%" stop-color="#0f172a"/>
+    <linearGradient id="lightRight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0f9ff"/>
+      <stop offset="55%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
     </linearGradient>
     <linearGradient id="foldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#020617" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="512" height="512" rx="96" fill="url(#darkBg)"/>
   <rect x="6" y="6" width="500" height="500" rx="90" stroke="#1e293b" stroke-width="2"/>
-  <polygon points="74,182 184,182 184,410 74,410" fill="url(#blockLeft)"/>
-  <polygon points="184,182 198,196 198,422 184,410" fill="#0f2557"/>
-  <polygon points="338,182 446,74 446,410 338,410" fill="url(#blockRight)"/>
-  <polygon points="446,74 458,86 458,422 446,410" fill="#091534"/>
+  <polygon points="74,182 184,182 184,410 74,410" fill="url(#lightLeft)"/>
+  <polygon points="184,182 198,196 198,422 184,410" fill="#38bdf8"/>
+  <polygon points="338,182 446,74 446,410 338,410" fill="url(#lightRight)"/>
+  <polygon points="446,74 458,86 458,422 446,410" fill="#0284c7"/>
   <polygon points="74,182 184,182 260,276 338,182 260,260" fill="url(#foldShadow)"/>
-  <polygon points="74,74 230,74 338,182 260,260" fill="url(#blockTop)"/>
-  <polyline points="74,74 230,74 338,182" stroke="#bae6fd" stroke-width="2.5" stroke-opacity="0.7" fill="none"/>
+  <polygon points="74,74 230,74 338,182 260,260" fill="url(#lightTop)"/>
+  <polyline points="74,74 230,74 338,182" stroke="#ffffff" stroke-width="2.5" stroke-opacity="0.9" fill="none"/>
 </svg>

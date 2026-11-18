@@ -127,6 +127,15 @@ if (empty($useAdminSidebar) && empty($disable_public_footer) && empty($disable_p
 					icon.classList.toggle('bi-sun-fill', isDark);
 				}
 			});
+
+			// Sinkronkan logo brand antara mode terang (icon.svg) dan mode gelap (icon-dark.svg)
+			document.querySelectorAll('img[src*="icon.svg"], img[src*="icon-dark.svg"]').forEach(img => {
+				const src = img.getAttribute('src') || '';
+				const next = isDark
+					? src.replace('icon.svg', 'icon-dark.svg')
+					: src.replace('icon-dark.svg', 'icon.svg');
+				if (next !== src) img.setAttribute('src', next);
+			});
 		};
 
 		// Initialize: prefer stored value, fallback to system
