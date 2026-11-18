@@ -534,12 +534,51 @@ include __DIR__ . '/header.php';
     function finishExam(autoTimeUp = false) {
         if (state.finished) return;
         const answeredCount = Object.keys(state.answers).length;
-        if (!autoTimeUp && answeredCount < QUESTIONS.length) {
-            const ok = confirm(`Masih ada ${QUESTIONS.length - answeredCount} soal yang belum dijawab. Yakin ingin mengakhiri simulasi sekarang?`);
-            if (!ok) return;
+        const unanswered = QUESTIONS.length - answeredCount;
+
+        if (!autoTimeUp) {
+            const msg = unanswered > 0
+                ? `Masih ada <strong>${unanswered} soal</strong> yang belum dijawab. Yakin ingin mengakhiri simulasi sekarang?`
+                : 'Semua soal sudah terjawab. Yakin ingin mengakhiri simulasi dan melihat skor akhir?';
+
+            if (window.Swal && typeof window.Swal.fire === 'function') {
+                window.Swal.fire({
+                    title: 'Akhiri Simulasi?',
+                    html: msg,
+                    icon: unanswered > 0 ? 'warning' : 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Selesai Ujian',
+                    cancelButtonText: 'Lanjutkan Mengerjakan',
+                    confirmButtonColor: '#d63939',
+                    reverseButtons: true
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        finalizeExam(false);
+                    }
+                });
+                return;
+            }
+            if (!confirm(unanswered > 0
+                ? `Masih ada ${unanswered} soal yang belum dijawab. Yakin ingin mengakhiri simulasi sekarang?`
+                : 'Yakin ingin mengakhiri simulasi sekarang?')) {
+                return;
+            }
         }
+        finalizeExam(autoTimeUp);
+    }
+
+    function finalizeExam(autoTimeUp = false) {
+        if (state.finished) return;
         state.finished = true;
         if (state.timerId) clearInterval(state.timerId);
+        if (autoTimeUp && window.Swal && typeof window.Swal.fire === 'function') {
+            window.Swal.fire({
+                title: 'Waktu Habis!',
+                text: 'Waktu simulasi telah berakhir. Jawaban Anda otomatis dikumpulkan.',
+                icon: 'info',
+                confirmButtonText: 'Lihat Hasil'
+            });
+        }
 
         let totalScore = 0;
         let correctCount = 0;
