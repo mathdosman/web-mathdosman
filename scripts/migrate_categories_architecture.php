@@ -65,7 +65,7 @@ try {
         [
             'name' => 'Geometri',
             'slug' => 'geometri',
-            'icon' => 'ti ti-shapes',
+            'icon' => 'ti ti-shape',
             'color' => 'purple',
             'order' => 2,
             'cover_image' => 'assets/img/kategori/geometri.svg',

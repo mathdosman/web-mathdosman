@@ -168,7 +168,7 @@ HTML;
             $html = <<< 'HTML'
 <div class="math-concept-card mb-4">
     <div class="d-flex align-items-center gap-2 text-primary fw-bold mb-2">
-        <i class="ti ti-shapes fs-4"></i>
+        <i class="ti ti-shape fs-4"></i>
         <h5 class="mb-0 fw-bold">Ringkasan Konsep: Komposisi Transformasi Geometri &amp; Luas</h5>
     </div>
     <p class="small text-secondary mb-3">Jika transformasi \(T_1\) dilanjutkan dengan transformasi \(T_2\), matriks komposisi totalnya adalah perkalian dari belakang ke depan: \(T = T_2 \cdot T_1\).</p>

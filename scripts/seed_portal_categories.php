@@ -55,7 +55,7 @@ try {
             'slug' => 'geometri-pengukuran',
             'subtitle' => 'Rumpun Ruang, Bangun & Sudut',
             'description' => 'Eksplorasi bangun datar, bangun ruang dimensi tiga, sifat sudut, lingkaran, dan transformasi geometri.',
-            'icon' => 'ti ti-shapes',
+            'icon' => 'ti ti-shape',
             'color' => 'teal',
             'order' => 2,
             'cover_image' => 'assets/img/kategori/geometri-pengukuran.svg',
