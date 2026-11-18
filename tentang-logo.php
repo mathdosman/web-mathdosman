@@ -46,7 +46,7 @@ include __DIR__ . '/includes/header.php';
                         <!-- Gambar Besar Logo Showcase -->
                         <div class="col-12 col-lg-5 text-center">
                             <div class="logo-hero-frame p-3 p-sm-4 mx-auto" style="max-width: 320px; background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(7, 15, 38, 0.6) 70%); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 28px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);">
-                                <img src="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/icon.svg"
+                                <img src="<?php echo htmlspecialchars(asset_url('assets/img/icon.svg', (string)$base_url)); ?>"
                                      alt="Logo MATHDOSMAN"
                                      class="img-fluid rounded-4 transition-all"
                                      style="max-width: 260px; filter: drop-shadow(0 12px 24px rgba(2, 132, 199, 0.45));"

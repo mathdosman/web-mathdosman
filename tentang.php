@@ -25,7 +25,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="p-3.5 p-md-4 rounded-4 mb-4 border" style="background: linear-gradient(135deg, rgba(7, 15, 38, 0.04) 0%, rgba(14, 165, 233, 0.07) 100%);">
                     <div class="row align-items-center g-3">
                         <div class="col-auto">
-                            <img src="<?php echo htmlspecialchars((string)$base_url); ?>/assets/img/icon.svg" width="68" height="68" class="rounded-3 shadow-sm" alt="Logo MATHDOSMAN">
+                            <img src="<?php echo htmlspecialchars(asset_url('assets/img/icon.svg', (string)$base_url)); ?>" width="68" height="68" class="rounded-3 shadow-sm" alt="Logo MATHDOSMAN">
                         </div>
                         <div class="col">
                             <div class="d-flex align-items-center gap-2 mb-1">

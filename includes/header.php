@@ -325,6 +325,17 @@ try {
                 theme = preferred;
             }
             document.documentElement.setAttribute('data-bs-theme', theme);
+            window.__syncThemeLogo = function(isDark) {
+                document.querySelectorAll('img[src*="icon.svg"], img[src*="icon-dark.svg"]').forEach(function(img) {
+                    if (img.hasAttribute('data-static-logo')) return;
+                    var src = img.getAttribute('src') || '';
+                    var next = isDark ? src.replace('icon.svg', 'icon-dark.svg') : src.replace('icon-dark.svg', 'icon.svg');
+                    if (next !== src) img.setAttribute('src', next);
+                });
+            };
+            if (theme === 'dark') {
+                document.addEventListener('DOMContentLoaded', function() { window.__syncThemeLogo(true); });
+            }
         })();
     </script>
     <?php if (!empty($faviconPath)): ?>

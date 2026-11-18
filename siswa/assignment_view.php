@@ -1073,7 +1073,7 @@ include __DIR__ . '/../includes/header.php';
         <?php
             $logoPath = $brandLogoPath ?? null;
             if (!$logoPath) {
-                $logoPath = $base_url . '/assets/img/icon.svg';
+                $logoPath = asset_url('assets/img/icon.svg', (string)$base_url);
             }
         ?>
         <div class="md-assignment-header bg-secondary bg-gradient text-white rounded-4 px-3 py-2 mb-3">
