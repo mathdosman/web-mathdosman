@@ -780,8 +780,12 @@ $renderSidebarKonten = function (string $title, array $list, string $currentCode
 
                             <div class="text-area">
                                 <div class="brand-name"><span class="brand-math">MATH</span><span class="brand-dosman">DOSMAN</span></div>
-                                <div class="slogan">Pusat Latihan Soal &amp; Referensi Matematika Terpadu</div>
-                                <div class="jenjang-pendidikan">SD &bull; SMP &bull; SMA &bull; SMK &bull; PERGURUAN TINGGI</div>
+                                <div class="slogan">Platform Belajar &amp; Bank Soal Matematika</div>
+                                <div class="jenjang-pendidikan">
+                                    <span class="kop-badge">Bank Soal</span>
+                                    <span class="kop-badge">Pembahasan Lengkap</span>
+                                    <span class="kop-badge">SMA / SMK &bull; UTBK-SNBT</span>
+                                </div>
                             </div>
                         </div>
                     </header>

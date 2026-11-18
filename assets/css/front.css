@@ -1257,26 +1257,36 @@
 
     /* Kop header (Paket) */
     body.paket-preview .kop-header {
-        text-align: center;
-        padding: 18px 10px;
-        background-color: var(--bs-tertiary-bg);
+        text-align: left;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.07) 0%, rgba(15, 23, 42, 0.02) 100%);
+        background-color: var(--bs-body-bg);
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        border-bottom: 4px double #1a237e;
-        margin: 0 auto 12px;
-        border-radius: 10px;
+        border: 1px solid var(--bs-border-color);
+        border-left: 4px solid #0284c7;
+        margin: 0 auto 14px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+
+    html[data-bs-theme="dark"] body.paket-preview .kop-header {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.25) 100%);
+        border-left-color: #38bdf8;
     }
 
     body.paket-preview .kop-header .container-kop {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 18px;
+        justify-content: flex-start;
+        gap: 16px;
     }
 
     body.paket-preview .kop-header .logo-svg {
-        width: 72px;
-        height: 72px;
+        width: 58px;
+        height: 58px;
         flex: 0 0 auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18);
     }
 
     body.paket-preview .kop-header .text-area {
@@ -1284,11 +1294,11 @@
     }
 
     body.paket-preview .kop-header .brand-name {
-        font-size: 30px;
+        font-size: 24px;
         font-weight: 850;
         margin: 0;
         letter-spacing: -0.02em;
-        line-height: 1;
+        line-height: 1.1;
         text-transform: uppercase;
         display: inline-flex;
         align-items: baseline;
@@ -1299,47 +1309,80 @@
         font-weight: 900;
     }
 
+    html[data-bs-theme="dark"] body.paket-preview .kop-header .brand-name .brand-math {
+        color: #f8fafc;
+    }
+
     body.paket-preview .kop-header .brand-name .brand-dosman {
         color: #0284c7;
         font-weight: 900;
     }
 
-    body.paket-preview .kop-header .logo-svg {
-        border-radius: 14px;
-        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2);
+    html[data-bs-theme="dark"] body.paket-preview .kop-header .brand-name .brand-dosman {
+        color: #38bdf8;
     }
 
     body.paket-preview .kop-header .slogan {
-        font-size: 14px;
-        color: #555;
-        margin: 6px 0 2px;
-        font-style: italic;
+        font-size: 13.5px;
+        color: var(--bs-secondary-color);
+        margin: 4px 0 7px;
+        font-style: normal;
+        font-weight: 500;
     }
 
     body.paket-preview .kop-header .jenjang-pendidikan {
-        font-size: 12px;
-        font-weight: 700;
-        color: #c5a021;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
         margin: 0;
-        letter-spacing: .6px;
+    }
+
+    body.paket-preview .kop-header .kop-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 9px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 999px;
+        color: #0369a1;
+        background-color: rgba(2, 132, 199, 0.1);
+        border: 1px solid rgba(2, 132, 199, 0.2);
+        letter-spacing: 0.2px;
+    }
+
+    html[data-bs-theme="dark"] body.paket-preview .kop-header .kop-badge {
+        color: #7dd3fc;
+        background-color: rgba(56, 189, 248, 0.12);
+        border-color: rgba(56, 189, 248, 0.25);
     }
 
     @media (max-width: 600px) {
         body.paket-preview .kop-header {
-            padding: 14px 10px;
+            padding: 14px;
+            border-left-width: 3px;
         }
 
         body.paket-preview .kop-header .container-kop {
-            flex-direction: column;
-            gap: 10px;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+
+        body.paket-preview .kop-header .logo-svg {
+            width: 48px;
+            height: 48px;
         }
 
         body.paket-preview .kop-header .text-area {
-            text-align: center;
+            text-align: left;
         }
 
         body.paket-preview .kop-header .brand-name {
-            font-size: 26px;
+            font-size: 20px;
+        }
+
+        body.paket-preview .kop-header .slogan {
+            font-size: 12.5px;
         }
     }
 
