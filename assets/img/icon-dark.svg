@@ -36,6 +36,9 @@
   <rect x="0" y="0" width="512" height="512" rx="96" fill="url(#lightBg)"/>
   <rect x="6" y="6" width="500" height="500" rx="90" stroke="#bfdbfe" stroke-width="2"/>
 
+  <!-- Lingkaran Tipis di Belakang M -->
+  <circle cx="256" cy="252" r="204" stroke="#1e3a8a" stroke-width="10" stroke-opacity="0.85"/>
+
   <!-- Bangun 1: Pilar Kiri Gelap + Sisi Kedalaman 3D -->
   <polygon points="74,182 184,182 184,410 74,410" fill="url(#darkLeft)"/>
   <polygon points="184,182 198,196 198,422 184,410" fill="#3b82f6"/>
