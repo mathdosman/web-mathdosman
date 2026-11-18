@@ -1,26 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
-  <defs>
-    <linearGradient id="mdBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="55%" stop-color="#1e3a8a"/>
-      <stop offset="100%" stop-color="#0284c7"/>
-    </linearGradient>
-    <linearGradient id="mdAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7dd3fc"/>
-      <stop offset="100%" stop-color="#38bdf8"/>
-    </linearGradient>
-  </defs>
+  <!-- Clean Soft Ice-Blue Rounded Background -->
+  <rect x="0" y="0" width="512" height="512" rx="96" fill="#e6f0ff"/>
 
-  <!-- Clean Rounded Square -->
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#mdBg)"/>
+  <!-- Left Vertical Pillar -->
+  <rect x="72" y="181" width="111" height="229" fill="#061224"/>
 
-  <!-- Minimalist Geometric M -->
-  <path d="M 132 364 V 156 L 256 286 L 380 156 V 364"
-        stroke="#ffffff"
-        stroke-width="46"
-        stroke-linecap="round"
-        stroke-linejoin="round"/>
+  <!-- Folded Top-Left Diagonal Ribbon -->
+  <polygon points="72,72 230,72 339,181 260,260" fill="#0d2240"/>
 
-  <!-- Subtle Geometric Math Accent (Center Apex Dot) -->
-  <circle cx="256" cy="148" r="24" fill="url(#mdAccent)"/>
+  <!-- Right Vertical Pillar & Peak -->
+  <polygon points="339,181 448,72 448,410 339,410" fill="#061224"/>
 </svg>
