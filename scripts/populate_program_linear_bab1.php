@@ -5,8 +5,8 @@
  *   Paket 1: Program Linear — Soal Pilihan Ganda (Model Matematika, Grafik SPtLDV & Nilai Optimum) (15 Soal PG)
  *   Paket 2: Program Linear — Soal Uraian Aplikasi Nyata, Garis Selidik & Soal Analisis HOTS (15 Soal Uraian)
  *
- * Rumpun      : Logika & Matematika Diskrit (CAT#31)
- * Subkategori : Program Linear (CAT#32 / logika-matematika-diskrit-program-linear)
+ * Rumpun      : Aljabar & Fungsi (CAT#1)
+ * Subkategori : Program Linear (CAT#32 / aljabar-fungsi-program-linear)
  */
 
 declare(strict_types=1);
@@ -403,13 +403,13 @@ $uraianQuestions = [
 try {
     $pdo->beginTransaction();
 
-    $catId = (int)$pdo->query("SELECT id FROM categories WHERE slug = 'logika-matematika-diskrit-program-linear' LIMIT 1")->fetchColumn();
+    $catId = (int)$pdo->query("SELECT id FROM categories WHERE slug = 'aljabar-fungsi-program-linear' LIMIT 1")->fetchColumn();
     if ($catId <= 0) {
-        throw new RuntimeException('Kategori logika-matematika-diskrit-program-linear (CAT#32) tidak ditemukan.');
+        throw new RuntimeException('Kategori aljabar-fungsi-program-linear (CAT#32) tidak ditemukan.');
     }
 
     $subjectId = 2; // Matematika
-    $materi = 'Logika & Matematika Diskrit';
+    $materi = 'Aljabar & Fungsi';
     $submateri = 'Program Linear';
 
     $packages = [
