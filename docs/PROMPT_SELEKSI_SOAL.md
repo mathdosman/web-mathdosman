@@ -9,8 +9,9 @@ Gunakan prompt di bawah ini kapan saja saat Anda mengunggah file PDF/gambar kump
 ```text
 Tolong seleksi semua model soal unik dari file PDF/gambar terlampir, lalu masukkan ke database live MathDosman sesuai rumpun dan subkategori yang paling tepat dengan mengikuti aturan berikut:
 
-1. **Pemetaan Rumpun & Subkategori:**
-   - Cek tabel `categories` dan `packages` di server live terlebih dahulu agar tidak terjadi duplikasi paket dan penempatan rumpun/subkategori 100% akurat.
+1. **Pemetaan Rumpun, Subkategori & Penempatan Konten:**
+   - Cek tabel `categories`, `contents`, dan `packages` di server live terlebih dahulu agar tidak terjadi duplikasi dan penempatan rumpun/subkategori 100% akurat.
+   - **Penempatan Fleksibel:** Soal hasil seleksi boleh **ditambahkan ke paket/konten materi yang sudah ada** (jika topiknya cocok dan melengkapi variasi soal pada pertemuan/paket tersebut), **atau dibuatkan paket/konten baru** jika topiknya merupakan submateri baru atau jumlah soalnya cukup untuk berdiri sendiri (15–20 soal).
    - Jika ada soal yang topiknya di luar bab utama (misal soal Parabola di dalam file Lingkaran), pisahkan ke subkategori yang sesuai atau laporkan agar tidak tercampur.
 
 2. **Seleksi Model Soal Unik (Kurasi Ketat):**
